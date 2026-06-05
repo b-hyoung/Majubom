@@ -1,0 +1,6 @@
+[submodule "esp32/esp-csi"]
+	path = esp32/esp-csi
+	url = https://github.com/espressif/esp-csi.git
+[submodule "esp32/esp-idf"]
+	path = esp32/esp-idf
+	url = https://github.com/espressif/esp-idf.git
