@@ -20,3 +20,4 @@ dependencies.lock
 # Generated CSI plots (regenerable from csi_log.csv)
 esp32/csi_heatmap.png
 esp32/csi_timeseries.png
+
