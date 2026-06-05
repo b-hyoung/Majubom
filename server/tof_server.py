@@ -1,16 +1,9 @@
 """
-VL53L5CX 멀티존 ToF 센서 데이터 수신 서버
-ESP32 → POST /tof → 저장 → GET /tof/latest 로 조회
+다중 센서 수신 서버 (ToF + CSI)
 포트: 5001
 
-VL53L5CX는 4x4(16존) 또는 8x8(64존) 거리 배열을 반환함
-JSON 형식:
-  {
-    "sensor": "tof1",
-    "resolution": "4x4",
-    "distances_mm": [234, 456, ..., 789],   // 16개 또는 64개
-    "targets":      [1,   1,   ...,  0]      // 존별 감지된 타겟 수 (optional)
-  }
+POST /tof  — VL53L5CX ToF 거리 데이터
+POST /csi  — WiFi CSI 진폭 통계 (ESP32 csi_http 프로젝트)
 """
 
 from flask import Flask, request, jsonify
@@ -25,6 +18,14 @@ latest = {
     "tof2": {"resolution": None, "distances_mm": None, "targets": None, "received_at": None},
 }
 log = []  # 최근 100건
+
+# ── CSI ──────────────────────────────────────────────────────────────
+latest_csi = {
+    "seq": None, "rssi": None, "channel": None,
+    "noise_floor": None, "amp_mean": None, "amp_std": None,
+    "received_at": None,
+}
+csi_log = []  # 최근 100건
 
 def grid_html(distances, resolution):
     if not distances:
@@ -87,6 +88,45 @@ def get_log():
     return jsonify(log[-20:])
 
 
+# ── CSI 엔드포인트 ────────────────────────────────────────────────────
+@app.route("/csi", methods=["POST"])
+def receive_csi():
+    data = request.get_json(silent=True)
+    if not data:
+        return jsonify({"error": "JSON body required"}), 400
+
+    now = datetime.now().isoformat(timespec="milliseconds")
+    latest_csi.update({
+        "seq":         data.get("seq"),
+        "rssi":        data.get("rssi"),
+        "channel":     data.get("channel"),
+        "noise_floor": data.get("noise_floor"),
+        "amp_mean":    data.get("amp_mean"),
+        "amp_std":     data.get("amp_std"),
+        "received_at": now,
+    })
+    csi_log.append(dict(latest_csi))
+    if len(csi_log) > 100:
+        csi_log.pop(0)
+
+    amp_mean = data.get("amp_mean") or 0
+    amp_std  = data.get("amp_std")  or 0
+    print(f"[{now}] CSI seq={data.get('seq')} | "
+          f"amp={amp_mean:.1f}±{amp_std:.1f} | "
+          f"rssi={data.get('rssi')} ch={data.get('channel')}")
+    return jsonify({"ok": True}), 200
+
+
+@app.route("/csi/latest", methods=["GET"])
+def get_csi_latest():
+    return jsonify(latest_csi)
+
+
+@app.route("/csi/log", methods=["GET"])
+def get_csi_log():
+    return jsonify(csi_log[-20:])
+
+
 @app.route("/", methods=["GET"])
 def index():
     t1, t2 = latest["tof1"], latest["tof2"]
@@ -96,6 +136,20 @@ def index():
             return "아직 없음"
         valid = [d for d in t["distances_mm"] if d and d > 0]
         return f"최솟값 {min(valid)} mm / 평균 {int(sum(valid)/len(valid))} mm" if valid else "유효값 없음"
+
+    # CSI 최신값
+    c = latest_csi
+    csi_summary = (
+        f"amp={c['amp_mean']:.1f}±{c['amp_std']:.1f} | rssi={c['rssi']} ch={c['channel']}"
+        if c["amp_mean"] is not None else "아직 없음"
+    )
+    csi_rows = "".join(
+        f"<tr><td>{e['received_at']}</td><td>{e['seq']}</td>"
+        f"<td>{e['amp_mean']:.1f}</td><td>{e['amp_std']:.1f}</td>"
+        f"<td>{e['rssi']}</td><td>{e['channel']}</td></tr>"
+        for e in reversed(csi_log[-10:])
+        if e["amp_mean"] is not None
+    )
 
     log_rows = "".join(
         f"<tr><td>{e['received_at']}</td><td>{e['sensor']}</td>"
@@ -131,7 +185,15 @@ def index():
   </div>
 </div>
 <div class=card>
-  <div class=label>최근 수신 로그 (최대 20건)</div>
+  <div class=label>CSI (WiFi) — {c['received_at'] or '수신 없음'}</div>
+  <div class=summary>{csi_summary}</div>
+  <table class=log style="margin-top:8px">
+    <tr><th>시각</th><th>seq</th><th>amp_mean</th><th>amp_std</th><th>rssi</th><th>ch</th></tr>
+    {csi_rows if csi_rows else '<tr><td colspan=6 style="color:#aaa">아직 없음</td></tr>'}
+  </table>
+</div>
+<div class=card>
+  <div class=label>ToF 최근 수신 로그 (최대 20건)</div>
   <table class=log>
     <tr><th>시각</th><th>센서</th><th>해상도</th><th>최솟값</th></tr>
     {log_rows if log_rows else '<tr><td colspan=4 style="color:#aaa">아직 없음</td></tr>'}
