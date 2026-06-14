@@ -180,10 +180,15 @@
       <h4 class="font-bold mb-1 text-emerald-300">작업2_측정계획.md</h4>
       <p class="text-sm text-slate-300">랩실 앉음 측정 절차 · 1시간 20분</p>
     </div>
-    <div class="bg-slate-900 border border-slate-700 rounded-xl p-5 md:col-span-2">
+    <div class="bg-slate-900 border border-slate-700 rounded-xl p-5">
       <h4 class="font-bold mb-1 text-emerald-300">시스템_데이터흐름_웹명세.md ⭐</h4>
       <p class="text-sm text-slate-300">팀원 R&R + JSON 명세 + 웹 대시보드 화면 구성 + 시연 시나리오</p>
-      <p class="text-xs text-amber-300 mt-2">→ 김도경(서버)/김민혁(ToF)/조우진(mmWave)에게 공유</p>
+      <p class="text-xs text-amber-300 mt-2">→ 김도경/김민혁/조우진 공유</p>
+    </div>
+    <div class="bg-slate-900 border border-amber-700/50 rounded-xl p-5">
+      <h4 class="font-bold mb-1 text-amber-300">CSI_JSON_명세_상세.md ⭐ NEW</h4>
+      <p class="text-sm text-slate-300">CSI JSON 한글 주석 + 필드 의미 + 시나리오 3개 + 서버 처리 코드</p>
+      <p class="text-xs text-emerald-300 mt-2">→ 김도경(서버) 전용 상세 명세</p>
     </div>
   </div>
 
@@ -289,7 +294,10 @@
   </h2>
   <div class="bg-slate-900 border border-slate-700 rounded-xl p-6">
     <p class="text-sm text-slate-300 mb-4">CSI 측에서 60초마다 POST로 보낼 JSON 형식. 자세한 내용 →
-      <a href="../시스템_데이터흐름_웹명세.md" class="text-emerald-400 underline">시스템_데이터흐름_웹명세.md</a></p>
+      <a href="../시스템_데이터흐름_웹명세.md" class="text-emerald-400 underline">시스템_데이터흐름_웹명세.md</a>
+      <span class="ml-2 text-amber-300">|</span>
+      <a href="../CSI_JSON_명세_상세.md" class="text-amber-400 underline ml-2">CSI_JSON_명세_상세.md (한글 해석 + 시나리오)</a>
+    </p>
     <pre class="bg-slate-950 rounded p-4 text-xs text-emerald-300 overflow-x-auto"><code>POST /csi
 {
   "timestamp": "2026-06-15T14:30:00Z",
@@ -406,7 +414,8 @@
     <a href="../CSI_HRV_진행정리.md" class="text-emerald-400 hover:underline">진행정리</a> ·
     <a href="../CSI_HRV_진단결과_의사결정.md" class="text-emerald-400 hover:underline">의사결정</a> ·
     <a href="../작업2_측정계획.md" class="text-emerald-400 hover:underline">측정계획</a> ·
-    <a href="../시스템_데이터흐름_웹명세.md" class="text-emerald-400 hover:underline">데이터흐름</a>
+    <a href="../시스템_데이터흐름_웹명세.md" class="text-emerald-400 hover:underline">데이터흐름</a> ·
+    <a href="../CSI_JSON_명세_상세.md" class="text-amber-400 hover:underline">JSON상세</a>
   </p>
 </footer>
 
