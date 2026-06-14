@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>MajuBom — 자료 허브 / 발표 흐름</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  body { font-family: 'Pretendard', 'Apple SD Gothic Neo', 'Segoe UI', system-ui, sans-serif; }
+  .card { transition: all 0.2s; }
+  .card:hover { transform: translateY(-3px); box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+  .badge { display: inline-block; padding: 2px 10px; border-radius: 9999px; font-size: 11px; font-weight: 700; }
+  .step-circle { width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.2rem; flex-shrink: 0; }
+  .progress-bar { background: linear-gradient(90deg, #10b981 var(--pct, 0%), #1e293b var(--pct, 0%)); }
+</style>
+</head>
+<body class="bg-slate-950 text-slate-100">
+
+<!-- HEADER -->
+<header class="bg-gradient-to-br from-indigo-950 via-purple-950 to-rose-950 border-b border-slate-800">
+  <div class="max-w-6xl mx-auto px-6 py-10 text-center">
+    <div class="text-xs text-indigo-300 font-mono mb-2 tracking-widest">🏥 MajuBom · 2026 글로벌 피우다프로젝트</div>
+    <h1 class="text-4xl md:text-5xl font-bold leading-tight mb-3">
+      자료 허브 + 발표 흐름
+    </h1>
+    <p class="text-slate-300">박형석 · CSI/HRV 파트 · 모든 산출물과 발표 시연 가이드를 한 페이지에</p>
+    <p class="text-xs text-slate-500 mt-2">중간평가 2026-07-08까지 D-23</p>
+  </div>
+</header>
+
+<main class="max-w-6xl mx-auto px-6 py-10 space-y-14">
+
+<!-- 작업 진행률 -->
+<section>
+  <h2 class="text-2xl font-bold mb-5 flex items-baseline gap-3">
+    <span class="badge bg-emerald-700 text-white">진행도</span>
+    작업 진척률
+  </h2>
+  <div class="space-y-3">
+    <div class="bg-slate-900 border border-slate-800 rounded-xl p-5">
+      <div class="flex justify-between mb-2">
+        <strong class="text-emerald-300">작업 1 · HRV 추세 z-score</strong>
+        <span class="text-emerald-400 font-bold">85%</span>
+      </div>
+      <div class="h-2 rounded-full bg-slate-800 overflow-hidden">
+        <div class="h-full bg-emerald-500" style="width:85%"></div>
+      </div>
+      <div class="text-xs text-slate-400 mt-2">알고리즘 ✓ · 학술 검증 ✓ · 시뮬 ✓ · 추가 측정 ⏳ · 시연 영상 ⏳</div>
+    </div>
+    <div class="bg-slate-900 border border-slate-800 rounded-xl p-5">
+      <div class="flex justify-between mb-2">
+        <strong class="text-orange-300">작업 2 · 재실감지 (인원수)</strong>
+        <span class="text-orange-400 font-bold">40%</span>
+      </div>
+      <div class="h-2 rounded-full bg-slate-800 overflow-hidden">
+        <div class="h-full bg-orange-500" style="width:40%"></div>
+      </div>
+      <div class="text-xs text-slate-400 mt-2">논문 분석 ✓ · CNN 코드 ✓ · 1명 데이터 ✓ · 2명 측정 ⏳ · 학습 ⏳</div>
+    </div>
+    <div class="bg-slate-900 border border-slate-800 rounded-xl p-5">
+      <div class="flex justify-between mb-2">
+        <strong class="text-purple-300">통합 (서버/대시보드 — 김도경)</strong>
+        <span class="text-purple-400 font-bold">30%</span>
+      </div>
+      <div class="h-2 rounded-full bg-slate-800 overflow-hidden">
+        <div class="h-full bg-purple-500" style="width:30%"></div>
+      </div>
+      <div class="text-xs text-slate-400 mt-2">서버 기본 ✓ · TOF 통합 ✓ · CSI 명세 ✓ · CSI 통합 ⏳ · mmWave 통합 ⏳</div>
+    </div>
+  </div>
+</section>
+
+<!-- 발표 시연 흐름 -->
+<section>
+  <h2 class="text-2xl font-bold mb-5 flex items-baseline gap-3">
+    <span class="badge bg-rose-700 text-white">발표 시연</span>
+    화면 보여줄 순서 (15분 발표 기준)
+  </h2>
+  <p class="text-slate-400 mb-6 text-sm">아래 순서로 자료 띄우면서 설명. 각 단계 클릭 = 해당 자료 열림.</p>
+
+  <div class="space-y-3">
+    <a href="dday_demo/index.html" class="card bg-slate-900 border border-slate-700 rounded-xl p-5 flex gap-4 items-center hover:border-rose-500">
+      <div class="step-circle bg-rose-600 text-white">1</div>
+      <div class="flex-1">
+        <strong class="text-rose-300">발표 슬라이드 (17장)</strong>
+        <p class="text-sm text-slate-400 mt-1">표지~동기~해법~시연~방어. F 키로 풀스크린. → 키로 넘김</p>
+      </div>
+      <span class="text-slate-500 text-2xl">→</span>
+    </a>
+
+    <a href="paper_review_C/index.html" class="card bg-slate-900 border border-slate-700 rounded-xl p-5 flex gap-4 items-center hover:border-orange-500">
+      <div class="step-circle bg-orange-600 text-white">2</div>
+      <div class="flex-1">
+        <strong class="text-orange-300">논문 C 한글 뷰어</strong>
+        <p class="text-sm text-slate-400 mt-1">질의 "재실감지 어떻게?" 답변용. CNN 구조 + 96% 결과 보여줌</p>
+      </div>
+      <span class="text-slate-500 text-2xl">→</span>
+    </a>
+
+    <a href="paper_review/index.html" class="card bg-slate-900 border border-slate-700 rounded-xl p-5 flex gap-4 items-center hover:border-indigo-500">
+      <div class="step-circle bg-indigo-600 text-white">3</div>
+      <div class="flex-1">
+        <strong class="text-indigo-300">논문 A 한글 뷰어 (SOTA)</strong>
+        <p class="text-sm text-slate-400 mt-1">질의 "HRV 학술 한계?" 답변용. Intel 5300 RMSE 130ms 인용</p>
+      </div>
+      <span class="text-slate-500 text-2xl">→</span>
+    </a>
+
+    <a href="terms/index.html" class="card bg-slate-900 border border-slate-700 rounded-xl p-5 flex gap-4 items-center hover:border-cyan-500">
+      <div class="step-circle bg-cyan-600 text-white">4</div>
+      <div class="flex-1">
+        <strong class="text-cyan-300">용어사전</strong>
+        <p class="text-sm text-slate-400 mt-1">"z-score가 뭔지?" 같은 기본 질의 시 검색</p>
+      </div>
+      <span class="text-slate-500 text-2xl">→</span>
+    </a>
+  </div>
+</section>
+
+<!-- 자료 카테고리 -->
+<section>
+  <h2 class="text-2xl font-bold mb-5 flex items-baseline gap-3">
+    <span class="badge bg-cyan-700 text-white">자료</span>
+    카테고리별 산출물
+  </h2>
+
+  <!-- 한글 뷰어 (HTML) -->
+  <h3 class="text-lg font-bold text-cyan-300 mt-6 mb-3">📄 한글 논문 뷰어</h3>
+  <div class="grid md:grid-cols-3 gap-4">
+    <a href="paper_review/index.html" class="card bg-slate-900 border border-slate-700 rounded-xl p-5 hover:border-indigo-500">
+      <div class="text-xs text-indigo-300 font-mono mb-1">논문 A · 작업 1</div>
+      <h4 class="font-bold mb-2">Shirakami & Sato</h4>
+      <p class="text-sm text-slate-300 mb-3">IEEE BHI 2021 · HRV SOTA</p>
+      <p class="text-xs text-emerald-300">✅ 발표 인용 OK</p>
+    </a>
+    <a href="paper_review_B/index.html" class="card bg-slate-900 border border-slate-700 rounded-xl p-5 hover:border-amber-500">
+      <div class="text-xs text-amber-300 font-mono mb-1">논문 B · 작업 1</div>
+      <h4 class="font-bold mb-2">Chaudhari et al.</h4>
+      <p class="text-sm text-slate-300 mb-3">Preprints 2026 · ESP32 2개</p>
+      <p class="text-xs text-rose-300">⚠️ 비심사 — 방법론 참고만</p>
+    </a>
+    <a href="paper_review_C/index.html" class="card bg-slate-900 border border-slate-700 rounded-xl p-5 hover:border-orange-500">
+      <div class="text-xs text-orange-300 font-mono mb-1">논문 C · 작업 2</div>
+      <h4 class="font-bold mb-2">Yakub et al.</h4>
+      <p class="text-sm text-slate-300 mb-3">IEEE ICETSIS 2024 · 재실 96%</p>
+      <p class="text-xs text-emerald-300">⭐ 작업 2 직접 베이스</p>
+    </a>
+  </div>
+
+  <!-- 보조 자료 -->
+  <h3 class="text-lg font-bold text-cyan-300 mt-8 mb-3">📚 보조 자료</h3>
+  <div class="grid md:grid-cols-2 gap-4">
+    <a href="terms/index.html" class="card bg-slate-900 border border-slate-700 rounded-xl p-5 hover:border-cyan-500">
+      <h4 class="font-bold mb-1">📖 용어사전</h4>
+      <p class="text-sm text-slate-300">CSI · HRV · 신호처리 · 검증 용어 한글 설명 + FAQ</p>
+    </a>
+    <a href="dday_demo/index.html" class="card bg-slate-900 border border-slate-700 rounded-xl p-5 hover:border-rose-500">
+      <h4 class="font-bold mb-1">🎬 발표 슬라이드 (17장)</h4>
+      <p class="text-sm text-slate-300">← → 키 / F 풀스크린 / 스와이프</p>
+    </a>
+  </div>
+
+  <!-- 문서 -->
+  <h3 class="text-lg font-bold text-emerald-300 mt-8 mb-3">📋 문서 (esp32/ 폴더)</h3>
+  <div class="grid md:grid-cols-2 gap-4">
+    <div class="bg-slate-900 border border-slate-700 rounded-xl p-5">
+      <h4 class="font-bold mb-1 text-emerald-300">CSI_HRV_진행정리.md ⭐</h4>
+      <p class="text-sm text-slate-300">오늘 스냅샷 + 24일 TODO + Q&A 5개</p>
+      <p class="text-xs text-slate-500 mt-2">한 페이지 요약. 가장 먼저 보기.</p>
+    </div>
+    <div class="bg-slate-900 border border-slate-700 rounded-xl p-5">
+      <h4 class="font-bold mb-1 text-emerald-300">CSI_HRV_진단결과_의사결정.md</h4>
+      <p class="text-sm text-slate-300">v1+v2 의사결정 흐름. 왜 이렇게 결정했는지 근거</p>
+    </div>
+    <div class="bg-slate-900 border border-slate-700 rounded-xl p-5">
+      <h4 class="font-bold mb-1 text-emerald-300">README_CSI_HRV.md</h4>
+      <p class="text-sm text-slate-300">전체 인수인계 (긴 본문). 하드웨어/측정/논문</p>
+    </div>
+    <div class="bg-slate-900 border border-slate-700 rounded-xl p-5">
+      <h4 class="font-bold mb-1 text-emerald-300">작업2_측정계획.md</h4>
+      <p class="text-sm text-slate-300">랩실 앉음 측정 절차 · 1시간 20분</p>
+    </div>
+    <div class="bg-slate-900 border border-slate-700 rounded-xl p-5 md:col-span-2">
+      <h4 class="font-bold mb-1 text-emerald-300">시스템_데이터흐름_웹명세.md ⭐</h4>
+      <p class="text-sm text-slate-300">팀원 R&R + JSON 명세 + 웹 대시보드 화면 구성 + 시연 시나리오</p>
+      <p class="text-xs text-amber-300 mt-2">→ 김도경(서버)/김민혁(ToF)/조우진(mmWave)에게 공유</p>
+    </div>
+  </div>
+
+  <!-- 코드 -->
+  <h3 class="text-lg font-bold text-violet-300 mt-8 mb-3">💻 코드 (esp32/ 폴더)</h3>
+  <div class="grid md:grid-cols-2 gap-4">
+    <div class="bg-slate-900 border border-slate-700 rounded-xl p-5">
+      <h4 class="font-bold mb-1 text-violet-300">vital_csi3.py</h4>
+      <p class="text-sm text-slate-300">위상 기반 HR/호흡/HRV 분석 (작업 1 메인)</p>
+      <p class="text-xs text-slate-500 mt-2 font-mono">python3 vital_csi3.py csi_test.csv</p>
+    </div>
+    <div class="bg-slate-900 border border-slate-700 rounded-xl p-5">
+      <h4 class="font-bold mb-1 text-violet-300">presence_cnn.py ⭐</h4>
+      <p class="text-sm text-slate-300">CNN 학습/추론 (작업 2, PyTorch, 논문 C 기반)</p>
+      <p class="text-xs text-slate-500 mt-2 font-mono">python3 presence_cnn.py --train</p>
+    </div>
+    <div class="bg-slate-900 border border-slate-700 rounded-xl p-5">
+      <h4 class="font-bold mb-1 text-violet-300">record_csi.py</h4>
+      <p class="text-sm text-slate-300">시리얼 → CSV 측정 (macOS용 원본)</p>
+      <p class="text-xs text-slate-500 mt-2 font-mono">python3 record_csi.py csi_X.csv 20</p>
+    </div>
+    <div class="bg-slate-900 border border-slate-700 rounded-xl p-5">
+      <h4 class="font-bold mb-1 text-violet-300">record_csi_win.py</h4>
+      <p class="text-sm text-slate-300">윈도우용 (포트 자동 검출)</p>
+      <p class="text-xs text-slate-500 mt-2 font-mono">python record_csi_win.py 20</p>
+    </div>
+  </div>
+</section>
+
+<!-- 작업 흐름도 -->
+<section>
+  <h2 class="text-2xl font-bold mb-5 flex items-baseline gap-3">
+    <span class="badge bg-indigo-700 text-white">흐름</span>
+    전체 시스템 + 박형석 위치
+  </h2>
+  <div class="bg-slate-900 border border-slate-700 rounded-2xl p-8 overflow-x-auto">
+    <svg viewBox="0 0 1000 380" class="w-full" style="min-width:900px">
+      <defs>
+        <marker id="ar" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+          <polygon points="0 0, 8 3, 0 6" fill="#10b981"/>
+        </marker>
+      </defs>
+      <g font-family="sans-serif">
+        <!-- 침대 -->
+        <rect x="20" y="40" width="430" height="280" rx="12" fill="#1e293b" stroke="#475569" stroke-dasharray="5 5"/>
+        <text x="235" y="65" text-anchor="middle" fill="#94a3b8" font-size="13">🛏 침대 옆 (환자 1명당)</text>
+
+        <!-- CSI -->
+        <g><rect x="40" y="90" width="180" height="80" rx="8" fill="#312e81" stroke="#a78bfa"/>
+          <text x="130" y="115" text-anchor="middle" fill="#ddd6fe" font-size="13" font-weight="bold">ESP32 × 2 (CSI)</text>
+          <text x="130" y="135" text-anchor="middle" fill="#c4b5fd" font-size="11">박형석 ⭐</text>
+          <text x="130" y="153" text-anchor="middle" fill="#c4b5fd" font-size="10">호흡 / HR / z-score / 인원</text></g>
+
+        <!-- ToF -->
+        <g><rect x="40" y="190" width="180" height="60" rx="8" fill="#164e63" stroke="#06b6d4"/>
+          <text x="130" y="213" text-anchor="middle" fill="#cffafe" font-size="13" font-weight="bold">ToF × 2</text>
+          <text x="130" y="232" text-anchor="middle" fill="#67e8f9" font-size="11">김민혁 / 침상 이탈</text></g>
+
+        <!-- mmWave -->
+        <g><rect x="40" y="265" width="180" height="40" rx="8" fill="#3f1d2d" stroke="#fb7185"/>
+          <text x="130" y="280" text-anchor="middle" fill="#fecdd3" font-size="13" font-weight="bold">TI mmWave</text>
+          <text x="130" y="296" text-anchor="middle" fill="#fda4af" font-size="11">조우진 / 보행</text></g>
+
+        <!-- 화살표들 침대→Pi -->
+        <g stroke="#10b981" stroke-width="1.8" fill="none">
+          <line x1="225" y1="130" x2="500" y2="200" marker-end="url(#ar)"/>
+          <line x1="225" y1="220" x2="500" y2="200" marker-end="url(#ar)"/>
+          <line x1="225" y1="285" x2="500" y2="200" marker-end="url(#ar)"/>
+        </g>
+        <text x="350" y="155" fill="#10b981" font-size="11">HTTP POST</text>
+        <text x="350" y="270" fill="#10b981" font-size="11">USB</text>
+
+        <!-- Pi 5 -->
+        <g><rect x="500" y="150" width="220" height="120" rx="10" fill="#064e3b" stroke="#10b981" stroke-width="2"/>
+          <text x="610" y="180" text-anchor="middle" fill="#a7f3d0" font-size="14" font-weight="bold">Pi 5</text>
+          <text x="610" y="200" text-anchor="middle" fill="#6ee7b7" font-size="11">Flask 서버 (5001)</text>
+          <text x="610" y="218" text-anchor="middle" fill="#6ee7b7" font-size="11">통합 위험도 계산</text>
+          <text x="610" y="236" text-anchor="middle" fill="#6ee7b7" font-size="11">알람 엔진</text>
+          <text x="610" y="254" text-anchor="middle" fill="#6ee7b7" font-size="11">데이터 저장</text></g>
+
+        <!-- Pi → 웹 -->
+        <line x1="725" y1="210" x2="800" y2="210" stroke="#fbbf24" stroke-width="1.8" marker-end="url(#ar)"/>
+
+        <!-- 웹 -->
+        <g><rect x="800" y="160" width="180" height="100" rx="10" fill="#7c2d12" stroke="#fb923c" stroke-width="2"/>
+          <text x="890" y="190" text-anchor="middle" fill="#fed7aa" font-size="14" font-weight="bold">웹 대시보드</text>
+          <text x="890" y="210" text-anchor="middle" fill="#fdba74" font-size="11">김도경</text>
+          <text x="890" y="228" text-anchor="middle" fill="#fdba74" font-size="11">실시간 + 추세</text>
+          <text x="890" y="246" text-anchor="middle" fill="#fdba74" font-size="11">알람</text></g>
+
+        <!-- 박형석 강조 -->
+        <text x="130" y="350" text-anchor="middle" fill="#a78bfa" font-size="11" font-style="italic">⬆ 박형석은 CSI 데이터를 JSON으로 Pi에 송신</text>
+      </g>
+    </svg>
+  </div>
+</section>
+
+<!-- 박형석이 김도경에게 줄 것 -->
+<section>
+  <h2 class="text-2xl font-bold mb-5 flex items-baseline gap-3">
+    <span class="badge bg-purple-700 text-white">전달</span>
+    박형석 → 김도경 (서버) 명세
+  </h2>
+  <div class="bg-slate-900 border border-slate-700 rounded-xl p-6">
+    <p class="text-sm text-slate-300 mb-4">CSI 측에서 60초마다 POST로 보낼 JSON 형식. 자세한 내용 →
+      <a href="../시스템_데이터흐름_웹명세.md" class="text-emerald-400 underline">시스템_데이터흐름_웹명세.md</a></p>
+    <pre class="bg-slate-950 rounded p-4 text-xs text-emerald-300 overflow-x-auto"><code>POST /csi
+{
+  "timestamp": "2026-06-15T14:30:00Z",
+  "bed_id": "bed_01",
+  "sensor": "csi",
+  "raw": {
+    "hr_bpm": 73,
+    "resp_rpm": 14,
+    "autocorr_strength": 0.45
+  },
+  "zscore": {
+    "hr": 0.4,
+    "resp": -0.3,
+    "strength": 0.2,
+    "total_abs": 0.9
+  },
+  "presence": {
+    "count": 1,
+    "confidence": 0.96
+  },
+  "alert_level": "normal"
+}</code></pre>
+    <div class="mt-4 grid grid-cols-4 gap-2 text-xs">
+      <div class="bg-slate-800 rounded p-2 text-center">
+        <div class="text-emerald-300">normal</div><div class="text-slate-400">Σ|z| &lt; 2</div>
+      </div>
+      <div class="bg-slate-800 rounded p-2 text-center">
+        <div class="text-yellow-300">caution</div><div class="text-slate-400">2~4</div>
+      </div>
+      <div class="bg-slate-800 rounded p-2 text-center">
+        <div class="text-orange-300">warning</div><div class="text-slate-400">4~6</div>
+      </div>
+      <div class="bg-slate-800 rounded p-2 text-center">
+        <div class="text-rose-300">critical</div><div class="text-slate-400">&gt; 6</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 실행 가이드 -->
+<section>
+  <h2 class="text-2xl font-bold mb-5 flex items-baseline gap-3">
+    <span class="badge bg-yellow-700 text-white">실행</span>
+    자주 쓰는 명령
+  </h2>
+  <div class="space-y-3">
+    <div class="bg-slate-900 border border-slate-700 rounded-lg p-4">
+      <div class="text-xs text-yellow-300 mb-1">macOS 측 — CSI 측정</div>
+      <code class="text-sm text-emerald-300 block">python3 esp32/record_csi.py csi_1p_01.csv 20</code>
+    </div>
+    <div class="bg-slate-900 border border-slate-700 rounded-lg p-4">
+      <div class="text-xs text-yellow-300 mb-1">CSI 분석 (단발)</div>
+      <code class="text-sm text-emerald-300 block">python3 esp32/vital_csi3.py csi_1p_01.csv</code>
+    </div>
+    <div class="bg-slate-900 border border-slate-700 rounded-lg p-4">
+      <div class="text-xs text-yellow-300 mb-1">작업 2 CNN 학습 (1명+2명 측정 후)</div>
+      <code class="text-sm text-emerald-300 block">python3 esp32/presence_cnn.py --train</code>
+    </div>
+    <div class="bg-slate-900 border border-slate-700 rounded-lg p-4">
+      <div class="text-xs text-yellow-300 mb-1">새 측정 인원 추론</div>
+      <code class="text-sm text-emerald-300 block">python3 esp32/presence_cnn.py --predict csi_live.csv</code>
+    </div>
+    <div class="bg-slate-900 border border-slate-700 rounded-lg p-4">
+      <div class="text-xs text-yellow-300 mb-1">발표 슬라이드 열기</div>
+      <code class="text-sm text-emerald-300 block">open esp32/docs/dday_demo/index.html</code>
+    </div>
+  </div>
+</section>
+
+<!-- 24일 카운트다운 -->
+<section>
+  <h2 class="text-2xl font-bold mb-5 flex items-baseline gap-3">
+    <span class="badge bg-rose-700 text-white">D-23</span>
+    7.8 중간평가까지 액션
+  </h2>
+  <div class="grid md:grid-cols-3 gap-4">
+    <div class="bg-emerald-900/30 border border-emerald-700/40 rounded-xl p-5">
+      <div class="text-xs text-emerald-300 mb-2">Week 1 · ~6.21</div>
+      <ul class="text-sm space-y-2 text-slate-200">
+        <li>✅ 문서 정리 완료</li>
+        <li>✅ CNN 코드 완료</li>
+        <li>⏳ 작업 2 측정 (1+2명)</li>
+        <li>⏳ z-score 모드 통합</li>
+      </ul>
+    </div>
+    <div class="bg-indigo-900/30 border border-indigo-700/40 rounded-xl p-5">
+      <div class="text-xs text-indigo-300 mb-2">Week 2 · 6.22~6.30</div>
+      <ul class="text-sm space-y-2 text-slate-200">
+        <li>⏳ 베이스라인 추가 측정 10회+</li>
+        <li>⏳ 변화 시뮬 측정</li>
+        <li>⏳ 30일 베이스라인 시뮬</li>
+        <li>⏳ 다중 센서 통합 (김도경)</li>
+      </ul>
+    </div>
+    <div class="bg-rose-900/30 border border-rose-700/40 rounded-xl p-5">
+      <div class="text-xs text-rose-300 mb-2">Week 3 · 7.1~7.7</div>
+      <ul class="text-sm space-y-2 text-slate-200">
+        <li>⏳ 시연 영상 (백업)</li>
+        <li>⏳ 슬라이드 실측 데이터 교체</li>
+        <li>⏳ 리허설 2회</li>
+        <li>⏳ 백업 장비 점검</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="border-t border-slate-800 pt-6 text-xs text-slate-500 text-center">
+  <p>📁 이 페이지: <span class="font-mono">esp32/docs/hub.html</span></p>
+  <p class="mt-1">생성: 2026-06-15 · MajuBom CSI/HRV 자료 허브</p>
+  <p class="mt-1 text-slate-600">
+    문서:
+    <a href="../README_CSI_HRV.md" class="text-emerald-400 hover:underline">README</a> ·
+    <a href="../CSI_HRV_진행정리.md" class="text-emerald-400 hover:underline">진행정리</a> ·
+    <a href="../CSI_HRV_진단결과_의사결정.md" class="text-emerald-400 hover:underline">의사결정</a> ·
+    <a href="../작업2_측정계획.md" class="text-emerald-400 hover:underline">측정계획</a> ·
+    <a href="../시스템_데이터흐름_웹명세.md" class="text-emerald-400 hover:underline">데이터흐름</a>
+  </p>
+</footer>
+
+</main>
+
+</body>
+</html>
