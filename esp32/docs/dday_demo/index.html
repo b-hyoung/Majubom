@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>MajuBom — 비접촉 낙상 사전 예측 시스템</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  body { font-family: 'Pretendard', 'Apple SD Gothic Neo', 'Segoe UI', system-ui, sans-serif; overflow: hidden; }
+  .slide { width: 100vw; height: 100vh; display: none; padding: 4vh 6vw; flex-direction: column; }
+  .slide.active { display: flex; }
+  .slide-title { font-size: 3vw; font-weight: 800; line-height: 1.2; margin-bottom: 2vh; }
+  .slide-sub { font-size: 1.2vw; color: #94a3b8; margin-bottom: 3vh; }
+  .big-num { font-size: 8vw; line-height: 1; font-weight: 900; }
+  .med-num { font-size: 4vw; line-height: 1; font-weight: 900; }
+  .point { font-size: 1.6vw; line-height: 1.5; }
+  .point-sm { font-size: 1.2vw; line-height: 1.5; }
+  .badge { display: inline-block; padding: 4px 14px; border-radius: 9999px; font-size: 12px; font-weight: 700; letter-spacing: 1px; }
+  /* progress bar */
+  .nav { position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%); display: flex; gap: 6px; z-index: 100; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: #475569; transition: all 0.3s; }
+  .dot.active { background: #10b981; width: 24px; border-radius: 4px; }
+  .page-num { position: fixed; top: 16px; right: 24px; font-family: monospace; font-size: 12px; color: #64748b; z-index: 100; }
+  .hint { position: fixed; bottom: 14px; right: 24px; font-size: 11px; color: #475569; z-index: 100; }
+</style>
+</head>
+<body class="bg-slate-950 text-slate-100">
+
+<!-- 슬라이드 1 — 표지 -->
+<section class="slide active bg-gradient-to-br from-indigo-950 via-purple-950 to-rose-950 justify-center items-center">
+  <div class="text-center">
+    <div class="text-sm text-indigo-300 font-mono mb-4 tracking-widest">2026 글로벌 피우다프로젝트 · 호남권</div>
+    <h1 class="text-6xl md:text-7xl font-bold leading-tight mb-6">
+      마주봄<span class="text-indigo-300">(MajuBom)</span>
+    </h1>
+    <p class="text-2xl text-slate-200 mb-2">치매환자 낙상 위험 사전 예측 시스템</p>
+    <p class="text-lg text-slate-400 mb-12">— 비접촉 다중 센서 (ToF + mmWave + WiFi CSI)</p>
+    <div class="text-sm text-slate-500">2026.07.08 중간평가 · 박형석 외 4인</div>
+  </div>
+</section>
+
+<!-- 슬라이드 2 — 동기 -->
+<section class="slide bg-slate-950 justify-center">
+  <div class="max-w-5xl mx-auto">
+    <span class="badge bg-rose-700 text-white">동기</span>
+    <h2 class="slide-title mt-4">"골절이나 입원 같은 단어로는<br/>다 전해지지 않았습니다."</h2>
+    <p class="point text-slate-300 mb-8">올해 초 할머니의 낙상 사고. 회복 이후의 일상까지 통째로 바뀌었다.</p>
+    <div class="grid grid-cols-3 gap-6 mt-8">
+      <div class="bg-rose-900/30 border border-rose-700/40 rounded-xl p-6 text-center">
+        <div class="med-num text-rose-300">1위</div>
+        <div class="point-sm text-slate-300 mt-2">노인 사고 원인</div>
+      </div>
+      <div class="bg-amber-900/30 border border-amber-700/40 rounded-xl p-6 text-center">
+        <div class="med-num text-amber-300">20%</div>
+        <div class="point-sm text-slate-300 mt-2">합병증 사망률</div>
+      </div>
+      <div class="bg-indigo-900/30 border border-indigo-700/40 rounded-xl p-6 text-center">
+        <div class="med-num text-indigo-300">~500만원</div>
+        <div class="point-sm text-slate-300 mt-2">평균 의료비</div>
+      </div>
+    </div>
+    <p class="point-sm text-slate-400 mt-8 italic">출처: 국가손상통계 (질병관리청 2023), 심평원 2021</p>
+  </div>
+</section>
+
+<!-- 슬라이드 3 — 기존 시스템의 한계 -->
+<section class="slide bg-slate-950 justify-center">
+  <div class="max-w-5xl mx-auto">
+    <span class="badge bg-amber-700 text-white">문제</span>
+    <h2 class="slide-title mt-4">기존 시스템은 모두 <span class="text-rose-400">"사후 대응"</span></h2>
+    <div class="grid grid-cols-3 gap-4 mt-12">
+      <div class="bg-slate-900 border border-slate-700 rounded-xl p-6">
+        <div class="text-3xl mb-3">📷</div>
+        <h3 class="font-bold text-rose-300 mb-2">카메라</h3>
+        <p class="point-sm text-slate-300">사생활 침해<br/>치매 환자 거부감</p>
+      </div>
+      <div class="bg-slate-900 border border-slate-700 rounded-xl p-6">
+        <div class="text-3xl mb-3">⌚</div>
+        <h3 class="font-bold text-rose-300 mb-2">웨어러블</h3>
+        <p class="point-sm text-slate-300">착용 거부<br/>충전·관리 부담</p>
+      </div>
+      <div class="bg-slate-900 border border-slate-700 rounded-xl p-6">
+        <div class="text-3xl mb-3">📐</div>
+        <h3 class="font-bold text-rose-300 mb-2">압력 매트</h3>
+        <p class="point-sm text-slate-300">오탐 잦음<br/>이미 떨어진 후 감지</p>
+      </div>
+    </div>
+    <p class="point text-center text-slate-200 mt-12">
+      낙상 발생 <strong class="text-rose-300">후</strong>가 아니라 <strong class="text-emerald-300">전</strong>에 잡아야 한다.
+    </p>
+  </div>
+</section>
+
+<!-- 슬라이드 4 — 우리 해법 -->
+<section class="slide bg-slate-950 justify-center">
+  <div class="max-w-5xl mx-auto">
+    <span class="badge bg-emerald-700 text-white">해법</span>
+    <h2 class="slide-title mt-4">3중 비접촉 센서 융합</h2>
+    <p class="slide-sub">트리거 → 예측 → 검증 구조</p>
+    <div class="grid grid-cols-3 gap-4 mt-8">
+      <div class="bg-cyan-900/30 border border-cyan-700/40 rounded-xl p-6">
+        <div class="text-xs text-cyan-300 mb-1">TRIGGER</div>
+        <h3 class="text-2xl font-bold mb-2">ToF</h3>
+        <p class="point-sm text-slate-300">침상 이탈 즉시 감지</p>
+        <p class="point-sm text-emerald-300 mt-2">mm 정밀도</p>
+      </div>
+      <div class="bg-indigo-900/30 border border-indigo-700/40 rounded-xl p-6">
+        <div class="text-xs text-indigo-300 mb-1">PREDICT</div>
+        <h3 class="text-2xl font-bold mb-2">mmWave</h3>
+        <p class="point-sm text-slate-300">보행 패턴 분석<br/>속도 / 보폭 / STV</p>
+        <p class="point-sm text-emerald-300 mt-2">70% 가중</p>
+      </div>
+      <div class="bg-purple-900/30 border border-purple-700/40 rounded-xl p-6">
+        <div class="text-xs text-purple-300 mb-1">VERIFY</div>
+        <h3 class="text-2xl font-bold mb-2">WiFi CSI</h3>
+        <p class="point-sm text-slate-300">자율신경 상태<br/>(HRV 추세)</p>
+        <p class="point-sm text-emerald-300 mt-2">30% 가중</p>
+      </div>
+    </div>
+    <p class="point text-center text-slate-300 mt-10">완전 비접촉 · 카메라 X · 웨어러블 X</p>
+  </div>
+</section>
+
+<!-- 슬라이드 5 — CSI 파트 초점 -->
+<section class="slide bg-slate-950 justify-center">
+  <div class="max-w-5xl mx-auto">
+    <span class="badge bg-purple-700 text-white">CSI 파트</span>
+    <h2 class="slide-title mt-4">오늘 발표는 <span class="text-purple-300">WiFi CSI</span> 파트</h2>
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl p-8 mt-8">
+      <p class="point text-slate-200 mb-4">
+        ESP32-S3 × 2로 침대 양쪽에 두고, <strong class="text-purple-300">WiFi 신호가 가슴 미동에 어떻게 변하는지</strong> 분석.
+      </p>
+      <div class="grid grid-cols-2 gap-6 mt-6">
+        <div class="bg-emerald-900/30 rounded-lg p-5">
+          <div class="text-sm text-emerald-300 mb-1">측정 가능</div>
+          <ul class="point-sm text-slate-200 space-y-1">
+            <li>✓ 호흡 (rpm)</li>
+            <li>✓ 심박 (bpm, 조건부)</li>
+            <li>✓ 신호 안정성</li>
+            <li>✓ 동행자 존재 여부</li>
+          </ul>
+        </div>
+        <div class="bg-rose-900/30 rounded-lg p-5">
+          <div class="text-sm text-rose-300 mb-1">한계 (학술적 확정)</div>
+          <ul class="point-sm text-slate-200 space-y-1">
+            <li>✗ HRV 절대값 (SDNN ms)</li>
+            <li>✗ Quotient 모델 불가</li>
+            <li>✗ 단일 안테나 한계</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 슬라이드 6 — 학술 근거 -->
+<section class="slide bg-slate-950 justify-center">
+  <div class="max-w-5xl mx-auto">
+    <span class="badge bg-indigo-700 text-white">학술 검토</span>
+    <h2 class="slide-title mt-4">HRV 절대값은 <span class="text-rose-400">단일 안테나로 불가</span></h2>
+    <div class="grid grid-cols-2 gap-4 mt-8">
+      <div class="bg-emerald-900/30 border border-emerald-700/40 rounded-xl p-6">
+        <div class="text-xs text-emerald-300 mb-1">SOTA (peer-reviewed)</div>
+        <h3 class="text-xl font-bold">Shirakami & Sato</h3>
+        <p class="point-sm text-slate-300 mb-2">IEEE BHI 2021</p>
+        <p class="point-sm text-slate-200">Intel 5300 다중 안테나 → RMSE <strong>130ms</strong></p>
+        <p class="point-sm text-amber-300 mt-2">→ 다중 안테나 필수</p>
+      </div>
+      <div class="bg-cyan-900/30 border border-cyan-700/40 rounded-xl p-6">
+        <div class="text-xs text-cyan-300 mb-1">ESP32 단일 (peer-reviewed)</div>
+        <h3 class="text-xl font-bold">Pulse-Fi (UCSC)</h3>
+        <p class="point-sm text-slate-300 mb-2">IoTDCoSS 2025</p>
+        <p class="point-sm text-slate-200">ESP32 × 2 단일 안테나 → HR MAE <strong>0.46 BPM</strong></p>
+        <p class="point-sm text-amber-300 mt-2">→ <strong>HRV는 의도적 제외</strong></p>
+      </div>
+    </div>
+    <div class="bg-rose-900/30 border border-rose-700/40 rounded-xl p-6 mt-6">
+      <p class="point text-slate-100">
+        <strong class="text-rose-300">결론</strong>: peer-reviewed 학계 어디에도 ESP32 단일 안테나로 HRV(SDNN/RMSSD) 검증된 시도 없음.
+        Chaudhari et al. 2026은 비심사 preprint + Fitbit GT 약점.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- 슬라이드 7 — 우리 결정 -->
+<section class="slide bg-slate-950 justify-center">
+  <div class="max-w-5xl mx-auto">
+    <span class="badge bg-emerald-700 text-white">결정</span>
+    <h2 class="slide-title mt-4">"HRV"의 의미를 <span class="text-emerald-300">절대값 → 추세 z-score</span>로 확장</h2>
+    <p class="slide-sub">신청서 §개인 맞춤형 분석과 정확히 정합</p>
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl p-8 mt-6">
+      <div class="grid grid-cols-2 gap-6">
+        <div>
+          <div class="text-sm text-rose-400 mb-2">기존 시도 (포기)</div>
+          <p class="point-sm text-slate-300">SDNN 91.5ms, RMSSD 101.6ms</p>
+          <p class="point-sm text-slate-500 mt-2">→ 단일 안테나로 ms 정밀도 불가</p>
+        </div>
+        <div>
+          <div class="text-sm text-emerald-300 mb-2">새 방향 (채택)</div>
+          <p class="point-sm text-slate-200">호흡 + HR + 안정성 <strong>z-score</strong></p>
+          <p class="point-sm text-emerald-300 mt-2">→ 신청서 "평소 대비 변화량" 정합</p>
+        </div>
+      </div>
+    </div>
+    <p class="point text-center text-slate-300 mt-8">
+      신청서 표현 "HRV" 유지, 정의 확장 = <strong class="text-emerald-300">차별성 5개 모두 유지</strong>
+    </p>
+  </div>
+</section>
+
+<!-- 슬라이드 8 — z-score 개념 -->
+<section class="slide bg-slate-950 justify-center">
+  <div class="max-w-5xl mx-auto">
+    <span class="badge bg-indigo-700 text-white">핵심 개념</span>
+    <h2 class="slide-title mt-4">시험 점수 비유 — z-score란?</h2>
+    <div class="grid grid-cols-3 gap-4 mt-10">
+      <div class="bg-slate-900 border border-slate-700 rounded-xl p-6 text-center">
+        <div class="text-4xl mb-3">📚</div>
+        <div class="font-bold text-emerald-300 mb-2">학생 A</div>
+        <p class="point-sm text-slate-300">평소 80점<br/>오늘 60점</p>
+        <p class="point-sm text-rose-400 mt-3 font-bold">-20점 위험!</p>
+      </div>
+      <div class="bg-slate-900 border border-slate-700 rounded-xl p-6 text-center">
+        <div class="text-4xl mb-3">📚</div>
+        <div class="font-bold text-cyan-300 mb-2">학생 B</div>
+        <p class="point-sm text-slate-300">평소 50점<br/>오늘 60점</p>
+        <p class="point-sm text-emerald-400 mt-3 font-bold">+10점 좋음!</p>
+      </div>
+      <div class="bg-indigo-900/40 border border-indigo-700 rounded-xl p-6">
+        <div class="font-bold text-indigo-300 mb-2">우리 시스템</div>
+        <p class="point-sm text-slate-200">같은 60점이라도 <strong>개인 평소</strong>로 평가.
+          <span class="text-emerald-300">절대값 X, 자기 변화 O</span></p>
+      </div>
+    </div>
+    <p class="point text-center text-slate-300 mt-10">
+      비정상인 사람도 → 자기 평소 기준 → 자기 변화는 잡힘
+    </p>
+  </div>
+</section>
+
+<!-- 슬라이드 9 — 시연 STEP 1 베이스라인 -->
+<section class="slide bg-slate-950 justify-center">
+  <div class="max-w-5xl mx-auto">
+    <span class="badge bg-emerald-700 text-white">시연 STEP 1</span>
+    <h2 class="slide-title mt-4">발표 30분 전 — 베이스라인 측정 4회</h2>
+    <p class="slide-sub">누워서 평소 호흡 90초씩</p>
+    <div class="grid grid-cols-4 gap-3 mt-8">
+      <div class="bg-slate-900 border border-cyan-700/40 rounded-lg p-5 text-center">
+        <div class="text-xs text-slate-500 mb-1">#1</div>
+        <div class="med-num text-cyan-300">6</div>
+        <div class="point-sm text-slate-400 mt-2">rpm / HR 67</div>
+      </div>
+      <div class="bg-slate-900 border border-cyan-700/40 rounded-lg p-5 text-center">
+        <div class="text-xs text-slate-500 mb-1">#2</div>
+        <div class="med-num text-cyan-300">6</div>
+        <div class="point-sm text-slate-400 mt-2">rpm / HR 57</div>
+      </div>
+      <div class="bg-slate-900 border border-cyan-700/40 rounded-lg p-5 text-center">
+        <div class="text-xs text-slate-500 mb-1">#3</div>
+        <div class="med-num text-cyan-300">6</div>
+        <div class="point-sm text-slate-400 mt-2">rpm / HR 61</div>
+      </div>
+      <div class="bg-slate-900 border border-cyan-700/40 rounded-lg p-5 text-center">
+        <div class="text-xs text-slate-500 mb-1">#4</div>
+        <div class="med-num text-cyan-300">9</div>
+        <div class="point-sm text-slate-400 mt-2">rpm / HR 79</div>
+      </div>
+    </div>
+    <div class="bg-emerald-900/30 border border-emerald-700/40 rounded-xl p-6 mt-8 text-center">
+      <div class="text-sm text-emerald-300 mb-3">🧠 컴퓨터가 학습한 "이 사람 평소"</div>
+      <div class="grid grid-cols-2 gap-8">
+        <div>
+          <div class="text-3xl font-bold">호흡 6.0 <span class="text-base text-slate-400">rpm (±0.3)</span></div>
+        </div>
+        <div>
+          <div class="text-3xl font-bold">HR 69 <span class="text-base text-slate-400">bpm (±9)</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 슬라이드 10 — 시연 STEP 2 라이브 -->
+<section class="slide bg-slate-950 justify-center">
+  <div class="max-w-5xl mx-auto">
+    <span class="badge bg-rose-700 text-white">시연 STEP 2</span>
+    <h2 class="slide-title mt-4">발표 라이브 — 지금 측정 → 즉시 평가</h2>
+    <p class="slide-sub">90초 측정 → 베이스라인과 비교</p>
+    <div class="grid grid-cols-3 gap-4 mt-8">
+      <div class="bg-cyan-900/40 border-2 border-cyan-500 rounded-xl p-6 text-center">
+        <div class="text-xs text-cyan-300 mb-2">호흡</div>
+        <div class="big-num text-cyan-300">9</div>
+        <div class="text-sm text-slate-400 mt-3">rpm</div>
+        <div class="text-xs text-slate-500 mt-2">평소 6 ± 0.3</div>
+      </div>
+      <div class="bg-rose-900/40 border-2 border-rose-500 rounded-xl p-6 text-center">
+        <div class="text-xs text-rose-300 mb-2">심박</div>
+        <div class="big-num text-rose-300">67</div>
+        <div class="text-sm text-slate-400 mt-3">bpm</div>
+        <div class="text-xs text-slate-500 mt-2">평소 69 ± 9</div>
+      </div>
+      <div class="bg-emerald-900/40 border-2 border-emerald-500 rounded-xl p-6 text-center">
+        <div class="text-xs text-emerald-300 mb-2">신호 안정성</div>
+        <div class="big-num text-emerald-300">0.31</div>
+        <div class="text-sm text-slate-400 mt-3">(품질 점수)</div>
+        <div class="text-xs text-slate-500 mt-2">평소 0.32 ± 0.03</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 슬라이드 11 — z-score 결과 -->
+<section class="slide bg-slate-950 justify-center">
+  <div class="max-w-5xl mx-auto">
+    <span class="badge bg-indigo-700 text-white">시연 STEP 3</span>
+    <h2 class="slide-title mt-4">평소와 얼마나 다른가?</h2>
+    <div class="grid grid-cols-3 gap-4 mt-10">
+      <div class="bg-rose-950 border-2 border-rose-600 rounded-xl p-6 text-center">
+        <div class="text-rose-300 font-bold mb-2">호흡 z</div>
+        <div class="big-num text-rose-400">+10</div>
+        <div class="text-xs text-rose-200 mt-3">임계 ±2의 5배</div>
+      </div>
+      <div class="bg-emerald-900/30 border border-emerald-700 rounded-xl p-6 text-center">
+        <div class="text-emerald-300 font-bold mb-2">강도 z</div>
+        <div class="big-num text-emerald-400">-0.5</div>
+        <div class="text-xs text-emerald-200 mt-3">정상 범위</div>
+      </div>
+      <div class="bg-emerald-900/30 border border-emerald-700 rounded-xl p-6 text-center">
+        <div class="text-emerald-300 font-bold mb-2">심박 z</div>
+        <div class="big-num text-emerald-400">-0.2</div>
+        <div class="text-xs text-emerald-200 mt-3">정상 범위</div>
+      </div>
+    </div>
+    <div class="bg-gradient-to-r from-rose-600 to-red-700 rounded-2xl p-8 mt-8 text-center">
+      <div class="text-sm text-rose-100 mb-2">통합 위험 점수 Σ|z|</div>
+      <div class="text-7xl font-bold text-white">10.75</div>
+      <div class="text-2xl text-rose-100 mt-3 font-bold">🚨 알람!</div>
+    </div>
+  </div>
+</section>
+
+<!-- 슬라이드 12 — 솔직한 인정 -->
+<section class="slide bg-amber-950 justify-center">
+  <div class="max-w-5xl mx-auto">
+    <span class="badge bg-amber-600 text-white">정직히</span>
+    <h2 class="slide-title mt-4 text-amber-100">사실 이건 <span class="text-amber-300">false positive</span> 였습니다</h2>
+    <p class="point text-amber-100 mt-4">
+      위 라이브 측정은 베이스라인과 <strong>같은 조건</strong>이었어요. 그런데 왜 알람이?
+    </p>
+    <div class="bg-slate-900 rounded-xl p-6 mt-8">
+      <div class="grid grid-cols-2 gap-6 point-sm">
+        <div>
+          <div class="text-amber-300 font-bold mb-3">📐 원인</div>
+          <p class="text-slate-300">베이스라인 4개 → 너무 적음</p>
+          <p class="text-slate-300">표준편차 σ = 0.30 (너무 좁음)</p>
+          <p class="text-rose-300 mt-2">→ 작은 변화도 알람 폭주</p>
+        </div>
+        <div>
+          <div class="text-emerald-300 font-bold mb-3">💡 의미</div>
+          <p class="text-slate-200">"30일 베이스라인이 왜 필요한가"의 직접 증거</p>
+          <p class="text-emerald-300 mt-2">→ 학습 데이터 ↑ → σ 안정 → 알람 정확</p>
+        </div>
+      </div>
+    </div>
+    <p class="point text-center text-amber-100 mt-8">
+      <strong>한계를 가린 게 아니라 측정해서 정확히 짚었습니다.</strong>
+    </p>
+  </div>
+</section>
+
+<!-- 슬라이드 13 — 30일 학습 방어 -->
+<section class="slide bg-slate-950 justify-center">
+  <div class="max-w-5xl mx-auto">
+    <span class="badge bg-cyan-700 text-white">예상 질문</span>
+    <h2 class="slide-title mt-4">"30일 학습 필요 = 도입 즉시 효과 X?"</h2>
+    <p class="point text-slate-300 mt-4">→ 부분적으로 사실, 다만 다층 안전망으로 보완</p>
+    <div class="grid grid-cols-2 gap-4 mt-8">
+      <div class="bg-emerald-900/30 border border-emerald-700/40 rounded-xl p-6">
+        <h3 class="font-bold text-emerald-300 mb-3">① 첫날부터 작동</h3>
+        <ul class="point-sm text-slate-200 space-y-2">
+          <li>✓ ToF (침상 이탈) 100%</li>
+          <li>✓ mmWave (보행/낙상) 100%</li>
+          <li>✓ 절대 위험 임계 (HR&gt;140 등)</li>
+        </ul>
+      </div>
+      <div class="bg-indigo-900/30 border border-indigo-700/40 rounded-xl p-6">
+        <h3 class="font-bold text-indigo-300 mb-3">② CSI 점진 정밀화</h3>
+        <ul class="point-sm text-slate-200 space-y-2">
+          <li>1주 — 큰 마진 작동</li>
+          <li>2주 — 보정</li>
+          <li>4주 — 안정</li>
+          <li>3개월 — 매우 정밀</li>
+        </ul>
+      </div>
+    </div>
+    <p class="point text-center text-slate-300 mt-8">
+      Apple Watch · Whoop · Oura 모두 같은 학습 기간 → <strong class="text-emerald-300">개인 맞춤의 본질적 비용</strong>
+    </p>
+  </div>
+</section>
+
+<!-- 슬라이드 14 — 비정상 환자 -->
+<section class="slide bg-slate-950 justify-center">
+  <div class="max-w-5xl mx-auto">
+    <span class="badge bg-rose-700 text-white">예상 질문</span>
+    <h2 class="slide-title mt-4">"평소 HR 빠른 사람은 못 잡지 않나?"</h2>
+    <div class="grid grid-cols-2 gap-6 mt-8">
+      <div class="bg-slate-900 border border-slate-700 rounded-xl p-6">
+        <div class="text-sm text-slate-500 mb-2">환자 A</div>
+        <p class="point-sm">평소 HR 70 → 오늘 100</p>
+        <p class="point-sm text-rose-300 mt-2 font-bold">z = +5 🚨 알람</p>
+      </div>
+      <div class="bg-slate-900 border border-slate-700 rounded-xl p-6">
+        <div class="text-sm text-slate-500 mb-2">환자 B (평소 빠름)</div>
+        <p class="point-sm">평소 HR 95 → 오늘 100</p>
+        <p class="point-sm text-emerald-300 mt-2 font-bold">z = +0.8 ✓ 정상</p>
+      </div>
+    </div>
+    <p class="point text-center text-slate-200 mt-8">
+      <strong>각자 평소 기준이라 비정상인 사람도 자기 변화는 잡힘</strong>
+    </p>
+    <div class="bg-amber-900/30 border border-amber-700/40 rounded-xl p-5 mt-6 text-center">
+      <p class="point-sm text-amber-100">단, 평소가 이미 위험(HR&gt;140 등)이면 → <strong>절대 위험 임계</strong>가 잡음</p>
+    </div>
+  </div>
+</section>
+
+<!-- 슬라이드 15 — WBS 일정 달성 -->
+<section class="slide bg-slate-950 justify-center">
+  <div class="max-w-5xl mx-auto">
+    <span class="badge bg-emerald-700 text-white">WBS 달성</span>
+    <h2 class="slide-title mt-4">신청서 일정대로 진행 중</h2>
+    <div class="space-y-3 mt-8">
+      <div class="bg-emerald-900/30 border border-emerald-700/40 rounded-lg p-4 flex justify-between items-center">
+        <span class="point-sm">5.22~5.28 요구사항 분석</span><span class="text-emerald-400 text-2xl">✓</span>
+      </div>
+      <div class="bg-emerald-900/30 border border-emerald-700/40 rounded-lg p-4 flex justify-between items-center">
+        <span class="point-sm">5.29~6.07 센서 연결 (ToF/mmWave/CSI)</span><span class="text-emerald-400 text-2xl">✓</span>
+      </div>
+      <div class="bg-amber-900/30 border border-amber-700/40 rounded-lg p-4 flex justify-between items-center">
+        <span class="point-sm">6.08~6.20 알고리즘 개발 (이탈/보행/HRV)</span><span class="text-amber-400 text-2xl">⏳ 진행중</span>
+      </div>
+      <div class="bg-slate-900 border border-slate-700 rounded-lg p-4 flex justify-between items-center opacity-60">
+        <span class="point-sm">6.21~6.30 다중 센서 통합</span><span class="text-2xl">-</span>
+      </div>
+      <div class="bg-slate-900 border border-slate-700 rounded-lg p-4 flex justify-between items-center opacity-60">
+        <span class="point-sm">7.01~7.05 1차 통합 테스트</span><span class="text-2xl">-</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 슬라이드 16 — 시스템 전체 -->
+<section class="slide bg-slate-950 justify-center">
+  <div class="max-w-5xl mx-auto">
+    <span class="badge bg-purple-700 text-white">전체 시스템</span>
+    <h2 class="slide-title mt-4">최종 융합 구조</h2>
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl p-8 mt-6">
+      <div class="font-mono text-base text-slate-200 leading-loose">
+        <div class="text-cyan-300">[침대 옆]</div>
+        <div class="ml-4">ToF 센서  ──▶ 침상 이탈 트리거</div>
+        <div class="ml-4">mmWave    ──▶ Pi 5 (USB 직결) ──▶ 보행 위험 (70%)</div>
+        <div class="ml-4">ESP32 CSI ──▶ WiFi ──▶ 서버 ──▶ 자율신경 z-score (30%)</div>
+        <div class="mt-4 text-emerald-300">[융합 위험도]</div>
+        <div class="ml-4">mmWave × 0.7 + CSI × 0.3 + 절대 위험 임계</div>
+        <div class="mt-4 text-rose-300">[4단계 알람]</div>
+        <div class="ml-4">정상 → 주의 → 경고 → 위험 → 간병인 알림</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 슬라이드 17 — 마무리 -->
+<section class="slide bg-gradient-to-br from-emerald-900 via-indigo-900 to-purple-900 justify-center items-center">
+  <div class="text-center max-w-4xl">
+    <h2 class="text-5xl md:text-6xl font-bold leading-tight mb-8">
+      한계를 정확히 안다는 것
+    </h2>
+    <p class="text-xl text-slate-200 mb-12 leading-relaxed">
+      "되는 것"만 보여주는 게 아니라<br/>
+      "안 되는 것"의 학술적 근거를 짚고<br/>
+      그것을 보완할 설계를 제시합니다.
+    </p>
+    <div class="grid grid-cols-3 gap-6 mt-12">
+      <div class="bg-white/10 rounded-xl p-5 backdrop-blur">
+        <div class="text-sm text-emerald-200 mb-1">완전 비접촉</div>
+        <div class="text-2xl font-bold">차별성 ✓</div>
+      </div>
+      <div class="bg-white/10 rounded-xl p-5 backdrop-blur">
+        <div class="text-sm text-cyan-200 mb-1">3중 센서 융합</div>
+        <div class="text-2xl font-bold">신청서 ✓</div>
+      </div>
+      <div class="bg-white/10 rounded-xl p-5 backdrop-blur">
+        <div class="text-sm text-purple-200 mb-1">사전 예측</div>
+        <div class="text-2xl font-bold">목표 ✓</div>
+      </div>
+    </div>
+    <p class="text-sm text-slate-300 mt-12">감사합니다 · MajuBom 팀</p>
+  </div>
+</section>
+
+<!-- NAV -->
+<div class="nav" id="nav"></div>
+<div class="page-num"><span id="pageNum">1</span> / <span id="pageTot">17</span></div>
+<div class="hint">← → 또는 스페이스로 넘기기 · F 풀스크린</div>
+
+<script>
+const slides = document.querySelectorAll('.slide');
+const nav = document.getElementById('nav');
+const pageNum = document.getElementById('pageNum');
+document.getElementById('pageTot').textContent = slides.length;
+let current = 0;
+
+// dots
+slides.forEach((_, i) => {
+  const d = document.createElement('div');
+  d.className = 'dot' + (i === 0 ? ' active' : '');
+  d.onclick = () => go(i);
+  nav.appendChild(d);
+});
+
+function go(i) {
+  if (i < 0 || i >= slides.length) return;
+  slides[current].classList.remove('active');
+  slides[i].classList.add('active');
+  nav.children[current].classList.remove('active');
+  nav.children[i].classList.add('active');
+  current = i;
+  pageNum.textContent = i + 1;
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') { e.preventDefault(); go(current + 1); }
+  else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); go(current - 1); }
+  else if (e.key === 'Home') go(0);
+  else if (e.key === 'End') go(slides.length - 1);
+  else if (e.key === 'f' || e.key === 'F') {
+    if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+    else document.exitFullscreen();
+  }
+});
+
+// 스와이프 (모바일 대응)
+let touchStart = 0;
+document.addEventListener('touchstart', e => { touchStart = e.changedTouches[0].clientX; });
+document.addEventListener('touchend', e => {
+  const dx = e.changedTouches[0].clientX - touchStart;
+  if (dx < -50) go(current + 1);
+  else if (dx > 50) go(current - 1);
+});
+</script>
+
+</body>
+</html>

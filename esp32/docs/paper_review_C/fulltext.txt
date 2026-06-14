@@ -1,0 +1,326 @@
+PAGES: 5
+===== PAGE 1 =====
+2024 ASU International Conference in Emerging Technologies for Sustainability and Intelligent Systems (ICETSIS)
+Presence Detection with Wi-fi using ESP32
+1st Mohd Priyanshu Yakub 2nd Nalla Vinayak Sai 3rd Sunil Kumar Singh
+School of CSE School of CSE School of CSE
+VITAP University VITAP University VITAP University
+Near Vijayawada, India Near Vijayawada, India Near Vijayawada, India
+priyanshu.20bce7305@vitap.ac.in vinayaksai.20bcr7048@vitap.ac.in sunil.singh@vitap.ac.in
+4th Pratyush Mohanty 5th Avinash Kumar Akela 6th Dhruv Jha
+School of CSE School of CSE School of CSE
+VITAP University VITAP University VITAP University
+Near Vijayawada, India Near Vijayawada, India Near Vijayawada, India
+pratyush.20bci7073@vitap.ac.in avinash.21bce7279@vitapstudent.ac.in dhruv.21bce7902@vitapstudent.ac.in
+Abstract—This paper addresses the increasing demand observation, it can be used for a variety of purposes,
+for presence detection across various industries while especially in private or delicate settings where intrusive
+addressing concerns related to invasive technologies such
+techniques might be uncomfortable or impractical. Wi-
+as cameras and microphones. The focus is on identifying
+Fi-based detection, which can identify people without
+individuals or objects within a specified area without
+compromising privacy. Introducing a cost and power ef- disclosing their identity, is useful in situations where ef-
+ficient Wi-Fi system leveraging the ESP32 system-on-chip, ficient,non-intrusivemonitoringisneeded.Itisaflexible
+with built-in Wi-Fi capabilities, is crucial for achieving option for applications that are concerned about privacy
+a balance between accuracy and affordability in Wi-Fi-
+[2]. Effective implementation of Wi-Fi-based presence
+based presence detection. The designed system uses CNN
+detectioninvolvesanalysisofChannelStateInformation
+(Convolutional Neural Network) for classifying occupancy
+and demonstrates a high accuracy of around 86% in (CSI) in Wi-Fi packets. CSI offers detailed insights
+classifying occupancy counts up to 3 people. Notably, into signal characteristics, such as strength, amplitude,
+accuracyreaches96%for0-2people,andpresence/absence and various parameters, enabling efficient monitoring
+determination reaches 98%. Challenges in classifying 0-4
+of the Wi-Fi channel without compromising security
+people due to confusion in 0 and 4 people, attributed to
+or privacy [3]. This paper explores the capabilities of
+the limitations of ESP32 chip and potential over-fitting,
+provide insights for future improvements. In conclusion, the ESP32 system-on-chip with inbuilt Wi-Fi capability
+this Wi-Fi-based presence detection system offers a non- for capturing and analyzing CSI data. The objective
+intrusivealternativetotraditionalmethods.Positiveresults is to study Wi-Fi-based presence detection, applying
+underscoreitspotentialtoenhancenon-invasivemonitoring Convolutional Neural Networks (CNN) to classify room
+technologies, paving the way for accurate and privacy-
+occupancy.
+respecting solutions in diverse real-world applications.
+The remainder of the paper is structured as follows:
+I. INTRODUCTION Section 2 provides a discussion of papers that share
+similarities in the related work. Section 3 presents a
+Presence detection, which is important in retail,
+detailed explanation of the proposed model and its
+healthcare, and security, is typically accomplished with
+functionalities. The analysis and discussion of results,
+intrusive techniques like cameras and microphones.
+accompanied by supporting graphs, are presented in
+These systems capture sensitive data and may allow
+Section 4. Finally, Section 5 concludes the paper by
+unauthorized access, which puts users at serious risk
+outlining future research.
+to their privacy even though they provide benefits in
+terms of security and monitoring. Such intrusive tech-
+II. BACKGROUNDANDRELATEDWORK
+nologiesarelimitedintheirapplicabilitybecauseprivacy
+concerns extend to both public and private spaces [1]. The base idea of presence detection using Wi-Fi
+One particularly non-intrusive option is Wi-Fi-based signals is based on the Doppler shift. The frequency or
+presencedetection,whichusessignalstoidentifypeople wavelengthofthesentorreceivedsignalshiftsasaresult
+orobjectswithoutviolatingtheirprivacy.Ittacklesissues of relative motion between the transmitter and receiver,
+with data leakage and privacy invasion associated with or as a result of any motion between them. Depending
+conventional techniques like cameras and microphones onthedirectionoftherelativemotion,thisshiftmightbe
+while striking a balance between accuracy and cost- either positive or negative. We call this phenomenon the
+effectiveness. Since this technology guarantees covert Doppler shift. For instance, the received frequency will
+979-8-3503-7222-9/24/$31.00 ©2024 IEEE 1273
+33495401.4202.50516SISTECI/9011.01
+:IOD
+|
+EEEI
+4202©
+00.13$/42/9-2227-3053-8-979
+|
+)SISTECI(
+smetsyS
+tnegilletnI
+dna
+ytilibaniatsuS
+rof
+seigolonhceT
+gnigremE
+ni
+ecnerefnoC
+lanoitanretnI
+USA
+4202
+Authorized licensed use limited to: Kongju National University. Downloaded on June 12,2026 at 04:24:19 UTC from IEEE Xplore. Restrictions apply.
+===== PAGE 2 =====
+2024 ASU International Conference in Emerging Technologies for Sustainability and Intelligent Systems (ICETSIS)
+be greater than the transmitted frequency if the trans- just so that they can implement this system.
+mitter and receiver are moving in the same direction; Both these issues affect the easy and efficient utilization
+conversely, if they are moving in the opposite direction, ofthissystem,whichalsomeansthatsuchsystemswon’t
+thereceivedfrequencywillbelower.DandanYangetal. be commercially available for implementation anytime
+propose a method to measure and study Doppler shift soon, which leads us to search for a more affordable
+indoors using CSI data [4]. Han Zou et al present a alternative.
+system that classifies occupancy as a boolean value(true Addressing these concerns, Muhammad Atif et al. in-
+or false) using a greedy algorithm for CSI subcarrier troduced”Wi-ESP”in2020,atooldesignedforDevice-
+selection, Signal Tendency Index (STI) calculation, and FreeWi-FiSensing(DFWS)throughCSImeasurements,
+Random Forest classification, achieving an accuracy of adhering to the 802.11n standards. Wi-ESP aims to
+94% [5]. Fengyu Wang et al.’s have researched and overcome limitations associated with conventional CSI
+implemented Wi-Fi based detection system unlike most data collection methods [10].
+other systems, the developed project does not require
+constantly moving subjects(humans) to work, it is based III. METHODOLOGY
+on tracking human breathing patterns in a given envi-
+To overcome the two major issues mentioned in the
+ronment using the Markov chain model for the natural
+previous section, we need a device that can freely
+breathing signals and implement an iterative dynamic
+connect to any Wi-Fi router already installed in homes
+programming algorithm to continuously track multiple
+and extract CSI from them, one such device is a simple
+breathing traces [6]. Zhengjie Wang et al demonstrate a
+ESP32-based development board that has its own NIC
+system recognizing up to 6 people with 97% accuracy,
+which can handle 2.4 GHz, 802.11n Wi-Fi packets.
+the system setup like most projects involves setting up
+Figure 1) shows the system implementation and data
+two Wi-Fi Routers acting as Receiver(Rx) and Trans-
+collection for the proposed work.
+mitter(Tx) at opposite ends of the room, they trained
+the model by simple controlling the number of people
+present in the area [7].
+CarnegieMellonUniversity’sGeng,Huang,andDela
+Torre presented a novel method for body segmentation
+and key-point detection that uses WiFi signals as 1D
+sensors. They achieved accurate and privacy-preserving
+dense human pose estimation by using deep learning,
+which addressed issues with conventional sensing tech-
+niques and represented a significant breakthrough in
+human sensing technology. [8].
+Alloftheprojectsdiscussedabovehaveaverysimilar
+experimentation environment which involves using two
+commercially off-the-shelf Wi-Fi routers (or simply put
+Fig.1. Systemset-upfordatacollection
+Wi-Fi routers commercially available for home environ-
+ments and personal spaces) situated on opposite ends The system comprises an ESP32 development board
+acting as Rx and Tx. There are two major issues with connected to a Computer for CSI data collection. Pro-
+this implementation: gramming is done using the Espressif framework in
+• Even though most papers mention them as “com- C, and data collection is facilitated by a Python script
+mercial of the shelf” or “COTS” Wi-Fi routers, accessing serial data from the ESP32. CSI collection
+not all of them will work as expected, what most using ESP32, following the 802.11n, 20 MHz PHY
+papers fail to mention is that they require Wi- standard, involves a sub-carrier range spanning from -
+Fi routers with specific NIC (Network Interface 28 to +28. Within this range, specific pilot sub-carriers
+Cards)ChipsetssuchasAtherosAR9580,AR9590, are identified at positions -21, -7, +7, and +21. The
+AR9344, and QCA9558 [9]. This is because many total number of sub-carriers is 56, with 52 being usable
+other chipsets have a different CSI resolution and for data transmission. Data is collected under different
+encoding which might not allow easy extraction of occupancy scenarios (0 to 4 people) systematically. A
+CSI information. This restricts the choice of Wi-Fi Wi-Fi router and ESP32 are set up, with data collected
+routers and hence not universal. at one end while controlling the number of participants.
+• Assuming one has an appropriate Wi-Fi router, it • 0 occupancy
+is still not a proper system as it requires two such • 1 person occupancy
+routersinoneparticulararea,i.e.,tomakethiswork • 2 people occupancy
+one has to buy another router of the same model • 3 people occupancy
+1274
+Authorized licensed use limited to: Kongju National University. Downloaded on June 12,2026 at 04:24:19 UTC from IEEE Xplore. Restrictions apply.
+===== PAGE 3 =====
+2024 ASU International Conference in Emerging Technologies for Sustainability and Intelligent Systems (ICETSIS)
+• 4 people occupancy
+Data collected is pre-processed to extract amplitudes
+and phase values from CSI data which will be further
+explained in the coming sections, trained and classified
+based on occupancy using Convolutional Neural Net-
+works (CNN) for further study and analysis.
+A. Data Collection and Preparation for Occupancy In-
+formation with CSI Data
+As shown in Figure 3, the methodical data collection
+process comprised controlled experiments with variable
+participant counts in a location outfitted with a Wi-Fi
+router and an ESP32 for data collection. To improve
+the robustness of the Machine Learning (ML) model, a
+variety of scenarios were added, ranging from walking
+to more subdued actions like sitting or talking. This
+extensive dataset pushes the model to identify subtle
+cuesandimprovesitsabilitytoclassifyhumanactivities
+across a range of behaviours.
+Fig.3. Depictionofdatacollectionprocess
+To avoid model bias, we separated the data into
+five data-sets based on occupancy (0 to 4). Retriev-
+ing phase and amplitude from raw CSI data improved
+model performance. Amplitude (A) was computed as
+the magnitude, and phase (ϕ) is found by calculat-
+ing the arc-tangent of the ratio of imaginary to real
+components ϕ = arctan
+(cid:0)Im(cid:1)
+, whereas amplitude (A)
+Re (cid:112)
+is computed as the magnitude A = (Re)2+(Im)2.
+These characteristics guarantee optimal performance in
+a range of occupancy scenarios, promoting a thorough
+comprehension of human behaviour.
+The device is put through stress testing by classifying
+data into four test scenarios with varying occupancy
+counts, exposing its real-world effectiveness and lim-
+itations. This methodical approach makes it easier to
+evaluate and adjust parameters for particular use cases,
+whichenhancesthemodel’sflexibilityinarangeofreal-
+world situations.
+B. Training and Testing model for Classification in
+Fig.2. Proposedmodel different scenarios
+Based on amplitude and phase vectors, the CNN
+modelisintendedforsequentialdataclassification.First,
+a 1D convolutional layer with 64 filters and a kernel
+sizeof10isused.Batchnormalizationandmaxpooling
+1275
+Authorized licensed use limited to: Kongju National University. Downloaded on June 12,2026 at 04:24:19 UTC from IEEE Xplore. Restrictions apply.
+===== PAGE 4 =====
+2024 ASU International Conference in Emerging Technologies for Sustainability and Intelligent Systems (ICETSIS)
+comenext.Asecondconvolutionallayer(128filters,ker- B. for classification of 0P, 1P, 2P, 3P
+nelsize5)replicatesthispattern.Twodenselayers(256
+In this case, we use CNN to see how effectively we
+and 128 neurons, ReLU activation, batch normalization,
+can classify a maximum occupancy of 3 people.
+and 0.5 dropout rate) have their outputs transformed by
+flattening. The last layer supports the particular classifi-
+cation task (e.g., occupancy range or presence/absence)
+withsoftmaxactivation.Stabilityisimprovedbydropout
+and batch normalization. The model ensures accurate
+classification by handling a variety of scenarios with
+efficiency.
+IV. RESULTSANDDISCUSSION
+After ESP32 and the Wi-Fi router successfully estab-
+lish communication via Ping packets, we retrieve CSI
+data from the router’s Ping Reply and reliably log it in
+the serial monitor. The displayed wave, which focuses
+onsubcarrieramplitudeinparticular,highlightsdynamic
+wireless channel variations brought about by movement
+by reflecting changes in CSI data (Figure 4).
+Fig.6. Confusionmatrixforclassifyingoccupancyupto3people
+the model accuracy is 86.17%
+C. for classification of 0P, 1P and 2P
+In this scenario, we test how well we can classify a
+maximumoccupancyof2peopleintheareausingCNN.
+Fig.4. VisualizationofSub-carrieramplitudes
+A. Observations for classification of 0P, 1P, 2P, 3P, 4P
+In this scenario, we test how well we can classify a
+maximumoccupancyof4peopleintheareausingCNN.
+Fig.7. Confusionmatrixforclassifyingoccupancyupto2people
+the model accuracy is 96.65%
+D. Observations for classification of true or false
+In this scenario, we test how well we can classify if
+people are present in the area or not using CNN. As the
+Fig.5. Confusionmatrixforclassifyingoccupancyupto4people
+output is Boolean (True, False) we classify in 2 labels.
+The model accuracy is 68.22%
+1276
+Authorized licensed use limited to: Kongju National University. Downloaded on June 12,2026 at 04:24:19 UTC from IEEE Xplore. Restrictions apply.
+===== PAGE 5 =====
+2024 ASU International Conference in Emerging Technologies for Sustainability and Intelligent Systems (ICETSIS)
+While the possibility of overfitting is a consideration, it
+is less likely to be the primary reason for the observed
+confusion. The maximum confusion occurs specifically
+in the classification of 4 and 0 people, with these cate-
+gories frequently misidentified. No other classification
+exhibits such a high degree of confusion, suggesting
+thatthelimitationsoftheESP32playamoresignificant
+role. Considering these factors, it becomes evident that
+our model’s accuracy is constrained by the capabilities
+of the ESP32, particularly in scenarios involving higher
+occupancy counts. Addressing this limitation will likely
+Fig.8. AccuracyandLossplotsforclassifyingoccupancyastrueor
+improve the overall performance of the model.
+false
+Futureobjectivesincludeexpandingthemodel’sapplica-
+tion to a variety of indoor locations to meet the growing
+needforreal-time,inconspicuousdetectiontechnologies.
+ACKNOWLEDGMENT
+The authors express their gratitude to the Centre of
+Excellence Internet of Things (CoE-IoT) at VIT-AP
+University, Vijayawada, India, for their valuable sug-
+gestions and support. The experimental works and data
+collection were conducted within the facilities of CoE-
+IoT. We would like to express our gratitude to Applied
+Science University in Bahrain (https://www.asu.edu.bh/)
+forofferingfreeregistrationtothestudentswhoauthored
+this academic paper.
+REFERENCES
+[1] Li,Wenda,BoTan,andRobertJ.Piechocki.”Wifi-basedpassive
+sensingsystemforhumanpresenceandactivityeventclassifica-
+tion.”IETWirelessSensorSystems8.6(2018):276-283.
+[2] Mesa-Cantillo,CarlosM.,etal.”ANonIntrusiveHumanPres-
+enceDetectionMethodologyBasedonChannelStateInformation
+Fig.9. Confusionmatrixclassifyingoccupancyastrueorfalse ofWi-FiNetworks.”Sensors23.1(2023):500.
+[3] Sahoo,AjitK.,K.Akhil,andSibaK.Udgata.”Wi-fisignal-based
+through-wallsensingforhumanpresenceandfalldetectionusing
+the model accuracy is 97.61%
+esp32module.”IntelligentSystems431(2022):1-6.
+[4] Yang,Dandan,TaoWang,YanzanSun,andYatingWu.”Doppler
+V. CONCLUSION shift measurement using complex-valued CSI of WiFi in corri-
+dors.” In 2018 3rd International Conference on Computer and
+Based on our observations, we’ve achieved a high
+CommunicationSystems(ICCCS),pp.367-371.IEEE,2018.
+accuracyofapproximately86%inclassifyingoccupancy [5] Zou,Han,YuxunZhou,JianfeiYang,WeixiGu,LihuaXie,and
+counts of up to 3 people. Additionally, the classification Costas Spanos. ”Freedetector: Device-free occupancy detection
+withcommoditywifi.”In2017IEEEInternationalConferenceon
+accuracy for 0-2 people is 96%, and determining the
+Sensing,CommunicationandNetworking(SECONWorkshops),
+presence or absence of people yields an accuracy of pp.1-5.IEEE,2017.
+nearly 98%. However, when it comes to classifying [6] Wang,Fengyu,FengZhang,ChenshuWu,BeibeiWang,andKJ
+Ray Liu. ”Passive people counting using commodity WiFi.” In
+occupancy counts of 0-4 people, our accuracy is not
+2020 IEEE 6th World Forum on Internet of Things (WF-IoT),
+as satisfactory. Examining the confusion matrix reveals pp.1-6.IEEE,2020.
+notable false positives, where instances of 4 people are [7] Wang,Zhengjie,JingwenFan,XueSong,NaishengZhou,Fang
+Chen,YinjingGuo,andDaChen.”CrowdcountingbasedonCSI
+misclassified as 0 people and vice versa. Two main
+andconvolutionalneuralnetwork.”In202133rdChineseControl
+factors contribute to this challenge; The ESP32, in com- andDecisionConference(CCDC),pp.1249-1254.IEEE,2021.
+parison to routers used in previous studies, has limited [8] Geng,Jiaqi,DongHuang,andFernandoDelaTorre.”DensePose
+FromWiFi.”arXivpreprintarXiv:2301.00250(2022).
+capabilities. The CSI data it generates are relatively
+[9] Xie, Yaxiong, Zhenjiang Li, and Mo Li. ”Precise power delay
+smaller in range and size. The current protocol allows profiling with commodity WiFi.” In Proceedings of the 21st
+for a subcarrier range of [-28,28]. In contrast, routers in AnnualinternationalconferenceonMobileComputingandNet-
+working,pp.53-64.2015.
+previous studies can support a broader subcarrier range
+[10] Atif, Muhammad, Shapna Muralidharan, Heedong Ko, and By-
+of[-512,512],andtheycanaugmentitwithmultiplean- ounghyun Yoo. ”Wi-ESP - A tool for CSI-based device-free
+tennas.Duetothislimitation,ourmodelfaceschallenges Wi-Fi sensing (DFWS).” Journal of Computational Design and
+Engineering7,no.5(2020):644-656.
+in accurately classifying scenarios involving 4 people.
+1277
+Authorized licensed use limited to: Kongju National University. Downloaded on June 12,2026 at 04:24:19 UTC from IEEE Xplore. Restrictions apply.

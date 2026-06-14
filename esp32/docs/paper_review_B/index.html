@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>논문 리뷰 B — HRV from Wi-Fi CSI: A Pilot Correlation Study (Chaudhari et al., 2026)</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  body { font-family: 'Pretendard', 'Apple SD Gothic Neo', 'Segoe UI', system-ui, sans-serif; }
+  .modal-backdrop { background: rgba(0,0,0,0.85); }
+  .step-num { background: linear-gradient(135deg, #06b6d4, #10b981); }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 9999px; font-size: 11px; font-weight: 600; }
+  .eq { background: #0f172a; border-left: 3px solid #06b6d4; padding: 8px 12px; font-family: monospace; font-size: 13px; color: #67e8f9; }
+</style>
+</head>
+<body class="bg-slate-950 text-slate-100">
+
+<!-- HEADER -->
+<header class="border-b border-slate-800 bg-gradient-to-r from-emerald-950 via-slate-900 to-cyan-950">
+  <div class="max-w-6xl mx-auto px-6 py-8">
+    <div class="text-xs text-emerald-300 font-mono mb-2">📄 논문 리뷰 B · MajuBom CSI/HRV 프로젝트</div>
+    <h1 class="text-3xl md:text-4xl font-bold leading-tight">
+      Wi-Fi CSI로 HRV 지표 추출하기<br/>
+      <span class="text-emerald-300 text-2xl">— ESP32 2개로 14인 파일럿 연구</span>
+    </h1>
+    <p class="text-slate-400 mt-3">
+      <span class="badge bg-emerald-700 text-white mr-2">논문 B · 우리와 동일 ESP32 환경</span>
+      <span class="badge bg-amber-700 text-white mr-2">⚠️ 비심사 preprint</span>
+      Chaudhari et al. · XZent Solutions Pvt Ltd (Nagpur, India) · Preprints.org 2026-01-08
+    </p>
+  </div>
+</header>
+
+<main class="max-w-6xl mx-auto px-6 py-8 space-y-10">
+
+<!-- DOUBLE CHECK & WARNING -->
+<section class="bg-slate-900 border border-slate-800 rounded-xl p-6">
+  <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
+    <span class="text-emerald-400">✅</span> 더블체크 결과 + ⚠️ 큰 경고
+  </h2>
+  <div class="grid md:grid-cols-2 gap-4 text-sm">
+    <div class="space-y-2">
+      <div class="flex"><span class="w-32 text-slate-500">제목</span><span>Extracting Heart-Rate Variability Indicators from Wi-Fi CSI: A Pilot Correlation Study</span></div>
+      <div class="flex"><span class="w-32 text-slate-500">저자</span><span>Saurav Chaudhari, Ketan Pise, Dinesh Fukate, Shantanu Gawande</span></div>
+      <div class="flex"><span class="w-32 text-slate-500">소속</span><span>XZent Solutions Pvt Ltd, Nagpur, India</span></div>
+      <div class="flex"><span class="w-32 text-slate-500">게재</span><span>Preprints.org · 2026-01-08</span></div>
+      <div class="flex"><span class="w-32 text-slate-500">DOI</span><span class="font-mono text-xs">10.20944/preprints202601.0518.v1</span></div>
+      <div class="flex"><span class="w-32 text-slate-500">분량</span><span>12페이지</span></div>
+      <div class="flex"><span class="w-32 text-slate-500">라이선스</span><span>CC BY 4.0 (자유 배포)</span></div>
+    </div>
+    <div class="bg-rose-950/30 border border-rose-700/50 rounded-lg p-4">
+      <h3 class="font-semibold text-rose-300 mb-2">⚠️ README_CSI_HRV.md 큰 모순 발견</h3>
+      <p class="text-xs text-slate-300 mb-2">README가 같은 논문을 두 곳에 다르게 적어놨음:</p>
+      <ul class="text-xs space-y-1 text-slate-200 mb-3">
+        <li>• §4·§7-A 1순위: "<span class="text-emerald-300">⭐⭐ 그대로 코드 이식</span>" (academia.edu 링크로 적힘)</li>
+        <li>• §7-A 주의 인용: "<span class="text-rose-300">⚠️ 비심사, Fitbit GT, 인용 금지</span>" (preprints.org 링크)</li>
+      </ul>
+      <p class="text-xs text-rose-200">→ <strong>둘이 사실 같은 논문</strong> (저자·DOI·내용 모두 일치). README 통합 필요. <code class="bg-slate-800 px-1">FIX_NOTES.md</code>에 추가됨.</p>
+    </div>
+  </div>
+
+  <div class="mt-4 grid md:grid-cols-3 gap-3 text-xs">
+    <div class="bg-rose-950/20 border border-rose-800/30 rounded p-3">
+      <div class="font-semibold text-rose-300 mb-1">⚠️ Non Peer-reviewed</div>
+      <div class="text-slate-300">Preprints.org 게재 = 동료심사 X. 본문 모든 페이지 상단에 "NOT PEER-REVIEWED" 표기</div>
+    </div>
+    <div class="bg-rose-950/20 border border-rose-800/30 rounded p-3">
+      <div class="font-semibold text-rose-300 mb-1">⚠️ Ground Truth = Fitbit</div>
+      <div class="text-slate-300">ECG 아닌 Fitbit Charge 5 손목 시계 (proprietary 알고리즘, 자체 오차 있음)</div>
+    </div>
+    <div class="bg-rose-950/20 border border-rose-800/30 rounded p-3">
+      <div class="font-semibold text-rose-300 mb-1">⚠️ N=14 파일럿</div>
+      <div class="text-slate-300">14명 / 14분 세션 / 단일 사무실 / 건강한 22~46세 → "feasibility 입증"이지 "임상 검증" 아님</div>
+    </div>
+  </div>
+</section>
+
+<!-- ONE LINER -->
+<section class="bg-gradient-to-br from-emerald-900/40 to-cyan-900/40 border border-emerald-700/40 rounded-xl p-6">
+  <h2 class="text-xl font-bold mb-3">🎯 한 줄 요약</h2>
+  <p class="text-lg leading-relaxed">
+    <strong class="text-emerald-300">ESP32-WROOM-32 두 대</strong>(TX beacon ~10Hz + RX monitor 모드)로 CSI 100Hz 수집 →
+    <strong class="text-emerald-300">적응형 peak(μ+1.5σ) + IQR outlier 제거</strong> →
+    14인 인지부하 실험에서 <strong class="text-emerald-300">Fitbit 대비 SDNN MAE 5.8ms / RMSSD 4.1ms</strong>,
+    <strong class="text-emerald-300">LF/HF 추세 r=0.84</strong> 보고. <span class="text-amber-300">단 ECG 검증 X.</span>
+  </p>
+</section>
+
+<!-- KEY NUMBERS -->
+<section>
+  <h2 class="text-xl font-bold mb-4">📊 핵심 결과 수치</h2>
+  <div class="grid md:grid-cols-4 gap-4">
+    <div class="bg-slate-900 border border-emerald-700/40 rounded-lg p-4">
+      <div class="text-3xl font-bold text-emerald-400">5.8<span class="text-lg">ms</span></div>
+      <div class="text-xs text-slate-400 mt-1">SDNN MAE<br/>(vs Fitbit)</div>
+    </div>
+    <div class="bg-slate-900 border border-emerald-700/40 rounded-lg p-4">
+      <div class="text-3xl font-bold text-emerald-400">4.1<span class="text-lg">ms</span></div>
+      <div class="text-xs text-slate-400 mt-1">RMSSD MAE<br/>(vs Fitbit)</div>
+    </div>
+    <div class="bg-slate-900 border border-emerald-700/40 rounded-lg p-4">
+      <div class="text-3xl font-bold text-emerald-400">0.84<span class="text-lg"> r</span></div>
+      <div class="text-xs text-slate-400 mt-1">LF/HF 상관<br/>(p&lt;0.001)</div>
+    </div>
+    <div class="bg-slate-900 border border-emerald-700/40 rounded-lg p-4">
+      <div class="text-3xl font-bold text-emerald-400">100<span class="text-lg">%</span></div>
+      <div class="text-xs text-slate-400 mt-1">방향성 일치<br/>(14명 전원)</div>
+    </div>
+  </div>
+</section>
+
+<!-- HARDWARE & PROTOCOL -->
+<section class="bg-slate-900 border border-slate-800 rounded-xl p-6">
+  <h2 class="text-xl font-bold mb-4">🔧 실험 셋업 — 우리 환경과 거의 동일</h2>
+  <div class="grid md:grid-cols-2 gap-6 text-sm">
+    <div>
+      <h3 class="font-semibold text-emerald-300 mb-2">하드웨어 (우리랑 거의 같음 ⭐)</h3>
+      <ul class="space-y-1 text-slate-300">
+        <li>• <strong>ESP32-WROOM-32 × 2개</strong> (Xtensa dual 240MHz, 520KB SRAM)</li>
+        <li>• <strong>TX</strong>: beacon frame ~10 frames/sec 송신</li>
+        <li>• <strong>RX</strong>: monitor 모드 sniff + CSI 추출 (esp-idf 커스텀 펌웨어)</li>
+        <li>• CSI 샘플링 <strong>100Hz</strong></li>
+        <li>• 30 subcarrier 사용</li>
+        <li>• 동기화: Linux NTP daemon (오프셋 &lt;50ms)</li>
+      </ul>
+      <div class="mt-3 bg-amber-950/30 border border-amber-700/30 rounded p-3 text-xs">
+        <strong class="text-amber-300">⚠️ Reference Device:</strong>
+        <span class="text-slate-200">Fitbit Charge 5 (좌측 손목), 클라우드 API로 HRV 메트릭 자동 수집</span>
+      </div>
+    </div>
+    <div>
+      <h3 class="font-semibold text-emerald-300 mb-2">실험 프로토콜 (총 14분)</h3>
+      <div class="space-y-2">
+        <div class="bg-slate-950 rounded p-3">
+          <div class="flex justify-between items-center">
+            <span class="font-bold text-cyan-300">① Baseline</span>
+            <span class="text-xs text-slate-500">5분</span>
+          </div>
+          <p class="text-xs text-slate-400 mt-1">의자에 앉아 정지, 자연호흡 (12~16/min)</p>
+        </div>
+        <div class="bg-slate-950 rounded p-3">
+          <div class="flex justify-between items-center">
+            <span class="font-bold text-rose-300">② Stress</span>
+            <span class="text-xs text-slate-500">4분</span>
+          </div>
+          <p class="text-xs text-slate-400 mt-1">100에서 7씩 빼기 (Serial Subtraction)<br/>→ 교감신경 항진, LF/HF 상승 예상</p>
+        </div>
+        <div class="bg-slate-950 rounded p-3">
+          <div class="flex justify-between items-center">
+            <span class="font-bold text-emerald-300">③ Recovery</span>
+            <span class="text-xs text-slate-500">5분</span>
+          </div>
+          <p class="text-xs text-slate-400 mt-1">메트로놈 가이드, 5회/분 호흡<br/>→ 부교감 회복</p>
+        </div>
+      </div>
+      <p class="text-xs text-slate-500 mt-2">참가자: 14명 (남 9, 여 5, 22~46세)</p>
+      <p class="text-xs text-slate-500">거리: TX-RX 3m, 사무실 20~22°C</p>
+    </div>
+  </div>
+</section>
+
+<!-- SIGNAL PROCESSING PIPELINE -->
+<section class="bg-slate-900 border border-slate-800 rounded-xl p-6">
+  <h2 class="text-xl font-bold mb-4">⚙️ 신호처리 파이프라인 — 7단계 (논문 본문 §3 그대로)</h2>
+
+  <!-- SVG Flow Diagram -->
+  <div class="bg-slate-950 border border-slate-800 rounded-lg p-4 mb-6 overflow-x-auto">
+    <svg viewBox="0 0 940 120" class="w-full" style="min-width:800px">
+      <defs>
+        <marker id="arrowB" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+          <polygon points="0 0, 8 3, 0 6" fill="#34d399"/>
+        </marker>
+      </defs>
+      <g font-family="sans-serif">
+        <g><rect x="10" y="40" width="115" height="50" rx="6" fill="#064e3b" stroke="#10b981"/>
+          <text x="67" y="62" text-anchor="middle" fill="#a7f3d0" font-size="12" font-weight="bold">① CSI 100Hz</text>
+          <text x="67" y="78" text-anchor="middle" fill="#6ee7b7" font-size="10">+ 위상차분 (식4)</text></g>
+        <g><rect x="145" y="40" width="105" height="50" rx="6" fill="#1e293b" stroke="#06b6d4"/>
+          <text x="197" y="62" text-anchor="middle" fill="#cffafe" font-size="12" font-weight="bold">② Detrend</text>
+          <text x="197" y="78" text-anchor="middle" fill="#67e8f9" font-size="10">선형 회귀 (식5)</text></g>
+        <g><rect x="270" y="40" width="115" height="50" rx="6" fill="#1e293b" stroke="#06b6d4"/>
+          <text x="327" y="62" text-anchor="middle" fill="#cffafe" font-size="12" font-weight="bold">③ BPF</text>
+          <text x="327" y="78" text-anchor="middle" fill="#67e8f9" font-size="10">0.8–2.5Hz, 4차</text></g>
+        <g><rect x="405" y="40" width="115" height="50" rx="6" fill="#312e81" stroke="#8b5cf6"/>
+          <text x="462" y="60" text-anchor="middle" fill="#e0e7ff" font-size="12" font-weight="bold">④ 적응형 Peak</text>
+          <text x="462" y="75" text-anchor="middle" fill="#c4b5fd" font-size="10">μ+1.5σ, 30s win</text>
+          <text x="462" y="86" text-anchor="middle" fill="#c4b5fd" font-size="9">RRI≥400ms</text></g>
+        <g><rect x="540" y="40" width="115" height="50" rx="6" fill="#7c2d12" stroke="#fb923c"/>
+          <text x="597" y="62" text-anchor="middle" fill="#fed7aa" font-size="12" font-weight="bold">⑤ IBI + IQR</text>
+          <text x="597" y="78" text-anchor="middle" fill="#fdba74" font-size="10">outlier ~5% 제거</text></g>
+        <g><rect x="675" y="15" width="115" height="40" rx="6" fill="#1e293b" stroke="#fb7185"/>
+          <text x="732" y="32" text-anchor="middle" fill="#fecdd3" font-size="12" font-weight="bold">⑥ Time-domain</text>
+          <text x="732" y="46" text-anchor="middle" fill="#fda4af" font-size="10">SDNN, RMSSD</text></g>
+        <g><rect x="675" y="75" width="115" height="40" rx="6" fill="#1e293b" stroke="#a78bfa"/>
+          <text x="732" y="92" text-anchor="middle" fill="#ddd6fe" font-size="12" font-weight="bold">⑦ Freq-domain</text>
+          <text x="732" y="106" text-anchor="middle" fill="#c4b5fd" font-size="10">Lomb-Scargle</text></g>
+        <g><rect x="810" y="40" width="115" height="50" rx="6" fill="#1e293b" stroke="#fbbf24"/>
+          <text x="867" y="60" text-anchor="middle" fill="#fde68a" font-size="12" font-weight="bold">LF, HF</text>
+          <text x="867" y="75" text-anchor="middle" fill="#fcd34d" font-size="11">LF/HF 비율</text>
+          <text x="867" y="86" text-anchor="middle" fill="#fcd34d" font-size="9">(메인 출력)</text></g>
+        <g stroke="#34d399" stroke-width="1.5" fill="none">
+          <line x1="125" y1="65" x2="143" y2="65" marker-end="url(#arrowB)"/>
+          <line x1="250" y1="65" x2="268" y2="65" marker-end="url(#arrowB)"/>
+          <line x1="385" y1="65" x2="403" y2="65" marker-end="url(#arrowB)"/>
+          <line x1="520" y1="65" x2="538" y2="65" marker-end="url(#arrowB)"/>
+          <line x1="655" y1="55" x2="673" y2="35" marker-end="url(#arrowB)"/>
+          <line x1="655" y1="75" x2="673" y2="95" marker-end="url(#arrowB)"/>
+          <line x1="790" y1="95" x2="810" y2="75" marker-end="url(#arrowB)"/>
+        </g>
+      </g>
+    </svg>
+  </div>
+
+  <!-- 7 steps detail -->
+  <div class="space-y-4">
+    <div class="flex gap-4">
+      <div class="step-num w-10 h-10 rounded-full flex items-center justify-center font-bold text-white shrink-0">1</div>
+      <div class="flex-1">
+        <h3 class="font-bold text-emerald-300">CSI 획득 + 위상 차분 (식 1, 4)</h3>
+        <p class="text-sm text-slate-300 mt-1">2.4GHz CSI 100Hz 수집. 위상은 슬로우 페이딩 제거를 위해 차분:</p>
+        <div class="eq mt-2">Δφ_diff(t) = ∠H_k(t) − ∠H_k(t−1) − θ_offset</div>
+        <p class="text-xs text-slate-400 mt-1">θ_offset은 baseline 첫 5초 정지 구간에서 추정.</p>
+      </div>
+    </div>
+
+    <div class="flex gap-4">
+      <div class="step-num w-10 h-10 rounded-full flex items-center justify-center font-bold text-white shrink-0">2</div>
+      <div class="flex-1">
+        <h3 class="font-bold text-cyan-300">Detrending — 하드웨어 드리프트 제거 (식 5)</h3>
+        <p class="text-sm text-slate-300 mt-1">선형 회귀로 저주파 드리프트 빼기:</p>
+        <div class="eq mt-2">y_detrended(t) = y(t) − (a·t + b)</div>
+      </div>
+    </div>
+
+    <div class="flex gap-4">
+      <div class="step-num w-10 h-10 rounded-full flex items-center justify-center font-bold text-white shrink-0">3</div>
+      <div class="flex-1">
+        <h3 class="font-bold text-cyan-300">BPF — <span class="text-amber-300">0.8–2.5Hz</span>, 4차 Butterworth IIR (식 6)</h3>
+        <p class="text-sm text-slate-300 mt-1">심박 대역 통과. HR 48~150BPM 범위.</p>
+        <div class="bg-amber-950/30 border border-amber-700/30 rounded p-2 mt-2 text-xs">
+          <strong class="text-amber-300">⚠️ 논문 A와 다름!</strong> 논문 A는 <code>1–3.5Hz, 2차</code>. 논문 B는 <code>0.8–2.5Hz, 4차</code>.
+          → 우리 BPF 설정 시 어느 쪽을 따를지 결정 필요. (호흡 잔재 영향 검토)
+        </div>
+      </div>
+    </div>
+
+    <div class="flex gap-4">
+      <div class="step-num w-10 h-10 rounded-full flex items-center justify-center font-bold text-white shrink-0">4</div>
+      <div class="flex-1">
+        <h3 class="font-bold text-violet-300">적응형 Peak 검출 (식 7) ⭐ 핵심 기여</h3>
+        <p class="text-sm text-slate-300 mt-1">시간 변동 임계 + 기울기 영점:</p>
+        <div class="eq mt-2">Peak at t_i  if  y_BP(t_i) > μ + k·σ  AND  dy_BP/dt|_{t_i} ≈ 0</div>
+        <ul class="text-xs text-slate-400 mt-2 space-y-1">
+          <li>• μ, σ = <strong>30초 슬라이딩 윈도우</strong>의 로컬 평균·표준편차</li>
+          <li>• <strong>k = 1.5</strong> (empirically tuned, 14명 실험에서 안정적)</li>
+          <li>• <strong>RRI ≥ 400ms</strong> 제약 (= HR ≤ 150BPM) → 거짓 peak 제거</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="flex gap-4">
+      <div class="step-num w-10 h-10 rounded-full flex items-center justify-center font-bold text-white shrink-0">5</div>
+      <div class="flex-1">
+        <h3 class="font-bold text-orange-300">IBI 추출 + IQR Outlier 제거 (식 8, 9) ⭐ 우리 vital_csi2.py에 없는 단계</h3>
+        <div class="eq mt-2">IBI_i = t_{i+1} − t_i</div>
+        <div class="eq mt-1">IBI_i 제거 시점:  |IBI_i − median(IBI)| > 1.5 × IQR(IBI)</div>
+        <p class="text-xs text-slate-400 mt-2">평균적으로 한 세션당 <strong>~5% 제거</strong>. 이게 RMSSD 부풀림 직접 잡는 후처리.</p>
+      </div>
+    </div>
+
+    <div class="flex gap-4">
+      <div class="step-num w-10 h-10 rounded-full flex items-center justify-center font-bold text-white shrink-0">6</div>
+      <div class="flex-1">
+        <h3 class="font-bold text-rose-300">시간영역 HRV (식 10~12)</h3>
+        <div class="eq mt-2">SDNN = √(1/(N−1) · Σ(IBI_i − IBI̅)²)</div>
+        <div class="eq mt-1">RMSSD = √(1/(N−1) · Σ(IBI_{i+1} − IBI_i)²)</div>
+        <div class="eq mt-1">CV = SDNN / IBI̅ × 100%</div>
+      </div>
+    </div>
+
+    <div class="flex gap-4">
+      <div class="step-num w-10 h-10 rounded-full flex items-center justify-center font-bold text-white shrink-0">7</div>
+      <div class="flex-1">
+        <h3 class="font-bold text-violet-300">주파수영역 HRV — Lomb-Scargle PSD (식 13~18)</h3>
+        <p class="text-sm text-slate-300 mt-1">IBI를 <strong>4Hz로 cubic spline 리샘플</strong> → <strong>Lomb-Scargle</strong>로 PSD (불균등 샘플 OK).</p>
+        <ul class="text-xs text-slate-400 mt-2 space-y-1">
+          <li>• <strong>LF</strong> = ∫₀.₀₄^₀.₁₅ P(f) df  [ms²]</li>
+          <li>• <strong>HF</strong> = ∫₀.₁₅^₀.₄₀ P(f) df  [ms²]</li>
+          <li>• <strong>LF/HF</strong> 비율 = 논문의 메인 출력 (r=0.84로 가장 강건)</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- RESULTS TABLE -->
+<section class="bg-slate-900 border border-slate-800 rounded-xl p-6">
+  <h2 class="text-xl font-bold mb-4">📈 주요 결과 (Table 2·3 요약)</h2>
+
+  <div class="overflow-x-auto">
+    <table class="w-full text-sm">
+      <thead class="text-slate-400 border-b border-slate-700">
+        <tr>
+          <th class="text-left py-2 pr-3">조건</th>
+          <th class="text-left py-2 pr-3">지표</th>
+          <th class="text-right py-2 pr-3">CSI (M±SD)</th>
+          <th class="text-right py-2 pr-3">Fitbit (M±SD)</th>
+          <th class="text-right py-2 pr-3">MAE</th>
+          <th class="text-right py-2 pr-3">ICC</th>
+          <th class="text-right py-2 pr-3">r</th>
+        </tr>
+      </thead>
+      <tbody class="text-slate-200">
+        <tr class="border-b border-slate-800"><td class="py-2 pr-3" rowspan="3">Baseline</td><td>SDNN</td><td class="text-right">43.8±6.2</td><td class="text-right">45.7±5.8</td><td class="text-right">5.3</td><td class="text-right">0.82</td><td class="text-right">0.79</td></tr>
+        <tr class="border-b border-slate-800"><td>RMSSD</td><td class="text-right">32.4±5.9</td><td class="text-right">34.5±5.2</td><td class="text-right">4.1</td><td class="text-right">0.81</td><td class="text-right">0.76</td></tr>
+        <tr class="border-b border-slate-800"><td>CV</td><td class="text-right">6.2±1.1</td><td class="text-right">6.5±0.9</td><td class="text-right">0.8</td><td class="text-right">0.78</td><td class="text-right">0.74</td></tr>
+
+        <tr class="border-b border-slate-800 bg-rose-900/10"><td class="py-2 pr-3" rowspan="3">Stress</td><td>SDNN</td><td class="text-right">28.6±4.1</td><td class="text-right">29.2±4.3</td><td class="text-right">3.8</td><td class="text-right">0.85</td><td class="text-right">0.81</td></tr>
+        <tr class="border-b border-slate-800 bg-rose-900/10"><td>RMSSD</td><td class="text-right">17.2±3.4</td><td class="text-right">16.9±3.7</td><td class="text-right">3.5</td><td class="text-right">0.83</td><td class="text-right">0.77</td></tr>
+        <tr class="border-b border-slate-800 bg-rose-900/10"><td>CV</td><td class="text-right">4.3±0.9</td><td class="text-right">4.1±1.0</td><td class="text-right">0.6</td><td class="text-right">0.80</td><td class="text-right">0.72</td></tr>
+
+        <tr class="border-b border-slate-800 bg-emerald-900/10"><td class="py-2 pr-3" rowspan="3">Recovery</td><td>SDNN</td><td class="text-right">38.1±5.5</td><td class="text-right">39.6±5.1</td><td class="text-right">4.9</td><td class="text-right">0.81</td><td class="text-right">0.77</td></tr>
+        <tr class="border-b border-slate-800 bg-emerald-900/10"><td>RMSSD</td><td class="text-right">25.3±4.8</td><td class="text-right">26.6±4.4</td><td class="text-right">3.9</td><td class="text-right">0.79</td><td class="text-right">0.74</td></tr>
+        <tr class="border-b border-slate-800 bg-emerald-900/10"><td>CV</td><td class="text-right">5.5±1.0</td><td class="text-right">5.9±0.8</td><td class="text-right">0.7</td><td class="text-right">0.77</td><td class="text-right">0.71</td></tr>
+
+        <tr class="border-b border-slate-700 bg-cyan-900/20 font-bold"><td class="py-2 pr-3" rowspan="3">Overall</td><td>SDNN</td><td class="text-right">36.8±8.3</td><td class="text-right">38.1±7.9</td><td class="text-right text-emerald-300">5.8</td><td class="text-right">0.82</td><td class="text-right">0.79</td></tr>
+        <tr class="border-b border-slate-700 bg-cyan-900/20 font-bold"><td>RMSSD</td><td class="text-right">25.0±9.2</td><td class="text-right">26.0±8.5</td><td class="text-right text-emerald-300">4.1</td><td class="text-right">0.81</td><td class="text-right">0.76</td></tr>
+        <tr class="border-b border-slate-700 bg-cyan-900/20 font-bold"><td>CV</td><td class="text-right">5.3±1.5</td><td class="text-right">5.5±1.3</td><td class="text-right">0.7</td><td class="text-right">0.78</td><td class="text-right">0.72</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="mt-6 grid md:grid-cols-2 gap-4 text-sm">
+    <div class="bg-slate-950 rounded p-4">
+      <h3 class="font-semibold text-emerald-300 mb-2">📌 LF/HF 비율 — 가장 강건한 출력</h3>
+      <table class="w-full text-xs">
+        <tr class="text-slate-400"><td></td><td class="text-right">CSI</td><td class="text-right">Fitbit</td><td class="text-right">r</td></tr>
+        <tr><td class="py-1">Baseline</td><td class="text-right">0.78±0.22</td><td class="text-right">0.75±0.20</td><td class="text-right">0.84</td></tr>
+        <tr class="bg-rose-900/20"><td class="py-1">Stress</td><td class="text-right">3.52±0.91</td><td class="text-right">3.38±0.88</td><td class="text-right">0.87</td></tr>
+        <tr class="bg-emerald-900/20"><td class="py-1">Recovery</td><td class="text-right">1.15±0.31</td><td class="text-right">1.12±0.28</td><td class="text-right">0.85</td></tr>
+      </table>
+      <p class="text-xs text-slate-400 mt-2">stress 시 baseline 대비 <strong class="text-rose-300">×4.5</strong> 상승. 모든 조건에서 <code>p&lt;0.001</code></p>
+    </div>
+    <div class="bg-slate-950 rounded p-4">
+      <h3 class="font-semibold text-emerald-300 mb-2">🎯 방향성 일치 — 14명 전원 100%</h3>
+      <ul class="text-xs text-slate-300 space-y-1">
+        <li>• Baseline → Stress: LF/HF <strong>+4.4</strong> (CSI) vs <strong>+4.6</strong> (Fitbit)</li>
+        <li>• Stress → Recovery: LF/HF <strong>−2.4</strong> (CSI) vs <strong>−2.3</strong> (Fitbit)</li>
+        <li>• RMSSD stress 감소율: <strong>−47%</strong> (CSI) vs <strong>−51%</strong> (Fitbit)</li>
+        <li>• RMSSD recovery 회복률: <strong>+47%</strong> (CSI) vs <strong>+57%</strong> (Fitbit)</li>
+      </ul>
+      <p class="text-xs text-emerald-200 mt-2">→ <strong>절대값보다 추세·방향성이 훨씬 강건</strong>. 우리 LF/HF z-score 전략 정확히 정합.</p>
+    </div>
+  </div>
+
+  <div class="mt-4 bg-amber-950/30 border border-amber-700/30 rounded p-3 text-xs">
+    <strong class="text-amber-300">⚠️ Subgroup 결과 — Baseline HR 안정성에 따라 상관 차이</strong>
+    <div class="mt-1 text-slate-300">CV&lt;4% (안정) <strong>r=0.89</strong> · CV 4~6% (보통) r=0.84 · CV&gt;6% (불안정) <strong>r=0.74</strong></div>
+    <div class="text-slate-400 mt-1">→ Beat detection이 불안정 baseline에서 약함. 우리 환자(고령·치매)는 baseline 자체가 불규칙할 수 있어 주의.</div>
+  </div>
+</section>
+
+<!-- LIMITATIONS (논문이 직접 인정) -->
+<section class="bg-rose-950/20 border border-rose-800/40 rounded-xl p-6">
+  <h2 class="text-xl font-bold mb-4">⚠️ 논문이 직접 인정한 한계 (§6.3)</h2>
+  <ul class="space-y-2 text-sm text-slate-200">
+    <li>1. <strong class="text-rose-300">Reference standard</strong>: Smartwatch HRV는 proprietary 알고리즘. <strong>ECG gold standard 아님</strong></li>
+    <li>2. <strong class="text-rose-300">Sample size</strong>: N=14는 feasibility pilot 수준, 임상 일반화 불충분</li>
+    <li>3. <strong class="text-rose-300">Duration</strong>: 14분/세션. 일·주 단위 장기 안정성 미검증</li>
+    <li>4. <strong class="text-rose-300">Task design</strong>: 산술 stress는 가벼움. 심한 stress·정서 자극 미평가</li>
+    <li>5. <strong class="text-rose-300">Environment</strong>: 단일 사무실. 5GHz·MIMO·다른 Wi-Fi 인프라 미테스트</li>
+    <li>6. <strong class="text-rose-300">Population</strong>: 건강한 22~46세. 심혈관질환·부정맥 환자 미포함 → <strong class="text-amber-300">치매·고령 환자에 그대로 적용 불확실</strong></li>
+  </ul>
+</section>
+
+<!-- APPLY TO US -->
+<section class="bg-gradient-to-br from-emerald-900/30 to-slate-900 border border-emerald-700/40 rounded-xl p-6">
+  <h2 class="text-xl font-bold mb-4">🎯 MajuBom 적용 가이드 — 진짜 베이스 논문</h2>
+  <div class="space-y-4 text-sm">
+    <div>
+      <h3 class="font-semibold text-emerald-300">✅ 그대로 이식 가능 (우리 환경과 일치)</h3>
+      <ul class="mt-2 space-y-1 text-slate-300">
+        <li>• <strong>적응형 peak 검출</strong> (μ+1.5σ, 30초 슬라이딩, RRI≥400ms) — Step 1에서 이미 구현 ✓</li>
+        <li>• <strong>IQR outlier 제거</strong> (1.5×IQR, 평균 5% 제거) — vital_csi2.py에 없음 → 추가 필요</li>
+        <li>• <strong>위상 차분 + Detrending</strong> — vital_csi2.py는 진폭만 씀, 위상 활용 검토</li>
+        <li>• <strong>Lomb-Scargle PSD</strong> — 불균등 샘플 OK, IBI 시계열에 적합. <code>scipy.signal.lombscargle</code></li>
+      </ul>
+    </div>
+    <div>
+      <h3 class="font-semibold text-amber-300">⚠️ 우리 환경에서 결정 필요</h3>
+      <ul class="mt-2 space-y-1 text-slate-300">
+        <li>• <strong>BPF 차이</strong>: 논문 B = 0.8~2.5Hz/4차 vs 논문 A = 1~3.5Hz/2차. 우리는 어느 쪽? → 호흡 잔재 시각화 비교 후 결정</li>
+        <li>• <strong>거리</strong>: 논문 B는 3m, 우리는 침대 양쪽 ~1m. 가까울수록 SNR 유리하지만 multipath도 강해짐</li>
+        <li>• <strong>자세</strong>: 논문 B는 앉은 자세, 우리는 누운 자세. 가슴 위치 다름 → 호흡 신호 형태 다를 수 있음</li>
+        <li>• <strong>대상</strong>: 논문 B는 건강한 청년, 우리는 치매·고령. baseline 불안정 시 r 0.74로 떨어짐 → 캘리브레이션 더 길게</li>
+      </ul>
+    </div>
+    <div class="bg-indigo-900/30 border border-indigo-700/40 rounded p-3">
+      <h3 class="font-semibold text-indigo-300">📌 vital_csi3.py 수정 우선순위 (논문 B 기반)</h3>
+      <ol class="mt-2 space-y-1 text-slate-200 list-decimal list-inside text-sm">
+        <li>적응형 peak (μ+1.5σ, 30s window, RRI≥400ms) — Step 1 코드 그대로</li>
+        <li>IQR outlier 제거 (1.5×IQR) — 새 함수 추가</li>
+        <li>BPF 0.8~2.5Hz 4차 vs 1~3.5Hz 2차 — A/B 비교 실험</li>
+        <li>Lomb-Scargle로 LF/HF 계산 → z-score 출력 모드</li>
+        <li>30일 베이스라인 누적 → 개인별 임계값 자동 조정</li>
+      </ol>
+    </div>
+    <div class="bg-rose-950/30 border border-rose-700/40 rounded p-3 text-xs">
+      <strong class="text-rose-300">⚠️ 발표·인용 시 주의:</strong>
+      <ul class="mt-1 space-y-1 text-rose-100">
+        <li>• 논문 B를 <strong>SOTA로 인용하지 말 것</strong> (비심사 preprint)</li>
+        <li>• SDNN 5.8ms, RMSSD 4.1ms 수치 인용 시 "Fitbit GT 기준, ECG 검증 X" 명시</li>
+        <li>• <strong>SOTA 근거는 논문 A (Shirakami, IEEE BHI 2021)</strong>를 메인으로</li>
+        <li>• 논문 B는 "ESP32 환경 적용 방법론 참고문헌"으로 포지셔닝</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- 논문 A vs B 비교 -->
+<section class="bg-slate-900 border border-slate-800 rounded-xl p-6">
+  <h2 class="text-xl font-bold mb-4">⚔️ 논문 A vs 논문 B 정면 비교</h2>
+  <div class="overflow-x-auto">
+    <table class="w-full text-sm">
+      <thead class="text-slate-400 border-b border-slate-700">
+        <tr><th class="text-left py-2"></th><th class="text-left py-2 px-3">논문 A (Shirakami & Sato)</th><th class="text-left py-2 px-3">논문 B (Chaudhari et al.)</th></tr>
+      </thead>
+      <tbody class="text-slate-200">
+        <tr class="border-b border-slate-800"><td class="py-2 text-slate-400">발표</td><td class="px-3">IEEE BHI <span class="text-emerald-300">2021 (peer-reviewed)</span></td><td class="px-3">Preprints.org <span class="text-rose-300">2026 (non peer-reviewed)</span></td></tr>
+        <tr class="border-b border-slate-800"><td class="py-2 text-slate-400">하드웨어</td><td class="px-3">Intel 5300 NIC, 1×3 SIMO 노트북</td><td class="px-3 text-emerald-300">ESP32-WROOM-32 × 2 ⭐</td></tr>
+        <tr class="border-b border-slate-800"><td class="py-2 text-slate-400">샘플링</td><td class="px-3">~160Hz</td><td class="px-3">100Hz</td></tr>
+        <tr class="border-b border-slate-800"><td class="py-2 text-slate-400">신호 소스</td><td class="px-3">진폭 quotient (rx0/rx1)</td><td class="px-3">위상 차분, 30 subcarrier 평균</td></tr>
+        <tr class="border-b border-slate-800"><td class="py-2 text-slate-400">BPF</td><td class="px-3">1–3.5Hz, 2차 Butterworth</td><td class="px-3">0.8–2.5Hz, 4차 Butterworth</td></tr>
+        <tr class="border-b border-slate-800"><td class="py-2 text-slate-400">Peak 검출</td><td class="px-3">SciPy find_peaks (T_i=0.35s)</td><td class="px-3 text-emerald-300">적응형 μ+1.5σ + 30s 슬라이딩 ⭐</td></tr>
+        <tr class="border-b border-slate-800"><td class="py-2 text-slate-400">신호 선택</td><td class="px-3 text-emerald-300">SDNN 작은 순 N=5 합산 ⭐</td><td class="px-3">subcarrier 단순 평균</td></tr>
+        <tr class="border-b border-slate-800"><td class="py-2 text-slate-400">Outlier 후처리</td><td class="px-3">명시 X</td><td class="px-3 text-emerald-300">IQR 1.5× 제거 (~5%) ⭐</td></tr>
+        <tr class="border-b border-slate-800"><td class="py-2 text-slate-400">Ground Truth</td><td class="px-3 text-emerald-300">PPG (Heartpy)</td><td class="px-3 text-rose-300">Fitbit Charge 5</td></tr>
+        <tr class="border-b border-slate-800"><td class="py-2 text-slate-400">대상자</td><td class="px-3">1명, 60초/위치</td><td class="px-3">14명, 14분/세션</td></tr>
+        <tr class="border-b border-slate-800"><td class="py-2 text-slate-400">자세</td><td class="px-3">앉은 자세</td><td class="px-3">앉은 자세</td></tr>
+        <tr class="border-b border-slate-800"><td class="py-2 text-slate-400">거리</td><td class="px-3">70~150cm LOS</td><td class="px-3">3m</td></tr>
+        <tr class="border-b border-slate-800"><td class="py-2 text-slate-400">핵심 결과</td><td class="px-3">RMSE 130ms, SDNN 8.8% 오차</td><td class="px-3">SDNN MAE 5.8ms, RMSSD 4.1ms, LF/HF r=0.84</td></tr>
+        <tr class="border-b border-slate-800"><td class="py-2 text-slate-400">우리 적용</td><td class="px-3">기법 일부만 차용 (subcarrier selection)</td><td class="px-3 text-emerald-300">메인 베이스 (적응형 + IQR + 위상차분)</td></tr>
+        <tr><td class="py-2 text-slate-400">발표 인용</td><td class="px-3 text-emerald-300">✅ SOTA로 인용 OK</td><td class="px-3 text-rose-300">⚠️ 방법론 참고로만</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ORIGINAL PAGES -->
+<section>
+  <h2 class="text-xl font-bold mb-4">📄 원본 PDF 12페이지 (클릭 = 확대)</h2>
+  <div class="grid grid-cols-3 md:grid-cols-6 gap-3">
+    <button class="bg-slate-900 border border-slate-700 rounded hover:border-emerald-500 transition" onclick="openModal('img/page1.png','1p — Title')"><img src="img/page1.png" class="w-full"/><div class="p-1 text-xs text-slate-400">1p</div></button>
+    <button class="bg-slate-900 border border-slate-700 rounded hover:border-emerald-500 transition" onclick="openModal('img/page2.png','2p — Abstract / Intro')"><img src="img/page2.png" class="w-full"/><div class="p-1 text-xs text-slate-400">2p</div></button>
+    <button class="bg-slate-900 border border-slate-700 rounded hover:border-emerald-500 transition" onclick="openModal('img/page3.png','3p — Background / CSI Model')"><img src="img/page3.png" class="w-full"/><div class="p-1 text-xs text-slate-400">3p</div></button>
+    <button class="bg-slate-900 border border-slate-700 rounded hover:border-emerald-500 transition" onclick="openModal('img/page4.png','4p — BPF / Peak detection')"><img src="img/page4.png" class="w-full"/><div class="p-1 text-xs text-slate-400">4p</div></button>
+    <button class="bg-slate-900 border border-slate-700 rounded hover:border-emerald-500 transition" onclick="openModal('img/page5.png','5p — Lomb-Scargle / LF, HF')"><img src="img/page5.png" class="w-full"/><div class="p-1 text-xs text-slate-400">5p</div></button>
+    <button class="bg-slate-900 border border-slate-700 rounded hover:border-emerald-500 transition" onclick="openModal('img/page6.png','6p — Methods / Demographics')"><img src="img/page6.png" class="w-full"/><div class="p-1 text-xs text-slate-400">6p</div></button>
+    <button class="bg-slate-900 border border-slate-700 rounded hover:border-emerald-500 transition" onclick="openModal('img/page7.png','7p — Hardware / Pipeline')"><img src="img/page7.png" class="w-full"/><div class="p-1 text-xs text-slate-400">7p</div></button>
+    <button class="bg-slate-900 border border-slate-700 rounded hover:border-emerald-500 transition" onclick="openModal('img/page8.png','8p — Results Table 2')"><img src="img/page8.png" class="w-full"/><div class="p-1 text-xs text-slate-400">8p</div></button>
+    <button class="bg-slate-900 border border-slate-700 rounded hover:border-emerald-500 transition" onclick="openModal('img/page9.png','9p — Results Table 3')"><img src="img/page9.png" class="w-full"/><div class="p-1 text-xs text-slate-400">9p</div></button>
+    <button class="bg-slate-900 border border-slate-700 rounded hover:border-emerald-500 transition" onclick="openModal('img/page10.png','10p — Subgroup / Discussion')"><img src="img/page10.png" class="w-full"/><div class="p-1 text-xs text-slate-400">10p</div></button>
+    <button class="bg-slate-900 border border-slate-700 rounded hover:border-emerald-500 transition" onclick="openModal('img/page11.png','11p — Limitations / Future')"><img src="img/page11.png" class="w-full"/><div class="p-1 text-xs text-slate-400">11p</div></button>
+    <button class="bg-slate-900 border border-slate-700 rounded hover:border-emerald-500 transition" onclick="openModal('img/page12.png','12p — References')"><img src="img/page12.png" class="w-full"/><div class="p-1 text-xs text-slate-400">12p</div></button>
+  </div>
+</section>
+
+<!-- META FOOTER -->
+<footer class="border-t border-slate-800 pt-6 text-xs text-slate-500">
+  <p>📁 원본 PDF: <span class="font-mono">c:\Users\ACE\Desktop\Extracting_Heart_Rate_Variability_Indica.pdf</span></p>
+  <p class="mt-1">📁 논문 A 리뷰: <span class="font-mono">c:\Users\ACE\Desktop\개개비\paper_review\index.html</span></p>
+  <p class="mt-1">📁 이 페이지: <span class="font-mono">c:\Users\ACE\Desktop\개개비\paper_review_B\index.html</span></p>
+  <p class="mt-1 text-slate-600">생성일: 2026-06-13 · MajuBom CSI/HRV 작업1 핵심 베이스 논문 리뷰</p>
+</footer>
+
+</main>
+
+<!-- MODAL -->
+<div id="modal" class="hidden fixed inset-0 z-50 modal-backdrop overflow-auto p-4" onclick="closeModal()">
+  <div class="max-w-5xl mx-auto bg-slate-900 rounded-lg overflow-hidden" onclick="event.stopPropagation()">
+    <div class="flex justify-between items-center p-4 border-b border-slate-800">
+      <h3 id="modalTitle" class="text-lg font-bold"></h3>
+      <button onclick="closeModal()" class="text-slate-400 hover:text-white text-2xl leading-none">&times;</button>
+    </div>
+    <img id="modalImg" src="" alt="" class="w-full"/>
+  </div>
+</div>
+
+<script>
+function openModal(src, title) {
+  document.getElementById('modalImg').src = src;
+  document.getElementById('modalTitle').textContent = title;
+  document.getElementById('modal').classList.remove('hidden');
+}
+function closeModal() { document.getElementById('modal').classList.add('hidden'); }
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+</script>
+
+</body>
+</html>

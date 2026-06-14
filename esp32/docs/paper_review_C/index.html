@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>논문 리뷰 C — Presence Detection with Wi-Fi using ESP32 (ICETSIS 2024)</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  body { font-family: 'Pretendard', 'Apple SD Gothic Neo', 'Segoe UI', system-ui, sans-serif; }
+  .modal-backdrop { background: rgba(0,0,0,0.85); }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 9999px; font-size: 11px; font-weight: 600; }
+  .layer { background: linear-gradient(135deg, #1e293b, #0f172a); border-left: 3px solid #f97316; padding: 10px 14px; border-radius: 4px; }
+  details > summary { cursor: pointer; }
+</style>
+</head>
+<body class="bg-slate-950 text-slate-100">
+
+<!-- HEADER -->
+<header class="border-b border-slate-800 bg-gradient-to-r from-orange-950 via-slate-900 to-amber-950">
+  <div class="max-w-6xl mx-auto px-6 py-8">
+    <div class="text-xs text-orange-300 font-mono mb-2">📄 논문 리뷰 C · MajuBom 작업2(재실감지)</div>
+    <h1 class="text-3xl md:text-4xl font-bold leading-tight">
+      Wi-Fi CSI + ESP32로 인원수 감지<br/>
+      <span class="text-orange-300 text-2xl">— CNN 기반 0~4명 분류</span>
+    </h1>
+    <p class="text-slate-400 mt-3">
+      <span class="badge bg-orange-700 text-white mr-2">논문 C · 작업2 직접 베이스</span>
+      <span class="badge bg-emerald-700 text-white mr-2">교수님 제공</span>
+      Yakub, Sai, Singh, Mohanty, Akela, Jha · VITAP Univ. (India) · ICETSIS 2024 · IEEE 10459433
+    </p>
+  </div>
+</header>
+
+<main class="max-w-6xl mx-auto px-6 py-8 space-y-10">
+
+<!-- 더블체크 -->
+<section class="bg-slate-900 border border-slate-800 rounded-xl p-6">
+  <h2 class="text-xl font-bold mb-4">✅ 더블체크 결과</h2>
+  <div class="grid md:grid-cols-2 gap-4 text-sm">
+    <div class="space-y-2">
+      <div class="flex"><span class="w-32 text-slate-500">제목</span><span>Presence Detection with Wi-Fi using ESP32</span></div>
+      <div class="flex"><span class="w-32 text-slate-500">저자</span><span>Mohd Priyanshu Yakub 외 5인</span></div>
+      <div class="flex"><span class="w-32 text-slate-500">소속</span><span>School of CSE, VITAP University (India)</span></div>
+      <div class="flex"><span class="w-32 text-slate-500">학회</span><span>ASU Int. Conf. ICETSIS 2024 (Bahrain)</span></div>
+      <div class="flex"><span class="w-32 text-slate-500">DOI</span><span class="font-mono text-xs">10.1109/ICETSIS61505.2024.10459433</span></div>
+      <div class="flex"><span class="w-32 text-slate-500">분량</span><span>5페이지</span></div>
+      <div class="flex"><span class="w-32 text-slate-500">peer-reviewed</span><span class="text-emerald-300">✅ Yes (IEEE conference)</span></div>
+    </div>
+    <div class="bg-emerald-900/20 border border-emerald-700/40 rounded-lg p-4">
+      <h3 class="font-semibold text-emerald-300 mb-2">🎯 우리 프로젝트와의 관계</h3>
+      <p class="text-xs text-slate-200">
+        <strong>작업 2 (재실감지)의 직접 베이스</strong>. 교수님이 주신 논문.<br/>
+        ESP32 CSI + CNN으로 인원수 분류 = MajuBom CSI 파트의 "동행자 존재 여부 확인" (신청서 §주요 기능) 정확히 정합.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- 한 줄 요약 -->
+<section class="bg-gradient-to-br from-orange-900/40 to-amber-900/40 border border-orange-700/40 rounded-xl p-6">
+  <h2 class="text-xl font-bold mb-3">🎯 한 줄 요약</h2>
+  <p class="text-lg leading-relaxed">
+    <strong class="text-orange-300">ESP32 1개 + 일반 Wi-Fi 라우터</strong>로 CSI 수집 →
+    <strong class="text-orange-300">CNN(1D Conv × 2 + Dense × 2)</strong>으로 인원수 분류 →
+    재실유무 <strong class="text-orange-300">98%</strong>, 0~2명 <strong class="text-orange-300">96%</strong>,
+    최대 3명 <strong class="text-orange-300">86%</strong> 달성.
+  </p>
+</section>
+
+<!-- 핵심 수치 -->
+<section>
+  <h2 class="text-xl font-bold mb-4">📊 핵심 결과 (4가지 분류 시나리오)</h2>
+  <div class="grid md:grid-cols-4 gap-4">
+    <div class="bg-slate-900 border border-emerald-600/60 rounded-lg p-4">
+      <div class="text-xs text-emerald-300 mb-1">재실유무 (있/없)</div>
+      <div class="text-4xl font-bold text-emerald-400">97.61<span class="text-lg">%</span></div>
+      <div class="text-xs text-slate-400 mt-1">✅ 가장 강건</div>
+    </div>
+    <div class="bg-slate-900 border border-emerald-600/40 rounded-lg p-4">
+      <div class="text-xs text-emerald-300 mb-1">0~2명 분류</div>
+      <div class="text-4xl font-bold text-emerald-400">96.65<span class="text-lg">%</span></div>
+      <div class="text-xs text-slate-400 mt-1">⭐ 우리 목표 (1명 vs 2명+)</div>
+    </div>
+    <div class="bg-slate-900 border border-amber-600/40 rounded-lg p-4">
+      <div class="text-xs text-amber-300 mb-1">0~3명 분류</div>
+      <div class="text-4xl font-bold text-amber-400">86.17<span class="text-lg">%</span></div>
+      <div class="text-xs text-slate-400 mt-1">⚠️ 정밀도 떨어짐</div>
+    </div>
+    <div class="bg-slate-900 border border-rose-600/40 rounded-lg p-4">
+      <div class="text-xs text-rose-300 mb-1">0~4명 분류</div>
+      <div class="text-4xl font-bold text-rose-400">68.22<span class="text-lg">%</span></div>
+      <div class="text-xs text-slate-400 mt-1">❌ 4 vs 0 혼동</div>
+    </div>
+  </div>
+  <p class="text-sm text-slate-400 mt-3 italic">→ 인원수가 늘수록 ESP32 한계로 정확도 급락. 우리 목적(1명 vs 2명+)은 96% 충분.</p>
+</section>
+
+<!-- 시스템 구조 -->
+<section class="bg-slate-900 border border-slate-800 rounded-xl p-6">
+  <h2 class="text-xl font-bold mb-4">🔌 시스템 구조 — 기존 연구 vs 이 논문</h2>
+  <div class="grid md:grid-cols-2 gap-4 text-sm">
+    <div class="bg-rose-900/20 border border-rose-700/30 rounded-lg p-5">
+      <h3 class="font-bold text-rose-300 mb-2">❌ 기존 연구 한계 (라우터 × 2)</h3>
+      <ul class="space-y-1 text-slate-300">
+        <li>• 특정 NIC 칩셋만 작동 (Atheros AR9580/AR9590/AR9344/QCA9558)</li>
+        <li>• 라우터 2개 (TX + RX) 필요</li>
+        <li>• "COTS"라고 하지만 사실상 호환성 제한</li>
+        <li>• 비싸고 셋업 복잡</li>
+        <li>• 상업적 보급 어려움</li>
+      </ul>
+    </div>
+    <div class="bg-emerald-900/30 border border-emerald-700/40 rounded-lg p-5">
+      <h3 class="font-bold text-emerald-300 mb-2">✅ 이 논문 (ESP32 × 1 + 라우터 × 1)</h3>
+      <ul class="space-y-1 text-slate-200">
+        <li>• ESP32 1개 + <strong>집에 있는 일반 Wi-Fi 라우터</strong></li>
+        <li>• 2.4GHz, 802.11n, 20MHz</li>
+        <li>• Sub-carrier 범위 [-28, +28] (총 56개, 52개 사용)</li>
+        <li>• 라우터에 ping → reply에서 CSI 추출</li>
+        <li>• Python 스크립트로 시리얼 데이터 수집</li>
+        <li>• <strong>저렴, 보급 가능</strong></li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="mt-4 bg-amber-950/30 border border-amber-700/30 rounded p-3 text-xs">
+    <strong class="text-amber-300">⚠️ 우리(MajuBom) 환경과 다른 점:</strong>
+    <span class="text-slate-200">
+      이 논문 = ESP32 × 1 + 외부 라우터. 우리 = <strong>ESP32 × 2 (TX softAP + RX)</strong>.
+      → CSI 추출 방식은 유사, 데이터 형식도 호환. CNN 모델 그대로 적용 가능.
+    </span>
+  </div>
+</section>
+
+<!-- 데이터 수집 -->
+<section class="bg-slate-900 border border-slate-800 rounded-xl p-6">
+  <h2 class="text-xl font-bold mb-4">📥 데이터 수집 방법</h2>
+  <div class="grid md:grid-cols-2 gap-6 text-sm">
+    <div>
+      <h3 class="font-semibold text-orange-300 mb-2">시나리오 5종 (라벨)</h3>
+      <ul class="space-y-1 text-slate-300">
+        <li>👤 0명 (빈 방)</li>
+        <li>👤 1명</li>
+        <li>👤👤 2명</li>
+        <li>👤👤👤 3명</li>
+        <li>👤👤👤👤 4명</li>
+      </ul>
+      <p class="text-xs text-slate-500 mt-2">각 시나리오 다양한 행동 (걷기, 앉기, 말하기) 포함 → ML 모델 robust</p>
+    </div>
+    <div>
+      <h3 class="font-semibold text-orange-300 mb-2">특징 추출 (CSI raw → feature)</h3>
+      <div class="bg-slate-950 rounded p-3 font-mono text-xs space-y-2">
+        <div class="text-emerald-300">진폭 (Amplitude):</div>
+        <div class="ml-3">A = √(Re² + Im²)</div>
+        <div class="text-emerald-300 mt-2">위상 (Phase):</div>
+        <div class="ml-3">ϕ = arctan(Im / Re)</div>
+      </div>
+      <p class="text-xs text-slate-500 mt-2">진폭 + 위상 둘 다 CNN 입력으로 사용</p>
+    </div>
+  </div>
+</section>
+
+<!-- CNN 모델 -->
+<section class="bg-slate-900 border border-slate-800 rounded-xl p-6">
+  <h2 class="text-xl font-bold mb-4">🧠 CNN 모델 구조</h2>
+  <div class="space-y-3">
+    <div class="layer">
+      <div class="font-bold text-orange-300">Input</div>
+      <div class="text-xs text-slate-300">CSI 진폭 + 위상 벡터 (sequential data)</div>
+    </div>
+    <div class="text-center text-slate-500">↓</div>
+    <div class="layer">
+      <div class="font-bold text-orange-300">① 1D Conv (64 filters, kernel=10)</div>
+      <div class="text-xs text-slate-300">+ Batch Normalization + Max Pooling</div>
+    </div>
+    <div class="text-center text-slate-500">↓</div>
+    <div class="layer">
+      <div class="font-bold text-orange-300">② 1D Conv (128 filters, kernel=5)</div>
+      <div class="text-xs text-slate-300">+ Batch Normalization + Max Pooling</div>
+    </div>
+    <div class="text-center text-slate-500">↓</div>
+    <div class="layer">
+      <div class="font-bold text-orange-300">③ Flatten</div>
+    </div>
+    <div class="text-center text-slate-500">↓</div>
+    <div class="layer">
+      <div class="font-bold text-orange-300">④ Dense (256, ReLU)</div>
+      <div class="text-xs text-slate-300">+ Batch Norm + Dropout 0.5</div>
+    </div>
+    <div class="text-center text-slate-500">↓</div>
+    <div class="layer">
+      <div class="font-bold text-orange-300">⑤ Dense (128, ReLU)</div>
+      <div class="text-xs text-slate-300">+ Batch Norm + Dropout 0.5</div>
+    </div>
+    <div class="text-center text-slate-500">↓</div>
+    <div class="layer">
+      <div class="font-bold text-emerald-300">⑥ Softmax (인원수 클래스 출력)</div>
+    </div>
+  </div>
+  <p class="text-xs text-slate-500 mt-4">
+    → 1D Conv 2개로 시계열 특징 추출 → Dense 2개로 분류. 표준적인 CNN-시계열 분류 구조.
+  </p>
+</section>
+
+<!-- 한계 -->
+<section class="bg-rose-950/20 border border-rose-800/40 rounded-xl p-6">
+  <h2 class="text-xl font-bold mb-4">⚠️ 논문이 직접 인정한 한계</h2>
+  <div class="space-y-3 text-sm">
+    <div class="flex gap-3">
+      <div class="text-rose-400">1.</div>
+      <div>
+        <strong class="text-rose-300">ESP32의 Sub-carrier 범위 제한</strong>
+        <p class="text-slate-300 text-xs mt-1">ESP32: [-28, +28] vs 라우터: [-512, +512] → 라우터 대비 정밀도 낮음</p>
+      </div>
+    </div>
+    <div class="flex gap-3">
+      <div class="text-rose-400">2.</div>
+      <div>
+        <strong class="text-rose-300">단일 안테나 vs 다중 안테나</strong>
+        <p class="text-slate-300 text-xs mt-1">라우터 다중 안테나로 augment 가능, ESP32는 1안테나라 한계</p>
+      </div>
+    </div>
+    <div class="flex gap-3">
+      <div class="text-rose-400">3.</div>
+      <div>
+        <strong class="text-rose-300">4명 vs 0명 혼동 (max confusion)</strong>
+        <p class="text-slate-300 text-xs mt-1">0~4명 분류에서 정확도 급락 (68.22%). 4명 → 0명으로 오분류 빈번.</p>
+      </div>
+    </div>
+    <div class="flex gap-3">
+      <div class="text-rose-400">4.</div>
+      <div>
+        <strong class="text-rose-300">Overfitting 가능성</strong>
+        <p class="text-slate-300 text-xs mt-1">단일 환경에서 학습 → 다른 실내 환경에선 재학습 필요</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 우리 적용 -->
+<section class="bg-gradient-to-br from-orange-900/30 to-slate-900 border border-orange-700/40 rounded-xl p-6">
+  <h2 class="text-xl font-bold mb-4">🎯 MajuBom 작업 2에 적용 가이드</h2>
+  <div class="space-y-4 text-sm">
+    <div>
+      <h3 class="font-semibold text-orange-300">✅ 그대로 이식 가능</h3>
+      <ul class="mt-2 space-y-1 text-slate-300">
+        <li>• <strong>1D CNN 모델 구조</strong> 그대로 사용 (TensorFlow/PyTorch 둘 다 OK)</li>
+        <li>• <strong>진폭 + 위상 feature 추출</strong> (vital_csi3.py에서 이미 추출 중)</li>
+        <li>• <strong>"1명 vs 2명+ 분류"가 우리 목적</strong> → 96.65% 정확도 달성 가능 추정</li>
+      </ul>
+    </div>
+    <div>
+      <h3 class="font-semibold text-amber-300">⚠️ 우리 환경 조정 필요</h3>
+      <ul class="mt-2 space-y-1 text-slate-300">
+        <li>• <strong>ESP32 × 2 (softAP) 구성</strong> — 이 논문은 외부 라우터 사용. 우리는 자체 TX softAP. → CSI 수집 코드는 우리 거 그대로 (`csi_recv_router`)</li>
+        <li>• <strong>요양원 환경 재학습 필수</strong> — multipath 지문이 방마다 다름</li>
+        <li>• <strong>침대 누운 자세에서 학습</strong> — 논문은 일반 활동(걷기/앉기) 위주. 우리는 누운 자세 중심</li>
+      </ul>
+    </div>
+    <div class="bg-emerald-900/30 border border-emerald-700/40 rounded p-3">
+      <h3 class="font-semibold text-emerald-300">⭐ 핵심 인사이트 — 작업 1과 시너지</h3>
+      <p class="text-sm text-slate-200 mt-2">
+        작업 2가 "1명 vs 2명+ 감지 (96%)"로 작동하면 → 작업 1 (HRV 추세)의
+        <strong>자동 outlier 게이트</strong> 역할:
+      </p>
+      <ul class="mt-2 space-y-1 text-xs text-slate-300">
+        <li>📍 방에 1명만 → HRV 측정 신뢰 ✓ z-score 적용</li>
+        <li>📍 방에 2명+ (간병인 등) → HRV 측정 무효화</li>
+        <li>📍 신청서 §주요 기능(CSI): "심박 변동성(HRV) 측정 + <strong>동행자 존재 여부</strong> 확인" 정확히 정합</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- 구현 우선순위 -->
+<section class="bg-slate-900 border border-slate-800 rounded-xl p-6">
+  <h2 class="text-xl font-bold mb-4">🗓 구현 우선순위 (발표 후)</h2>
+  <ol class="space-y-3 text-sm list-decimal list-inside">
+    <li><strong>데이터 수집</strong>: 1명(누움) × 30회, 2명(누움+옆에 사람) × 30회 = 60개 샘플
+      <p class="text-xs text-slate-400 ml-6 mt-1">→ 각 30초 측정. ESP32 csi_recv_router 그대로 사용</p>
+    </li>
+    <li><strong>특징 추출</strong>: vital_csi3.py 코드 재사용 (진폭 + 위상)
+      <p class="text-xs text-slate-400 ml-6 mt-1">→ amp = |H|, phase = unwrap(∠H)</p>
+    </li>
+    <li><strong>CNN 모델 구현</strong>: 논문 구조 그대로 (Keras 30줄 정도)
+      <p class="text-xs text-slate-400 ml-6 mt-1">→ 이진 분류 (1명 vs 2명+)이라 더 단순화 가능</p>
+    </li>
+    <li><strong>학습 + 검증</strong>: 80/20 split, accuracy 측정
+      <p class="text-xs text-slate-400 ml-6 mt-1">→ 목표: 90%+ (논문 96% 기준)</p>
+    </li>
+    <li><strong>작업 1과 통합</strong>: 게이트 로직 적용
+      <p class="text-xs text-slate-400 ml-6 mt-1">→ "2명+ 감지 시 HRV 측정 무효화"</p>
+    </li>
+  </ol>
+</section>
+
+<!-- 원본 PDF -->
+<section>
+  <h2 class="text-xl font-bold mb-4">📄 원본 PDF 5페이지 (클릭 = 확대)</h2>
+  <div class="grid grid-cols-3 md:grid-cols-5 gap-3">
+    <button class="bg-slate-900 border border-slate-700 rounded hover:border-orange-500 transition" onclick="openModal('img/page1.png','1p — Abstract / Intro')"><img src="img/page1.png" class="w-full"/><div class="p-1 text-xs text-slate-400">1p</div></button>
+    <button class="bg-slate-900 border border-slate-700 rounded hover:border-orange-500 transition" onclick="openModal('img/page2.png','2p — Related Work / Methodology')"><img src="img/page2.png" class="w-full"/><div class="p-1 text-xs text-slate-400">2p</div></button>
+    <button class="bg-slate-900 border border-slate-700 rounded hover:border-orange-500 transition" onclick="openModal('img/page3.png','3p — Data Collection / CNN')"><img src="img/page3.png" class="w-full"/><div class="p-1 text-xs text-slate-400">3p</div></button>
+    <button class="bg-slate-900 border border-slate-700 rounded hover:border-orange-500 transition" onclick="openModal('img/page4.png','4p — Results (Confusion Matrices)')"><img src="img/page4.png" class="w-full"/><div class="p-1 text-xs text-slate-400">4p</div></button>
+    <button class="bg-slate-900 border border-slate-700 rounded hover:border-orange-500 transition" onclick="openModal('img/page5.png','5p — Conclusion / References')"><img src="img/page5.png" class="w-full"/><div class="p-1 text-xs text-slate-400">5p</div></button>
+  </div>
+</section>
+
+<!-- 논문 A/B/C 비교 -->
+<section class="bg-slate-900 border border-slate-800 rounded-xl p-6">
+  <h2 class="text-xl font-bold mb-4">⚔️ 논문 A / B / C 정리 비교</h2>
+  <div class="overflow-x-auto">
+    <table class="w-full text-sm">
+      <thead class="text-slate-400 border-b border-slate-700">
+        <tr>
+          <th class="text-left py-2"></th>
+          <th class="text-left py-2 px-3">A · Shirakami</th>
+          <th class="text-left py-2 px-3">B · Chaudhari</th>
+          <th class="text-left py-2 px-3">C · VITAP (이거)</th>
+        </tr>
+      </thead>
+      <tbody class="text-slate-200">
+        <tr class="border-b border-slate-800"><td class="py-2 text-slate-400">목적</td><td class="px-3">HRV 추출</td><td class="px-3">HRV 추출</td><td class="px-3 text-orange-300">인원수 감지</td></tr>
+        <tr class="border-b border-slate-800"><td class="py-2 text-slate-400">우리 작업</td><td class="px-3">작업 1</td><td class="px-3">작업 1</td><td class="px-3 text-orange-300">작업 2 ⭐</td></tr>
+        <tr class="border-b border-slate-800"><td class="py-2 text-slate-400">하드웨어</td><td class="px-3">Intel 5300 (3안테나)</td><td class="px-3">ESP32 × 2</td><td class="px-3">ESP32 × 1 + 라우터</td></tr>
+        <tr class="border-b border-slate-800"><td class="py-2 text-slate-400">방법</td><td class="px-3">Quotient + SDNN 선택</td><td class="px-3">적응형 peak</td><td class="px-3 text-orange-300">CNN (1D Conv × 2)</td></tr>
+        <tr class="border-b border-slate-800"><td class="py-2 text-slate-400">학회</td><td class="px-3">IEEE BHI 2021 ✓</td><td class="px-3 text-rose-300">Preprints (비심사) ⚠️</td><td class="px-3 text-emerald-300">IEEE ICETSIS 2024 ✓</td></tr>
+        <tr class="border-b border-slate-800"><td class="py-2 text-slate-400">결과</td><td class="px-3">RMSE 130ms</td><td class="px-3">SDNN 5.8ms (Fitbit GT)</td><td class="px-3 text-emerald-300">재실 98% / 0~2명 96%</td></tr>
+        <tr><td class="py-2 text-slate-400">우리 적용</td><td class="px-3">방법론 참고</td><td class="px-3">방법론 참고</td><td class="px-3 text-emerald-300">CNN 그대로 이식</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- META FOOTER -->
+<footer class="border-t border-slate-800 pt-6 text-xs text-slate-500">
+  <p>📁 원본 PDF: <span class="font-mono">c:\Users\ACE\Desktop\개개비\참고문헌\Presence_Detection_with_Wi-Fi_Using_ESP32.pdf</span></p>
+  <p class="mt-1">📁 이 페이지: <span class="font-mono">c:\Users\ACE\Desktop\개개비\paper_review_C\index.html</span></p>
+  <p class="mt-1">관련 자료:
+    <a href="../paper_review/index.html" class="text-emerald-400 hover:underline">논문 A 리뷰</a> ·
+    <a href="../paper_review_B/index.html" class="text-emerald-400 hover:underline">논문 B 리뷰</a> ·
+    <a href="../terms/index.html" class="text-emerald-400 hover:underline">용어사전</a> ·
+    <a href="../dday_demo/index.html" class="text-emerald-400 hover:underline">발표 슬라이드</a>
+  </p>
+  <p class="mt-1 text-slate-600">생성일: 2026-06-14 · MajuBom 작업 2 (재실감지) 베이스 논문 리뷰</p>
+</footer>
+
+</main>
+
+<!-- MODAL -->
+<div id="modal" class="hidden fixed inset-0 z-50 modal-backdrop overflow-auto p-4" onclick="closeModal()">
+  <div class="max-w-5xl mx-auto bg-slate-900 rounded-lg overflow-hidden" onclick="event.stopPropagation()">
+    <div class="flex justify-between items-center p-4 border-b border-slate-800">
+      <h3 id="modalTitle" class="text-lg font-bold"></h3>
+      <button onclick="closeModal()" class="text-slate-400 hover:text-white text-2xl leading-none">&times;</button>
+    </div>
+    <img id="modalImg" src="" alt="" class="w-full"/>
+  </div>
+</div>
+
+<script>
+function openModal(src, title) {
+  document.getElementById('modalImg').src = src;
+  document.getElementById('modalTitle').textContent = title;
+  document.getElementById('modal').classList.remove('hidden');
+}
+function closeModal() { document.getElementById('modal').classList.add('hidden'); }
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+</script>
+
+</body>
+</html>

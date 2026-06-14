@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>논문 리뷰 — HRV Extraction using Commodity Wi-Fi (Shirakami & Sato, BHI 2021)</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  body { font-family: 'Pretendard', 'Apple SD Gothic Neo', 'Segoe UI', system-ui, sans-serif; }
+  .modal-backdrop { background: rgba(0,0,0,0.85); }
+  .step-num { background: linear-gradient(135deg, #6366f1, #8b5cf6); }
+  .gridbox { display: grid; grid-template-columns: 1fr; gap: 1rem; }
+  @media (min-width: 1024px) { .gridbox { grid-template-columns: 3fr 2fr; } }
+  details > summary { cursor: pointer; }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 9999px; font-size: 11px; font-weight: 600; }
+</style>
+</head>
+<body class="bg-slate-950 text-slate-100">
+
+<!-- HEADER -->
+<header class="border-b border-slate-800 bg-gradient-to-r from-indigo-950 via-slate-900 to-purple-950">
+  <div class="max-w-6xl mx-auto px-6 py-8">
+    <div class="text-xs text-indigo-300 font-mono mb-2">📄 논문 리뷰 · MajuBom CSI/HRV 프로젝트</div>
+    <h1 class="text-3xl md:text-4xl font-bold leading-tight">
+      Commodity Wi-Fi로 HRV 추출하기<br/>
+      <span class="text-indigo-300 text-2xl">— Time Domain Signal Processing 기반</span>
+    </h1>
+    <p class="text-slate-400 mt-3">
+      <span class="badge bg-indigo-700 text-white mr-2">논문 A · 정밀도 기준점</span>
+      Shirakami & Sato (Kyoto Univ.) · IEEE BHI 2021 · DOI 10.1109/BHI50953.2021.9508523
+    </p>
+  </div>
+</header>
+
+<main class="max-w-6xl mx-auto px-6 py-8 space-y-10">
+
+<!-- DOUBLE CHECK -->
+<section class="bg-slate-900 border border-slate-800 rounded-xl p-6">
+  <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
+    <span class="text-emerald-400">✅</span> 더블체크 결과 — 그 논문 맞습니다
+  </h2>
+  <div class="grid md:grid-cols-2 gap-4 text-sm">
+    <div class="space-y-2">
+      <div class="flex"><span class="w-32 text-slate-500">제목</span><span>Heart Rate Variability Extraction using Commodity Wi-Fi Devices via Time Domain Signal Processing</span></div>
+      <div class="flex"><span class="w-32 text-slate-500">저자</span><span>Itsuki Shirakami, Takashi Sato</span></div>
+      <div class="flex"><span class="w-32 text-slate-500">기관</span><span>Graduate School of Informatics, Kyoto University</span></div>
+      <div class="flex"><span class="w-32 text-slate-500">발표</span><span>IEEE EMBS Int. Conf. on Biomedical and Health Informatics (BHI), 2021</span></div>
+      <div class="flex"><span class="w-32 text-slate-500">DOI</span><span class="font-mono text-xs">10.1109/BHI50953.2021.9508523</span></div>
+      <div class="flex"><span class="w-32 text-slate-500">분량</span><span>4페이지</span></div>
+      <div class="flex"><span class="w-32 text-slate-500">다운로드 출처</span><span>Kongju National University (공주대) · 2026-06-12</span></div>
+    </div>
+    <div class="bg-amber-900/20 border border-amber-700/40 rounded-lg p-4">
+      <h3 class="font-semibold text-amber-300 mb-2">⚠️ README_CSI_HRV.md 수치 정정</h3>
+      <p class="text-xs text-slate-400 mb-2">기존 메모: "ECG 대비 R-R 상대오차 <strong>2.53~4.83%</strong>, 복조 MSE <strong>0.35%</strong>"</p>
+      <p class="text-xs text-emerald-300">→ <strong>본문에 해당 수치 없음.</strong> 다른 논문의 수치이거나 환각 가능. 발표·문서에선 아래 <strong>실제 본문 수치</strong>로 교체할 것:</p>
+      <ul class="text-xs mt-2 space-y-1 text-slate-200">
+        <li>• <strong>RMSE 130ms</strong> (peak interval 평균, 모든 위치 평균)</li>
+        <li>• <strong>SDNN 상대오차 8.8%</strong> (최소)</li>
+        <li>• 평균 IBI 오차 최대 <strong>50ms</strong> = HR 5.7BPM 오차</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ONE LINER -->
+<section class="bg-gradient-to-br from-indigo-900/40 to-purple-900/40 border border-indigo-700/40 rounded-xl p-6">
+  <h2 class="text-xl font-bold mb-3">🎯 한 줄 요약</h2>
+  <p class="text-lg leading-relaxed">
+    <strong class="text-indigo-300">FFT 없이 시간영역에서</strong>,
+    두 안테나의 CSI 진폭을 <strong class="text-indigo-300">나눠서(quotient)</strong> 노이즈를 제거하고,
+    여러 subcarrier 중 <strong class="text-indigo-300">SDNN이 작은 신호 N개</strong>를 골라 합쳐서
+    <strong class="text-indigo-300">박동 간격(IBI)</strong>을 직접 검출 → 상용 Wi-Fi로 HRV를 처음으로 추출.
+  </p>
+</section>
+
+<!-- KEY NUMBERS -->
+<section>
+  <h2 class="text-xl font-bold mb-4">📊 핵심 결과 수치</h2>
+  <div class="grid md:grid-cols-4 gap-4">
+    <div class="bg-slate-900 border border-emerald-700/40 rounded-lg p-4">
+      <div class="text-3xl font-bold text-emerald-400">130<span class="text-lg">ms</span></div>
+      <div class="text-xs text-slate-400 mt-1">평균 RMSE<br/>(peak interval)</div>
+    </div>
+    <div class="bg-slate-900 border border-emerald-700/40 rounded-lg p-4">
+      <div class="text-3xl font-bold text-emerald-400">8.8<span class="text-lg">%</span></div>
+      <div class="text-xs text-slate-400 mt-1">SDNN 상대오차<br/>(최소)</div>
+    </div>
+    <div class="bg-slate-900 border border-emerald-700/40 rounded-lg p-4">
+      <div class="text-3xl font-bold text-emerald-400">5.7<span class="text-lg">BPM</span></div>
+      <div class="text-xs text-slate-400 mt-1">평균 심박 오차<br/>(최대)</div>
+    </div>
+    <div class="bg-slate-900 border border-emerald-700/40 rounded-lg p-4">
+      <div class="text-3xl font-bold text-emerald-400">60<span class="text-lg">s</span></div>
+      <div class="text-xs text-slate-400 mt-1">측정 시간<br/>(피험자 정지)</div>
+    </div>
+  </div>
+</section>
+
+<!-- ALGORITHM -->
+<section class="bg-slate-900 border border-slate-800 rounded-xl p-6">
+  <h2 class="text-xl font-bold mb-4">⚙️ 제안 알고리즘 — 6단계 (Fig.1 흐름도 한글 재구성)</h2>
+
+  <!-- SVG Flow Diagram -->
+  <div class="bg-slate-950 border border-slate-800 rounded-lg p-4 mb-6 overflow-x-auto">
+    <svg viewBox="0 0 920 280" class="w-full" style="min-width:760px">
+      <defs>
+        <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+          <polygon points="0 0, 8 3, 0 6" fill="#818cf8"/>
+        </marker>
+      </defs>
+      <!-- Antennas -->
+      <g font-family="monospace" font-size="12" fill="#94a3b8">
+        <circle cx="50" cy="60" r="18" fill="#1e293b" stroke="#475569" stroke-width="1.5"/>
+        <text x="50" y="64" text-anchor="middle">rx0</text>
+        <circle cx="50" cy="140" r="18" fill="#1e293b" stroke="#475569" stroke-width="1.5"/>
+        <text x="50" y="144" text-anchor="middle">rx1</text>
+        <circle cx="50" cy="220" r="18" fill="#1e293b" stroke="#475569" stroke-width="1.5"/>
+        <text x="50" y="224" text-anchor="middle">rx2</text>
+      </g>
+      <text x="50" y="20" text-anchor="middle" fill="#64748b" font-size="11">CSI 진폭</text>
+
+      <!-- Quotient nodes -->
+      <g>
+        <rect x="140" y="80" width="120" height="40" rx="6" fill="#312e81" stroke="#6366f1"/>
+        <text x="200" y="105" text-anchor="middle" fill="#e0e7ff" font-size="13" font-family="monospace">rx0 / rx1</text>
+        <rect x="140" y="180" width="120" height="40" rx="6" fill="#312e81" stroke="#6366f1"/>
+        <text x="200" y="205" text-anchor="middle" fill="#e0e7ff" font-size="13" font-family="monospace">rx1 / rx2</text>
+      </g>
+      <text x="200" y="155" text-anchor="middle" fill="#64748b" font-size="11">① quotient (위상노이즈 제거)</text>
+
+      <!-- BPF -->
+      <g>
+        <rect x="310" y="100" width="120" height="100" rx="6" fill="#1e293b" stroke="#0ea5e9"/>
+        <text x="370" y="140" text-anchor="middle" fill="#bae6fd" font-size="13" font-weight="bold">② BPF</text>
+        <text x="370" y="160" text-anchor="middle" fill="#7dd3fc" font-size="11">1 – 3.5 Hz</text>
+        <text x="370" y="180" text-anchor="middle" fill="#7dd3fc" font-size="10">Butterworth 2nd · 영위상</text>
+      </g>
+
+      <!-- Peak detection 1 -->
+      <g>
+        <rect x="480" y="100" width="120" height="100" rx="6" fill="#1e293b" stroke="#a78bfa"/>
+        <text x="540" y="135" text-anchor="middle" fill="#ddd6fe" font-size="13" font-weight="bold">③ Peak 검출</text>
+        <text x="540" y="155" text-anchor="middle" fill="#c4b5fd" font-size="11">SciPy find_peaks</text>
+        <text x="540" y="175" text-anchor="middle" fill="#c4b5fd" font-size="10">distance ≥ T_i = 0.35s</text>
+      </g>
+
+      <!-- Signal selection -->
+      <g>
+        <rect x="650" y="60" width="130" height="80" rx="6" fill="#1e293b" stroke="#34d399"/>
+        <text x="715" y="90" text-anchor="middle" fill="#a7f3d0" font-size="13" font-weight="bold">④ 신호 선택</text>
+        <text x="715" y="108" text-anchor="middle" fill="#6ee7b7" font-size="11">IBI 계산 → SDNN ↑</text>
+        <text x="715" y="124" text-anchor="middle" fill="#6ee7b7" font-size="11">작은 순 N_s=5 선택</text>
+      </g>
+
+      <!-- Sum in time -->
+      <g>
+        <rect x="650" y="160" width="130" height="60" rx="6" fill="#1e293b" stroke="#fb7185"/>
+        <text x="715" y="185" text-anchor="middle" fill="#fecdd3" font-size="13" font-weight="bold">⑤ 시간영역 합산</text>
+        <text x="715" y="205" text-anchor="middle" fill="#fda4af" font-size="11">정규화 후 ∑</text>
+      </g>
+
+      <!-- Final peak -->
+      <g>
+        <rect x="800" y="100" width="100" height="80" rx="6" fill="#1e293b" stroke="#a78bfa"/>
+        <text x="850" y="135" text-anchor="middle" fill="#ddd6fe" font-size="13" font-weight="bold">⑥ Peak</text>
+        <text x="850" y="155" text-anchor="middle" fill="#c4b5fd" font-size="11">→ HRV</text>
+      </g>
+
+      <!-- Arrows -->
+      <g stroke="#818cf8" stroke-width="1.6" fill="none">
+        <line x1="70" y1="60" x2="135" y2="95" marker-end="url(#arrow)"/>
+        <line x1="70" y1="140" x2="135" y2="100" marker-end="url(#arrow)"/>
+        <line x1="70" y1="140" x2="135" y2="195" marker-end="url(#arrow)"/>
+        <line x1="70" y1="220" x2="135" y2="200" marker-end="url(#arrow)"/>
+        <line x1="260" y1="100" x2="305" y2="135" marker-end="url(#arrow)"/>
+        <line x1="260" y1="200" x2="305" y2="165" marker-end="url(#arrow)"/>
+        <line x1="430" y1="150" x2="475" y2="150" marker-end="url(#arrow)"/>
+        <line x1="600" y1="135" x2="645" y2="100" marker-end="url(#arrow)"/>
+        <line x1="780" y1="100" x2="800" y2="135" marker-end="url(#arrow)"/>
+        <line x1="780" y1="190" x2="800" y2="160" marker-end="url(#arrow)"/>
+        <line x1="715" y1="140" x2="715" y2="158" marker-end="url(#arrow)"/>
+      </g>
+    </svg>
+  </div>
+
+  <!-- 6 steps detail -->
+  <div class="space-y-4">
+    <div class="flex gap-4">
+      <div class="step-num w-10 h-10 rounded-full flex items-center justify-center font-bold text-white shrink-0">1</div>
+      <div>
+        <h3 class="font-bold text-indigo-300">CSI Quotient — 두 안테나 진폭의 비율 계산</h3>
+        <p class="text-sm text-slate-300 mt-1">같은 수신기의 두 안테나(rx0, rx1)에서 받은 CSI 진폭을 <strong>나눠서</strong> 사용. 두 안테나엔 같은 임펄스 노이즈 δ(f,t)와 같은 위상 오프셋 e<sup>-jϕ</sup>가 곱해져 있다고 가정 → 비율을 취하면 <strong>공통 노이즈가 약분</strong>되어 사라짐.</p>
+        <div class="bg-slate-950 rounded p-2 mt-2 font-mono text-xs text-emerald-300">
+          H_q(f,t) = (H_s1 + H_d1) / (H_s2 + H_d2) &nbsp; ← (식 4)
+        </div>
+      </div>
+    </div>
+
+    <div class="flex gap-4">
+      <div class="step-num w-10 h-10 rounded-full flex items-center justify-center font-bold text-white shrink-0">2</div>
+      <div>
+        <h3 class="font-bold text-sky-300">대역통과 필터 (BPF) 1 – 3.5 Hz</h3>
+        <p class="text-sm text-slate-300 mt-1">각 subcarrier × 수신 안테나 조합에 <strong>2차 Butterworth BPF</strong> 적용. 심박 기본 주파수 ~1–2Hz를 통과시킴. <strong>Forward-Backward 필터</strong>(영위상)라 신호 시간이 밀리지 않음. 호흡 신호(0.2–0.5Hz)는 차단.</p>
+      </div>
+    </div>
+
+    <div class="flex gap-4">
+      <div class="step-num w-10 h-10 rounded-full flex items-center justify-center font-bold text-white shrink-0">3</div>
+      <div>
+        <h3 class="font-bold text-violet-300">1차 Peak 검출 (각 subcarrier별)</h3>
+        <p class="text-sm text-slate-300 mt-1">SciPy <code class="bg-slate-800 px-1 rounded">find_peaks</code>로 각 신호의 local maximum을 찾되, 인접 peak 간격 ≥ <strong>T_i = 0.35초</strong> 제약. (= 최대 검출 주파수 1/0.35 ≈ 2.86Hz, 약 171BPM 상한)</p>
+      </div>
+    </div>
+
+    <div class="flex gap-4">
+      <div class="step-num w-10 h-10 rounded-full flex items-center justify-center font-bold text-white shrink-0">4</div>
+      <div>
+        <h3 class="font-bold text-emerald-300">신호 선택 — SDNN 작은 순 N개</h3>
+        <p class="text-sm text-slate-300 mt-1">각 신호의 peak 시퀀스 → IBI 계산 → <strong>SDNN(IBI 표준편차)</strong> 계산. 심박을 잘 잡은 subcarrier일수록 SDNN이 작음(IBI가 안정적) → <strong>SDNN 작은 순으로 N_s = 5개</strong> 선택.</p>
+        <p class="text-xs text-amber-300 mt-2">💡 이게 논문 핵심 인사이트: "좋은 신호일수록 IBI 분산이 작다"는 가정.</p>
+      </div>
+    </div>
+
+    <div class="flex gap-4">
+      <div class="step-num w-10 h-10 rounded-full flex items-center justify-center font-bold text-white shrink-0">5</div>
+      <div>
+        <h3 class="font-bold text-rose-300">선택 신호 시간영역 합산</h3>
+        <p class="text-sm text-slate-300 mt-1">선택된 5개 신호를 <strong>정규화 후 시간영역에서 그대로 더함</strong>. 신호 간 노이즈가 무상관이라 가정하면, 합산 시 SNR이 √N 배로 개선됨.</p>
+      </div>
+    </div>
+
+    <div class="flex gap-4">
+      <div class="step-num w-10 h-10 rounded-full flex items-center justify-center font-bold text-white shrink-0">6</div>
+      <div>
+        <h3 class="font-bold text-violet-300">최종 Peak 검출 → HRV 출력</h3>
+        <p class="text-sm text-slate-300 mt-1">합산 신호에 다시 같은 peak 검출(T_i=0.35s 제약) → <strong>IBI 시퀀스 = HRV</strong> 출력.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HYPERPARAMS -->
+<section class="bg-slate-900 border border-slate-800 rounded-xl p-6">
+  <h2 class="text-xl font-bold mb-4">🔧 하이퍼파라미터</h2>
+  <div class="grid md:grid-cols-2 gap-4">
+    <div class="bg-slate-950 rounded p-4">
+      <div class="font-mono text-2xl text-indigo-300">T_i = 0.35s</div>
+      <div class="text-sm text-slate-400 mt-2">peak 간 최소 간격. 이 값의 역수 = 검출 가능 최대 주파수 ≈ 2.86Hz (≈ 171BPM)</div>
+    </div>
+    <div class="bg-slate-950 rounded p-4">
+      <div class="font-mono text-2xl text-indigo-300">N_s = 5</div>
+      <div class="text-sm text-slate-400 mt-2">최종 합산에 쓸 신호 수. SDNN 작은 순으로 5개.</div>
+    </div>
+  </div>
+</section>
+
+<!-- EXPERIMENT -->
+<section class="bg-slate-900 border border-slate-800 rounded-xl p-6">
+  <h2 class="text-xl font-bold mb-4">🧪 실험 셋업</h2>
+  <div class="grid md:grid-cols-2 gap-6 text-sm">
+    <div>
+      <h3 class="font-semibold text-slate-300 mb-2">하드웨어</h3>
+      <ul class="space-y-1 text-slate-400">
+        <li>• Ubuntu 14.04 PC × 2 + <strong class="text-amber-300">Intel 5300 NIC</strong></li>
+        <li>• Linux 802.11n CSI Tool 사용</li>
+        <li>• 옴니 안테나 <strong>9.5cm 간격</strong>, 1×3 SIMO</li>
+        <li>• 중심주파수 <strong>5.32GHz</strong> (W64), BW 20MHz</li>
+        <li>• 30/56 subcarrier 기록</li>
+        <li>• 샘플링 ~<strong>160Hz</strong> 평균 (일정 X)</li>
+      </ul>
+      <div class="mt-3 bg-rose-950/40 border border-rose-800/40 rounded p-3 text-xs">
+        <strong class="text-rose-300">⚠️ 우리(MajuBom)랑 다른 점:</strong>
+        <ul class="mt-1 space-y-0.5 text-rose-100">
+          <li>• 논문 = Intel 5300 NIC 노트북. 우리 = <strong>ESP32-S3</strong></li>
+          <li>• 논문 = 한 수신기에 안테나 3개(SIMO). 우리 = <strong>ESP32 2개(TX+RX, 안테나 각 1개)</strong></li>
+          <li>• 즉 <strong>step 1 quotient를 같은 수신기 안에서 못 함</strong> → 다른 subcarrier 간 비율 또는 위상차분으로 대체 필요</li>
+        </ul>
+      </div>
+    </div>
+    <div>
+      <h3 class="font-semibold text-slate-300 mb-2">피험자 / 환경</h3>
+      <ul class="space-y-1 text-slate-400">
+        <li>• 의자에 깊게 앉은 자세 <span class="text-amber-300">(누운 자세 아님)</span></li>
+        <li>• 60초간 자연호흡, 정지</li>
+        <li>• 안테나 높이 90cm (가슴 높이)</li>
+        <li>• LOS 거리: <strong>70 ~ 150cm</strong> (20cm 간격)</li>
+        <li>• Offset: <strong>23 ~ 38cm</strong> (3cm 간격)</li>
+        <li>• 기준 센서: <strong>손가락 PPG</strong></li>
+        <li>• 동기화: NTP</li>
+        <li>• Peak 검출 (PPG측): Heartpy 라이브러리</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- APPLY TO US -->
+<section class="bg-gradient-to-br from-emerald-900/30 to-slate-900 border border-emerald-700/40 rounded-xl p-6">
+  <h2 class="text-xl font-bold mb-4">🎯 MajuBom에 어떻게 적용할까</h2>
+  <div class="space-y-4 text-sm">
+    <div>
+      <h3 class="font-semibold text-emerald-300">바로 이식 가능한 것</h3>
+      <ul class="mt-2 space-y-1 text-slate-300">
+        <li>✅ <strong>BPF 1–3.5Hz (Butterworth 2차, Forward-Backward)</strong> — 그대로 적용</li>
+        <li>✅ <strong>SDNN-based subcarrier selection</strong> — N_s=5로 시작. 우리는 64 subcarrier 있으니 충분</li>
+        <li>✅ <strong>peak 간격 ≥ 0.35s 제약</strong> — vital_csi2.py의 distance 파라미터에 적용</li>
+        <li>✅ <strong>정규화 후 시간영역 합산</strong> — PCA 대신/병용 가능</li>
+      </ul>
+    </div>
+    <div>
+      <h3 class="font-semibold text-amber-300">우리 환경 적응 필요</h3>
+      <ul class="mt-2 space-y-1 text-slate-300">
+        <li>⚠️ <strong>Quotient 모델을 어떻게?</strong> — 우리 RX는 안테나 1개라 "같은 수신기 두 안테나" 비율 불가능 →
+          <strong>같은 수신기의 다른 subcarrier 간 비율</strong> 또는 <strong>위상 차분(PhaseBeat 방식)</strong>로 대체</li>
+        <li>⚠️ <strong>샘플링 주파수</strong> — 논문 160Hz, 우리 ~100~111Hz. BPF/peak detection 파라미터 그대로 동작하지만 RMSSD 한계는 우리 쪽이 더 큼 (샘플간격 10ms ≈ RMSSD 정상값과 비슷)</li>
+        <li>⚠️ <strong>측정 시간</strong> — 논문 60초, 우리 90초. 더 길어서 IBI 통계 안정성은 우리가 유리</li>
+      </ul>
+    </div>
+    <div class="bg-indigo-900/30 border border-indigo-700/40 rounded p-3">
+      <h3 class="font-semibold text-indigo-300">📌 코드 작업 우선순위 (vital_csi2.py 수정안)</h3>
+      <ol class="mt-2 space-y-1 text-slate-200 list-decimal list-inside text-sm">
+        <li>현재 PCA → <strong>subcarrier별 BPF + peak + IBI → SDNN으로 N=5 선택 → 정규화 후 합산</strong>으로 교체</li>
+        <li>1차 peak 검출에 <strong>T_i=0.35s</strong> 제약 명시</li>
+        <li>quotient 시도: 64 subcarrier 중 강한 신호 두 개 골라 비율 → 효과 비교</li>
+        <li>RMSSD가 SDNN보다 작아지는지 확인 (현재 RMSSD>SDNN 문제 해결 목표)</li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<!-- ORIGINAL PAGES -->
+<section>
+  <h2 class="text-xl font-bold mb-4">📄 원본 PDF 페이지 (클릭 = 확대)</h2>
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+    <button class="block bg-slate-900 border border-slate-700 rounded-lg overflow-hidden hover:border-indigo-500 transition" onclick="openModal('img/page1.png','1페이지 — Abstract · Introduction · CSI 기본')">
+      <img src="img/page1.png" alt="page1" class="w-full"/>
+      <div class="p-2 text-xs text-slate-400">1p · Abstract / Intro</div>
+    </button>
+    <button class="block bg-slate-900 border border-slate-700 rounded-lg overflow-hidden hover:border-indigo-500 transition" onclick="openModal('img/page2.png','2페이지 — CSI Quotient 모델 식 (2), (3), (4)')">
+      <img src="img/page2.png" alt="page2" class="w-full"/>
+      <div class="p-2 text-xs text-slate-400">2p · Quotient 모델 / 알고리즘 6단계</div>
+    </button>
+    <button class="block bg-slate-900 border border-slate-700 rounded-lg overflow-hidden hover:border-indigo-500 transition" onclick="openModal('img/page3.png','3페이지 — Fig.1 처리흐름 · Fig.2 실험환경')">
+      <img src="img/page3.png" alt="page3" class="w-full"/>
+      <div class="p-2 text-xs text-slate-400">3p · Fig.1 흐름도 · Fig.2 실험</div>
+    </button>
+    <button class="block bg-slate-900 border border-slate-700 rounded-lg overflow-hidden hover:border-indigo-500 transition" onclick="openModal('img/page4.png','4페이지 — Fig.3 결과 히트맵 · 참고문헌')">
+      <img src="img/page4.png" alt="page4" class="w-full"/>
+      <div class="p-2 text-xs text-slate-400">4p · 결과 그래프 / 참고문헌</div>
+    </button>
+  </div>
+</section>
+
+<!-- EMBEDDED FIGURES -->
+<section>
+  <h2 class="text-xl font-bold mb-4">🖼 추출된 그림 (Fig.1, Fig.2 원본)</h2>
+  <div class="grid md:grid-cols-2 gap-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-lg p-4">
+      <img src="img/p3_img1.png" alt="Fig.1" class="w-full bg-white rounded"/>
+      <p class="text-sm mt-2"><strong>Fig.1</strong> — 처리 흐름. CSI 진폭 → quotient(rx0/rx1, rx1/rx2) → BPF → peak → signal selection → sum → 최종 peak → HRV</p>
+    </div>
+    <div class="bg-slate-900 border border-slate-800 rounded-lg p-4">
+      <img src="img/p3_img2.png" alt="Fig.2" class="w-full bg-white rounded"/>
+      <p class="text-sm mt-2"><strong>Fig.2</strong> — 실험 환경. 의자에 앉은 피험자, Tx 안테나 3개(1개만 사용), Rx 안테나 3개. LOS 거리·offset 표시</p>
+    </div>
+  </div>
+</section>
+
+<!-- META FOOTER -->
+<footer class="border-t border-slate-800 pt-6 text-xs text-slate-500">
+  <p>📁 원본 PDF: <span class="font-mono">c:\Users\ACE\Desktop\개개비\참고문헌\Heart Rate Variability Extraction using Commodity Wi-Fi Devices via Time Domain Signal Processing.pdf</span></p>
+  <p class="mt-1">이 페이지: <span class="font-mono">c:\Users\ACE\Desktop\개개비\paper_review\index.html</span></p>
+  <p class="mt-1 text-slate-600">생성일: 2026-06-13 · MajuBom CSI/HRV 작업1 참고용</p>
+</footer>
+
+</main>
+
+<!-- MODAL -->
+<div id="modal" class="hidden fixed inset-0 z-50 modal-backdrop overflow-auto p-4" onclick="closeModal()">
+  <div class="max-w-5xl mx-auto bg-slate-900 rounded-lg overflow-hidden" onclick="event.stopPropagation()">
+    <div class="flex justify-between items-center p-4 border-b border-slate-800">
+      <h3 id="modalTitle" class="text-lg font-bold"></h3>
+      <button onclick="closeModal()" class="text-slate-400 hover:text-white text-2xl leading-none">&times;</button>
+    </div>
+    <img id="modalImg" src="" alt="" class="w-full"/>
+  </div>
+</div>
+
+<script>
+function openModal(src, title) {
+  document.getElementById('modalImg').src = src;
+  document.getElementById('modalTitle').textContent = title;
+  document.getElementById('modal').classList.remove('hidden');
+}
+function closeModal() {
+  document.getElementById('modal').classList.add('hidden');
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>MajuBom 용어사전 — CSI / HRV / 신호처리 기초</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  body { font-family: 'Pretendard', 'Apple SD Gothic Neo', 'Segoe UI', system-ui, sans-serif; scroll-behavior: smooth; }
+  .term-card { transition: all 0.2s; }
+  .term-card:hover { transform: translateY(-2px); }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 9999px; font-size: 11px; font-weight: 600; }
+  .anchor::before { content: ''; display: block; height: 80px; margin-top: -80px; visibility: hidden; }
+  nav.toc a.active { color: #34d399; border-color: #34d399; }
+  .eq { background: #0f172a; border-left: 3px solid #34d399; padding: 6px 10px; font-family: monospace; font-size: 13px; color: #6ee7b7; }
+  details > summary { cursor: pointer; }
+  details > summary::marker { color: #64748b; }
+  code.kw { background: #1e293b; color: #fcd34d; padding: 1px 5px; border-radius: 4px; font-size: 0.92em; }
+</style>
+</head>
+<body class="bg-slate-950 text-slate-100">
+
+<!-- HEADER -->
+<header class="sticky top-0 z-30 border-b border-slate-800 bg-slate-950/90 backdrop-blur">
+  <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+    <div>
+      <h1 class="text-xl font-bold">📚 MajuBom 용어사전</h1>
+      <p class="text-xs text-slate-400">CSI · HRV · 신호처리 · 검증 — 처음 보는 사람을 위한 친절한 설명</p>
+    </div>
+    <div class="text-xs text-slate-500 hidden md:flex gap-4">
+      <a href="../paper_review/index.html" class="hover:text-emerald-300">← 논문 A 리뷰</a>
+      <a href="../paper_review_B/index.html" class="hover:text-emerald-300">논문 B 리뷰 →</a>
+    </div>
+  </div>
+</header>
+
+<div class="max-w-7xl mx-auto px-6 py-8 flex gap-8">
+
+  <!-- SIDEBAR TOC -->
+  <nav class="toc hidden lg:block w-56 shrink-0 sticky top-24 self-start text-sm">
+    <div class="text-xs uppercase tracking-wider text-slate-500 mb-3">목차</div>
+    <ul class="space-y-1.5 border-l border-slate-800 pl-3">
+      <li><a href="#flow" class="text-slate-400 hover:text-emerald-300 block py-1 border-l-2 border-transparent pl-2">🎯 한 줄 + 흐름</a></li>
+      <li><a href="#cat1" class="text-slate-400 hover:text-emerald-300 block py-1 border-l-2 border-transparent pl-2">① 심박 기본</a></li>
+      <li><a href="#cat2" class="text-slate-400 hover:text-emerald-300 block py-1 border-l-2 border-transparent pl-2">② HRV 지표</a></li>
+      <li><a href="#cat3" class="text-slate-400 hover:text-emerald-300 block py-1 border-l-2 border-transparent pl-2">③ CSI 기본</a></li>
+      <li><a href="#cat4" class="text-slate-400 hover:text-emerald-300 block py-1 border-l-2 border-transparent pl-2">④ 신호처리</a></li>
+      <li><a href="#cat5" class="text-slate-400 hover:text-emerald-300 block py-1 border-l-2 border-transparent pl-2">⑤ Peak 찾기</a></li>
+      <li><a href="#cat6" class="text-slate-400 hover:text-emerald-300 block py-1 border-l-2 border-transparent pl-2">⑥ Outlier</a></li>
+      <li><a href="#cat7" class="text-slate-400 hover:text-emerald-300 block py-1 border-l-2 border-transparent pl-2">⑦ 검증·통계</a></li>
+      <li><a href="#faq" class="text-slate-400 hover:text-emerald-300 block py-1 border-l-2 border-transparent pl-2">❓ 자주 헷갈리는 것</a></li>
+    </ul>
+  </nav>
+
+  <main class="flex-1 space-y-16">
+
+  <!-- HERO -->
+  <section id="flow" class="anchor">
+    <div class="bg-gradient-to-br from-emerald-900/30 via-slate-900 to-cyan-900/30 border border-emerald-700/40 rounded-2xl p-8">
+      <h2 class="text-3xl font-bold mb-4">🎯 한 줄로 — 우리가 도대체 뭐 하나</h2>
+      <p class="text-xl text-slate-100 leading-relaxed">
+        <strong class="text-emerald-300">심장이 뛸 때마다 박자 사이 시간이 얼마나 흔들리는지</strong> 측정하는 거예요.<br/>
+        그 흔들림이 <strong class="text-emerald-300">자율신경 상태</strong>를 알려주고,
+        그게 흐트러지면 <strong class="text-emerald-300">낙상 위험 신호</strong>일 수 있어요.
+      </p>
+      <div class="mt-4 bg-slate-950/70 border border-slate-700 rounded-lg p-4">
+        <p class="text-sm text-slate-400 mb-2">💡 <strong>비유</strong>:</p>
+        <p class="text-slate-200">메트로놈이 완벽하게 똑딱똑딱 안 뛰고, <strong>살짝씩 다르게</strong> 뛴다고 생각해보세요.
+          그 "흔들림 폭"이 곧 우리가 보려는 값. WiFi 신호로 가슴 움직임을 감지해 그걸 측정.</p>
+      </div>
+    </div>
+
+    <!-- FLOW DIAGRAM -->
+    <div class="mt-6 bg-slate-900 border border-slate-800 rounded-2xl p-6">
+      <h3 class="text-lg font-bold mb-4">🔁 전체 흐름</h3>
+      <div class="overflow-x-auto">
+        <svg viewBox="0 0 1000 220" class="w-full" style="min-width:880px">
+          <defs>
+            <marker id="ar" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+              <polygon points="0 0, 8 3, 0 6" fill="#10b981"/>
+            </marker>
+          </defs>
+          <g font-family="sans-serif">
+            <g><rect x="10" y="80" width="130" height="60" rx="8" fill="#1e293b" stroke="#06b6d4"/>
+              <text x="75" y="105" text-anchor="middle" fill="#cffafe" font-size="13" font-weight="bold">① CSI raw</text>
+              <text x="75" y="123" text-anchor="middle" fill="#67e8f9" font-size="11">WiFi 채널 정보</text></g>
+            <g><rect x="170" y="80" width="120" height="60" rx="8" fill="#1e293b" stroke="#0ea5e9"/>
+              <text x="230" y="105" text-anchor="middle" fill="#bae6fd" font-size="13" font-weight="bold">② BPF</text>
+              <text x="230" y="123" text-anchor="middle" fill="#7dd3fc" font-size="11">심박 대역만</text></g>
+            <g><rect x="320" y="80" width="120" height="60" rx="8" fill="#1e293b" stroke="#a78bfa"/>
+              <text x="380" y="105" text-anchor="middle" fill="#ddd6fe" font-size="13" font-weight="bold">③ PCA</text>
+              <text x="380" y="123" text-anchor="middle" fill="#c4b5fd" font-size="11">좋은 1줄 추출</text></g>
+            <g><rect x="470" y="80" width="120" height="60" rx="8" fill="#312e81" stroke="#8b5cf6"/>
+              <text x="530" y="105" text-anchor="middle" fill="#e0e7ff" font-size="13" font-weight="bold">④ Peak 찾기</text>
+              <text x="530" y="123" text-anchor="middle" fill="#c4b5fd" font-size="11">심장 뛴 순간</text></g>
+            <g><rect x="620" y="80" width="120" height="60" rx="8" fill="#7c2d12" stroke="#fb923c"/>
+              <text x="680" y="105" text-anchor="middle" fill="#fed7aa" font-size="13" font-weight="bold">⑤ R-R 계산</text>
+              <text x="680" y="123" text-anchor="middle" fill="#fdba74" font-size="11">+ outlier 제거</text></g>
+            <g><rect x="770" y="80" width="120" height="60" rx="8" fill="#064e3b" stroke="#10b981"/>
+              <text x="830" y="105" text-anchor="middle" fill="#a7f3d0" font-size="13" font-weight="bold">⑥ HRV 통계</text>
+              <text x="830" y="123" text-anchor="middle" fill="#6ee7b7" font-size="11">SDNN · RMSSD</text></g>
+            <g><rect x="900" y="80" width="90" height="60" rx="8" fill="#1e293b" stroke="#fbbf24"/>
+              <text x="945" y="105" text-anchor="middle" fill="#fef3c7" font-size="13" font-weight="bold">⑦ 검증</text>
+              <text x="945" y="123" text-anchor="middle" fill="#fcd34d" font-size="11">애플워치</text></g>
+            <g stroke="#10b981" stroke-width="1.8" fill="none">
+              <line x1="140" y1="110" x2="168" y2="110" marker-end="url(#ar)"/>
+              <line x1="290" y1="110" x2="318" y2="110" marker-end="url(#ar)"/>
+              <line x1="440" y1="110" x2="468" y2="110" marker-end="url(#ar)"/>
+              <line x1="590" y1="110" x2="618" y2="110" marker-end="url(#ar)"/>
+              <line x1="740" y1="110" x2="768" y2="110" marker-end="url(#ar)"/>
+              <line x1="890" y1="110" x2="898" y2="110" marker-end="url(#ar)"/>
+            </g>
+            <text x="500" y="30" text-anchor="middle" fill="#94a3b8" font-size="13">"WiFi 진동" → "심장 뛴 시점" → "박자 간격" → "흔들림 통계"</text>
+            <text x="500" y="180" text-anchor="middle" fill="#475569" font-size="11">각 단계는 아래에서 차근차근 설명</text>
+          </g>
+        </svg>
+      </div>
+    </div>
+  </section>
+
+  <!-- ① 심박 기본 -->
+  <section id="cat1" class="anchor">
+    <div class="flex items-baseline gap-3 mb-6">
+      <span class="badge bg-emerald-700 text-white">① 가장 기본</span>
+      <h2 class="text-2xl font-bold">심박 관련 용어</h2>
+    </div>
+
+    <!-- 그림: peaks + RR -->
+    <div class="bg-slate-900 border border-slate-800 rounded-xl p-6 mb-6">
+      <svg viewBox="0 0 800 200" class="w-full">
+        <g font-family="sans-serif">
+          <line x1="20" y1="120" x2="780" y2="120" stroke="#475569" stroke-width="1"/>
+          <text x="780" y="115" text-anchor="end" fill="#64748b" font-size="11">시간 →</text>
+          <g fill="#fb7185">
+            <text x="100" y="55" text-anchor="middle" font-size="28">♥</text>
+            <text x="250" y="55" text-anchor="middle" font-size="28">♥</text>
+            <text x="430" y="55" text-anchor="middle" font-size="28">♥</text>
+            <text x="580" y="55" text-anchor="middle" font-size="28">♥</text>
+            <text x="730" y="55" text-anchor="middle" font-size="28">♥</text>
+          </g>
+          <g stroke="#fb7185" stroke-width="1.5">
+            <line x1="100" y1="75" x2="100" y2="125"/>
+            <line x1="250" y1="75" x2="250" y2="125"/>
+            <line x1="430" y1="75" x2="430" y2="125"/>
+            <line x1="580" y1="75" x2="580" y2="125"/>
+            <line x1="730" y1="75" x2="730" y2="125"/>
+          </g>
+          <g stroke="#34d399" stroke-width="1.5">
+            <line x1="100" y1="145" x2="250" y2="145" marker-end="url(#ar)" marker-start="url(#ar)"/>
+            <line x1="250" y1="145" x2="430" y2="145" marker-end="url(#ar)" marker-start="url(#ar)"/>
+            <line x1="430" y1="145" x2="580" y2="145" marker-end="url(#ar)" marker-start="url(#ar)"/>
+            <line x1="580" y1="145" x2="730" y2="145" marker-end="url(#ar)" marker-start="url(#ar)"/>
+          </g>
+          <g fill="#a7f3d0" font-size="12" text-anchor="middle">
+            <text x="175" y="172">753 ms</text>
+            <text x="340" y="172">812 ms</text>
+            <text x="505" y="172">742 ms</text>
+            <text x="655" y="172">778 ms</text>
+          </g>
+          <text x="100" y="100" text-anchor="middle" fill="#fda4af" font-size="11">peak</text>
+          <text x="400" y="195" text-anchor="middle" fill="#34d399" font-size="12">↑ 박자 사이 시간 = R-R interval (IBI)</text>
+        </g>
+      </svg>
+    </div>
+
+    <div class="grid md:grid-cols-2 gap-4">
+      <div class="term-card bg-slate-900 border border-slate-800 rounded-lg p-5">
+        <div class="flex items-baseline justify-between">
+          <h3 class="text-lg font-bold text-emerald-300">HR <span class="text-xs text-slate-500 font-normal">(Heart Rate)</span></h3>
+          <span class="text-xs text-slate-500">단위: bpm</span>
+        </div>
+        <p class="text-sm text-slate-300 mt-2"><strong>심박수</strong>. 1분에 심장이 몇 번 뛰는지.</p>
+        <p class="text-xs text-slate-500 mt-1">예: 정상 60~80bpm, 운동 시 120~160bpm</p>
+      </div>
+
+      <div class="term-card bg-slate-900 border border-slate-800 rounded-lg p-5">
+        <div class="flex items-baseline justify-between">
+          <h3 class="text-lg font-bold text-emerald-300">R-R interval / IBI</h3>
+          <span class="text-xs text-slate-500">단위: ms</span>
+        </div>
+        <p class="text-sm text-slate-300 mt-2">두 박동 사이 <strong>시간 간격</strong>. <code class="kw">IBI</code> = Inter-Beat Interval.</p>
+        <p class="text-xs text-slate-500 mt-1">예: HR 80bpm = R-R 평균 750ms (60000÷80)</p>
+      </div>
+
+      <div class="term-card bg-slate-900 border border-slate-800 rounded-lg p-5">
+        <div class="flex items-baseline justify-between">
+          <h3 class="text-lg font-bold text-emerald-300">NN interval</h3>
+          <span class="text-xs text-slate-500">단위: ms</span>
+        </div>
+        <p class="text-sm text-slate-300 mt-2">"<strong>정상(Normal)</strong> R-R"만. 이상치(부정맥 등)를 뺀 R-R.</p>
+        <p class="text-xs text-slate-500 mt-1">실용상 R-R과 거의 같은 의미. 학술 표현.</p>
+      </div>
+
+      <div class="term-card bg-slate-900 border border-slate-800 rounded-lg p-5">
+        <div class="flex items-baseline justify-between">
+          <h3 class="text-lg font-bold text-emerald-300">peak</h3>
+          <span class="text-xs text-slate-500">신호의 산봉우리</span>
+        </div>
+        <p class="text-sm text-slate-300 mt-2">CSI 진폭 신호에서 <strong>심장이 뛴 순간</strong>으로 인식되는 지점. 신호의 국소 최댓값.</p>
+        <p class="text-xs text-slate-500 mt-1">peak 시점 차이 = R-R interval</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ② HRV 지표 -->
+  <section id="cat2" class="anchor">
+    <div class="flex items-baseline gap-3 mb-6">
+      <span class="badge bg-cyan-700 text-white">② HRV 본체</span>
+      <h2 class="text-2xl font-bold">HRV 지표 — 두 종류</h2>
+    </div>
+
+    <p class="text-slate-300 mb-6">
+      <strong class="text-cyan-300">HRV</strong>는 "박동 간격이 얼마나 흔들리는지"를 여러 각도로 본 거예요.
+      크게 <strong>시간영역</strong>(시간 단위 통계)과 <strong>주파수영역</strong>(스펙트럼 분석) 두 가지.
+    </p>
+
+    <div class="grid md:grid-cols-2 gap-6">
+      <!-- 시간영역 -->
+      <div class="bg-slate-900 border border-emerald-700/30 rounded-xl p-6">
+        <h3 class="font-bold text-emerald-300 mb-3">🅰 시간영역 (간단한 통계)</h3>
+        <div class="space-y-4">
+          <div>
+            <div class="flex justify-between"><strong class="text-emerald-200">SDNN</strong> <span class="text-xs text-slate-500">단위 ms</span></div>
+            <p class="text-sm text-slate-300 mt-1">R-R 시간들의 <strong>표준편차</strong>. 전체 변동의 크기.</p>
+            <div class="eq mt-2">SDNN = √( Σ(RR_i − RR̅)² / (N−1) )</div>
+            <p class="text-xs text-slate-500 mt-1">정상 청년: <strong>30~50ms</strong> · 우리 측정: 91.5ms (부풀어 있음)</p>
+          </div>
+          <div>
+            <div class="flex justify-between"><strong class="text-emerald-200">RMSSD</strong> <span class="text-xs text-slate-500">단위 ms</span></div>
+            <p class="text-sm text-slate-300 mt-1"><strong>연속한 두 R-R 차이</strong>의 RMS. <strong>빠른</strong> 변동만 봄.</p>
+            <div class="eq mt-2">RMSSD = √( Σ(RR_{i+1} − RR_i)² / (N−1) )</div>
+            <p class="text-xs text-slate-500 mt-1">정상 청년: <strong>20~40ms</strong> · 부교감(휴식) 활동 지표</p>
+            <p class="text-xs text-amber-300 mt-1">⚠️ 정상은 <strong>RMSSD &lt; SDNN</strong>. 반대면 peak 잡기 망친 신호</p>
+          </div>
+          <div>
+            <div class="flex justify-between"><strong class="text-emerald-200">CV</strong> <span class="text-xs text-slate-500">단위 %</span></div>
+            <p class="text-sm text-slate-300 mt-1"><strong>변동계수</strong>. SDNN을 평균 R-R로 나눈 비율.</p>
+            <div class="eq mt-2">CV = SDNN / 평균RR × 100%</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 주파수영역 -->
+      <div class="bg-slate-900 border border-violet-700/30 rounded-xl p-6">
+        <h3 class="font-bold text-violet-300 mb-3">🅱 주파수영역 (스펙트럼)</h3>
+        <p class="text-xs text-slate-400 mb-3">R-R 시퀀스를 푸리에 변환해 어떤 주파수 성분이 강한지 분석</p>
+        <div class="space-y-4">
+          <div>
+            <div class="flex justify-between"><strong class="text-violet-200">LF</strong> <span class="text-xs text-slate-500">0.04~0.15Hz</span></div>
+            <p class="text-sm text-slate-300 mt-1">저주파 파워. <strong>교감+부교감 혼합</strong> 지표.</p>
+          </div>
+          <div>
+            <div class="flex justify-between"><strong class="text-violet-200">HF</strong> <span class="text-xs text-slate-500">0.15~0.40Hz</span></div>
+            <p class="text-sm text-slate-300 mt-1">고주파 파워. <strong>부교감</strong>(휴식 신경) 지표. 호흡과 관련.</p>
+          </div>
+          <div>
+            <div class="flex justify-between"><strong class="text-violet-200">LF/HF</strong> <span class="text-xs text-slate-500">비율</span></div>
+            <p class="text-sm text-slate-300 mt-1"><strong>스트레스/자율신경 균형</strong> 지표. 흔히 사용.</p>
+            <p class="text-xs text-emerald-300 mt-1">⭐ 신청서 목표 = 평소 대비 <strong>LF/HF z-score 추세</strong></p>
+          </div>
+        </div>
+        <div class="mt-4 bg-amber-950/30 border border-amber-700/30 rounded p-3 text-xs">
+          <strong class="text-amber-300">💡 우리 입장:</strong>
+          <p class="mt-1 text-slate-300">형석님이 "HRV 절대값(SDNN)에 매달리겠다" 선언 →
+            <strong>🅰 시간영역</strong> 메인, <strong>🅱 주파수영역</strong>은 백업.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ③ CSI -->
+  <section id="cat3" class="anchor">
+    <div class="flex items-baseline gap-3 mb-6">
+      <span class="badge bg-sky-700 text-white">③ 우리 센서</span>
+      <h2 class="text-2xl font-bold">CSI 관련 용어</h2>
+    </div>
+
+    <p class="text-slate-300 mb-6">
+      카메라 대신 <strong class="text-sky-300">WiFi 신호의 미세한 변형</strong>으로 가슴 움직임을 추측하는 게 우리 방식.
+      그 변형 데이터가 <strong>CSI</strong>.
+    </p>
+
+    <div class="grid md:grid-cols-2 gap-4">
+      <div class="term-card bg-slate-900 border border-sky-700/30 rounded-lg p-5">
+        <h3 class="text-lg font-bold text-sky-300">CSI <span class="text-xs text-slate-500 font-normal">Channel State Information</span></h3>
+        <p class="text-sm text-slate-300 mt-2">WiFi 송신기 → 수신기 사이의 <strong>채널 상태</strong> 정보. 사람 가슴이 움직이면 채널이 미세하게 바뀜 → 그걸로 심박/호흡 추출.</p>
+        <p class="text-xs text-slate-500 mt-2">한 패킷당 64개 subcarrier × (I, Q) 복소수 = 128값</p>
+      </div>
+
+      <div class="term-card bg-slate-900 border border-sky-700/30 rounded-lg p-5">
+        <h3 class="text-lg font-bold text-sky-300">Subcarrier</h3>
+        <p class="text-sm text-slate-300 mt-2">WiFi(OFDM)는 한 번에 <strong>64개의 작은 주파수 채널</strong>을 동시에 보냄. 각각이 subcarrier. CSI는 subcarrier별로 따로 나옴.</p>
+        <p class="text-xs text-slate-500 mt-2">우리는 그 중 정보 많은 일부만 골라 씀</p>
+      </div>
+
+      <div class="term-card bg-slate-900 border border-sky-700/30 rounded-lg p-5">
+        <h3 class="text-lg font-bold text-sky-300">진폭 (Amplitude)</h3>
+        <p class="text-sm text-slate-300 mt-2">WiFi 신호의 <strong>크기</strong>. I, Q값으로 계산: <code class="kw">amp = √(I² + Q²)</code></p>
+        <p class="text-xs text-slate-500 mt-2">우리 vital_csi2.py는 진폭만 사용</p>
+      </div>
+
+      <div class="term-card bg-slate-900 border border-sky-700/30 rounded-lg p-5">
+        <h3 class="text-lg font-bold text-sky-300">위상 (Phase)</h3>
+        <p class="text-sm text-slate-300 mt-2">WiFi 신호 sin파의 <strong>시작 위치(각도)</strong>. 심박 미세진동에 더 민감.</p>
+        <p class="text-xs text-amber-300 mt-2">⭐ 논문 B는 위상 사용 (진폭 X). 향후 도입 검토</p>
+      </div>
+
+      <div class="term-card bg-slate-900 border border-sky-700/30 rounded-lg p-5">
+        <h3 class="text-lg font-bold text-sky-300">Quotient model</h3>
+        <p class="text-sm text-slate-300 mt-2">같은 수신기 두 안테나 CSI를 <strong>나눈 것(비율)</strong>. 공통 노이즈가 약분돼서 깨끗해짐.</p>
+        <p class="text-xs text-rose-300 mt-2">⚠️ 우리 ESP32는 안테나 1개라 원본 quotient 불가</p>
+      </div>
+
+      <div class="term-card bg-slate-900 border border-sky-700/30 rounded-lg p-5">
+        <h3 class="text-lg font-bold text-sky-300">Multipath</h3>
+        <p class="text-sm text-slate-300 mt-2">WiFi 신호가 벽·가구 등에 <strong>여러 경로로 반사</strong>되어 도착. 환경마다 달라 새 환경에선 정확도 떨어짐.</p>
+        <p class="text-xs text-slate-500 mt-2">요양원마다 캘리브레이션 필요한 이유</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ④ 신호처리 -->
+  <section id="cat4" class="anchor">
+    <div class="flex items-baseline gap-3 mb-6">
+      <span class="badge bg-violet-700 text-white">④ 신호처리</span>
+      <h2 class="text-2xl font-bold">raw → peak 잡기 전 도구들</h2>
+    </div>
+
+    <div class="grid md:grid-cols-2 gap-4">
+      <div class="term-card bg-slate-900 border border-violet-700/30 rounded-lg p-5">
+        <h3 class="text-lg font-bold text-violet-300">BPF <span class="text-xs text-slate-500 font-normal">Band-Pass Filter</span></h3>
+        <p class="text-sm text-slate-300 mt-2">특정 <strong>주파수 대역만 통과</strong>시키는 필터. 라디오 다이얼 같은 거.</p>
+        <p class="text-xs text-slate-500 mt-2">우리 vital_csi2.py: <code class="kw">0.9~1.8Hz</code> = 54~108 bpm 대역만 남김 (호흡·노이즈 제거)</p>
+        <div class="mt-2 bg-amber-950/30 border border-amber-700/30 rounded p-2 text-xs">
+          <strong class="text-amber-300">논문별 대역 차이</strong>: 논문 A=1~3.5Hz, 논문 B=0.8~2.5Hz, 우리=0.9~1.8Hz
+        </div>
+      </div>
+
+      <div class="term-card bg-slate-900 border border-violet-700/30 rounded-lg p-5">
+        <h3 class="text-lg font-bold text-violet-300">Butterworth</h3>
+        <p class="text-sm text-slate-300 mt-2">가장 흔한 BPF 종류. <strong>대역 안은 평탄, 바깥은 부드럽게 감쇠</strong>.</p>
+        <p class="text-xs text-slate-500 mt-2"><code class="kw">차수</code>가 클수록 더 칼같이 자름 (논문 A는 2차, 논문 B는 4차)</p>
+      </div>
+
+      <div class="term-card bg-slate-900 border border-violet-700/30 rounded-lg p-5">
+        <h3 class="text-lg font-bold text-violet-300">Detrend</h3>
+        <p class="text-sm text-slate-300 mt-2">신호의 <strong>천천히 변하는 추세</strong>(드리프트)를 빼서 평평하게 만듦.</p>
+        <p class="text-xs text-slate-500 mt-2">하드웨어 온도 변화로 신호가 살살 올라가는 거 제거</p>
+      </div>
+
+      <div class="term-card bg-slate-900 border border-violet-700/30 rounded-lg p-5">
+        <h3 class="text-lg font-bold text-violet-300">PCA <span class="text-xs text-slate-500 font-normal">Principal Component Analysis</span></h3>
+        <p class="text-sm text-slate-300 mt-2"><strong>여러 신호를 하나로 압축</strong>. 정보가 가장 많이 담긴 방향을 찾아냄.</p>
+        <p class="text-xs text-slate-500 mt-2">비유: 합창단 60명 중 멜로디 잘 들리는 1명 자동 선출</p>
+        <p class="text-xs text-amber-300 mt-2">우리 vital_csi2.py는 64 subcarrier → PCA로 상위 3개 컴포넌트</p>
+      </div>
+
+      <div class="term-card bg-slate-900 border border-violet-700/30 rounded-lg p-5">
+        <h3 class="text-lg font-bold text-violet-300">z-score / 정규화</h3>
+        <p class="text-sm text-slate-300 mt-2">데이터를 <strong>평균 0, 표준편차 1</strong>로 맞춤.</p>
+        <div class="eq mt-2">z = (x − μ) / σ</div>
+        <p class="text-xs text-slate-500 mt-2">예: 키 175cm → "평균보다 1.2σ 큼"</p>
+        <p class="text-xs text-amber-300 mt-2">⚠️ PCA 후 신호는 z-score 분포라 μ+1.5σ 임계가 너무 엄격해짐 (오늘 발견한 문제)</p>
+      </div>
+
+      <div class="term-card bg-slate-900 border border-violet-700/30 rounded-lg p-5">
+        <h3 class="text-lg font-bold text-violet-300">자기상관 <span class="text-xs text-slate-500 font-normal">autocorrelation</span></h3>
+        <p class="text-sm text-slate-300 mt-2">신호가 <strong>얼마 만에 자기 자신과 비슷해지나</strong>를 찾는 방법.</p>
+        <p class="text-xs text-slate-500 mt-2">메트로놈 똑딱 사이 시간을 자동으로 추정. 우리 vital_csi2는 이걸로 평균 심박 주기 T 추정.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ⑤ Peak -->
+  <section id="cat5" class="anchor">
+    <div class="flex items-baseline gap-3 mb-6">
+      <span class="badge bg-rose-700 text-white">⑤ Peak 찾기</span>
+      <h2 class="text-2xl font-bold">신호에서 심장 뛴 시점 잡기</h2>
+    </div>
+
+    <!-- 그림: peak + 임계 -->
+    <div class="bg-slate-900 border border-slate-800 rounded-xl p-6 mb-6">
+      <svg viewBox="0 0 800 220" class="w-full">
+        <g font-family="sans-serif">
+          <path d="M20,150 Q60,80 100,130 T180,140 Q220,70 260,130 T340,150 Q380,80 420,140 T500,135 Q540,90 580,140 T660,130 Q700,80 740,140"
+                stroke="#94a3b8" stroke-width="2" fill="none"/>
+          <line x1="20" y1="100" x2="760" y2="100" stroke="#fb923c" stroke-width="1.5" stroke-dasharray="5,3"/>
+          <text x="765" y="95" fill="#fb923c" font-size="11">μ + 1.5σ 임계</text>
+          <g fill="#10b981">
+            <circle cx="100" cy="130" r="0"/>
+            <circle cx="260" cy="130" r="0"/>
+            <circle cx="420" cy="140" r="0"/>
+            <circle cx="580" cy="140" r="0"/>
+            <circle cx="740" cy="140" r="0"/>
+          </g>
+          <g fill="#34d399">
+            <text x="100" y="75" text-anchor="middle" font-size="20">★</text>
+            <text x="260" y="75" text-anchor="middle" font-size="20">★</text>
+            <text x="420" y="75" text-anchor="middle" font-size="20">★</text>
+            <text x="580" y="75" text-anchor="middle" font-size="20">★</text>
+            <text x="740" y="75" text-anchor="middle" font-size="20">★</text>
+          </g>
+          <text x="100" y="55" text-anchor="middle" fill="#a7f3d0" font-size="11">peak ✓ (임계 위)</text>
+          <text x="400" y="200" text-anchor="middle" fill="#94a3b8" font-size="12">★ = peak로 인정된 점 (임계선 위 + 거리 조건 충족)</text>
+        </g>
+      </svg>
+    </div>
+
+    <div class="grid md:grid-cols-2 gap-4">
+      <div class="term-card bg-slate-900 border border-rose-700/30 rounded-lg p-5">
+        <h3 class="text-lg font-bold text-rose-300">find_peaks</h3>
+        <p class="text-sm text-slate-300 mt-2">SciPy의 <strong>peak 찾기 함수</strong>. distance, prominence, height 옵션으로 조건 부과.</p>
+        <p class="text-xs text-slate-500 mt-2"><code class="kw">scipy.signal.find_peaks</code></p>
+      </div>
+
+      <div class="term-card bg-slate-900 border border-rose-700/30 rounded-lg p-5">
+        <h3 class="text-lg font-bold text-rose-300">distance</h3>
+        <p class="text-sm text-slate-300 mt-2">"<strong>이 거리 안에 두 peak 있을 수 없음</strong>" 제약. 노이즈 peak 줄임.</p>
+        <p class="text-xs text-slate-500 mt-2">우리 코드: 자기상관 주기 T × 0.65 (적응형 distance ✅)</p>
+      </div>
+
+      <div class="term-card bg-slate-900 border border-rose-700/30 rounded-lg p-5">
+        <h3 class="text-lg font-bold text-rose-300">prominence</h3>
+        <p class="text-sm text-slate-300 mt-2">peak가 <strong>주변보다 얼마나 솟아있어야</strong> 인정할지. 고정값.</p>
+        <p class="text-xs text-rose-200 mt-2">⚠️ 고정값이라 신호 크기 변하면 부적합. 우리가 바꾸려는 부분.</p>
+      </div>
+
+      <div class="term-card bg-slate-900 border border-rose-700/30 rounded-lg p-5">
+        <h3 class="text-lg font-bold text-rose-300">μ <span class="text-xs text-slate-500">(뮤)</span></h3>
+        <p class="text-sm text-slate-300 mt-2"><strong>평균값</strong>(mean). 그리스 문자.</p>
+      </div>
+
+      <div class="term-card bg-slate-900 border border-rose-700/30 rounded-lg p-5">
+        <h3 class="text-lg font-bold text-rose-300">σ <span class="text-xs text-slate-500">(시그마)</span></h3>
+        <p class="text-sm text-slate-300 mt-2"><strong>표준편차</strong>(standard deviation). 데이터가 평균에서 얼마나 흩어졌는지.</p>
+      </div>
+
+      <div class="term-card bg-slate-900 border border-rose-700/30 rounded-lg p-5">
+        <h3 class="text-lg font-bold text-rose-300">μ + 1.5σ <span class="text-xs text-slate-500">적응형 임계</span></h3>
+        <p class="text-sm text-slate-300 mt-2">"평균보다 1.5σ 위인 점만 peak로 인정". <strong>신호 크기 따라 임계가 자동 조정</strong>.</p>
+        <p class="text-xs text-amber-300 mt-2">논문 B 핵심. 우리 PCA z-score 신호엔 너무 엄격함 (실측 결과)</p>
+      </div>
+
+      <div class="term-card bg-slate-900 border border-rose-700/30 rounded-lg p-5 md:col-span-2">
+        <h3 class="text-lg font-bold text-rose-300">슬라이딩 윈도우 <span class="text-xs text-slate-500">Sliding Window</span></h3>
+        <p class="text-sm text-slate-300 mt-2">긴 신호를 <strong>일정 크기 창</strong>으로 보면서 <strong>한 칸씩 옆으로 이동</strong>. 각 위치에서 그 구간만의 μ, σ 계산.</p>
+        <p class="text-xs text-slate-500 mt-2">예: 90초 신호에 30초 창 → 1초씩 이동하며 60번 통계 계산. 시간 변화 따라잡음.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ⑥ Outlier -->
+  <section id="cat6" class="anchor">
+    <div class="flex items-baseline gap-3 mb-6">
+      <span class="badge bg-orange-700 text-white">⑥ 잘못된 값 제거</span>
+      <h2 class="text-2xl font-bold">Outlier 제거</h2>
+    </div>
+
+    <p class="text-slate-300 mb-6">
+      R-R 시퀀스에 가끔 <strong class="text-orange-300">말도 안 되는 값</strong>이 들어가요 (peak 놓침/가짜 peak).
+      예: <code class="kw">[750, 780, 760, <span class="text-rose-400">2300</span>, 740, 800]</code> ← 2300이 outlier
+      → 통계 망치기 전에 빼야 함.
+    </p>
+
+    <div class="grid md:grid-cols-2 gap-4">
+      <div class="term-card bg-slate-900 border border-orange-700/30 rounded-lg p-5">
+        <h3 class="text-lg font-bold text-orange-300">median <span class="text-xs text-slate-500 font-normal">중앙값</span></h3>
+        <p class="text-sm text-slate-300 mt-2">데이터 정렬했을 때 <strong>한가운데 값</strong>. outlier에 강함 (평균은 outlier에 휘둘림).</p>
+      </div>
+
+      <div class="term-card bg-slate-900 border border-orange-700/30 rounded-lg p-5">
+        <h3 class="text-lg font-bold text-orange-300">percentile / quartile</h3>
+        <p class="text-sm text-slate-300 mt-2">"<strong>아래에서 N%</strong> 위치 값". 25%(Q1), 50%(중앙값), 75%(Q3).</p>
+      </div>
+
+      <div class="term-card bg-slate-900 border border-orange-700/30 rounded-lg p-5">
+        <h3 class="text-lg font-bold text-orange-300">IQR <span class="text-xs text-slate-500 font-normal">Interquartile Range</span></h3>
+        <p class="text-sm text-slate-300 mt-2"><strong>Q3 − Q1</strong>. 가운데 50% 데이터의 폭. 데이터 흩어짐을 outlier에 강하게 측정.</p>
+        <div class="eq mt-2">IQR = Q3 − Q1</div>
+      </div>
+
+      <div class="term-card bg-slate-900 border border-orange-700/30 rounded-lg p-5">
+        <h3 class="text-lg font-bold text-orange-300">1.5 × IQR 규칙</h3>
+        <p class="text-sm text-slate-300 mt-2">"<strong>Q1 − 1.5×IQR ~ Q3 + 1.5×IQR</strong> 밖에 있는 값은 outlier"로 빼버림. 통계 표준.</p>
+        <p class="text-xs text-emerald-300 mt-2">⭐ 논문 B 식 9의 방법. vital_csi2.py에 추가 필요</p>
+      </div>
+
+      <div class="term-card bg-slate-900 border border-orange-700/30 rounded-lg p-5 md:col-span-2">
+        <h3 class="text-lg font-bold text-orange-300">median ±30% <span class="text-xs text-slate-500 font-normal">(우리 현재 방식)</span></h3>
+        <p class="text-sm text-slate-300 mt-2">"중앙값에서 ±30% 벗어난 값은 outlier". 정적·임의 임계. IQR보다 단순하지만 분포에 둔감.</p>
+        <p class="text-xs text-amber-300 mt-2">vital_csi2.py의 현재 방식. IQR로 교체 검토 중.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ⑦ 검증·통계 -->
+  <section id="cat7" class="anchor">
+    <div class="flex items-baseline gap-3 mb-6">
+      <span class="badge bg-yellow-700 text-white">⑦ 검증</span>
+      <h2 class="text-2xl font-bold">통계 / 검증 용어</h2>
+    </div>
+
+    <div class="grid md:grid-cols-2 gap-4">
+      <div class="term-card bg-slate-900 border border-yellow-700/30 rounded-lg p-5">
+        <h3 class="text-lg font-bold text-yellow-300">Ground Truth <span class="text-xs text-slate-500 font-normal">정답값</span></h3>
+        <p class="text-sm text-slate-300 mt-2">"<strong>진짜 정답</strong>"으로 인정되는 외부 측정값. 우리 CSI 결과를 검증하는 기준.</p>
+        <p class="text-xs text-amber-300 mt-2">우리 후보: <strong>애플워치 SDNN</strong> (Polar H10이 더 정확하지만 비용)</p>
+      </div>
+
+      <div class="term-card bg-slate-900 border border-yellow-700/30 rounded-lg p-5">
+        <h3 class="text-lg font-bold text-yellow-300">ECG <span class="text-xs text-slate-500 font-normal">심전도</span></h3>
+        <p class="text-sm text-slate-300 mt-2">전극으로 <strong>심장 전기신호 직접 측정</strong>. 가장 정확. HRV의 학술 표준.</p>
+        <p class="text-xs text-slate-500 mt-2">병원 검사 / 가슴띠 / 애플워치 ECG 앱(30초)</p>
+      </div>
+
+      <div class="term-card bg-slate-900 border border-yellow-700/30 rounded-lg p-5">
+        <h3 class="text-lg font-bold text-yellow-300">PPG <span class="text-xs text-slate-500 font-normal">광용적맥파</span></h3>
+        <p class="text-sm text-slate-300 mt-2">빛으로 <strong>혈류 변화 측정</strong> → 심박. 손목 시계·손가락 클립.</p>
+        <p class="text-xs text-slate-500 mt-2">ECG보다 부정확. 손목 PPG는 RMSSD에 ±10~30ms 오차</p>
+      </div>
+
+      <div class="term-card bg-slate-900 border border-yellow-700/30 rounded-lg p-5">
+        <h3 class="text-lg font-bold text-yellow-300">RMSE</h3>
+        <p class="text-sm text-slate-300 mt-2"><strong>오차 제곱평균의 제곱근</strong>. 예측-정답 차이의 크기. 큰 오차 더 크게 벌점.</p>
+        <div class="eq mt-2">RMSE = √( Σ(pred−true)² / N )</div>
+      </div>
+
+      <div class="term-card bg-slate-900 border border-yellow-700/30 rounded-lg p-5">
+        <h3 class="text-lg font-bold text-yellow-300">MAE <span class="text-xs text-slate-500 font-normal">평균절대오차</span></h3>
+        <p class="text-sm text-slate-300 mt-2">예측-정답 <strong>차이 절댓값의 평균</strong>. 직관적.</p>
+        <div class="eq mt-2">MAE = Σ|pred−true| / N</div>
+        <p class="text-xs text-slate-500 mt-2">논문 B: SDNN MAE = 5.8ms</p>
+      </div>
+
+      <div class="term-card bg-slate-900 border border-yellow-700/30 rounded-lg p-5">
+        <h3 class="text-lg font-bold text-yellow-300">r <span class="text-xs text-slate-500 font-normal">피어슨 상관계수</span></h3>
+        <p class="text-sm text-slate-300 mt-2"><strong>-1 ~ 1</strong>. 두 값이 같이 움직이는 정도. 1에 가까울수록 일치.</p>
+        <p class="text-xs text-slate-500 mt-2">예: r=0.84 → "추세가 매우 잘 따라감"</p>
+      </div>
+
+      <div class="term-card bg-slate-900 border border-yellow-700/30 rounded-lg p-5">
+        <h3 class="text-lg font-bold text-yellow-300">p-value</h3>
+        <p class="text-sm text-slate-300 mt-2">"<strong>우연일 확률</strong>". <code class="kw">p &lt; 0.05</code>면 통계적으로 유의(우연 아님).</p>
+      </div>
+
+      <div class="term-card bg-slate-900 border border-yellow-700/30 rounded-lg p-5">
+        <h3 class="text-lg font-bold text-yellow-300">ICC <span class="text-xs text-slate-500 font-normal">급내 상관계수</span></h3>
+        <p class="text-sm text-slate-300 mt-2"><strong>두 측정 도구가 절대값까지 얼마나 일치</strong>하는지. r이 추세만 보는 반면 ICC는 값 자체 일치 평가.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section id="faq" class="anchor">
+    <div class="flex items-baseline gap-3 mb-6">
+      <span class="badge bg-pink-700 text-white">FAQ</span>
+      <h2 class="text-2xl font-bold">자주 헷갈리는 것</h2>
+    </div>
+
+    <div class="space-y-3">
+      <details class="bg-slate-900 border border-slate-800 rounded-lg p-4">
+        <summary class="font-bold text-pink-300">Q. SDNN과 RMSSD의 차이가 뭐야?</summary>
+        <div class="mt-3 text-sm text-slate-300 space-y-2">
+          <p>둘 다 R-R 시간 흔들림을 보는데 보는 시간 스케일이 다름.</p>
+          <p><strong class="text-emerald-300">SDNN</strong>: 모든 R-R 시간이 평균에서 얼마나 흩어져있나 (전체 변동)</p>
+          <p><strong class="text-emerald-300">RMSSD</strong>: 바로 옆 R-R끼리 얼마나 다른가 (빠른 변동만)</p>
+          <p>비유: 1주일 기온 SDNN = "주 평균 25도, 매일 ±5도 변동" / RMSSD = "어제 27도 오늘 23도, 매일 4도씩 출렁"</p>
+        </div>
+      </details>
+
+      <details class="bg-slate-900 border border-slate-800 rounded-lg p-4">
+        <summary class="font-bold text-pink-300">Q. 왜 RMSSD &gt; SDNN이면 비정상이야?</summary>
+        <div class="mt-3 text-sm text-slate-300 space-y-2">
+          <p>RMSSD는 <strong>인접 R-R 차이</strong>만 보고, SDNN은 <strong>전체 흩어짐</strong>을 봄.</p>
+          <p>전체 흩어짐(SDNN)은 <strong>장기 변동 + 단기 변동</strong>을 다 담는데, RMSSD는 <strong>단기 변동만</strong>. 보통 단기 ≤ 전체.</p>
+          <p>실제로 RMSSD &gt; SDNN이 나오면 → peak 잡기에서 <strong>박자마다 시간이 마구잡이로 튀고 있다</strong>는 신호. 즉 peak 타이밍 잡기가 망가짐.</p>
+          <p>우리 측정 RMSSD/SDNN = 1.11~1.24 → 약간 비정상. 알고리즘 개선해야 함.</p>
+        </div>
+      </details>
+
+      <details class="bg-slate-900 border border-slate-800 rounded-lg p-4">
+        <summary class="font-bold text-pink-300">Q. HR과 HRV의 관계?</summary>
+        <div class="mt-3 text-sm text-slate-300 space-y-2">
+          <p><strong class="text-emerald-300">HR</strong>(심박수)은 <strong>평균 빠르기</strong>. "1분에 80번 뛴다" 같은 평균값.</p>
+          <p><strong class="text-emerald-300">HRV</strong>(심박변이도)는 그 평균에서 <strong>박자가 얼마나 흔들리나</strong>.</p>
+          <p>비슷한 HR이라도 HRV는 천차만별. 운동선수 = HR 낮고 HRV 높음(건강), 스트레스 = HR 보통이어도 HRV 낮음.</p>
+        </div>
+      </details>
+
+      <details class="bg-slate-900 border border-slate-800 rounded-lg p-4">
+        <summary class="font-bold text-pink-300">Q. 왜 적응형 peak가 합성 데이터에선 잘 됐는데 실측에선 망했어?</summary>
+        <div class="mt-3 text-sm text-slate-300 space-y-2">
+          <p>합성 신호는 <strong>raw 진폭</strong>이라 큰 값(peak)이 분명히 솟아있음. μ+1.5σ가 그걸 잘 잡음.</p>
+          <p>실측은 <strong>PCA로 z-score 정규화된</strong> 신호. 분포가 정규분포(N(0,1))에 가까움.</p>
+          <p>μ+1.5σ는 정규분포에서 <strong>상위 ~7%만 통과</strong> → peak 후보가 너무 적어짐 (11개로 줄어듦).</p>
+          <p>해결: k값을 1.5 → 0.5나 0.0으로 낮추거나, PCA 전 raw 신호에 적응형 임계 적용.</p>
+        </div>
+      </details>
+
+      <details class="bg-slate-900 border border-slate-800 rounded-lg p-4">
+        <summary class="font-bold text-pink-300">Q. ECG와 PPG는 뭐가 다르고, 어느 게 더 정확해?</summary>
+        <div class="mt-3 text-sm text-slate-300 space-y-2">
+          <p><strong class="text-emerald-300">ECG</strong>: 심장 전기신호 직접 측정. 정확. 가슴 전극, 의료기기, 가슴띠(Polar H10).</p>
+          <p><strong class="text-emerald-300">PPG</strong>: 빛으로 혈류 변화 측정 → 박동 추정. 손목 시계, 손가락 클립.</p>
+          <p>R-R 타이밍 정밀도: <strong>ECG &gt; PPG</strong>. PPG는 ±10~30ms 오차가 일반적.</p>
+          <p>HRV 학술 연구는 거의 ECG. PPG는 절대값 신뢰는 약하지만 추세 비교엔 쓸 만.</p>
+        </div>
+      </details>
+
+      <details class="bg-slate-900 border border-slate-800 rounded-lg p-4">
+        <summary class="font-bold text-pink-300">Q. 우리는 결국 뭐 만드는 거야?</summary>
+        <div class="mt-3 text-sm text-slate-300 space-y-2">
+          <p>침대 양쪽 ESP32-S3 두 대로 WiFi 신호 보내고 받음 → CSI 100Hz 수집</p>
+          <p>그 신호로 누워있는 사람의 <strong>가슴 미세 움직임</strong>을 추측 → 심박 R-R 시퀀스 추출</p>
+          <p>R-R로 <strong>SDNN/RMSSD/LF/HF 계산</strong> → 자율신경 상태 추적</p>
+          <p>평소 대비 변화가 크면 <strong>낙상 위험 신호</strong>로 간주 → 멀티모달(ToF+mmWave)와 융합해 알람</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="border-t border-slate-800 pt-6 text-xs text-slate-500">
+    <p>📁 이 페이지: <span class="font-mono">c:\Users\ACE\Desktop\개개비\terms\index.html</span></p>
+    <p class="mt-1">관련 자료: <a href="../paper_review/index.html" class="text-emerald-400 hover:underline">논문 A 리뷰</a> · <a href="../paper_review_B/index.html" class="text-emerald-400 hover:underline">논문 B 리뷰</a></p>
+    <p class="mt-1 text-slate-600">생성일: 2026-06-13 · MajuBom 프로젝트 용어 입문</p>
+  </footer>
+
+  </main>
+</div>
+
+<script>
+// 스크롤 시 좌측 TOC 하이라이트
+const sections = document.querySelectorAll('section[id]');
+const tocLinks = document.querySelectorAll('nav.toc a');
+const obs = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      tocLinks.forEach(a => a.classList.remove('active'));
+      const link = document.querySelector(`nav.toc a[href="#${e.target.id}"]`);
+      if (link) link.classList.add('active');
+    }
+  });
+}, { rootMargin: '-30% 0px -60% 0px' });
+sections.forEach(s => obs.observe(s));
+</script>
+
+</body>
+</html>
