@@ -1,378 +1,516 @@
-# 📤 박형석(CSI) → 서버 JSON 명세 + 한글 해석
+# 📤 박형석(CSI) → 서버로 보낼 데이터 명세 (친절 한글판)
 
-> 김도경(서버) 공유용 상세 명세.
-> 시스템 전체 흐름은 [`시스템_데이터흐름_웹명세.md`](./시스템_데이터흐름_웹명세.md) 참조.
+> 김도경(서버 담당)에게 줄 명세서.
+> JSON이 뭔지 모르는 사람도 읽을 수 있게 작성.
 > 작성: 2026-06-15
 
 ---
 
-## 📡 엔드포인트
+## 🎬 한 줄 요약
+
+> **"환자 침대 옆 ESP32(WiFi 센서) 두 개가 1분에 한 번씩 '이 환자 지금 상태 어때요'를 컴퓨터(서버)에 알려줍니다."**
 
 ```
-POST http://192.168.0.48:5001/csi
-Content-Type: application/json
-주기      : 60초마다 1회 (또는 알람 이벤트 시 즉시)
-송신 주체  : Pi 5 측 Python 분석기 (ESP32에서 받은 raw CSI를 60초 누적·분석 후 송신)
+[침대 옆 ESP32 두 대]
+        ↓ (WiFi 신호로 가슴 움직임 측정)
+[Pi 5 서버]
+        ↓ (1분마다 분석 + JSON으로 패키징)
+[웹 대시보드]
+        ↓ (간호사가 화면 봄)
 ```
 
 ---
 
-## 🎯 Phase 1 — 현재 단계 (raw 값만)
+## 📡 통신 기본 정보
 
-### JSON (한글 주석 포함)
-```js
-{
-  "timestamp": "2026-06-15T14:30:00Z",  // 측정 시점 (UTC, ISO 8601)
-  "bed_id": "bed_01",                    // 침대 식별자 (병동 + 번호, 예: ward1_bed01)
-  "sensor": "csi",                       // 센서 종류 (서버가 라우팅용으로 사용)
-
-  "raw": {
-    "hr_bpm": 73,                        // 심박수 (분당, 자기상관 기반)
-    "resp_rpm": 14,                      // 호흡수 (분당, Welch PSD 기반)
-    "autocorr_strength": 0.45            // 신호 품질 점수 (0~1, 높을수록 깨끗)
-  },
-
-  "quality": {
-    "reliable": true,                    // 신뢰 가능 여부 (강도 ≥ 0.30이면 true)
-    "samples_count": 9000,               // 90초 동안 수신한 CSI 패킷 수 (참고용)
-    "duration_sec": 90                   // 실제 측정 시간 (초)
-  }
-}
-```
-
-### 필드별 상세 해석
-
-| 필드 | 타입 | 단위 | 의미 | 어떻게 계산? |
-|---|---|---|---|---|
-| `timestamp` | string | ISO 8601 | 측정 시점 (UTC) | 측정 종료 시 `datetime.utcnow().isoformat()` |
-| `bed_id` | string | - | 환자/침대 식별자 | 설정값. 침대마다 고유 |
-| `sensor` | string | - | "csi" 고정 | 서버가 엔드포인트 분기용 |
-| `raw.hr_bpm` | int | bpm | 1분당 심박수 | 위상 자기상관 peak lag → `60 × 100 / lag` |
-| `raw.resp_rpm` | float | rpm | 1분당 호흡수 | Welch PSD 0.1~0.5Hz peak × 60 |
-| `raw.autocorr_strength` | float | 0~1 | 신호에서 심박 박자가 얼마나 또렷한가 | `ac[lag] / ac[0]` |
-| `quality.reliable` | bool | - | 측정 신뢰 가능 여부 | 강도 ≥ 0.30이면 true |
-| `quality.samples_count` | int | 개 | 90초 누적 CSI 패킷 수 | 보통 8000~11000개 |
-| `quality.duration_sec` | int | 초 | 측정 길이 | 보통 90초 (또는 60초 슬라이딩) |
+| 항목 | 값 | 한글 설명 |
+|---|---|---|
+| **방식** | HTTP POST | "JSON 데이터를 서버 주소로 보내기" |
+| **주소** | `http://192.168.0.48:5001/csi` | 서버(Pi 5)의 IP + 포트 + 경로 |
+| **보내는 빈도** | **60초마다 1번** | 1분에 한 번씩 상태 보고 |
+| **보내는 사람** | Pi 5 안의 Python 분석기 | (ESP32 자체가 보내는 게 아님) |
 
 ---
 
-## 🎯 Phase 2 — 베이스라인 학습 후 (z-score 추가)
+## 🎯 단계(Phase)별 데이터 — 점점 풍부해짐
 
-### JSON
+작업이 진행되면서 보내는 데이터가 늘어남:
+
+```
+Phase 1 (지금)    : raw 측정값만 보냄           ← 가장 기본
+Phase 2 (1~2주 후) : + 평소 대비 변화량(z-score) ← 추세 추가
+Phase 3 (한 달 후) : + 방에 몇 명 있는지         ← 인원수 추가
+```
+
+---
+
+# 📦 Phase 1 — 현재 단계 (가장 기본)
+
+## 전체 JSON (한글 주석 다 풀어 씀)
+
 ```js
 {
+  // ========== 기본 정보 ==========
   "timestamp": "2026-06-15T14:30:00Z",
+    // ↑ "측정한 시점"을 국제표준(ISO 8601) 형식으로
+    //   "2026년 6월 15일 14시 30분 0초 UTC(세계협정시)"
+    //   서버가 받을 때 시간순으로 정렬하기 위해 필요
+
   "bed_id": "bed_01",
+    // ↑ "어느 침대인가" 표시
+    //   요양원에서 침대마다 고유 번호 부여 (예: ward1_bed01, ward2_bed05)
+    //   서버가 "어느 환자의 데이터인지" 구별하기 위해
+
   "sensor": "csi",
+    // ↑ "어떤 종류의 센서인가"
+    //   서버가 받을 때 ToF/mmWave/CSI 데이터를 구분해서 처리하기 위해
+    //   값은 "csi" 고정 (CSI = WiFi 신호 분석)
 
+  // ========== 실제 측정값 (가장 중요) ==========
   "raw": {
-    "hr_bpm": 73,                        // 현재 측정 심박수
-    "resp_rpm": 14,                      // 현재 측정 호흡수
-    "autocorr_strength": 0.45            // 현재 신호 품질
+    // ↑ "raw"는 "원본" 또는 "가공 안 한 값"이라는 뜻
+
+    "hr_bpm": 73,
+      // ↑ HR = Heart Rate (심박수)
+      //   bpm = Beats Per Minute (1분당 박동수)
+      //   "이 환자 지금 심장이 1분에 73번 뛰고 있어요"
+      //   정상 청년: 60~80 / 노인: 60~85 / 빈맥: 100 이상
+
+    "resp_rpm": 14,
+      // ↑ Respiration (호흡)
+      //   rpm = Respirations Per Minute (1분당 호흡수)
+      //   "이 환자 지금 1분에 14번 숨쉬고 있어요"
+      //   정상 성인: 12~20 / 깊은 호흡: 6~10 / 빠른 호흡: 25 이상
+
+    "autocorr_strength": 0.45
+      // ↑ "자기상관 강도" = 신호 품질 점수 (0~1 사이 숫자)
+      //   0에 가까우면 = "신호가 노이즈로 가득함" (측정 못 믿음)
+      //   1에 가까우면 = "신호가 깨끗함" (측정 믿을 만함)
+      //   0.30 이하면 "환경 노이즈 많아 측정 실패" 의심
+      //   에어컨 켜져있으면 0.29, 끄면 0.47 (실측 예시)
   },
 
-  "zscore": {                            // 평소(베이스라인) 대비 변화량
-    "hr": 0.4,                           // HR z-score (평소 평균 - 표준편차 단위)
-    "resp": -0.3,                        // 호흡 z-score
-    "strength": 0.2,                     // 신호 안정성 z-score
-    "total_abs": 0.9                     // 통합 위험 점수 (Σ|z|, 합계)
-  },
-
-  "baseline": {                          // 현재 베이스라인 정보
-    "age_days": 7,                       // 누적 일수 (30일 권장)
-    "hr_mu": 71.5,                       // 학습된 HR 평균
-    "hr_sigma": 5.8,                     // 학습된 HR 표준편차
-    "resp_mu": 13.7,                     // 호흡 평균
-    "resp_sigma": 2.1,                   // 호흡 표준편차
-    "strength_mu": 0.42,                 // 강도 평균
-    "strength_sigma": 0.08               // 강도 표준편차
-  },
-
-  "alert_level": "normal",               // 알람 단계 (normal/caution/warning/critical)
-
+  // ========== 측정 품질 정보 ==========
   "quality": {
+    // ↑ "이 측정이 얼마나 신뢰할 만한가" 정보
+
     "reliable": true,
+      // ↑ "믿을 만한 측정인가?" true(예) / false(아니요)
+      //   autocorr_strength >= 0.30이면 true
+      //   false면 서버가 이 측정 무시하거나 알람 보류
+
     "samples_count": 9000,
+      // ↑ "90초 동안 받은 WiFi 패킷 수"
+      //   보통 8000~11000개 (1초에 약 100개)
+      //   너무 적으면 (예: 3000) 신호 끊김 의심
+
     "duration_sec": 90
+      // ↑ "실제 측정한 시간(초)"
+      //   보통 90초, 또는 60초
   }
 }
 ```
 
-### z-score 필드 해석
+## 한 표로 정리
 
-| 필드 | 의미 | 양수 의미 | 음수 의미 |
-|---|---|---|---|
-| `zscore.hr` | "평소 대비 HR이 얼마나 다른가" | 평소보다 빠름 (각성/스트레스) | 평소보다 느림 (이완) |
-| `zscore.resp` | 호흡 변화 | 평소보다 빠른 호흡 | 평소보다 느린 호흡 |
-| `zscore.strength` | 신호 안정성 변화 | 평소보다 깨끗 (좋은 환경) | 평소보다 노이즈 많음 |
-| `zscore.total_abs` | \|z\| 합계 = **종합 위험도** | (절댓값 합이라 항상 ≥ 0) | - |
-
-### baseline 필드 해석
-
-| 필드 | 의미 |
-|---|---|
-| `baseline.age_days` | 베이스라인 학습 누적 일수. 30일 권장. **1주 미만이면 z-score 신뢰도 낮음** |
-| `baseline.X_mu` | 30일 평균 (그 환자의 "평소" 값) |
-| `baseline.X_sigma` | 표준편차 (평소 자연 변동 폭) |
-
-### alert_level 4단계
-
-| 단계 | 조건 | 의미 | UI 색상 권장 |
-|---|---|---|---|
-| `normal` | Σ\|z\| < 2 | 평소와 다르지 않음 | 🟢 초록 |
-| `caution` | 2 ≤ Σ\|z\| < 4 | 평소보다 약간 다름 (관찰) | 🟡 노랑 |
-| `warning` | 4 ≤ Σ\|z\| < 6 | 명확한 변화 (경고, 간병인 확인 권장) | 🟠 주황 |
-| `critical` | Σ\|z\| ≥ 6 | 큰 변화 (즉시 대응 알람) | 🔴 빨강 |
-
-> ⚠️ **임계값은 잠정**. 30일 운영 후 false positive 비율 보고 조정 필요.
+| 필드명 | 한글 의미 | 단위 | 예시 값 | 의미 |
+|---|---|---|---|---|
+| `timestamp` | 측정 시점 | ISO 8601 (국제표준 시간) | "2026-06-15T14:30:00Z" | "이 시각에 측정함" |
+| `bed_id` | 침대 번호 | (글자) | "bed_01" | "이 침대의 환자" |
+| `sensor` | 센서 종류 | (글자) | "csi" | "WiFi CSI 센서임" |
+| `raw.hr_bpm` | **심박수** | bpm (분당 박동수) | 73 | "1분에 73번 뜀" |
+| `raw.resp_rpm` | **호흡수** | rpm (분당 호흡수) | 14 | "1분에 14번 숨쉼" |
+| `raw.autocorr_strength` | **신호 품질** | 0~1 | 0.45 | "신호 품질 중간" |
+| `quality.reliable` | 신뢰 여부 | true/false | true | "측정 믿을 만함" |
+| `quality.samples_count` | 받은 패킷 수 | 개 | 9000 | "9000개 받음" |
+| `quality.duration_sec` | 측정 시간 | 초 | 90 | "90초 측정" |
 
 ---
 
-## 🎯 Phase 3 — 작업 2 (재실감지) 통합 후
+# 📦 Phase 2 — 베이스라인 학습 후 (z-score 추가)
 
-### JSON
+## 새로 추가되는 것 — 평소 대비 변화량
+
+> **핵심**: 30일 정도 측정하면 "이 환자의 평소"를 컴퓨터가 학습.
+> 그러면 매번 측정할 때 "지금이 평소와 얼마나 다른지" 숫자로 표현 가능.
+
+## 전체 JSON
+
 ```js
 {
+  // ========== Phase 1과 동일 ==========
   "timestamp": "2026-06-15T14:30:00Z",
   "bed_id": "bed_01",
   "sensor": "csi",
-
-  "raw": { /* Phase 1 동일 */ },
-  "zscore": { /* Phase 2 동일 */ },
-  "baseline": { /* Phase 2 동일 */ },
-
-  "presence": {                          // 재실 감지 결과 (CNN 출력)
-    "count": 1,                          // 인원수 (1 = 환자만, 2 = 환자+다른 사람)
-    "confidence": 0.96,                  // CNN 분류 확률 (0~1)
-    "gate_active": true                  // HRV z-score 신뢰 게이트
-                                         //   true  = 1명 감지 → z-score 신뢰
-                                         //   false = 2명+ 감지 → z-score 무효화
-                                         //           (간병인/방문자 있어서 측정 오염)
+  "raw": {
+    "hr_bpm": 73,
+    "resp_rpm": 14,
+    "autocorr_strength": 0.45
   },
 
-  "alert_level": "normal",               // gate_active=false이면 무조건 "normal"
+  // ========== 새로 추가 ① — 평소 대비 변화량 ==========
+  "zscore": {
+    // ↑ z-score = "평소에서 표준편차 몇 배 떨어졌나"
+    //   0  = 평소와 똑같음
+    //   +1 = 평소보다 한 단계 위 (약간 빠름/높음)
+    //   +2 = 평소보다 꽤 위 (눈에 띄게 다름)
+    //   +3 = 평소보다 매우 위 (이상함, 경고 수준)
+    //   -1, -2, -3 = 반대 방향 (느림/낮음)
 
-  "quality": { /* Phase 1 동일 */ }
+    "hr": 0.4,
+      // ↑ "심박수가 평소보다 0.4σ 위" = 거의 평소와 같음
+      //   예: 평소 71±5 → 오늘 73 → z = (73-71)/5 = 0.4
+
+    "resp": -0.3,
+      // ↑ "호흡이 평소보다 0.3σ 아래" = 거의 평소
+      //   예: 평소 14.5±2 → 오늘 14 → z = -0.25 ≈ -0.3
+
+    "strength": 0.2,
+      // ↑ "신호 품질이 평소보다 약간 좋음"
+
+    "total_abs": 0.9
+      // ↑ |hr| + |resp| + |strength| 합계 (절댓값 합)
+      //   = 0.4 + 0.3 + 0.2 = 0.9
+      //   이 숫자가 "종합 위험도 점수" 역할
+      //   2 미만 = 정상
+      //   2~4 = 주의
+      //   4~6 = 경고
+      //   6 이상 = 위험
+  },
+
+  // ========== 새로 추가 ② — 베이스라인 정보 ==========
+  "baseline": {
+    // ↑ "이 환자의 평소 값들" (30일 측정 누적해서 학습됨)
+
+    "age_days": 7,
+      // ↑ "베이스라인 누적 일수"
+      //   7일이면 아직 학습 초기 → z-score 신뢰도 낮음
+      //   30일 이상이면 안정적
+
+    "hr_mu": 71.5,
+      // ↑ mu = μ = "평균"
+      //   "이 환자 평소 심박수 평균 71.5 bpm"
+
+    "hr_sigma": 5.8,
+      // ↑ sigma = σ = "표준편차" (평소 자연스러운 변동 폭)
+      //   "이 환자 평소 ±5.8 bpm 정도 변동"
+
+    "resp_mu": 13.7,
+      "resp_sigma": 2.1,
+      // ↑ 호흡도 마찬가지
+
+    "strength_mu": 0.42,
+    "strength_sigma": 0.08
+      // ↑ 신호 품질도 마찬가지
+  },
+
+  // ========== 새로 추가 ③ — 종합 위험 단계 ==========
+  "alert_level": "normal",
+    // ↑ 4단계 알람:
+    //   "normal"   = 정상 (총 변화 < 2)
+    //   "caution"  = 주의 (총 변화 2~4) — 관찰만
+    //   "warning"  = 경고 (총 변화 4~6) — 간병인 확인 권장
+    //   "critical" = 위험 (총 변화 6 이상) — 즉시 대응
+
+  "quality": { /* Phase 1과 동일 */ }
 }
 ```
 
-### presence 필드 해석
+## z-score를 직관적으로 이해하기 — 시험 점수 비유
 
-| 필드 | 의미 |
-|---|---|
-| `presence.count` | 방에 있는 사람 수. **현재 모델은 1명 vs 2명+ 이진 분류** |
-| `presence.confidence` | CNN softmax 출력 확률. 0.9+ 권장 임계 |
-| `presence.gate_active` | **이게 false면 z-score 신뢰 X** → 서버는 알람 보류 |
+```
+학생 A: 평소 80점 → 오늘 60점
+   → 평소보다 20점 떨어짐 → "어, 이상한데?"
 
-### 게이트 로직 (서버 측 처리 권장)
+학생 B: 평소 50점 → 오늘 60점
+   → 평소보다 10점 오름 → "잘 봤네!"
 
-```python
-# Pi 5 서버에서 받았을 때
-if not data["presence"]["gate_active"]:
-    # 2명+ 감지 → HRV 측정 오염 → 알람 무시
-    log_event("CSI: 2명 감지 — HRV 측정 보류")
-    return
-else:
-    # 1명 단독 → z-score 평가 진행
-    process_alert(data["alert_level"], data["zscore"])
+같은 60점이라도 평가 다름. z-score는 이걸 숫자로 표현.
+```
+
+심장도 똑같음:
+
+```
+환자 A: 평소 HR 70 → 오늘 100 → z = +6 → 🔴 위험
+환자 B: 평소 HR 95 → 오늘 100 → z = +0.8 → 🟢 평범
+
+같은 100bpm이라도 평가 다름.
+```
+
+## 알람 단계 색상표
+
+| 단계 | 조건 | 의미 | 색상 | 행동 |
+|---|---|---|---|---|
+| **normal** (정상) | 총 변화 < 2 | 평소와 다르지 않음 | 🟢 초록 | 없음 |
+| **caution** (주의) | 2 ~ 4 | 약간 다름 | 🟡 노랑 | 화면에만 표시, 알람 X |
+| **warning** (경고) | 4 ~ 6 | 명확한 변화 | 🟠 주황 | 간병인 확인 권장 |
+| **critical** (위험) | ≥ 6 | 큰 변화 | 🔴 빨강 | **즉시 알람** + 대응 |
+
+---
+
+# 📦 Phase 3 — 작업 2 (재실감지) 통합 후
+
+## 새로 추가되는 것 — 방에 몇 명 있는지
+
+```js
+{
+  // ========== Phase 1+2 모두 동일 ==========
+  "timestamp": "...",
+  "bed_id": "bed_01",
+  "sensor": "csi",
+  "raw": { /* ... */ },
+  "zscore": { /* ... */ },
+  "baseline": { /* ... */ },
+
+  // ========== 새로 추가 — 재실 감지 ==========
+  "presence": {
+    "count": 1,
+      // ↑ "방에 몇 명 있는가"
+      //   1 = 환자 혼자 (정상 측정 가능)
+      //   2 = 환자 + 다른 사람 (간병인/방문자)
+      //   (지금 단계에선 1명/2명+ 이진 분류만)
+
+    "confidence": 0.96,
+      // ↑ "AI가 얼마나 자신 있게 판단했나" (0~1)
+      //   0.96 = 96% 확신
+      //   0.5 가까우면 "분류 애매함"
+
+    "gate_active": true
+      // ↑ "HRV 측정 신뢰 게이트"
+      //   true  = 환자만 있음 → z-score 믿어도 됨
+      //   false = 다른 사람 있음 → z-score 무시
+      //           (간병인 들어와서 신호 섞이면 측정값 거짓일 수 있음)
+  },
+
+  "alert_level": "normal",
+  "quality": { /* ... */ }
+}
+```
+
+## 왜 게이트가 필요한가
+
+```
+[상황] 환자 + 간병인 = 방에 2명
+
+CSI 신호:
+  환자 가슴 움직임 + 간병인 움직임 → 신호 섞임
+       ↓
+  HR = 95 bpm처럼 잘못 측정될 수 있음
+       ↓
+  z-score = 매우 큼 (가짜 값)
+       ↓
+  알람 폭주 ❌
+
+[해결]
+  재실감지 = 2명 → gate_active = false
+       ↓
+  서버: "지금은 측정 무효 → 알람 보류"
+       ↓
+  간병인 나간 후 = 1명 → gate_active = true → 정상 측정 재개
 ```
 
 ---
 
-## 📊 시나리오 3가지 — 실제 JSON 예시
+# 📊 시나리오 3가지 — 실제 상황 예시
 
-### 시나리오 1 — 평소 정상 상태
+## 시나리오 ① — 평소 정상 상태 🟢
+
+**상황**: 환자 혼자 침대에 누워있음. 평소대로 자고 있음.
+
 ```js
 {
   "timestamp": "2026-06-15T14:30:00Z",
   "bed_id": "bed_01",
   "sensor": "csi",
   "raw": {
-    "hr_bpm": 72,                  // 평소 HR과 거의 같음
-    "resp_rpm": 14,                // 평소 호흡과 거의 같음
-    "autocorr_strength": 0.45      // 신호 깨끗
+    "hr_bpm": 72,         // 평소 HR (71)과 거의 같음
+    "resp_rpm": 14,       // 평소 호흡 (14)과 같음
+    "autocorr_strength": 0.45  // 신호 깨끗
   },
   "zscore": {
-    "hr": -0.1,                    // 평소 거의 동일
-    "resp": 0.2,                   // 평소 거의 동일
+    "hr": -0.1,           // 거의 0 (평소와 같음)
+    "resp": 0.2,
     "strength": 0.3,
-    "total_abs": 0.6               // < 2 → normal
+    "total_abs": 0.6      // < 2 → normal
   },
-  "presence": { "count": 1, "confidence": 0.97, "gate_active": true },
+  "presence": {
+    "count": 1,           // 환자 혼자
+    "confidence": 0.97,
+    "gate_active": true
+  },
   "alert_level": "normal"
 }
-// → 🟢 평소대로. 알람 없음.
 ```
 
-### 시나리오 2 — 자율신경 흔들림 (주의)
+**서버 반응**: 화면에 "🟢 정상" 표시만, 알람 X.
+
+---
+
+## 시나리오 ② — 자율신경 흔들림 (경고) 🟠
+
+**상황**: 환자가 갑자기 어지러움 느껴 식은땀 흘림. HR과 호흡이 빨라짐.
+
 ```js
 {
   "timestamp": "2026-06-15T15:00:00Z",
   "bed_id": "bed_01",
   "sensor": "csi",
   "raw": {
-    "hr_bpm": 84,                  // 평소보다 12 빨라짐
-    "resp_rpm": 18,                // 평소보다 4 빨라짐
-    "autocorr_strength": 0.38      // 신호 약간 흔들림
+    "hr_bpm": 84,         // 평소 71보다 13 빨라짐
+    "resp_rpm": 18,       // 평소 14보다 4 빨라짐
+    "autocorr_strength": 0.38  // 약간 흔들림
   },
   "zscore": {
-    "hr": 2.1,                     // 평소보다 +2.1σ
-    "resp": 2.0,                   // 평소보다 +2.0σ
+    "hr": 2.1,            // 평소 대비 +2.1σ (눈에 띄게 다름)
+    "resp": 2.0,          // 평소 대비 +2.0σ
     "strength": -0.5,
-    "total_abs": 4.6               // 4~6 → warning
+    "total_abs": 4.6      // 4~6 → warning 경고
   },
-  "presence": { "count": 1, "confidence": 0.95, "gate_active": true },
+  "presence": {
+    "count": 1,
+    "confidence": 0.95,
+    "gate_active": true
+  },
   "alert_level": "warning"
 }
-// → 🟠 자율신경 흥분 의심. 간병인 확인 권장.
 ```
 
-### 시나리오 3 — 간병인 방문 (게이트 차단)
+**서버 반응**: 화면 "🟠 경고" + 간호사 단말기에 알림 "Bed 01 자율신경 변화 감지, 확인 권장".
+
+---
+
+## 시나리오 ③ — 간병인 방문 중 (알람 차단) ⚪
+
+**상황**: 간호사가 환자 옆에서 활력 징후 체크 중. 신호가 두 명 것 섞임.
+
 ```js
 {
   "timestamp": "2026-06-15T16:00:00Z",
   "bed_id": "bed_01",
   "sensor": "csi",
   "raw": {
-    "hr_bpm": 95,                  // 환자+간병인 신호 섞임 → 부정확
-    "resp_rpm": 22,                // 마찬가지
-    "autocorr_strength": 0.18      // 신호 매우 흔들림
+    "hr_bpm": 95,         // 두 사람 신호 섞여 가짜 값
+    "resp_rpm": 22,       // 마찬가지
+    "autocorr_strength": 0.18  // 신호 매우 더러움
   },
   "zscore": {
-    "hr": 4.0,                     // 매우 큼 (하지만 false)
+    "hr": 4.0,            // 매우 큼 (하지만 거짓)
     "resp": 4.5,
     "strength": -3.0,
-    "total_abs": 11.5              // 매우 높음
+    "total_abs": 11.5     // 11.5 → 평소면 critical
   },
   "presence": {
-    "count": 2,                    // ← 2명 감지!
+    "count": 2,           // ← 2명 감지!
     "confidence": 0.93,
-    "gate_active": false           // ← 게이트 차단
+    "gate_active": false  // ← 게이트 차단
   },
-  "alert_level": "normal"          // ← 게이트 false면 강제 normal
+  "alert_level": "normal" // ← gate_active=false면 강제로 normal
 }
-// → ⚪ 알람 발생 X. "간병인 방문 중, 측정 보류" 로그만 기록.
 ```
+
+**서버 반응**: 화면에 "👥 간병인 방문 중, 측정 보류" 표시. **알람 X**. 이벤트 로그에만 기록.
 
 ---
 
-## 🔄 데이터 처리 순서 (CSI 측 내부)
+# 🛠 김도경(서버) 측 처리 — 의사코드
 
-```
-[ESP32 RX]
-  CSI raw 데이터 수신 (100Hz, 60초 = 6000 패킷)
-       ↓
-  WiFi/MQTT로 Pi 5에 전달
-       ↓
-[Pi 5 측 Python 분석기]
-  raw CSV 수신
-       ↓
-  [1단계] 신호 추출
-    - 진폭 + 위상 추출
-    - PCA로 차원 축소
-    - BPF 0.8~2.0Hz (심박)
-    - Welch PSD (호흡)
-       ↓
-  [2단계] 핵심 값 계산
-    - HR = 위상 자기상관 lag → 60 × FS / lag
-    - 호흡 = Welch peak frequency × 60
-    - 강도 = ac[lag] / ac[0]
-       ↓
-  [3단계] 베이스라인 비교 (Phase 2+)
-    - baseline.json 로드
-    - z = (현재 - μ) / σ
-    - alert_level 결정
-       ↓
-  [4단계] 재실 분류 (Phase 3+)
-    - presence_cnn.pt 모델 추론
-    - count + confidence
-    - gate_active 결정
-       ↓
-  [5단계] JSON 패키징 + POST
-    - 위 정보 모두 JSON으로
-    - POST /csi
-```
-
----
-
-## ⏱ 타이밍 정리
-
-| 항목 | 주기 |
-|---|---|
-| CSI raw 수신 (ESP32 → Pi) | 실시간 (~100Hz) |
-| 분석 실행 | **60초마다** |
-| POST /csi | **60초마다 1회** (or 알람 시 즉시) |
-| baseline.json 갱신 | 1일 1회 (새 측정 누적) |
-| 30일 베이스라인 학습 완료 | 입소 후 30일 |
-
----
-
-## 🛠 김도경(서버) 측 처리 권장
-
-### 1. 수신 후 저장
+## 1. 데이터 받기
 ```python
+# Pi 5 서버 코드
 @app.route("/csi", methods=["POST"])
 def receive_csi():
-    data = request.json
-    db.insert("csi_log", data)        # 모든 데이터 저장 (추세용)
+    data = request.json  # ← JSON을 파이썬 딕셔너리로 자동 변환
+
+    # 모든 데이터 일단 데이터베이스에 저장 (추세 그래프용)
+    db.insert("csi_log", data)
     return "ok", 200
 ```
 
-### 2. 게이트 + 알람
+## 2. 게이트 확인 후 알람 결정
 ```python
-if not data["presence"]["gate_active"]:
-    return  # 2명+ → 알람 보류
+# 위 함수 안에서 계속
 
+# Phase 3에서만 필요 — 재실감지 게이트
+if not data["presence"]["gate_active"]:
+    # 다른 사람이 같이 있음 → 측정 신뢰 X
+    print(f"Bed {data['bed_id']}: 2명 감지 — HRV 측정 보류")
+    return  # 알람 보내지 않고 종료
+
+# 1명 단독 → 알람 평가
 level = data["alert_level"]
-if level in ["warning", "critical"]:
-    notify_caregiver(data)
+if level == "critical":
+    send_alarm_to_caregiver(data, urgent=True)
+elif level == "warning":
+    send_alarm_to_caregiver(data, urgent=False)
+# normal, caution = 알람 X (화면 표시만)
 ```
 
-### 3. 대시보드 갱신
+## 3. 대시보드 갱신
 ```python
 update_dashboard(data["bed_id"], {
     "hr": data["raw"]["hr_bpm"],
     "resp": data["raw"]["resp_rpm"],
-    "zscore": data["zscore"]["total_abs"],
+    "score": data["zscore"]["total_abs"],
     "level": data["alert_level"],
-    "presence": data["presence"]["count"]
+    "people": data["presence"]["count"]
 })
 ```
 
 ---
 
-## ❓ FAQ (예상 질문 답변)
+# ❓ 자주 묻는 질문
 
-### Q1. baseline_age_days < 7이면 어떻게?
-→ z-score 신뢰도 낮음. UI에서 "학습 중 (X일째)" 표시. 알람 발생해도 "관찰 권장" 정도로 약하게.
-
-### Q2. presence.confidence가 0.6 같이 낮으면?
-→ 게이트 active=true로 두되, 알람 임계 더 보수적으로. 또는 UI에 "분류 불확실" 표시.
-
-### Q3. 30일 베이스라인 학습 중인데 환자가 갑자기 위험 상태면?
-→ **절대 위험 임계 병행**:
+## Q1. 베이스라인 학습 안 끝났는데(예: 7일째) 알람 와도 되나?
+**A**: 신뢰도 낮음 표시 권장.
 ```python
-if data["raw"]["hr_bpm"] > 140 or data["raw"]["hr_bpm"] < 40:
-    emergency_alert()  # 베이스라인 무관 즉시 알람
+if data["baseline"]["age_days"] < 14:
+    level = "관찰 (학습 중)"  # 정식 알람 X
 ```
 
-### Q4. CSI 측정 실패 시 (Hz 너무 낮음 등)?
-→ `quality.reliable = false`로 보냄. 서버는 그 측정 무시.
+## Q2. 신호 품질이 너무 낮으면(autocorr_strength 0.2 같이)?
+**A**: `quality.reliable = false`로 옴. 그 측정은 무시:
+```python
+if not data["quality"]["reliable"]:
+    return  # 화면 갱신·알람 모두 X
+```
 
-### Q5. 다른 침대 환자 신호 섞이지 않나?
-→ ESP32 페어를 침대마다 다른 WiFi 채널 사용. softAP 채널 1, 6, 11 분리.
+## Q3. 평소 HR이 이미 위험한 환자(예: 평소 130bpm)는 못 잡나?
+**A**: 절대 위험 임계 병행 필수:
+```python
+hr = data["raw"]["hr_bpm"]
+if hr > 140 or hr < 40:
+    emergency_alarm(data)  # 베이스라인 무관 즉시 알람
+```
+
+## Q4. 30일 누적 데이터는 어디 있나?
+**A**: Pi 5의 `baseline.json` 파일. CSI 측에서 매번 누적·갱신.
+
+## Q5. 다른 침대 환자 신호가 섞이지 않나?
+**A**: 침대마다 ESP32 페어 WiFi 채널 분리 (1, 6, 11번 등).
 
 ---
 
-## 📂 관련 파일
+# 📅 단계별 진행
+
+| 단계 | 시기 | 보내는 데이터 |
+|---|---|---|
+| **Phase 1** | 지금 ~ 6.21 | raw만 (HR, 호흡, 신호 품질) |
+| **Phase 2** | 6.22 ~ 7.5 | + z-score + alert_level |
+| **Phase 3** | 발표(7.8) 이후 | + presence (인원수 + 게이트) |
+
+각 Phase에서 김도경 측 서버 코드도 그에 맞춰 단계적 확장.
+
+---
+
+# 📂 관련 자료
 
 | 파일 | 내용 |
 |---|---|
-| `시스템_데이터흐름_웹명세.md` | 전체 시스템 + 다른 센서 명세 |
-| `presence_cnn.py` | CNN 학습/추론 코드 |
+| `시스템_데이터흐름_웹명세.md` | 전체 시스템 흐름 + ToF/mmWave 명세 |
+| `presence_cnn.py` | 작업 2 CNN 코드 |
 | `vital_csi3.py` | CSI 분석기 (HR/호흡/강도 추출) |
-| `baseline.json` | 30일 베이스라인 저장 (Pi 5 측) |
-| **`CSI_JSON_명세_상세.md`** | **이 문서** |
+| `docs/hub.html` | 모든 자료 허브 페이지 |
+| **`CSI_JSON_명세_상세.md`** | **이 문서 (친절 한글판)** |
 
 ---
 
@@ -380,4 +518,5 @@ if data["raw"]["hr_bpm"] > 140 or data["raw"]["hr_bpm"] < 40:
 
 | 날짜 | 변경 |
 |---|---|
-| 2026-06-15 | 작성. Phase 1/2/3별 JSON + 시나리오 3개 + 한글 해석 |
+| 2026-06-15 | 작성 (영어 위주) |
+| 2026-06-15 | 친절 한글판으로 재작성 (한글 주석 풍부, 시나리오 친절히, 비전공자 대응) |
