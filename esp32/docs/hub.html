@@ -298,28 +298,32 @@
       <span class="ml-2 text-amber-300">|</span>
       <a href="../CSI_JSON_명세_상세.md" class="text-amber-400 underline ml-2">CSI_JSON_명세_상세.md (한글 해석 + 시나리오)</a>
     </p>
-    <pre class="bg-slate-950 rounded p-4 text-xs text-emerald-300 overflow-x-auto"><code>POST /csi
-{
-  "timestamp": "2026-06-15T14:30:00Z",
-  "bed_id": "bed_01",
-  "sensor": "csi",
-  "raw": {
-    "hr_bpm": 73,
-    "resp_rpm": 14,
-    "autocorr_strength": 0.45
+    <pre class="bg-slate-950 rounded p-4 text-xs overflow-x-auto"><code><span class="text-slate-500">POST /csi   <span class="text-amber-300">// 침대 환자 상태를 60초마다 서버에 전송</span></span>
+<span class="text-emerald-300">{</span>
+  <span class="text-cyan-300">"timestamp"</span>: <span class="text-emerald-200">"2026-06-15T14:30:00Z"</span>,   <span class="text-amber-300">// 측정 시점 (UTC 국제표준 시간)</span>
+  <span class="text-cyan-300">"bed_id"</span>:    <span class="text-emerald-200">"bed_01"</span>,                  <span class="text-amber-300">// 침대 번호 (환자 식별자)</span>
+  <span class="text-cyan-300">"sensor"</span>:    <span class="text-emerald-200">"csi"</span>,                     <span class="text-amber-300">// 센서 종류 ("csi" 고정)</span>
+
+  <span class="text-cyan-300">"raw"</span>: {                                  <span class="text-amber-300">// ─── 실제 측정값 ───</span>
+    <span class="text-cyan-300">"hr_bpm"</span>: <span class="text-yellow-300">73</span>,                          <span class="text-amber-300">// 심박수 (1분당 박동) — 정상 60~80</span>
+    <span class="text-cyan-300">"resp_rpm"</span>: <span class="text-yellow-300">14</span>,                        <span class="text-amber-300">// 호흡수 (1분당 호흡) — 정상 12~20</span>
+    <span class="text-cyan-300">"autocorr_strength"</span>: <span class="text-yellow-300">0.45</span>             <span class="text-amber-300">// 신호 품질 (0~1) — 높을수록 깨끗</span>
   },
-  "zscore": {
-    "hr": 0.4,
-    "resp": -0.3,
-    "strength": 0.2,
-    "total_abs": 0.9
+
+  <span class="text-cyan-300">"zscore"</span>: {                              <span class="text-amber-300">// ─── 평소 대비 변화량 ───</span>
+    <span class="text-cyan-300">"hr"</span>: <span class="text-yellow-300">0.4</span>,                              <span class="text-amber-300">// HR 변화 (+ 빠름 / − 느림)</span>
+    <span class="text-cyan-300">"resp"</span>: <span class="text-yellow-300">-0.3</span>,                           <span class="text-amber-300">// 호흡 변화</span>
+    <span class="text-cyan-300">"strength"</span>: <span class="text-yellow-300">0.2</span>,                        <span class="text-amber-300">// 신호 안정성 변화</span>
+    <span class="text-cyan-300">"total_abs"</span>: <span class="text-yellow-300">0.9</span>                        <span class="text-amber-300">// |z| 합계 = 종합 위험 점수</span>
   },
-  "presence": {
-    "count": 1,
-    "confidence": 0.96
+
+  <span class="text-cyan-300">"presence"</span>: {                            <span class="text-amber-300">// ─── 방에 몇 명? (작업 2) ───</span>
+    <span class="text-cyan-300">"count"</span>: <span class="text-yellow-300">1</span>,                              <span class="text-amber-300">// 인원수 (1 = 환자만 / 2 = 다른 사람도)</span>
+    <span class="text-cyan-300">"confidence"</span>: <span class="text-yellow-300">0.96</span>                      <span class="text-amber-300">// AI 분류 확률 (96% 확신)</span>
   },
-  "alert_level": "normal"
-}</code></pre>
+
+  <span class="text-cyan-300">"alert_level"</span>: <span class="text-emerald-200">"normal"</span>                <span class="text-amber-300">// 🟢 normal / 🟡 caution / 🟠 warning / 🔴 critical</span>
+<span class="text-emerald-300">}</span></code></pre>
     <div class="mt-4 grid grid-cols-4 gap-2 text-xs">
       <div class="bg-slate-800 rounded p-2 text-center">
         <div class="text-emerald-300">normal</div><div class="text-slate-400">Σ|z| &lt; 2</div>
