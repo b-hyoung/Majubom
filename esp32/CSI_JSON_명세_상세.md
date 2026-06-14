@@ -4,6 +4,39 @@
 > JSON이 뭔지 모르는 사람도 읽을 수 있게 작성.
 > 작성: 2026-06-15
 
+## ⚠️ 어디서 계산되는지 (중요)
+
+```
+[ESP32]   raw CSI 신호만 수집 (계산 X)
+   ↓ (USB 시리얼 또는 WiFi)
+[Pi 5]    ⭐ 여기서 모든 분석·계산·JSON 패키징·저장·웹 ⭐
+   ↓ (Pi 내부 함수 호출 or 자기자신에게 POST)
+[웹]      간호사가 보는 대시보드
+```
+
+| 계산 항목 | 어디서? |
+|---|---|
+| CSI raw 수집 | ESP32 |
+| HR/호흡/강도 추출 (vital_csi3.py) | **Pi 5** |
+| 베이스라인 누적 (baseline.json) | **Pi 5** |
+| z-score 계산 | **Pi 5** |
+| CNN 추론 (presence_cnn.py) | **Pi 5** |
+| 알람 단계 결정 | **Pi 5** |
+| JSON 패키징 + POST /csi | **Pi 5** |
+
+→ 즉 **POST /csi는 외부 통신이 아니라 Pi 내부 흐름** (또는 같은 네트워크 안 Flask 서버).
+
+### 현재 (개발) vs 운영 (배포 시)
+| | 지금 (노트북) | 운영 (Pi 5) |
+|---|---|---|
+| 측정 | macOS record_csi.py 수동 | ESP32 → Pi 5 (USB 직결 또는 WiFi) |
+| 분석 | 노트북에서 vital_csi3.py | Pi 5에서 vital_csi3.py |
+| 학습 | 노트북에서 presence_cnn.py --train | 노트북에서 학습 OK, 모델만 Pi에 복사 |
+| 추론 | 노트북에서 --predict | Pi 5에서 실시간 추론 |
+| 웹 | 없음 | Pi 5 Flask 풀스택 |
+
+→ **노트북 코드 그대로 Pi 5에 복사 가능**. Python 동일.
+
 ---
 
 ## 🎬 한 줄 요약
