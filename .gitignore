@@ -17,6 +17,9 @@ dependencies.lock
 .vscode/
 .idea/
 
+# 서버 런타임 상태 (침대별 baseline 누적 — 배포 환경마다 다름, 커밋 X)
+server/csi_baseline.json
+
 # Generated CSI plots (regenerable from csi_log.csv)
 esp32/csi_heatmap.png
 esp32/csi_timeseries.png
