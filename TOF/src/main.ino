@@ -7,7 +7,7 @@
 // ─── 사용자 설정 ─────────────────────────────────────
 const char* WIFI_SSID  = "Jvision_Lab";
 const char* WIFI_PASS  = "1234567890";
-const char* SERVER_URL = "http://192.168.0.48:5001/tof";
+const char* SERVER_URL = "http://192.168.0.22:5001/tof";
 // ─────────────────────────────────────────────────────
 
 #define SDA_PIN      8
@@ -16,7 +16,8 @@ const char* SERVER_URL = "http://192.168.0.48:5001/tof";
 #define LPN2_PIN     5
 #define SENSOR1_ADDR 0x52
 #define SENSOR2_ADDR 0x54
-#define ZONE_COUNT   16    // 4x4
+#define ZONE_COUNT   16    // 4x4 (8x8은 이 배선의 I2C 버스 한계로 wedge되어 4x4 운용)
+#define GRID_SIDE    4     // 4x4 한 변
 #define INTERVAL_MS  500
 
 // initSlow를 위한 서브클래스 (protected p_dev 접근)
@@ -101,9 +102,9 @@ void ensureWiFi() {
 
 void printGrid(const char* name, VL53L5CX_ResultsData &r) {
   Serial.printf("\n=== %s (4x4 mm) ===\n", name);
-  for (int row = 0; row < 4; row++) {
-    for (int col = 0; col < 4; col++) {
-      int z = row * 4 + col;
+  for (int row = 0; row < GRID_SIDE; row++) {
+    for (int col = 0; col < GRID_SIDE; col++) {
+      int z = row * GRID_SIDE + col;
       int d = -1;
       if (r.nb_target_detected[z] > 0) {
         uint8_t st = r.target_status[VL53L5CX_NB_TARGET_PER_ZONE * z];
@@ -117,12 +118,12 @@ void printGrid(const char* name, VL53L5CX_ResultsData &r) {
 }
 
 void postSensor(const char* sensorName, VL53L5CX_ResultsData &r) {
-  StaticJsonDocument<768> doc;
+  JsonDocument doc;   // v7 동적 문서 (8x8=64존 수용)
   doc["sensor"]     = sensorName;
   doc["resolution"] = "4x4";
 
-  JsonArray dist = doc.createNestedArray("distances_mm");
-  JsonArray tgts = doc.createNestedArray("targets");
+  JsonArray dist = doc["distances_mm"].to<JsonArray>();
+  JsonArray tgts = doc["targets"].to<JsonArray>();
 
   for (int z = 0; z < ZONE_COUNT; z++) {
     int d = -1;

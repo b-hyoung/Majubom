@@ -18,7 +18,7 @@
 #include "protocol_examples_common.h"
 
 /* ── 설정 ────────────────────────────────────────────────────────── */
-#define SERVER_URL   "http://192.168.0.48:5001/csi"
+#define SERVER_URL   "http://192.168.0.22:5001/csi"
 #define PING_INTERVAL_MS  10    /* 핑 간격 (ms) → ~100Hz CSI */
 #define BATCH_SIZE        100   /* 패킷 N개 모아서 1회 POST (~1초) */
 
