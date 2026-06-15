@@ -36,3 +36,6 @@ esp32/*.csv
 .vscode/ipch
 
 작업일지.md
+
+# 런타임 생성 — 빈 침대 캘리브레이션 베이스라인(환경별로 다름)
+server/tof_baseline.json
