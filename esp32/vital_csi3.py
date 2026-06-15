@@ -14,8 +14,6 @@ import numpy as np
 from scipy.signal import butter, filtfilt, detrend, welch, hilbert, find_peaks
 from sklearn.decomposition import PCA
 
-LOG = sys.argv[1] if len(sys.argv) > 1 else "csi_hold4.csv"
-USE_FULL = "--full" in sys.argv
 FS = 100.0
 
 
@@ -112,52 +110,78 @@ def detect_hold(amp_pc0, tu):
     return None
 
 
+def analyze(path, use_full=False):
+    """CSV 1개를 분석해 측정값 dict 반환. 계산식은 CLI와 동일(불변).
+    반환값은 정밀 float — 라운딩/정수화는 호출 측(send_csi)이 담당."""
+    ts, comp = parse(path)
+    tu = np.arange(ts[0], ts[-1], 1e6 / FS)
+    tsec = (tu - tu[0]) / 1e6
+
+    # 호흡 (진폭 PC0로 검출 — 호흡은 진폭에 강하게 나옴)
+    amp_pcs = to_pca(np.abs(comp), ts, tu)
+    fr, pw = welch(amp_pcs[:, 0], fs=FS, nperseg=int(FS * 20))
+    rb = (fr >= 0.1) & (fr <= 0.5)
+    resp_rpm = fr[rb][np.argmax(pw[rb])] * 60
+
+    # 분석 구간 결정
+    seg = slice(None)
+    hold = None if use_full else detect_hold(amp_pcs[:, 0], tu)
+    if hold:
+        seg = slice(hold[0], hold[1])
+
+    # 위상 신호 (패킷별 오프셋 제거 후 시간축 unwrap) → 핵심
+    ph = np.angle(comp) - np.angle(comp).mean(1, keepdims=True)
+    ph_pcs = to_pca(np.unwrap(ph, axis=0), ts, tu)
+
+    # HR: 위상 PC들 중 자기상관 강도 최강
+    best = None
+    for c in range(ph_pcs.shape[1]):
+        s = band(ph_pcs[:, c][seg], 0.8, 2.0)
+        bpm, strg, lag = hr_autocorr(s)
+        if best is None or strg > best[1]:
+            best = (bpm, strg, lag, c, s)
+    bpm, strg, lag, c, s = best
+    reliable = strg > 0.30
+    hrv = hrv_adaptive(ph_pcs[:, c][seg], lag)
+
+    return {
+        "hr_bpm": float(bpm),
+        "resp_rpm": float(resp_rpm),
+        "autocorr_strength": float(strg),
+        "reliable": bool(reliable),
+        "samples_count": int(len(ts)),
+        "duration_sec": float(tsec[-1]),
+        "_detail": {"pc": int(c), "hold": hold, "tsec": tsec, "hrv": hrv},
+    }
+
+
+def _print_cli(path, r):
+    """기존 CLI 출력 형식 그대로 재현."""
+    d = r["_detail"]
+    tsec, hold, hrv, reliable = d["tsec"], d["hold"], d["hrv"], r["reliable"]
+    print(f"[{path}] {r['samples_count']}패킷, {r['duration_sec']:.0f}초")
+    print(f"호흡 : {r['resp_rpm']:.1f} rpm")
+    if hold:
+        print(f"숨참기 구간 검출: {tsec[hold[0]]:.0f}~{tsec[hold[1]]:.0f}초 → 이 구간 분석")
+    else:
+        print("숨참기 구간 없음 → 전체 신호 분석 (호흡 간섭 가능)")
+    print(f"\n── 결과 (위상 PC{d['pc']}) ──")
+    print(f"HR (자기상관) : {r['hr_bpm']:.0f} bpm   [강도 {r['autocorr_strength']:.2f} "
+          f"{'✅신뢰' if reliable else '❌노이즈의심(에어컨/움직임)'}]")
+    if hrv and reliable:
+        sane = 10 < hrv["sdnn"] < 120 and 10 < hrv["rmssd"] < 120
+        print(f"HR (peak)     : {hrv['hr_peak']:.0f} bpm")
+        print(f"SDNN          : {hrv['sdnn']:.1f} ms")
+        print(f"RMSSD         : {hrv['rmssd']:.1f} ms   ({hrv['beats']}박)")
+        print("→ " + ("HRV 생리범위 ✅ (단 ms정밀도는 ground truth로 재검증 필요)"
+                      if sane else "HRV 범위밖 — 신호 더 정밀화 필요"))
+    else:
+        print("HRV          : 산출 보류 " +
+              ("(자기상관 강도 낮음 = 심박 신호 불충분)" if not reliable else "(peak 부족)"))
+
+
 # ---- 실행 ----
-ts, comp = parse(LOG)
-tu = np.arange(ts[0], ts[-1], 1e6 / FS)
-tsec = (tu - tu[0]) / 1e6
-print(f"[{LOG}] {len(ts)}패킷, {tsec[-1]:.0f}초")
-
-# 호흡 (진폭 PC0로 검출 — 호흡은 진폭에 강하게 나옴)
-amp_pcs = to_pca(np.abs(comp), ts, tu)
-fr, pw = welch(amp_pcs[:, 0], fs=FS, nperseg=int(FS * 20))
-rb = (fr >= 0.1) & (fr <= 0.5)
-print(f"호흡 : {fr[rb][np.argmax(pw[rb])] * 60:.1f} rpm")
-
-# 분석 구간 결정
-seg = slice(None)
-hold = None if USE_FULL else detect_hold(amp_pcs[:, 0], tu)
-if hold:
-    seg = slice(hold[0], hold[1])
-    print(f"숨참기 구간 검출: {tsec[hold[0]]:.0f}~{tsec[hold[1]]:.0f}초 → 이 구간 분석")
-else:
-    print("숨참기 구간 없음 → 전체 신호 분석 (호흡 간섭 가능)")
-
-# 위상 신호 (패킷별 오프셋 제거 후 시간축 unwrap) → 핵심
-ph = np.angle(comp) - np.angle(comp).mean(1, keepdims=True)
-ph_pcs = to_pca(np.unwrap(ph, axis=0), ts, tu)
-
-# HR: 위상 PC들 중 자기상관 강도 최강
-best = None
-for c in range(ph_pcs.shape[1]):
-    s = band(ph_pcs[:, c][seg], 0.8, 2.0)
-    bpm, strg, lag = hr_autocorr(s)
-    if best is None or strg > best[1]:
-        best = (bpm, strg, lag, c, s)
-bpm, strg, lag, c, s = best
-
-print(f"\n── 결과 (위상 PC{c}) ──")
-reliable = strg > 0.30
-print(f"HR (자기상관) : {bpm:.0f} bpm   [강도 {strg:.2f} {'✅신뢰' if reliable else '❌노이즈의심(에어컨/움직임)'}]")
-
-hrv = hrv_adaptive(ph_pcs[:, c][seg], lag)
-if hrv and reliable:
-    sane = 10 < hrv["sdnn"] < 120 and 10 < hrv["rmssd"] < 120
-    print(f"HR (peak)     : {hrv['hr_peak']:.0f} bpm")
-    print(f"SDNN          : {hrv['sdnn']:.1f} ms")
-    print(f"RMSSD         : {hrv['rmssd']:.1f} ms   ({hrv['beats']}박)")
-    print("→ " + ("HRV 생리범위 ✅ (단 ms정밀도는 ground truth로 재검증 필요)"
-                  if sane else "HRV 범위밖 — 신호 더 정밀화 필요"))
-else:
-    print("HRV          : 산출 보류 " +
-          ("(자기상관 강도 낮음 = 심박 신호 불충분)" if not reliable else "(peak 부족)"))
+if __name__ == "__main__":
+    LOG = sys.argv[1] if len(sys.argv) > 1 else "csi_hold4.csv"
+    USE_FULL = "--full" in sys.argv
+    _print_cli(LOG, analyze(LOG, USE_FULL))

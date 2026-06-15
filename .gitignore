@@ -21,6 +21,13 @@ dependencies.lock
 esp32/csi_heatmap.png
 esp32/csi_timeseries.png
 
+# CSI 측정 raw CSV — git 용량 비대 방지(향후 측정분은 커밋 안 함).
+# 이미 커밋된 검증용 케이스는 예외로 유지.
+esp32/*.csv
+!esp32/csi_hold4.csv
+!esp32/csi_rest.csv
+!esp32/csi_watch1.csv
+
 .pio
 .vscode/.browse.c_cpp.db*
 .vscode/c_cpp_properties.json
