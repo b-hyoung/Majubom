@@ -20,6 +20,7 @@ dependencies.lock
 # Generated CSI plots (regenerable from csi_log.csv)
 esp32/csi_heatmap.png
 esp32/csi_timeseries.png
+esp32/vital_csi.png
 
 # CSI 측정 raw CSV — git 용량 비대 방지(향후 측정분은 커밋 안 함).
 # 이미 커밋된 검증용 케이스는 예외로 유지.
