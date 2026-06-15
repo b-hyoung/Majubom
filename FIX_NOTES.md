@@ -43,11 +43,18 @@
     "reliable": true,                     // 믿을 만한 측정인가 (false면 무시)
     "samples_count": 8800,                // 받은 WiFi 패킷 수
     "duration_sec": 90                    // 측정 시간(초)
+  },
+
+  "presence": {                           // ── 인원수 (방에 몇 명) ──
+    "count": 1,                           // 1=환자 혼자, 2=보호자/간호사 동석
+    "confidence": null,                   // CNN 확신도 (지금은 모델 미학습 → null)
+    "gate_active": true                   // 측정 신뢰 게이트 (2명이면 false → 알람 보류)
   }
 }
 ```
 
 > 숫자는 예시값. 매 측정(60초)마다 채워져 옴.
+> **`presence`는 현재 임시 기본값**(`count:1, gate_active:true`). 재실감지 CNN 학습(Phase 3) 후 실제 1/2명 추론값으로 채워짐.
 
 ---
 
@@ -81,6 +88,7 @@ total_abs  = |z_hr| + |z_resp| + |z_strength|     # 종합 위험점수
 | `critical` | ≥ 6 | 🔴 | 즉시 알람 |
 
 ### 예외 처리 (필수)
+- `presence.gate_active == false` (2명 동석) → 신호 섞여 측정 신뢰 X → **알람 보류** (화면엔 "보호자 방문 중" 표시)
 - `quality.reliable == false` → 그 측정 무시 (알람·갱신 X)
 - `age_days < 14` (학습 초기) → z-score 신뢰 낮음, 정식 알람 보류
 - **절대 임계**: `hr_bpm > 140` 또는 `< 40` → baseline 무관 즉시 알람

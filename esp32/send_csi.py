@@ -3,8 +3,9 @@ CSI 송신부 — 분석 결과를 서버(/csi)로 POST
 =================================================
 vital_csi3.analyze()로 HR/호흡/강도를 뽑아 JSON으로 패키징 후 전송.
 
-CSI는 측정값(raw + quality)만 보냄.
+CSI는 측정값(raw + quality + presence)을 보냄.
 baseline·z-score·alert_level은 서버가 DB에 쌓인 과거로 계산(공식은 서버연동_변경사항.md).
+presence(인원수)는 재실감지 CNN 추론값 — 지금은 모델 미학습이라 임시 기본값(count=1).
 
 사용:
   python3 send_csi.py csi_rest.csv              # CSV 분석 → 1회 POST
@@ -48,6 +49,11 @@ BAUD = 921600
 #     "reliable": True,                    # 믿을 만한 측정인가
 #     "samples_count": 8800,               # 받은 패킷 수
 #     "duration_sec": 90                   # 측정 시간(초)
+#   },
+#   "presence": {                          # 인원수 (CSI의 CNN 추론, 지금은 임시 기본값)
+#     "count": 1,                          # 1=환자 혼자, 2=보호자/간호사 동석
+#     "confidence": None,                  # CNN 확신도 (모델 미학습 → null)
+#     "gate_active": True                  # 측정 신뢰 게이트 (2명이면 false)
 #   }
 # }
 # ───────────────────────────────────────────────────────────────────
@@ -67,6 +73,13 @@ def build_payload(metrics, bed_id):
             "reliable": metrics["reliable"],
             "samples_count": metrics["samples_count"],
             "duration_sec": round(metrics["duration_sec"]),
+        },
+        # presence(인원수): 재실감지 CNN 추론값. 지금은 모델 미학습이라 임시 기본값.
+        # presence_cnn 학습(Phase 3) 후 실제 추론값으로 교체.
+        "presence": {
+            "count": 1,           # 방에 몇 명 (임시: 환자 1명 가정)
+            "confidence": None,   # CNN 확신도 (모델 미학습 → null)
+            "gate_active": True,  # 측정 신뢰 게이트 (2명이면 false → 알람 보류)
         },
     }
 

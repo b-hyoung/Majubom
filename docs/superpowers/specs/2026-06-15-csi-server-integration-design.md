@@ -25,11 +25,13 @@
   "bed_id": "bed_01",
   "sensor": "csi",
   "raw":      { "hr_bpm": 73, "resp_rpm": 14, "autocorr_strength": 0.45 },
-  "quality":  { "reliable": true, "samples_count": 9000, "duration_sec": 90 }
+  "quality":  { "reliable": true, "samples_count": 9000, "duration_sec": 90 },
+  "presence": { "count": 1, "confidence": null, "gate_active": true }
 }
 ```
 
 - `timestamp`: UTC ISO 8601.
+- `presence`: 재실감지 CNN 추론값. CNN 미학습이라 현재 임시 기본값(`count:1, gate_active:true`) → Phase 3 학습 후 실제값.
 - 서버가 DB로 계산: `baseline`(μ·σ), `zscore`(`(x−μ)/σ`, `total_abs`=절댓값 합), `alert_level`(2/4/6 임계). 공식은 `서버연동_변경사항.md`.
 
 ## 컴포넌트
