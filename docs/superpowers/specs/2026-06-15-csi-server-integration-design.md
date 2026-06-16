@@ -50,7 +50,7 @@
   - `python3 send_csi.py csi_rest.csv --dry` — POST 안 하고 JSON만 출력(검증용)
   - `python3 send_csi.py csi_rest.csv --bed bed_02` — 침대 지정
   - `python3 send_csi.py --loop` — ESP32 실시간 90초 캡처→분석→POST 반복
-- 상수: `SERVER_URL = "http://192.168.0.48:5001/csi"`, `BED_ID = "bed_01"`, `DURATION = 90`.
+- 상수: `SERVER_URL = "http://192.168.0.22:5003/csi"` (csi_server.py 포트 5003), `BED_ID = "bed_01"`, `DURATION = 90`.
 - `analyze()` 결과 → 계약 JSON 조립(raw + quality) → POST.
 - `--loop`: 시리얼 캡처를 임시 CSV로 모은 뒤 `analyze` (record_csi 로직 재사용, 포트 자동검출).
 

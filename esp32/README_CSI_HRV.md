@@ -152,9 +152,9 @@ CSI_DATA,seq,mac,rssi,rate,...,timestamp(18번필드 µs),...,len,first_word,"[I
 
 **논문 A — 정밀도 기준점**
 [Shirakami & Sato, "Heart Rate Variability Extraction using Commodity Wi-Fi Devices via Time Domain Signal Processing", IEEE BHI 2021](https://ieeexplore.ieee.org/document/9508523/) (DOI 10.1109/BHI50953.2021.9508523)
-- 핵심기법: **CSI quotient model**(두 신호 나눠 위상노이즈 제거) + SDNN기반 subcarrier 선택
-- 성능: **ECG 대비 R-R 상대오차 2.53~4.83%**, 복조 MSE 0.35%
-- IEEE 본문은 418로 막힘. 초록까지만 확인됨.
+- 핵심기법: **CSI quotient model**(두 신호 나눠 위상노이즈 제거, Intel 5300 다중안테나) + SDNN기반 subcarrier 선택
+- 성능: **RMSE 130ms** (vs ECG), **SDNN 최저오차 8.8%**(좋은 위치만)
+- ⚠️ 정정: 옛 메모의 "R-R 상대오차 2.53~4.83%·복조 MSE 0.35%"는 **본문에 없는 환각 수치**. 실제는 위 RMSE 130ms·SDNN 8.8% (PDF 풀텍스트 분석 기준)
 
 **논문 B — 우리와 동일 구성(ESP32 2개) ⭐⭐**
 [Extracting Heart-Rate Variability Indicators from Wi-Fi CSI: A Pilot Correlation Study (academia.edu)](https://www.academia.edu/145844177/Extracting_Heart_Rate_Variability_Indicators_from_Wi_Fi_CSI_A_Pilot_Correlation_Study)
@@ -207,8 +207,8 @@ CSI_DATA,seq,mac,rssi,rate,...,timestamp(18번필드 µs),...,len,first_word,"[I
 #### 🥇 1순위 (이대로 구현)
 | 논문 | 우리한테 주는 것 | 핵심 수치 |
 |---|---|---|
-| ⭐ **[Extracting HRV Indicators from Wi-Fi CSI: A Pilot Correlation Study](https://www.academia.edu/145844177/Extracting_Heart_Rate_Variability_Indicators_from_Wi_Fi_CSI_A_Pilot_Correlation_Study)** (academia.edu) | **우리와 동일한 ESP32 2개 구성.** 적응형 peak(μ+1.5σ, 30초창, RRI≥400ms) → 그대로 코드에 이식 | SDNN 5.8ms, RMSSD 4.1ms, LF/HF r=0.84 |
-| ⭐ **[Heart Rate Variability Extraction using Commodity Wi-Fi Devices via Time Domain Signal Processing](https://ieeexplore.ieee.org/document/9508523/)** Shirakami & Sato, IEEE BHI 2021 | **CSI quotient model**(2채널 나눠 위상노이즈 제거) = 정밀도 핵심 기법 | ECG 대비 R-R 오차 2.53~4.83%, 복조 MSE 0.35% |
+| **[Extracting HRV Indicators from Wi-Fi CSI: A Pilot Correlation Study](https://www.academia.edu/145844177/Extracting_Heart_Rate_Variability_Indicators_from_Wi_Fi_CSI_A_Pilot_Correlation_Study)** (Preprints.org 2026, **비심사**) | ESP32 2개 구성. 적응형 peak(μ+kσ)·IQR → **시도했으나 PCA z-score엔 부적합(k=0 적정)으로 기각**. SOTA 인용 금지 | SDNN 5.8ms, RMSSD 4.1ms (preprint 주장값) |
+| ⭐ **[Heart Rate Variability Extraction using Commodity Wi-Fi Devices via Time Domain Signal Processing](https://ieeexplore.ieee.org/document/9508523/)** Shirakami & Sato, IEEE BHI 2021 | **CSI quotient model**(2채널 나눠 위상노이즈 제거, 다중안테나) = 정밀도 핵심 기법 (단일안테나 적용 불가) | **RMSE 130ms, SDNN 8.8%** (옛 "2.53~4.83%·MSE 0.35%"는 환각, 정정) |
 
 #### 🥈 2순위 (보조 기법)
 | 논문 | 볼 이유 |

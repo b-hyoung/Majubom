@@ -26,7 +26,7 @@ from urllib import request, error
 from vital_csi3 import analyze
 
 # ── 설정 ──────────────────────────────────────────────
-SERVER_URL = "http://192.168.0.48:5001/csi"
+SERVER_URL = "http://192.168.0.22:5003/csi"   # csi_server.py (포트 5003). IP는 서버 PC에 맞게.
 BED_ID = "bed_01"
 DURATION = 90          # 실시간 모드 측정 길이(초)
 BAUD = 921600

@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CSI 구현 & 로우데이터 해설</title>
+<style>
+  :root{
+    --bg:#0d0b1a; --tile:#17142a; --tile2:#1e1a35; --line:#2a2545;
+    --text:#f0eefb; --dim:#9a93c4; --muted:#6b6494;
+    --csi:#fbbf24; --vio:#a78bfa; --blue:#60a5fa; --cyan:#22d3ee;
+    --ok:#34d399; --caution:#fbbf24; --warn:#fb923c; --danger:#f43f5e;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:system-ui,'Segoe UI','Noto Sans KR',sans-serif;
+    background:radial-gradient(900px 500px at 85% -10%,rgba(167,139,250,.18),transparent 60%),
+    radial-gradient(700px 500px at 0% 110%,rgba(34,211,238,.12),transparent 55%),var(--bg);
+    background-attachment:fixed;color:var(--text);line-height:1.65;padding:0 0 80px}
+  .mono{font-family:'JetBrains Mono',ui-monospace,Menlo,monospace}
+  header{padding:34px 32px 18px;max-width:1100px;margin:0 auto}
+  h1{font-size:26px;font-weight:800;letter-spacing:-.5px}
+  h1 .dot{color:var(--csi)}
+  .sub{color:var(--dim);font-size:14px;margin-top:6px}
+  main{max-width:1100px;margin:0 auto;padding:0 32px}
+  section{background:var(--tile);border:1px solid var(--line);border-radius:18px;padding:24px 26px;margin:18px 0}
+  h2{font-size:18px;font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:9px}
+  h2 .n{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--bg);background:var(--csi);
+    width:24px;height:24px;border-radius:7px;display:inline-flex;align-items:center;justify-content:center;font-weight:700}
+  .lead{color:var(--dim);font-size:13.5px;margin-bottom:16px}
+  code{font-family:'JetBrains Mono',monospace;background:#000a;padding:2px 6px;border-radius:6px;font-size:.92em;color:var(--cyan)}
+
+  /* 파이프라인 */
+  .flow{display:flex;align-items:stretch;gap:8px;flex-wrap:wrap}
+  .step{flex:1;min-width:130px;background:var(--tile2);border:1px solid var(--line);border-radius:13px;padding:13px 12px}
+  .step .k{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);font-family:'JetBrains Mono',monospace}
+  .step .v{font-weight:700;margin-top:5px;font-size:14px}
+  .step .d{font-size:11.5px;color:var(--dim);margin-top:5px}
+  .arrow{align-self:center;color:var(--muted);font-size:18px}
+
+  /* 로우데이터 */
+  .rawline{background:#000a;border:1px solid var(--line);border-radius:10px;padding:14px;overflow-x:auto;
+    font-family:'JetBrains Mono',monospace;font-size:12px;white-space:nowrap;color:var(--dim)}
+  .tok{padding:1px 3px;border-radius:4px}
+  .tok.use{background:rgba(251,191,36,.22);color:var(--csi);font-weight:700}
+  .tok.arr{background:rgba(96,165,250,.18);color:var(--blue);font-weight:700}
+  table{width:100%;border-collapse:collapse;margin-top:14px;font-size:12.5px}
+  th,td{border:1px solid var(--line);padding:7px 10px;text-align:left;vertical-align:top}
+  th{background:var(--tile2);color:var(--dim);font-weight:600;font-family:'JetBrains Mono',monospace;font-size:11px}
+  td.idx{font-family:'JetBrains Mono',monospace;color:var(--muted);text-align:center;width:42px}
+  tr.use td{background:rgba(251,191,36,.08)}
+  tr.use td.idx{color:var(--csi)}
+  .badge{font-size:10px;padding:2px 7px;border-radius:20px;font-weight:700;font-family:'JetBrains Mono',monospace}
+  .badge.use{background:rgba(251,191,36,.2);color:var(--csi)}
+  .badge.meta{background:rgba(255,255,255,.06);color:var(--muted)}
+  button.toggle{margin-top:14px;background:var(--tile2);border:1px solid var(--line);color:var(--text);
+    padding:8px 14px;border-radius:10px;cursor:pointer;font-size:12px;font-family:'JetBrains Mono',monospace}
+  button.toggle:hover{border-color:var(--csi)}
+
+  .pipe{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:6px}
+  @media(max-width:760px){.pipe{grid-template-columns:1fr}}
+  .branch{background:var(--tile2);border:1px solid var(--line);border-radius:13px;padding:16px}
+  .branch h3{font-size:14px;margin-bottom:8px}
+  .branch.amp h3{color:var(--cyan)} .branch.ph h3{color:var(--vio)}
+  .branch ol{margin-left:18px;font-size:12.5px;color:var(--dim)}
+  .branch ol li{margin:4px 0}
+
+  pre.json{background:#000a;border:1px solid var(--line);border-radius:10px;padding:14px;overflow-x:auto;
+    font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--dim)}
+  pre.json .k{color:var(--csi)} pre.json .c{color:var(--muted)}
+
+  .cards{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media(max-width:760px){.cards{grid-template-columns:1fr}}
+  .card{background:var(--tile2);border:1px solid var(--line);border-radius:13px;padding:14px 16px}
+  .card.bug{border-left:3px solid var(--danger)} .card.limit{border-left:3px solid var(--caution)}
+  .card h4{font-size:13px;margin-bottom:7px}
+  .card ul{margin-left:16px;font-size:12.5px;color:var(--dim)} .card li{margin:5px 0}
+  .card b{color:var(--text)}
+
+  .risk{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+  .rl{flex:1;min-width:120px;border-radius:11px;padding:12px;text-align:center}
+  .rl .lv{font-weight:800;font-size:15px} .rl .c{font-size:11px;font-family:'JetBrains Mono',monospace;margin-top:3px;opacity:.85}
+  .footer{max-width:1100px;margin:24px auto 0;padding:0 32px;color:var(--muted);font-size:12px}
+</style>
+</head>
+<body>
+<header>
+  <h1>CSI 구현 &amp; 로우데이터 해설<span class="dot">.</span></h1>
+  <div class="sub">WiFi CSI로 심박·호흡을 측정하는 파이프라인 · 로우데이터 각 필드의 역할 · 지금 겪는 문제점 — 한 페이지 정리</div>
+</header>
+
+<main>
+
+<!-- 1. 한눈에 -->
+<section>
+  <h2><span class="n">1</span> 한눈에 — 전체 파이프라인</h2>
+  <div class="lead">ESP32 2대가 만든 WiFi 신호 변화(CSI)를 분석해 심박·호흡을 뽑고, 서버가 평소 대비 변화(z-score)로 위험을 판정한다.</div>
+  <div class="flow">
+    <div class="step"><div class="k">측정</div><div class="v">ESP32 ×2</div><div class="d">TX softAP + RX. CSI 100~111Hz 수신 → 시리얼로 <code>CSI_DATA</code> 출력</div></div>
+    <div class="arrow">→</div>
+    <div class="step"><div class="k">분석</div><div class="v">vital_csi3.py</div><div class="d">I/Q → PCA → 위상 자기상관 HR + 진폭 호흡 + 신호강도</div></div>
+    <div class="arrow">→</div>
+    <div class="step"><div class="k">송신</div><div class="v">send_csi.py</div><div class="d"><code>raw/quality/presence</code> JSON을 소켓/HTTP로 전송</div></div>
+    <div class="arrow">→</div>
+    <div class="step"><div class="k">서버</div><div class="v">csi_server :5003</div><div class="d">baseline·z-score·alert 계산 (csi_logic)</div></div>
+    <div class="arrow">→</div>
+    <div class="step"><div class="k">표출</div><div class="v">대시보드</div><div class="d">침대별 위험단계 색상 표시</div></div>
+  </div>
+</section>
+
+<!-- 2. 로우데이터 해부 -->
+<section>
+  <h2><span class="n">2</span> 로우데이터 해부 — <code>CSI_DATA</code> 한 줄의 정체</h2>
+  <div class="lead">측정 시 시리얼로 1패킷마다 아래 한 줄이 들어온다. 콤마로 나뉜 <b>25개 필드 + 끝의 CSI 배열</b>. 노랑 = 분석에 직접 쓰는 값, 파랑 = 핵심(서브캐리어 I/Q 배열).</div>
+
+  <div class="rawline" id="rawline">
+    <span class="tok">CSI_DATA</span>,<span class="tok use" data-i="1">71018</span>,<span class="tok" data-i="2">1c:db:d4:45:44:6d</span>,<span class="tok use" data-i="3">-60</span>,<span class="tok" data-i="4">11</span>,<span class="tok" data-i="5">1</span>,<span class="tok" data-i="6">4</span>,<span class="tok" data-i="7">0</span>,<span class="tok" data-i="8">1</span>,<span class="tok" data-i="9">1</span>,<span class="tok" data-i="10">0</span>,<span class="tok" data-i="11">0</span>,<span class="tok" data-i="12">0</span>,<span class="tok" data-i="13">0</span>,<span class="tok use" data-i="14">-97</span>,<span class="tok" data-i="15">0</span>,<span class="tok use" data-i="16">1</span>,<span class="tok" data-i="17">1</span>,<span class="tok use" data-i="18">805942577</span>,<span class="tok" data-i="19">0</span>,<span class="tok" data-i="20">83</span>,<span class="tok" data-i="21">1</span>,<span class="tok" data-i="22">128</span>,<span class="tok" data-i="23">0</span>,<span class="tok arr" data-i="24">"[0,0,…,-3,-4,-2,-4,…]"</span>
+  </div>
+  <button class="toggle" onclick="toggleUse()">🔦 분석에 쓰는 필드만 강조 / 전체 보기</button>
+
+  <table id="fieldtbl">
+    <tr><th class="idx">#</th><th>필드</th><th>의미</th><th>용도</th></tr>
+    <tr><td class="idx">0</td><td><code>CSI_DATA</code></td><td>라인 식별자</td><td><span class="badge meta">파싱 시작점</span></td></tr>
+    <tr class="use"><td class="idx">1</td><td>seq</td><td>패킷 순번</td><td><span class="badge use">패킷 수(품질)</span></td></tr>
+    <tr><td class="idx">2</td><td>mac</td><td>송신(TX) MAC</td><td><span class="badge meta">메타</span></td></tr>
+    <tr class="use"><td class="idx">3</td><td>rssi</td><td>수신 신호세기(dBm)</td><td><span class="badge use">환경 품질 참고</span></td></tr>
+    <tr><td class="idx">4</td><td>rate</td><td>전송 속도</td><td><span class="badge meta">메타</span></td></tr>
+    <tr><td class="idx">5–13</td><td>sig_mode … sgi</td><td>변조/대역/코딩 플래그</td><td><span class="badge meta">메타</span></td></tr>
+    <tr class="use"><td class="idx">14</td><td>noise_floor</td><td>잡음 바닥(dBm)</td><td><span class="badge use">환경 품질 참고</span></td></tr>
+    <tr><td class="idx">15</td><td>ampdu_cnt</td><td>집계 카운트</td><td><span class="badge meta">메타</span></td></tr>
+    <tr class="use"><td class="idx">16</td><td>channel</td><td>WiFi 채널</td><td><span class="badge use">침대별 채널 분리</span></td></tr>
+    <tr><td class="idx">17</td><td>secondary_channel</td><td>보조 채널</td><td><span class="badge meta">메타</span></td></tr>
+    <tr class="use"><td class="idx">18</td><td>local_timestamp</td><td>수신 시각(µs)</td><td><span class="badge use">균일 리샘플 시간축</span></td></tr>
+    <tr><td class="idx">19–21</td><td>ant / sig_len / rx_state</td><td>안테나·길이·상태</td><td><span class="badge meta">메타</span></td></tr>
+    <tr><td class="idx">22</td><td>len</td><td>CSI 데이터 길이(=128)</td><td><span class="badge meta">검증</span></td></tr>
+    <tr><td class="idx">23</td><td>first_word</td><td>유효 플래그</td><td><span class="badge meta">메타</span></td></tr>
+    <tr class="use"><td class="idx">24</td><td><b>CSI 배열 <code>[…]</code></b></td><td><b>128개 정수 = 64 서브캐리어 × (I,Q)</b></td><td><span class="badge use">★ 핵심 신호</span></td></tr>
+  </table>
+  <div class="lead" style="margin-top:14px">
+    배열은 <b>짝수=I(실부), 홀수=Q(허부)</b> → <code>I + jQ</code> 로 묶어 <b>64개 복소 서브캐리어</b>가 된다.
+    이게 "가슴이 움직이며 WiFi 신호가 어떻게 변했나"의 원본. 진폭 <code>|I+jQ|</code> 과 위상 <code>∠(I+jQ)</code> 을 따로 쓴다.
+    <br>※ <code>vital_csi3.parse()</code> 는 실제로 <b>[18] 시각</b> 과 <b>[24] CSI 배열</b> 만 사용 (나머지는 메타/품질 참고).
+  </div>
+</section>
+
+<!-- 3. 위상 & 진폭 -->
+<section>
+  <h2><span class="n">3</span> 위상(phase) &amp; 진폭(amplitude) — 같은 신호, 다른 관점</h2>
+  <div class="lead">서브캐리어 한 개 값 <code>I + jQ</code> 는 복소수다. <b>벡터(화살표)</b> 로 보면 — 길이=진폭, 각도=위상.</div>
+  <pre class="json">        Q (허부)
+        │      ● (I, Q)
+        │     ╱
+        │    ╱   ← 화살표 길이 = <span class="k">진폭</span> |I+jQ| = √(I²+Q²)   "얼마나 세게 도착했나"
+        │   ╱θ   ← 화살표 각도 = <span class="k">위상</span> ∠(I+jQ) = atan2(Q, I)  "얼마나 밀려서 도착했나"
+        └────────── I (실부)</pre>
+  <div class="lead" style="margin:6px 0 14px">
+    WiFi 파동은 <b>TX → 가슴 반사 → RX</b> 로 온다. 가슴이 움직이면 <b>경로 길이</b>가 바뀌고, 그게 진폭·위상에 다르게 찍힌다.
+  </div>
+  <div class="pipe">
+    <div class="branch amp">
+      <h3>📶 진폭 = "세기" → 호흡</h3>
+      <ol>
+        <li>여러 경로 파동의 <b>보강/상쇄 간섭</b> 세기</li>
+        <li>가슴이 <b>수 mm~cm</b> 크게 움직임 → 진폭 뚜렷이 출렁</li>
+        <li>느리고 큰 진동 → 호흡 추출에 적합</li>
+        <li>하드웨어 오프셋 영향 적어 <b>안정적</b></li>
+      </ol>
+    </div>
+    <div class="branch ph">
+      <h3>🧭 위상 = "거리/타이밍" → 심박</h3>
+      <ol>
+        <li>경로 길이에 직접 비례: <code>Δφ = 2π·(2·Δd)/λ</code></li>
+        <li>2.4GHz WiFi <code>λ ≈ 12.5cm</code> → <b>0.5mm</b> 변화도 측정 가능</li>
+        <li>심박 진동 <b>0.2~0.5mm</b> 미세 → 진폭엔 안 잡혀도 위상엔 잡힘</li>
+        <li>단, 패킷별 위상 오프셋(잡음) 제거 필요 ↓</li>
+      </ol>
+    </div>
+  </div>
+  <table>
+    <tr><th></th><th>움직임 크기</th><th>잘 잡히는 곳</th><th>주파수</th></tr>
+    <tr><td><b>호흡</b></td><td>수 mm ~ cm (큼)</td><td>진폭 <code>|I+jQ|</code></td><td>0.1–0.5Hz</td></tr>
+    <tr class="use"><td><b>심박</b></td><td>0.2~0.5 mm (미세)</td><td>위상 <code>∠(I+jQ)</code></td><td>0.8–2.0Hz</td></tr>
+  </table>
+  <div class="lead" style="margin-top:14px">
+    <b>⚠️ 위상의 함정</b> — TX/RX가 따로 동작해 패킷마다 <b>공통 위상 오프셋</b>(주파수 오차·샘플링 타이밍)이 끼는데, 진짜 심박보다 크다.
+    그래서 <code>∠(comp) − 패킷별 평균</code> 으로 오프셋을 빼고 <code>unwrap</code>(±2π 점프 풀기) 한 뒤에야 위상에서 심박이 보인다.
+    진폭은 이런 오프셋이 없어 호흡이 더 쉽게 나온다.
+  </div>
+</section>
+
+<!-- 4. 처리 흐름 -->
+<section>
+  <h2><span class="n">4</span> 처리 흐름 — 배열에서 심박·호흡까지</h2>
+  <div class="lead">복소 CSI를 PCA로 압축한 뒤, <b>진폭은 호흡</b>(느린 진동), <b>위상은 심박</b>(빠른 진동)으로 나눠 뽑는다.</div>
+  <div class="step" style="margin-bottom:14px">
+    <div class="k">공통</div>
+    <div class="v">I/Q → 복소 CSI (N×64) → 균일 리샘플 → detrend/정규화 → PCA</div>
+  </div>
+  <div class="pipe">
+    <div class="branch amp">
+      <h3>① 진폭 → 호흡 (resp_rpm)</h3>
+      <ol>
+        <li>진폭 PCA 성분</li>
+        <li>Welch 스펙트럼</li>
+        <li>0.1–0.5Hz(6–30rpm) 최대 피크 → 호흡수</li>
+        <li>호흡 envelope 최소창 = 숨참기 구간(발표·검증용)</li>
+      </ol>
+    </div>
+    <div class="branch ph">
+      <h3>② 위상 → 심박 (hr_bpm)</h3>
+      <ol>
+        <li>위상 오프셋 제거 + 시간축 unwrap → PCA</li>
+        <li>밴드패스 0.8–2.0Hz(48–120bpm)</li>
+        <li><b>자기상관</b> 최대 lag → 심박수</li>
+        <li><b>강도 = ac[lag]/ac[0]</b> → 0.30↑ 이면 <code>reliable</code></li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<!-- 4. 보내는 데이터 -->
+<section>
+  <h2><span class="n">5</span> 서버로 보내는 것 vs 서버가 계산하는 것</h2>
+  <div class="lead">CSI는 <b>측정값만</b> 보낸다. 평소값(baseline)·변화량(z-score)·위험단계는 <b>서버</b>가 누적 데이터로 계산.</div>
+  <pre class="json">{
+  <span class="k">"timestamp"</span>: "2026-06-16T00:00:00Z",  <span class="c">// 측정 시각</span>
+  <span class="k">"bed_id"</span>: "bed_01",                     <span class="c">// 어느 환자</span>
+  <span class="k">"sensor"</span>: "csi",
+  <span class="k">"raw"</span>:     { "hr_bpm":78, "resp_rpm":16, "autocorr_strength":0.41 },  <span class="c">// ② ③ 결과</span>
+  <span class="k">"quality"</span>: { "reliable":true, "samples_count":8800, "duration_sec":90 },
+  <span class="k">"presence"</span>:{ "count":1, "confidence":null, "gate_active":true }   <span class="c">// 인원수(CNN)</span>
+}
+<span class="c">// 서버가 계산: baseline(μ·σ) → z=(x−μ)/σ → total_abs → alert_level</span></pre>
+</section>
+
+<!-- 5. 겪는 문제 -->
+<section>
+  <h2><span class="n">6</span> 지금 겪는 문제점</h2>
+  <div class="lead">측정/알고리즘의 <b>본질적 한계</b>와, 시스템 통합에서 <b>실제로 부딪힌 버그</b>를 나눠 정리.</div>
+  <div class="cards">
+    <div class="card limit">
+      <h4>⚠️ 연구·측정 한계</h4>
+      <ul>
+        <li><b>HRV 절대값(SDNN ms) — 구현·측정은 했으나 부정확</b>: <code>vital_csi2</code>(진폭 peak)로 SDNN/RMSSD를 실제로 뽑았지만, 애플워치 33~35ms 대비 <b>CSI 66~96ms (2~3배 부풀림)</b> · HR도 ~85bpm 고정. 숨참기 최상조건도 SDNN 159ms → 단일안테나 학술적 한계 확정 → "추세 z-score"로 전환</li>
+        <li><b>자기상관 강도 0.30 경계</b> — 일상 환경(전체신호)에선 0.35처럼 신뢰선에 근접</li>
+        <li><b>HR z-score 환경 의존</b> — 통제 ±2bpm vs 일상 5~18bpm 차이</li>
+        <li><b>베이스라인 부족 → false positive 폭주</b> — 4건이면 σ가 좁아 오탐 → <b>30일 학습 필요</b></li>
+        <li><b>운영 vs 발표 HR 차이</b> — 운영=전체신호, 발표=숨참기 구간(±2bpm 검증용)</li>
+      </ul>
+    </div>
+    <div class="card bug">
+      <h4>🐞 통합 시 실제 겪은 버그</h4>
+      <ul>
+        <li><b>/csi 형식 충돌</b> — 서버가 옛 형식(<code>amp_mean</code>) 기대 vs 새 형식(<code>raw/quality</code>) → 서버 수정으로 해결</li>
+        <li><b>서버 IP·포트 변경</b> — <code>.48:5001</code> → <code>.22:5003</code> 으로 바뀌어 송신부 주소 stale</li>
+        <li><b>분석 환경</b> — venv에 <code>scipy</code> 없음 / 서버 <code>flask</code> 미설치 → 실행 불가</li>
+        <li><b>git submodule 깨짐</b> — <code>esp-csi/esp-idf</code> 의 <code>.git</code> 포인터가 빈 <code>.git/modules</code> 가리켜 모든 git 명령 실패</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- 6. 위험 규칙 -->
+<section>
+  <h2><span class="n">7</span> 위험 판정 규칙 (total_abs = |z_hr|+|z_resp|+|z_strength|)</h2>
+  <div class="risk">
+    <div class="rl" style="background:rgba(52,211,153,.15);color:#34d399"><div class="lv">정상</div><div class="c">&lt; 2 · normal</div></div>
+    <div class="rl" style="background:rgba(251,191,36,.15);color:#fbbf24"><div class="lv">주의</div><div class="c">2~4 · caution</div></div>
+    <div class="rl" style="background:rgba(251,146,60,.15);color:#fb923c"><div class="lv">경고</div><div class="c">4~6 · warning</div></div>
+    <div class="rl" style="background:rgba(244,63,94,.15);color:#f43f5e"><div class="lv">위험</div><div class="c">≥6 또는 HR&gt;140/&lt;40 · critical</div></div>
+  </div>
+  <div class="lead" style="margin-top:14px">
+    예외: <code>reliable=false</code> 측정 무시 · <code>gate_active=false</code>(보호자 동석) 측정 보류 · 베이스라인 <code>n&lt;5</code>/14일 미만 학습 중(정식 알람 보류).
+  </div>
+</section>
+
+<!-- 8. 논문 활용 & 출처 검증 -->
+<section>
+  <h2><span class="n">8</span> 논문 활용 &amp; 출처 검증 (환각 더블체크)</h2>
+  <div class="lead">
+    로우데이터→HR/호흡의 핵심 알고리즘은 <b>자체 구현 + 애플워치(±2bpm) 검증</b>이고, 논문은 주로
+    <b>근거·한계 입증 / 기각 판단 / CNN 구조</b>에 썼다. 아래는 로컬 원문(fulltext·뷰어)으로 교차검증한 결과.
+  </div>
+
+  <h3 style="margin:8px 0 8px;font-size:14px;color:var(--csi)">로우데이터 ↔ 알고리즘 ↔ 논문 연결</h3>
+  <table>
+    <tr><th>로우데이터에서</th><th>방법</th><th>논문 연결</th></tr>
+    <tr><td>진폭 <code>|I+jQ|</code> → 호흡</td><td>Welch 스펙트럼 최대 피크</td><td><span class="badge meta">일반 기법 · 자체</span></td></tr>
+    <tr class="use"><td>위상 <code>∠(I+jQ)</code> → 심박</td><td>PCA + 자기상관 주기</td><td><b>자체 구현</b> · 애플워치 검증 <span class="badge meta">논문 차용 아님</span></td></tr>
+    <tr><td>HRV 절대값(SDNN ms)</td><td><code>vital_csi2</code> 진폭 peak로 <b>시도함</b></td><td>측정값 부풀림(66~96ms vs 워치 33~35) + 논문 A·Pulse-Fi 근거 → <b>단일안테나 불가 확정 → 추세 z-score로 전환</b></td></tr>
+    <tr><td>인원수(presence)</td><td>1D CNN</td><td><b>논문 C 구조 차용</b> (작업2)</td></tr>
+  </table>
+
+  <h3 style="margin:18px 0 8px;font-size:14px;color:var(--csi)">논문별 — 어디에 어떻게 썼나</h3>
+  <table>
+    <tr><th>논문</th><th>출처(검증)</th><th>활용</th></tr>
+    <tr><td><b>A. Shirakami &amp; Sato</b></td><td>IEEE BHI 2021 · DOI 10.1109/BHI50953.2021.9508523 ✅뷰어 일치</td><td>SOTA·한계 근거. 핵심기법(Intel5300 <b>다중안테나 quotient</b>, RMSE 130ms)이 <b>단일안테나 ESP32엔 적용 불가</b> → 기각</td></tr>
+    <tr><td><b>Pulse-Fi</b></td><td>Kocheta·Bhatia·Obraczka · IoTDCoSS 2025(UCSC) ⚠️로컬 원문 없음</td><td>peer-reviewed 근거: ESP32 단일안테나 HR 가능(MAE 0.46) + <b>HRV 의도적 제외</b>. LSTM 차용은 보류</td></tr>
+    <tr><td><b>B. Chaudhari et al.</b></td><td>Preprints.org 2026 · <b>비심사(NOT PEER-REVIEWED)</b> ✅fulltext 일치</td><td>적응형 peak(μ+kσ)·IQR 방법론 <b>검토했으나 PCA z-score엔 부적합 → 기각</b>. <b>SOTA 인용 금지</b></td></tr>
+    <tr class="use"><td><b>C. Yakub et al.</b></td><td>IEEE ICETSIS 2024 ✅fulltext 일치</td><td>재실감지 <b>1D CNN 구조 차용</b> (presence_cnn). 정확도 96.65%(0–2명)</td></tr>
+  </table>
+
+  <div class="card bug" style="margin-top:18px">
+    <h4>🔎 환각 더블체크 결과</h4>
+    <ul>
+      <li>✅ <b>논문 A</b> 저자·DOI·RMSE 130ms·SDNN 8.8% — 뷰어(PDF 기반) 일치</li>
+      <li>✅ <b>논문 B</b> 비심사 preprint·SDNN MAE 5.8ms·Fitbit GT — fulltext 일치. <b>※ 논문 B가 논문 A를 'Nakamura et al.'로 오인용</b> → "참고만, SOTA 인용 금지" 근거 보강</li>
+      <li>✅ <b>논문 C</b> 96.65%(0–2명)·86.17%·ICETSIS 2024·Yakub — fulltext 일치</li>
+      <li>⚠️ <b>Pulse-Fi</b> (MAE 0.46·HRV 제외) — 로컬 원문 없음, 프로젝트 인용문만 → <b>원문 PDF로 최종 확인 권장</b></li>
+      <li>❌ <b>README_CSI_HRV.md 에 환각 수치 잔존</b>: "R-R 오차 2.53~4.83%, 복조 MSE 0.35%"는 본문에 없는 <b>환각</b> → 올바른 값 <b>RMSE 130ms · SDNN 8.8%</b> (이번에 정정)</li>
+    </ul>
+  </div>
+</section>
+
+</main>
+<div class="footer">MajuBom · CSI 파트 · 자기완결 HTML (외부 의존 없음) · 로우데이터 예시는 <code>csi_rest.csv</code> 실측 1패킷</div>
+
+<script>
+let useOnly = false;
+function toggleUse(){
+  useOnly = !useOnly;
+  // 표: use 행만
+  document.querySelectorAll('#fieldtbl tr').forEach((tr,i)=>{
+    if(i===0) return; // header
+    const isUse = tr.classList.contains('use');
+    tr.style.display = (useOnly && !isUse) ? 'none' : '';
+  });
+  // 로우라인: 안 쓰는 토큰 흐리게
+  document.querySelectorAll('#rawline .tok').forEach(t=>{
+    const keep = t.classList.contains('use') || t.classList.contains('arr');
+    t.style.opacity = (useOnly && !keep) ? '0.25' : '1';
+  });
+}
+</script>
+</body>
+</html>
