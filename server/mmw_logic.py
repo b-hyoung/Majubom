@@ -34,22 +34,28 @@ MIN_SAMPLES = 5          # z-score를 신뢰할 최소 누적 측정 수 (σ 안
 WARMUP_DAYS = 14         # 누적 일수 < 14 → "학습 중", 정식 알람 보류
 
 # 추적하는 보행 지표 4종. 각각 baseline μ·σ 를 누적한다.
-#  speed       : 평균 보행 속도 (m/s)        — 느려지면 위험
-#  speed_cv    : 속도 변동계수               — 불규칙할수록 위험
-#  sway        : 좌우 흔들림 (m)             — 비틀거림
-#  freeze_ratio: 거의 멈춰 있던 시간 비율    — 멈칫거림
-METRICS = ("speed", "speed_cv", "sway", "freeze_ratio")
+#  speed         : 평균 보행 속도 (m/s)        — 느려지면 위험
+#  speed_cv      : 속도 변동계수               — 불규칙할수록 위험
+#  sway          : 좌우 흔들림 (m)             — 비틀거림
+#  freeze_ratio  : 거의 멈춰 있던 시간 비율    — 멈칫거림
+#  stride_length : 추정 보폭 (m)              — 짧아지면 위험
+#  stride_cv     : 보폭 변동계수               — 불규칙할수록 위험
+METRICS = ("speed", "speed_cv", "sway", "freeze_ratio", "stride_length", "stride_cv")
 
 # σ 하한 (측정 초기 분산이 0에 가까워 z가 폭발하는 것을 방지)
-SIGMA_FLOOR = {"speed": 0.05, "speed_cv": 0.03, "sway": 0.02, "freeze_ratio": 0.03}
+SIGMA_FLOOR = {
+    "speed": 0.05, "speed_cv": 0.03, "sway": 0.02,
+    "freeze_ratio": 0.03, "stride_length": 0.03, "stride_cv": 0.02,
+}
 
 # alert_level 임계 (total_abs 기준)
-TH_CAUTION, TH_WARNING, TH_CRITICAL = 2.0, 4.0, 6.0
+# 지표 4개→6개로 늘어나 total_abs가 자연히 커지므로 비례 조정 (×1.5)
+TH_CAUTION, TH_WARNING, TH_CRITICAL = 3.0, 6.0, 9.0
 
 # 절대 임계 (baseline 무관 즉시 위험)
 #  height_drop: track 높이(머리/몸통)가 한 윈도우에서 이만큼(m) 이상 급강하 →
 #               주저앉음/낙상으로 간주하고 즉시 critical.
-HEIGHT_DROP_FALL = 0.5
+HEIGHT_DROP_FALL = 1.2
 
 LEVELS = ("normal", "caution", "warning", "critical")
 LEVEL_KO = {"normal": "정상", "caution": "주의", "warning": "경고", "critical": "위험"}

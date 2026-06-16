@@ -165,6 +165,82 @@ def extract_targets(hdr, frame_bytes):
     return targets
 
 
+# ── 보폭 추정 (FFT → cadence → stride) ────────────────────────────────
+def _estimate_stride(speed, t, speed_mean):
+    """
+    속도 시계열에서 FFT로 걸음 주기(cadence)를 내부적으로 추출하고,
+    보폭(stride_length)과 보폭 변동성(stride_cv)을 추정한다.
+
+    원리: 걸을 때 몸통 속도가 한 걸음마다 빨라졌다 느려졌다를 반복한다.
+    이 주기적 변동의 지배 주파수 = cadence(Hz, 걸음/초).
+    stride_length = speed / cadence.
+
+    보폭 변동성: 속도 시계열을 걸음 주기 단위로 잘라 구간별 평균 속도를 구하고,
+    각 구간의 보폭을 추정해 CV(변동계수)를 구한다.
+    """
+    n = len(speed)
+    if n < 20 or speed_mean < 0.1:
+        return 0.0, 0.0
+
+    # 샘플링 주파수 추정
+    dt = np.diff(t)
+    dt = dt[dt > 0]
+    if len(dt) == 0:
+        return 0.0, 0.0
+    fs = 1.0 / np.median(dt)
+    if fs < 1.0:
+        return 0.0, 0.0
+
+    # 속도에서 평균 제거 후 FFT
+    sig = speed - speed_mean
+    freqs = np.fft.rfftfreq(n, d=1.0 / fs)
+    fft_mag = np.abs(np.fft.rfft(sig))
+
+    # 걸음 주파수 범위: 0.5~3.0 Hz (분당 30~180걸음)
+    mask = (freqs >= 0.5) & (freqs <= 3.0)
+    if not np.any(mask):
+        return 0.0, 0.0
+
+    valid_freqs = freqs[mask]
+    valid_mag = fft_mag[mask]
+    peak_idx = np.argmax(valid_mag)
+
+    # 피크가 노이즈보다 충분히 커야 유의미 (평균 대비 2배 이상)
+    if valid_mag[peak_idx] < np.mean(valid_mag) * 2:
+        return 0.0, 0.0
+
+    cadence_hz = float(valid_freqs[peak_idx])
+
+    # 보폭 추정: stride = speed / cadence
+    stride_length = speed_mean / cadence_hz
+
+    # 보폭 변동성: 걸음 주기 단위로 구간을 나눠 각 구간 보폭을 추정
+    step_period = 1.0 / cadence_hz  # 한 걸음에 걸리는 시간 (초)
+    samples_per_step = max(int(fs * step_period), 1)
+
+    if n >= samples_per_step * 2:
+        n_steps = n // samples_per_step
+        step_strides = []
+        for i in range(n_steps):
+            seg = speed[i * samples_per_step:(i + 1) * samples_per_step]
+            seg_mean = float(np.mean(seg))
+            if seg_mean > 0.05:
+                step_strides.append(seg_mean / cadence_hz)
+        if len(step_strides) >= 2:
+            arr_s = np.array(step_strides)
+            s_mean = np.mean(arr_s)
+            if s_mean > 1e-6:
+                stride_cv = float(np.std(arr_s) / s_mean)
+            else:
+                stride_cv = 0.0
+        else:
+            stride_cv = 0.0
+    else:
+        stride_cv = 0.0
+
+    return stride_length, stride_cv
+
+
 # ── 보행 지표 계산 (features.py 로직 통합) ─────────────────────────────
 def compute_gait_features(track_history):
     """
@@ -209,12 +285,17 @@ def compute_gait_features(track_history):
     # height_drop: z 최대 하강폭 (낙상 신호)
     height_drop = float(np.max(z) - np.min(z)) if np.ptp(z) > 0 else 0.0
 
+    # stride_length / stride_cv: 속도 FFT → cadence → 보폭 추정
+    stride_length, stride_cv = _estimate_stride(speed, t, speed_mean)
+
     raw = {
         "speed": round(speed_mean, 3),
         "speed_cv": round(speed_cv, 3),
         "sway": round(sway, 3),
         "freeze_ratio": round(freeze_ratio, 3),
         "height_drop": round(height_drop, 3),
+        "stride_length": round(stride_length, 3),
+        "stride_cv": round(stride_cv, 3),
     }
     quality = {"reliable": True, "n_samples": len(samples)}
     presence = {"n_targets": n_targets, "main_tid": int(main_tid)}

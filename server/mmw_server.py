@@ -59,6 +59,8 @@ def receive_mmw():
     raw.setdefault("sway", 0.0)
     raw.setdefault("freeze_ratio", 0.0)
     raw.setdefault("height_drop", 0.0)
+    raw.setdefault("stride_length", 0.0)
+    raw.setdefault("stride_cv", 0.0)
     data.setdefault("target_id", "room_01")
 
     # baseline 갱신 + z-score/alert 계산 (mmw_logic)
@@ -76,7 +78,8 @@ def receive_mmw():
     print(f"[{result['received_at']}] MMW {result['target_id']} | "
           f"spd={raw.get('speed')} cv={raw.get('speed_cv')} "
           f"sway={raw.get('sway')} frz={raw.get('freeze_ratio')} "
-          f"drop={raw.get('height_drop')} | z_total={ztot} | "
+          f"drop={raw.get('height_drop')} stride={raw.get('stride_length')} "
+          f"s_cv={raw.get('stride_cv')} | z_total={ztot} | "
           f"level={lvl}{' ALARM' if result.get('alarm') else ''}")
     return jsonify({"ok": True, "alert_level": result.get("alert_level"),
                     "alarm": result.get("alarm")}), 200
@@ -272,6 +275,7 @@ def index():
           <div class=big>속도 <b>{raw.get('speed','—')}</b> m/s</div>
           <div class=row>변동 {raw.get('speed_cv','—')} · 흔들림 {raw.get('sway','—')}
               · 멈칫 {raw.get('freeze_ratio','—')} · 높이강하 {raw.get('height_drop','—')}
+              · 보폭 {raw.get('stride_length','—')}m · 보폭변동 {raw.get('stride_cv','—')}
               · reliable {str(reliable).lower()}</div>
           <div class=row>z_total <b>{ztot}</b> · baseline {age}</div>
           <div class=reason>{reason}</div>
