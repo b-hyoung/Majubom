@@ -93,3 +93,13 @@ python parse_csi.py
 - 1주차 미션·역할 분담은 `esp32/HANDOFF.md` 참조
 - ESP-IDF 버전 변경 시: `cd esp32/esp-idf && git checkout <tag>` 후 부모 저장소에서 커밋
 - 빌드 산출물(`build/`, `sdkconfig.old`, `venv/`)은 `.gitignore` 처리됨
+
+## db.py
+
+init_db()	테이블/인덱스 생성
+upsert_bed(bed_id)	침대 자동 등록
+insert_csi(...)	CSI 1건 저장
+update_baseline(bed_id)	최근 30일 reliable 데이터로 μ/σ 재계산
+compute_alert(...)	z-score + alert_level 결정 (예외처리 포함)
+get_csi_log(bed_id, limit)	DB 이력 조회
+get_baseline(bed_id)	baseline 통계 조회

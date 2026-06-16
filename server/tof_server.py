@@ -2,14 +2,19 @@
 다중 센서 수신 서버 (ToF + CSI)
 포트: 5001
 
-POST /tof  — VL53L5CX ToF 거리 데이터
-POST /csi  — WiFi CSI 진폭 통계 (ESP32 csi_http 프로젝트)
+POST /tof              — VL53L5CX ToF 거리 데이터
+POST /csi              — WiFi CSI 측정값 (HR/호흡/신호품질 + 재실)
+GET  /csi/latest       — 침대별 최신 CSI (in-memory)
+GET  /csi/log          — DB 이력 조회 (?bed_id=&limit=)
+GET  /csi/baseline/<id>— 침대별 baseline 통계
+GET  /beds             — 등록된 침대 목록
 """
 
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from datetime import datetime
 import os, json
+import db
 
 app = Flask(__name__)
 CORS(app)
@@ -103,11 +108,14 @@ log = []  # 최근 100건
 
 # ── CSI ──────────────────────────────────────────────────────────────
 latest_csi = {
-    "seq": None, "rssi": None, "channel": None,
-    "noise_floor": None, "amp_mean": None, "amp_std": None,
+    "bed_id": None, "hr_bpm": None, "resp_rpm": None,
+    "autocorr_strength": None, "reliable": None,
+    "presence_count": None, "gate_active": None,
+    "z_hr": None, "z_resp": None, "z_strength": None,
+    "total_abs": None, "alert_level": None,
     "received_at": None,
 }
-csi_log = []  # 최근 100건
+csi_log = []  # 최근 100건 (in-memory, 재시작 시 초기화)
 
 def grid_html(distances, resolution):
     if not distances:
@@ -210,26 +218,55 @@ def receive_csi():
     if not data:
         return jsonify({"error": "JSON body required"}), 400
 
+    bed_id    = data.get("bed_id", "unknown")
+    timestamp = data.get("timestamp") or datetime.now().isoformat()
+
+    raw     = data.get("raw") or {}
+    quality = data.get("quality") or {}
+    pres    = data.get("presence") or {}
+
+    hr_bpm            = raw.get("hr_bpm")
+    resp_rpm          = raw.get("resp_rpm")
+    autocorr_strength = raw.get("autocorr_strength")
+
+    reliable      = bool(quality.get("reliable", True))
+    samples_count = quality.get("samples_count")
+    duration_sec  = quality.get("duration_sec")
+
+    presence_count      = pres.get("count", 1)
+    presence_confidence = pres.get("confidence")
+    gate_active         = bool(pres.get("gate_active", True))
+
+    db.upsert_bed(bed_id)
+
+    z_hr, z_resp, z_str, total_abs, alert_level = db.compute_alert(
+        bed_id, hr_bpm, resp_rpm, autocorr_strength, reliable, gate_active
+    )
+
+    db.insert_csi(
+        bed_id, timestamp, hr_bpm, resp_rpm, autocorr_strength,
+        reliable, samples_count, duration_sec,
+        presence_count, presence_confidence, gate_active,
+        z_hr, z_resp, z_str, total_abs, alert_level,
+    )
+    db.update_baseline(bed_id)
+
     now = datetime.now().isoformat(timespec="milliseconds")
     latest_csi.update({
-        "seq":         data.get("seq"),
-        "rssi":        data.get("rssi"),
-        "channel":     data.get("channel"),
-        "noise_floor": data.get("noise_floor"),
-        "amp_mean":    data.get("amp_mean"),
-        "amp_std":     data.get("amp_std"),
+        "bed_id": bed_id, "hr_bpm": hr_bpm, "resp_rpm": resp_rpm,
+        "autocorr_strength": autocorr_strength, "reliable": reliable,
+        "presence_count": presence_count, "gate_active": gate_active,
+        "z_hr": z_hr, "z_resp": z_resp, "z_strength": z_str,
+        "total_abs": total_abs, "alert_level": alert_level,
         "received_at": now,
     })
     csi_log.append(dict(latest_csi))
     if len(csi_log) > 100:
         csi_log.pop(0)
 
-    amp_mean = data.get("amp_mean") or 0
-    amp_std  = data.get("amp_std")  or 0
-    print(f"[{now}] CSI seq={data.get('seq')} | "
-          f"amp={amp_mean:.1f}±{amp_std:.1f} | "
-          f"rssi={data.get('rssi')} ch={data.get('channel')}")
-    return jsonify({"ok": True}), 200
+    print(f"[{now}] CSI {bed_id} | hr={hr_bpm} resp={resp_rpm} "
+          f"str={autocorr_strength} | {alert_level}")
+    return jsonify({"ok": True, "alert_level": alert_level}), 200
 
 
 @app.route("/csi/latest", methods=["GET"])
@@ -239,7 +276,22 @@ def get_csi_latest():
 
 @app.route("/csi/log", methods=["GET"])
 def get_csi_log():
-    return jsonify(csi_log[-20:])
+    bed_id = request.args.get("bed_id")
+    limit  = min(int(request.args.get("limit", 20)), 200)
+    return jsonify(db.get_csi_log(bed_id, limit))
+
+
+@app.route("/csi/baseline/<bed_id>", methods=["GET"])
+def csi_baseline(bed_id):
+    bl = db.get_baseline(bed_id)
+    if bl is None:
+        return jsonify({"error": "baseline not found", "bed_id": bed_id}), 404
+    return jsonify(bl)
+
+
+@app.route("/beds", methods=["GET"])
+def list_beds():
+    return jsonify(db.list_beds())
 
 
 @app.route("/", methods=["GET"])
@@ -253,18 +305,43 @@ def index():
         return f"최솟값 {min(valid)} mm / 평균 {int(sum(valid)/len(valid))} mm" if valid else "유효값 없음"
 
     # CSI 최신값
+    def _alert_color(level):
+        return {"normal": "#0a7", "caution": "#fa0", "warning": "#f60",
+                "critical": "#c00", "learning": "#999", "paused": "#88a",
+                "unreliable": "#ccc"}.get(level, "#999")
+
     c = latest_csi
-    csi_summary = (
-        f"amp={c['amp_mean']:.1f}±{c['amp_std']:.1f} | rssi={c['rssi']} ch={c['channel']}"
-        if c["amp_mean"] is not None else "아직 없음"
-    )
-    csi_rows = "".join(
-        f"<tr><td>{e['received_at']}</td><td>{e['seq']}</td>"
-        f"<td>{e['amp_mean']:.1f}</td><td>{e['amp_std']:.1f}</td>"
-        f"<td>{e['rssi']}</td><td>{e['channel']}</td></tr>"
-        for e in reversed(csi_log[-10:])
-        if e["amp_mean"] is not None
-    )
+    al = (c.get("alert_level") or "—").upper()
+    al_color = _alert_color(c.get("alert_level"))
+    if c["hr_bpm"] is None:
+        csi_summary = "아직 없음"
+    elif c.get("alert_level") == "paused":
+        csi_summary = (
+            f"HR={c['hr_bpm']} bpm | 호흡={c['resp_rpm']} rpm | "
+            f"신호={c['autocorr_strength']} | "
+            f"<span style='color:#88a;font-weight:bold'>👥 보호자 방문 중 (알람 보류)</span>"
+        )
+    else:
+        csi_summary = (
+            f"HR={c['hr_bpm']} bpm | 호흡={c['resp_rpm']} rpm | "
+            f"신호={c['autocorr_strength']} | "
+            f"<span style='color:{al_color};font-weight:bold'>{al}</span>"
+        )
+    csi_rows = ""
+    for e in reversed(csi_log[-10:]):
+        if e.get("hr_bpm") is None:
+            continue
+        ec = _alert_color(e.get("alert_level"))
+        lv = e.get("alert_level") or ""
+        el = "👥 보호자 방문 중" if lv == "paused" else lv.upper()
+        csi_rows += (
+            f"<tr><td>{e.get('received_at', '')}</td>"
+            f"<td>{e.get('bed_id', '')}</td>"
+            f"<td>{e.get('hr_bpm', '—')}</td>"
+            f"<td>{e.get('resp_rpm', '—')}</td>"
+            f"<td>{e.get('autocorr_strength', '—')}</td>"
+            f"<td style='color:{ec};font-weight:bold'>{el}</td></tr>"
+        )
 
     log_rows = "".join(
         f"<tr><td>{e['received_at']}</td><td>{e['sensor']}</td>"
@@ -323,10 +400,10 @@ def index():
   </div>
 </div>
 <div class=card>
-  <div class=label>CSI (WiFi) — {c['received_at'] or '수신 없음'}</div>
+  <div class=label>CSI (WiFi) — {c.get('received_at') or '수신 없음'}</div>
   <div class=summary>{csi_summary}</div>
   <table class=log style="margin-top:8px">
-    <tr><th>시각</th><th>seq</th><th>amp_mean</th><th>amp_std</th><th>rssi</th><th>ch</th></tr>
+    <tr><th>시각</th><th>침대</th><th>HR(bpm)</th><th>호흡(rpm)</th><th>신호강도</th><th>알람</th></tr>
     {csi_rows if csi_rows else '<tr><td colspan=6 style="color:#aaa">아직 없음</td></tr>'}
   </table>
 </div>
@@ -341,5 +418,6 @@ def index():
 
 
 if __name__ == "__main__":
+    db.init_db()
     print("VL53L5CX ToF 서버 시작 → http://0.0.0.0:5001")
     app.run(host="0.0.0.0", port=5001, debug=True)
