@@ -17,13 +17,13 @@
 
   /* 슬라이드 */
   .deck{height:100vh;width:100vw;position:relative}
-  .slide{position:absolute;inset:0;padding:6vh 7vw;display:none;flex-direction:column;animation:fade .35s ease}
+  .slide{position:absolute;inset:0;padding:4.5vh 5.5vw;display:none;flex-direction:column;animation:fade .35s ease}
   .slide.active{display:flex}
   @keyframes fade{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
-  .kicker{font-family:'JetBrains Mono',monospace;font-size:13px;letter-spacing:2px;text-transform:uppercase;color:var(--faint)}
+  .kicker{font-family:'JetBrains Mono',monospace;font-size:15px;letter-spacing:2px;text-transform:uppercase;color:var(--faint)}
   h1{font-size:clamp(28px,5vw,56px);font-weight:800;letter-spacing:-1.5px;line-height:1.1;margin:8px 0}
-  h2{font-size:clamp(22px,3.4vw,38px);font-weight:800;letter-spacing:-.8px;margin:6px 0 14px}
-  .lead{font-size:clamp(15px,1.7vw,20px);color:var(--dim);line-height:1.6;max-width:60ch}
+  h2{font-size:clamp(26px,4vw,46px);font-weight:800;letter-spacing:-.8px;margin:8px 0 18px}
+  .lead{font-size:clamp(17px,2vw,24px);color:var(--dim);line-height:1.7;max-width:66ch}
 
   /* 진행바·번호 */
   .bar{position:fixed;left:0;top:0;height:4px;background:var(--csi);transition:width .3s;z-index:50}
@@ -34,23 +34,26 @@
   .imgslot{border:2px dashed var(--line);border-radius:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;
     color:var(--faint);background:repeating-linear-gradient(45deg,#fff,#fff 12px,#fcfcfd 12px,#fcfcfd 24px);font-size:13px;gap:4px}
   .imgslot .ic{font-size:26px}
-  .cols{display:flex;gap:22px;flex:1;min-height:0}
+  .cols{display:flex;gap:28px;flex:1;min-height:0}
+  /* 텍스트 슬라이드 본문: 헤더 아래 남는 세로공간을 채우고 중앙정렬 */
+  .body{flex:1;min-height:0;display:flex;flex-direction:column;justify-content:center}
   .col{flex:1;display:flex;flex-direction:column}
   .pills{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
-  .pill{font-family:'JetBrains Mono',monospace;font-size:12px;padding:5px 12px;border-radius:20px;border:1px solid var(--line);background:#fff;color:var(--dim)}
-  ul.feat{list-style:none;margin-top:8px} ul.feat li{font-size:clamp(14px,1.5vw,17px);margin:9px 0;padding-left:24px;position:relative;color:var(--text)}
-  ul.feat li::before{content:'';position:absolute;left:4px;top:9px;width:8px;height:8px;border-radius:50%;background:var(--csi)}
+  .pill{font-family:'JetBrains Mono',monospace;font-size:13.5px;padding:6px 13px;border-radius:20px;border:1px solid var(--line);background:#fff;color:var(--dim)}
+  ul.feat{list-style:none;margin-top:10px} ul.feat li{font-size:clamp(16px,1.9vw,21px);margin:13px 0;padding-left:27px;position:relative;color:var(--text);line-height:1.45}
+  ul.feat li::before{content:'';position:absolute;left:4px;top:11px;width:9px;height:9px;border-radius:50%;background:var(--csi)}
+  ul.feat.dense li{font-size:15px;margin:8px 0;padding-left:22px;line-height:1.4} ul.feat.dense li::before{top:8px;width:7px;height:7px}
   ul.feat.tof li::before{background:var(--tof)} ul.feat.mm li::before{background:var(--mm)}
-  .tag{display:inline-flex;align-items:center;gap:7px;font-family:'JetBrains Mono',monospace;font-size:12px;padding:5px 12px;border-radius:8px;font-weight:700}
-  .small{font-size:13px;color:var(--faint);margin-top:auto;padding-top:10px}
+  .tag{display:inline-flex;align-items:center;gap:7px;font-family:'JetBrains Mono',monospace;font-size:13.5px;padding:7px 14px;border-radius:8px;font-weight:700}
+  .small{font-size:15px;color:var(--faint);margin-top:auto;padding-top:12px}
 
   /* 센서 카드(개요) */
-  .scards{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:18px 0}
-  .scard{border:1px solid var(--line);border-radius:14px;padding:16px;background:#fff}
+  .scards{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:22px 0}
+  .scard{border:1px solid var(--line);border-radius:14px;padding:20px;background:#fff}
   .scard.csi{border-top:4px solid var(--csi)} .scard.tof{border-top:4px solid var(--tof)} .scard.mm{border-top:4px solid var(--mm)}
-  .scard h3{font-size:16px} .scard p{font-size:13px;color:var(--dim);margin-top:5px}
-  .arrow-row{display:flex;align-items:center;justify-content:center;gap:14px;font-size:14px;color:var(--dim);margin-top:6px;flex-wrap:wrap}
-  .chip{background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px 14px;font-weight:700;font-size:14px}
+  .scard h3{font-size:19px} .scard p{font-size:15px;color:var(--dim);margin-top:6px;line-height:1.5}
+  .arrow-row{display:flex;align-items:center;justify-content:center;gap:14px;font-size:16px;color:var(--dim);margin-top:6px;flex-wrap:wrap}
+  .chip{background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px 16px;font-weight:700;font-size:16px}
 
   /* 라이브 임베드 */
   .live-wrap{flex:1;display:flex;flex-direction:column;min-height:0;margin-top:10px}
@@ -63,19 +66,19 @@
 
   /* 흐름도(클릭) */
   .flow{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:18px 0}
-  .fstep{border:1px solid var(--line);border-radius:12px;padding:12px 16px;background:#fff;cursor:pointer;transition:.2s;text-align:center;min-width:96px}
+  .fstep{border:1px solid var(--line);border-radius:12px;padding:15px 18px;background:#fff;cursor:pointer;transition:.2s;text-align:center;min-width:108px}
   .fstep:hover{border-color:var(--csi)} .fstep.on{background:var(--csibg);border-color:var(--csi);box-shadow:0 4px 16px #d977061a}
-  .fstep .t{font-weight:700;font-size:14px} .fstep .d{font-size:11px;color:var(--dim);margin-top:2px}
-  .fsep{color:var(--faint);font-size:18px}
-  .levels{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px}
-  .lv{flex:1;min-width:120px;border-radius:11px;padding:12px;text-align:center;font-weight:700}
+  .fstep .t{font-weight:700;font-size:16px} .fstep .d{font-size:12.5px;color:var(--dim);margin-top:3px}
+  .fsep{color:var(--faint);font-size:20px}
+  .levels{display:flex;gap:12px;flex-wrap:wrap;margin-top:6px}
+  .lv{flex:1;min-width:120px;border-radius:11px;padding:16px;text-align:center;font-weight:700;font-size:17px}
 
   /* 토글(S8) */
   .toggle{display:inline-flex;border:1px solid var(--line);border-radius:12px;overflow:hidden;margin:6px 0 14px}
   .toggle button{border:0;background:#fff;padding:9px 20px;cursor:pointer;font-size:14px;font-weight:700;color:var(--dim)}
   .toggle button.on{background:var(--csi);color:#fff}
   .tview{display:none} .tview.on{display:block;animation:fade .3s}
-  .card2{border:1px solid var(--line);border-radius:14px;padding:18px;background:#fff;margin-top:6px}
+  .card2{border:1px solid var(--line);border-radius:14px;padding:20px 22px;background:#fff;margin-top:6px;font-size:16.5px;line-height:1.55}
   .card2.limit{border-left:4px solid var(--danger)} .card2.next{border-left:4px solid var(--ok)}
 
   /* 인터랙티브 측정실적 (평균 → 클릭 펼침) */
@@ -94,20 +97,20 @@
   .mtable .ok{color:var(--ok);font-weight:700}
 
   /* 논문 vs 우리 비교표 */
-  table.cmp{width:100%;border-collapse:collapse;font-size:13px}
-  table.cmp td,table.cmp th{border:1px solid var(--line);padding:7px 10px;text-align:left;vertical-align:top}
-  table.cmp th{background:#f8fafc;color:var(--dim);font-family:'JetBrains Mono',monospace;font-size:11px}
-  table.cmp td:first-child{color:var(--dim);font-family:'JetBrains Mono',monospace;font-size:11px;width:66px}
+  table.cmp{width:100%;border-collapse:collapse;font-size:15px}
+  table.cmp td,table.cmp th{border:1px solid var(--line);padding:9px 12px;text-align:left;vertical-align:top}
+  table.cmp th{background:#f8fafc;color:var(--dim);font-family:'JetBrains Mono',monospace;font-size:12.5px}
+  table.cmp td:first-child{color:var(--dim);font-family:'JetBrains Mono',monospace;font-size:12.5px;width:78px}
   table.cmp b{color:var(--csi)}
 
   /* 로드맵 */
-  .road{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:14px}
-  .rcol h4{font-size:15px;margin-bottom:8px;display:flex;align-items:center;gap:8px}
-  .rcol ul{list-style:none} .rcol li{font-size:13.5px;color:var(--dim);margin:7px 0;padding-left:16px;position:relative}
+  .road{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:16px}
+  .rcol h4{font-size:18px;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+  .rcol ul{list-style:none} .rcol li{font-size:15.5px;color:var(--dim);margin:9px 0;padding-left:18px;position:relative;line-height:1.45}
   .rcol li::before{content:'→';position:absolute;left:0;color:var(--faint)}
-  table.contract{width:100%;border-collapse:collapse;margin-top:10px;font-size:13px}
-  table.contract td,table.contract th{border:1px solid var(--line);padding:8px 11px;text-align:left}
-  table.contract th{background:#fff;color:var(--dim);font-family:'JetBrains Mono',monospace;font-size:11px}
+  table.contract{width:100%;border-collapse:collapse;margin-top:12px;font-size:16px}
+  table.contract td,table.contract th{border:1px solid var(--line);padding:12px 14px;text-align:left}
+  table.contract th{background:#fff;color:var(--dim);font-family:'JetBrains Mono',monospace;font-size:13px}
   code{font-family:'JetBrains Mono',monospace;background:#f1f5f9;padding:1px 6px;border-radius:5px;font-size:.9em;color:var(--vio)}
   .by{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--faint)}
 </style>
@@ -127,7 +130,7 @@
       <span class="pill" style="color:var(--mm)">mmWave · 보행</span>
       <span class="pill">서버 · z-score 판정</span>
     </div>
-    <div class="imgslot" style="height:24vh;margin-top:22px;max-width:520px"><span class="ic">📷</span>대표 이미지 / 시스템 사진</div>
+    <div class="imgslot" style="height:30vh;margin-top:26px;max-width:660px"><span class="ic">📷</span>대표 이미지 / 시스템 사진</div>
     <div class="small by">팀 마주봄 · 2026</div>
   </section>
 
@@ -136,6 +139,7 @@
     <div class="kicker">01 · 우리가 뭘 만드나</div>
     <h2>침대 옆 3센서 → 서버가 판정 → 간호사 화면</h2>
     <p class="lead">측정은 임베디드(센서)가, <b>판정·표출은 서버</b>가 — 역할을 나눴다. 3센서가 같은 형식으로 측정값만 보내면 서버가 평소 대비 변화로 위험을 매긴다.</p>
+    <div class="body">
     <div class="scards">
       <div class="scard csi"><h3 style="color:var(--csi)">CSI · 심박/호흡</h3><p>WiFi 신호 변화로 가슴 움직임 → 심박·호흡·자율신경 추세</p></div>
       <div class="scard tof"><h3 style="color:var(--tof)">ToF · 침상 이탈</h3><p>침대 위 거리 격자로 "사람이 침대에 있나/없나"</p></div>
@@ -145,6 +149,7 @@
       <span class="chip">3센서 측정</span> →
       <span class="chip" style="border-color:var(--csi);color:var(--csi)">서버 · baseline·z-score·판정</span> →
       <span class="chip">실시간 대시보드</span>
+    </div>
     </div>
     <div class="small">슬로건 — <b>"임베디드 = 측정, 서버 = 판정·표출"</b></div>
   </section>
@@ -169,6 +174,7 @@
   <section class="slide">
     <div class="kicker">03 · 데이터 흐름 · 공통 계약</div>
     <h2>3센서 공통 형식 → 서버가 위험을 매긴다</h2>
+    <div class="body">
     <table class="contract">
       <tr><th>raw</th><th>quality</th><th>presence</th></tr>
       <tr><td>실제 측정값 (심박·호흡·거리·속도)</td><td>신뢰도 (reliable·샘플수)</td><td>재실 (1명/2명·gate)</td></tr>
@@ -187,6 +193,7 @@
       <div class="lv" style="background:#fef9c3;color:var(--caution)">주의 2~4</div>
       <div class="lv" style="background:#ffedd5;color:var(--warn)">경고 4~6</div>
       <div class="lv" style="background:#fee2e2;color:var(--danger)">위험 ≥6</div>
+    </div>
     </div>
     <div class="small"><b>total_abs = |z_HR| + |z_호흡|</b> (생체 신호 2개). 신호강도는 <b>신뢰 게이트</b>로만 — 품질 지표라 위험점수엔 미포함.</div>
   </section>
@@ -207,8 +214,8 @@
         <div class="small">트러블슈팅: 8×8/100kHz wedge → 4×4/400kHz 복원 (향후 8×8 전환)</div>
       </div>
       <div class="col">
-        <img src="img/tof_demo1.gif" class="mimg" style="max-height:23vh" alt="ToF 침대 Top view 데모">
-        <img src="img/tof_demo2.gif" class="mimg" style="margin-top:10px;max-height:23vh" alt="ToF 라이브 대시보드 데모">
+        <img src="img/tof_demo1.gif" class="mimg" style="flex:1;min-height:0;max-height:31vh" alt="ToF 침대 Top view 데모">
+        <img src="img/tof_demo2.gif" class="mimg" style="flex:1;min-height:0;margin-top:12px;max-height:31vh" alt="ToF 라이브 대시보드 데모">
       </div>
     </div>
   </section>
@@ -249,8 +256,8 @@
         <div class="card2" style="margin-top:12px"><b>왜 다르게 했나</b> — 논문의 quotient는 한 칩에 안테나 2개가 필요. ESP32(단일 안테나·2.4GHz)에선 불가능 → <b>위상 자기상관</b>으로 측정하고, 절대 HRV 대신 <b>추세 z-score</b>로 같은 목표(자율신경 변화)를 달성.</div>
       </div>
       <div class="col">
-        <img src="img/method_setup.png" class="mimg" style="max-height:24vh">
-        <img src="img/method_flow.png" class="mimg" style="margin-top:10px;max-height:24vh">
+        <img src="img/method_setup.png" class="mimg" style="flex:1;min-height:0;max-height:30vh">
+        <img src="img/method_flow.png" class="mimg" style="flex:1;min-height:0;margin-top:12px;max-height:30vh">
       </div>
     </div>
   </section>
@@ -267,7 +274,7 @@
           <li>위상 자기상관으로 심박 주기 검출 (csi_hold4)</li>
           <li><b>현재 정량 검증된 정확도</b> (통제 환경 기준)</li>
         </ul>
-        <img src="img/csi_signal.png" class="mimg" style="margin-top:auto;max-height:32vh">
+        <img src="img/csi_signal.png" class="mimg" style="flex:1;min-height:0;margin-top:14px;max-height:38vh">
       </div>
       <div class="col">
         <div class="tag" style="background:#fef9c3;color:var(--caution)">신호 수신 — 정확도는 별개</div>
@@ -276,7 +283,7 @@
           <li><b>신호 수신 ≠ 정확도</b> — 통제 외 환경은 미검증</li>
           <li>품질 기반 신호 선택은 논문 계열(HSR·SDNN), <b>임계 0.30은 경험값</b></li>
         </ul>
-        <img src="img/c_strength_dist.png" class="mimg" style="margin-top:auto;max-height:32vh">
+        <img src="img/c_strength_dist.png" class="mimg" style="flex:1;min-height:0;margin-top:14px;max-height:38vh">
       </div>
     </div>
     <div class="small">측정 조건에 따라 검증 수준이 다름 — 정량 검증은 통제 환경 기준.</div>
@@ -295,7 +302,7 @@
           <li>일상 HR 5~18bpm 오차 · <b>최강신호 선택 편향</b> 인정</li>
           <li>원인: 박동단위 정제(quotient)는 <b>한 칩 안테나 2개</b> 필요</li>
         </ul>
-        <img src="img/csi_sdnn_vs_norm.png" class="mimg" style="margin-top:auto;max-height:32vh">
+        <img src="img/csi_sdnn_vs_norm.png" class="mimg" style="flex:1;min-height:0;margin-top:14px;max-height:38vh">
       </div>
       <div class="col">
         <div class="tag" style="background:#dcfce7;color:var(--ok)">→ 방향</div>
@@ -314,6 +321,7 @@
   <section class="slide">
     <div class="kicker">07 · 향후 로드맵</div>
     <h2>여기까지 왔고, 다음은 이렇게</h2>
+    <div class="body">
     <div class="road">
       <div class="rcol"><h4><span style="color:var(--csi)">●</span> CSI</h4><ul>
         <li>HRV 절대값: <b>AX210+FeitCSI</b> PoC</li><li>지향성 안테나로 일상 정확도 ↑</li><li>30일 베이스라인 누적</li></ul></div>
@@ -324,7 +332,7 @@
     </div>
     <div class="card2" style="margin-top:14px;border-left:4px solid var(--csi)">
       <b>고려사항 — CSI HRV 확장 시</b>
-      <ul class="feat" style="margin-top:6px">
+      <ul class="feat dense" style="margin-top:6px">
         <li><b>하드웨어</b>: AX210(2안테나·현행 ~₩3만) + FeitCSI(Pi/ARM 가능) → quotient로 HRV 정제. <b>Pi5는 PCIe 어댑터 필요(까다로움), x86이 수월</b></li>
         <li><b>검증 부담</b>: 선행 preprint(논문 B) 재현 실패 → 자체 ground-truth(ECG/워치) 검증 필수</li>
         <li><b>z-score 범위</b>: 위험점수=생체 2신호(HR·호흡)만, 신호강도는 신뢰 게이트 (정합 완료)</li>
@@ -333,7 +341,8 @@
     <div class="card2" style="margin-top:12px">
       <b>공통</b> — WiFiManager(재플래시 없이 망 변경) · MQTT 무선화 · 3센서 융합 위험판정 고도화
     </div>
-    <div class="small" style="font-size:15px;color:var(--text);margin-top:18px">
+    </div>
+    <div class="small" style="font-size:16px;color:var(--text);margin-top:10px">
       <b>마주봄 — 임베디드 3종 + 서버가 하나의 시스템으로 통합 동작. 향후: 정밀도 · 확장 · 무선화.</b>
     </div>
   </section>
