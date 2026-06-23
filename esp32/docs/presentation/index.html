@@ -144,7 +144,7 @@
 
   <!-- 3 라이브 -->
   <section class="slide">
-    <div class="kicker">02 · 지금, 돌아갑니다 🔴 LIVE</div>
+    <div class="kicker">02 · 통합 시스템 실시간 동작 🔴 LIVE</div>
     <h2>통합 실시간 대시보드</h2>
     <div class="live-wrap">
       <div class="live-bar">
@@ -166,7 +166,7 @@
       <tr><th>raw</th><th>quality</th><th>presence</th></tr>
       <tr><td>실제 측정값 (심박·호흡·거리·속도)</td><td>신뢰도 (reliable·샘플수)</td><td>재실 (1명/2명·gate)</td></tr>
     </table>
-    <p class="lead" style="margin-top:14px">서버 판정 흐름 — <b>단계를 클릭</b>해 보세요:</p>
+    <p class="lead" style="margin-top:14px">서버 판정 흐름 <span style="font-size:13px;color:var(--faint)">(단계 클릭 시 강조)</span></p>
     <div class="flow" id="flow">
       <div class="fstep" onclick="pickStep(this)"><div class="t">수신</div><div class="d">POST /csi·tof·mmw</div></div><span class="fsep">→</span>
       <div class="fstep" onclick="pickStep(this)"><div class="t">reliable</div><div class="d">false면 무시</div></div><span class="fsep">→</span>
@@ -235,34 +235,34 @@
   <!-- 7 CSI 측정 결과 -->
   <section class="slide">
     <div class="kicker">06 · CSI · 측정 결과 <span class="by">박형석</span></div>
-    <h2 style="color:var(--csi)">CSI 측정 — "되는 것"과 "검증된 것"을 나눠서</h2>
+    <h2 style="color:var(--csi)">CSI 측정 — 검증 결과와 신호 수신</h2>
     <div class="cols">
       <div class="col">
-        <div class="tag" style="background:#dcfce7;color:var(--ok)">✅ 검증됨 — 통제 환경 ±2bpm</div>
+        <div class="tag" style="background:#dcfce7;color:var(--ok)">검증 — 통제 환경 ±2bpm</div>
         <ul class="feat" style="margin-top:8px">
-          <li>숨참기·에어컨off 통제에서 <b>애플워치 ±2bpm 일치</b></li>
+          <li>통제 환경(숨참기·에어컨 off)에서 <b>애플워치 대비 ±2bpm</b></li>
           <li>위상 자기상관으로 심박 주기 검출 (csi_hold4)</li>
-          <li>→ <b>자신 있게 말할 수 있는 유일한 정확도 주장</b></li>
+          <li><b>현재 정량 검증된 정확도</b> (통제 환경 기준)</li>
         </ul>
         <img src="img/csi_signal.png" class="mimg" style="margin-top:auto;max-height:32vh">
       </div>
       <div class="col">
-        <div class="tag" style="background:#fef9c3;color:var(--caution)">△ 측정은 됨 — 정확도는 별개</div>
+        <div class="tag" style="background:#fef9c3;color:var(--caution)">신호 수신 — 정확도는 별개</div>
         <ul class="feat" style="margin-top:8px">
-          <li>9회 전부 신호 수신 — <b>0.30은 경험적 게이트</b> (논문 임계 아님)</li>
-          <li><b>신호 잡힘 ≠ 정확</b> — 통제 밖 정확도는 미검증</li>
-          <li>품질-선택 자체는 논문 계열(HSR·SDNN선택), <b>임계값만 우리 경험값</b></li>
+          <li>9회 측정 전부 신호 수신 (강도 ≥ 0.30)</li>
+          <li><b>신호 수신 ≠ 정확도</b> — 통제 외 환경은 미검증</li>
+          <li>품질 기반 신호 선택은 논문 계열(HSR·SDNN), <b>임계 0.30은 경험값</b></li>
         </ul>
         <img src="img/c_strength_dist.png" class="mimg" style="margin-top:auto;max-height:32vh">
       </div>
     </div>
-    <div class="small">⚠️ 평균(예: HR 71)은 서로 다른 측정을 뭉갠 값이라 의미 없음 → 일부러 뺐다. "검증된 1건 vs 신호만 잡힌 9건"으로 분리.</div>
+    <div class="small">측정 조건이 달라 단순 평균은 제시하지 않음 — 통제 검증값과 신호 수신을 구분해 표기.</div>
   </section>
 
   <!-- 8 CSI ② 한계↔향후 -->
   <section class="slide">
     <div class="kicker">06 · CSI · 한계와 방향 <span class="by">박형석</span></div>
-    <h2 style="color:var(--csi)">한계와 방향 — 숨기지 않고</h2>
+    <h2 style="color:var(--csi)">한계와 향후 방향</h2>
     <div class="cols">
       <div class="col">
         <div class="tag" style="background:#fee2e2;color:var(--danger)">⚠️ 한계</div>
@@ -282,7 +282,7 @@
           <li>③ <b>외장 지향성 안테나</b>(WROOM-1U) — 일상 HR 정확도 ↑</li>
           <li>④ <b>30일 롤링 baseline</b>(이상탐지 표준) + <b>z-score 2σ/3σ</b>(통계 표준)로 기준 근거 정립</li>
         </ul>
-        <div class="card2 next" style="margin-top:auto"><b>핵심</b> — "안 되는 게 아니라, 절대 HRV만 단일안테나로 어렵다. 추세로 우회 + 하드웨어로 확장."</div>
+        <div class="card2 next" style="margin-top:auto"><b>요약</b> — 절대 HRV는 단일안테나의 구조적 한계. 추세 z-score로 목표 달성, 다중안테나로 확장.</div>
       </div>
     </div>
   </section>
@@ -303,7 +303,7 @@
       <b>공통</b> — WiFiManager(재플래시 없이 망 변경) · MQTT 무선화 · 3센서 융합 위험판정 고도화
     </div>
     <div class="small" style="font-size:15px;color:var(--text);margin-top:18px">
-      <b>마주봄 — 임베디드 3종 + 서버가 한 시스템으로 묶여 "지금 돌아간다". 다음은 정밀도·확장·무선화.</b>
+      <b>마주봄 — 임베디드 3종 + 서버가 하나의 시스템으로 통합 동작. 향후: 정밀도 · 확장 · 무선화.</b>
     </div>
   </section>
 
