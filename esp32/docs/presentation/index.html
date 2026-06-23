@@ -93,6 +93,13 @@
   .mtable th{background:#f8fafc;color:var(--dim);font-family:'JetBrains Mono',monospace;font-size:11px}
   .mtable .ok{color:var(--ok);font-weight:700}
 
+  /* 논문 vs 우리 비교표 */
+  table.cmp{width:100%;border-collapse:collapse;font-size:13px}
+  table.cmp td,table.cmp th{border:1px solid var(--line);padding:7px 10px;text-align:left;vertical-align:top}
+  table.cmp th{background:#f8fafc;color:var(--dim);font-family:'JetBrains Mono',monospace;font-size:11px}
+  table.cmp td:first-child{color:var(--dim);font-family:'JetBrains Mono',monospace;font-size:11px;width:66px}
+  table.cmp b{color:var(--csi)}
+
   /* 로드맵 */
   .road{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:14px}
   .rcol h4{font-size:15px;margin-bottom:8px;display:flex;align-items:center;gap:8px}
@@ -224,12 +231,24 @@
   <!-- 7a CSI 측정 방식 -->
   <section class="slide">
     <div class="kicker">06 · CSI · 측정 방식 <span class="by">박형석</span></div>
-    <h2 style="color:var(--csi)">어떻게 측정하나 — 논문 방식을 우리 셋업으로</h2>
-    <div style="flex:1;display:flex;flex-direction:column;gap:10px;min-height:0;margin-top:6px">
-      <img src="img/method_setup.png" style="flex:1;min-height:0;object-fit:contain;width:100%">
-      <img src="img/method_flow.png" style="flex:1;min-height:0;object-fit:contain;width:100%">
+    <h2 style="color:var(--csi)">논문 방식 → 우리 환경 적용</h2>
+    <div class="cols">
+      <div class="col">
+        <table class="cmp">
+          <tr><th></th><th>논문 (Shirakami BHI'21)</th><th>우리 환경</th></tr>
+          <tr><td>하드웨어</td><td>Intel 5300 · 안테나 3개(1×3)</td><td>ESP32-S3 ×2 · <b>단일 안테나</b></td></tr>
+          <tr><td>주파수</td><td>5.32 GHz</td><td><b>2.4 GHz</b> (ESP32 한정)</td></tr>
+          <tr><td>자세·배치</td><td>앉은 사람 · 수평(가슴높이)</td><td><b>누운 환자</b> · 천장/수직 가설</td></tr>
+          <tr><td>신호·정제</td><td>진폭 + CSI quotient(2안테나)</td><td><b>위상 자기상관</b>(단일·자체)</td></tr>
+          <tr><td>목표</td><td>박동단위 HRV(SDNN)</td><td>HR·호흡 + <b>추세 z-score</b></td></tr>
+        </table>
+        <div class="card2" style="margin-top:12px"><b>왜 다르게 했나</b> — 논문의 quotient는 한 칩에 안테나 2개가 필요. ESP32(단일 안테나·2.4GHz)에선 불가능 → <b>위상 자기상관</b>으로 측정하고, 절대 HRV 대신 <b>추세 z-score</b>로 같은 목표(자율신경 변화)를 달성.</div>
+      </div>
+      <div class="col">
+        <img src="img/method_setup.png" class="mimg" style="max-height:24vh">
+        <img src="img/method_flow.png" class="mimg" style="margin-top:10px;max-height:24vh">
+      </div>
     </div>
-    <div class="small">논문(Shirakami)의 진폭 quotient는 안테나 2개 필요 → 단일안테나인 우리는 <b>위상 자기상관(자체 구현)</b>. 실제 하드웨어 사진은 별도 첨부 📷</div>
   </section>
 
   <!-- 7 CSI 측정 결과 -->
@@ -256,7 +275,7 @@
         <img src="img/c_strength_dist.png" class="mimg" style="margin-top:auto;max-height:32vh">
       </div>
     </div>
-    <div class="small">측정 조건이 달라 단순 평균은 제시하지 않음 — 통제 검증값과 신호 수신을 구분해 표기.</div>
+    <div class="small">측정 조건에 따라 검증 수준이 다름 — 정량 검증은 통제 환경 기준.</div>
   </section>
 
   <!-- 8 CSI ② 한계↔향후 -->
