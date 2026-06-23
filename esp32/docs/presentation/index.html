@@ -249,9 +249,9 @@
       <div class="col">
         <div class="tag" style="background:#fef9c3;color:var(--caution)">△ 측정은 됨 — 정확도는 별개</div>
         <ul class="feat" style="margin-top:8px">
-          <li>9회 측정 전부 <b>신호 수신 성공</b> (강도 ≥ 0.30)</li>
+          <li>9회 전부 신호 수신 — <b>0.30은 경험적 게이트</b> (논문 임계 아님)</li>
           <li><b>신호 잡힘 ≠ 정확</b> — 통제 밖 정확도는 미검증</li>
-          <li>reliable = "측정 시도 가치 있음"일 뿐, 정답 보장 아님</li>
+          <li>품질-선택 자체는 논문 계열(HSR·SDNN선택), <b>임계값만 우리 경험값</b></li>
         </ul>
         <img src="img/c_strength_dist.png" class="mimg" style="margin-top:auto;max-height:32vh">
       </div>
@@ -267,12 +267,12 @@
       <div class="col">
         <div class="tag" style="background:#fee2e2;color:var(--danger)">⚠️ 한계</div>
         <ul class="feat" style="margin-top:8px">
-          <li><b>HRV 절대값(SDNN ms) 불가</b> — 워치 대비 2~3배 부풀림</li>
-          <li>분석 방법 바꾸면 또 달라짐(50~175ms) = 절대값 못 믿음</li>
+          <li><b>HRV 절대값(SDNN ms) 불가</b> — CSI 50~183ms vs <b>정상 단기 20~50ms</b>(Shaffer&amp;Ginsberg 2017) = 최대 3.7배 범위 밖</li>
+          <li>방법 바꿔도 100~180ms대 = <b>일관되게 비정상</b></li>
           <li>일상 HR 5~18bpm 오차 · <b>최강신호 선택 편향</b> 인정</li>
           <li>원인: 박동단위 정제(quotient)는 <b>한 칩 안테나 2개</b> 필요</li>
         </ul>
-        <img src="img/watch_vs_csi.png" class="mimg" style="margin-top:auto;max-height:30vh">
+        <img src="img/csi_sdnn_vs_norm.png" class="mimg" style="margin-top:auto;max-height:32vh">
       </div>
       <div class="col">
         <div class="tag" style="background:#dcfce7;color:var(--ok)">→ 방향</div>
@@ -280,7 +280,7 @@
           <li>① <b>추세 z-score 전환 — 이미 작동</b> (자율신경 변화 = 신청서 핵심)</li>
           <li>② <b>다중안테나 PoC</b> (QCA9300/AX210) — 절대 HRV 검증</li>
           <li>③ <b>외장 지향성 안테나</b>(WROOM-1U) — 일상 HR 정확도 ↑</li>
-          <li>④ 30일 베이스라인 — z-score 신뢰도 ↑</li>
+          <li>④ <b>30일 롤링 baseline</b>(이상탐지 표준) + <b>z-score 2σ/3σ</b>(통계 표준)로 기준 근거 정립</li>
         </ul>
         <div class="card2 next" style="margin-top:auto"><b>핵심</b> — "안 되는 게 아니라, 절대 HRV만 단일안테나로 어렵다. 추세로 우회 + 하드웨어로 확장."</div>
       </div>
