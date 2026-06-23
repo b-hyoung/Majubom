@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ESP32-S3-WROOM-1 데이터시트 집중 가이드</title>
+<style>
+  :root{
+    --bg:#0d0b1a; --tile:#17142a; --tile2:#1e1a35; --line:#2a2545;
+    --text:#f0eefb; --dim:#9a93c4; --muted:#6b6494;
+    --must:#f43f5e; --ref:#60a5fa; --skip:#6b7280; --ok:#34d399; --amber:#fbbf24; --vio:#a78bfa;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:system-ui,'Segoe UI','Noto Sans KR',sans-serif;
+    background:radial-gradient(900px 500px at 85% -10%,rgba(167,139,250,.18),transparent 60%),
+    radial-gradient(700px 500px at 0% 110%,rgba(96,165,250,.10),transparent 55%),var(--bg);
+    background-attachment:fixed;color:var(--text);line-height:1.6;padding:0 0 80px}
+  .mono{font-family:'JetBrains Mono',ui-monospace,Menlo,monospace}
+  header{padding:34px 32px 12px;max-width:1080px;margin:0 auto}
+  h1{font-size:25px;font-weight:800;letter-spacing:-.5px}
+  h1 small{display:block;font-size:13px;color:var(--dim);font-weight:500;margin-top:6px}
+  main{max-width:1080px;margin:0 auto;padding:0 32px}
+  .legend{display:flex;gap:10px;flex-wrap:wrap;margin:14px 0 4px}
+  .lg{font-size:11px;font-family:'JetBrains Mono',monospace;padding:4px 10px;border-radius:20px;border:1px solid var(--line)}
+  .lg.must{color:var(--must);background:rgba(244,63,94,.1)}
+  .lg.ref{color:var(--ref);background:rgba(96,165,250,.1)}
+  .lg.skip{color:var(--skip);background:rgba(107,114,128,.12)}
+
+  section{background:var(--tile);border:1px solid var(--line);border-radius:18px;padding:22px 24px;margin:16px 0}
+  h2{font-size:17px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:9px}
+  code{font-family:'JetBrains Mono',monospace;background:#000a;padding:1px 6px;border-radius:6px;font-size:.9em;color:#22d3ee}
+
+  /* 통제 가능/불가 */
+  .split{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media(max-width:740px){.split{grid-template-columns:1fr}}
+  .col{border-radius:13px;padding:16px;border:1px solid var(--line)}
+  .col.can{background:rgba(52,211,153,.08);border-left:3px solid var(--ok)}
+  .col.cant{background:rgba(244,63,94,.07);border-left:3px solid var(--must)}
+  .col h3{font-size:14px;margin-bottom:8px}
+  .col ul{margin-left:16px;font-size:13px;color:var(--dim)} .col li{margin:5px 0}
+  .col b{color:var(--text)}
+
+  /* 섹션 카드 */
+  .cards{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+  @media(max-width:740px){.cards{grid-template-columns:1fr}}
+  .card{background:var(--tile2);border:1px solid var(--line);border-radius:13px;padding:14px 16px;position:relative}
+  .card.must{border-left:3px solid var(--must)} .card.ref{border-left:3px solid var(--ref)} .card.skip{border-left:3px solid var(--skip);opacity:.72}
+  .card .sec{font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--muted)}
+  .card .ttl{font-size:14px;font-weight:700;margin:3px 0 7px}
+  .card .pri{position:absolute;top:13px;right:14px;font-size:11px;font-family:'JetBrains Mono',monospace;padding:2px 8px;border-radius:20px}
+  .pri.must{color:var(--must);background:rgba(244,63,94,.13)} .pri.ref{color:var(--ref);background:rgba(96,165,250,.13)} .pri.skip{color:var(--skip);background:rgba(107,114,128,.15)}
+  .card ul{margin-left:15px;font-size:12.5px;color:var(--dim)} .card li{margin:4px 0}
+  .card b{color:var(--text)}
+
+  table{width:100%;border-collapse:collapse;margin-top:6px;font-size:13px}
+  th,td{border:1px solid var(--line);padding:8px 11px;text-align:left;vertical-align:top}
+  th{background:var(--tile2);color:var(--dim);font-weight:600;font-family:'JetBrains Mono',monospace;font-size:11px}
+  tr.hot td{background:rgba(244,63,94,.08)}
+  .star{color:var(--must);font-size:12px}
+
+  /* 핀 회피 칩 */
+  .pins{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+  .pin{font-family:'JetBrains Mono',monospace;font-size:12px;padding:6px 11px;border-radius:9px;border:1px solid var(--line);background:var(--tile2)}
+  .pin.bad{border-color:var(--must);color:var(--must);background:rgba(244,63,94,.1)}
+  .pin.use{border-color:var(--ok);color:var(--ok);background:rgba(52,211,153,.1)}
+  .note{font-size:12.5px;color:var(--dim);margin-top:10px}
+  .footer{max-width:1080px;margin:22px auto 0;padding:0 32px;color:var(--muted);font-size:12px}
+</style>
+</head>
+<body>
+<header>
+  <h1>ESP32-S3-WROOM-1 데이터시트 집중 가이드
+    <small>모델 N16R8 (16MB flash / 8MB PSRAM) · MajuBom CSI 프로젝트 관점에서 "뭘 봐야 하나"</small></h1>
+  <div class="legend">
+    <span class="lg must">🔴 필수(우리 직결)</span>
+    <span class="lg ref">🔵 참고</span>
+    <span class="lg skip">⚪ skip(보드설계용)</span>
+  </div>
+</header>
+
+<main>
+
+<!-- 통제 가능/불가 -->
+<section>
+  <h2>🧭 큰 그림 — 우리가 바꿀 수 있는 것 vs 못 바꾸는 것</h2>
+  <div class="split">
+    <div class="col cant">
+      <h3>❌ 칩 구조라 못 바꿈</h3>
+      <ul>
+        <li><b>단일 안테나</b>(1×1) → CSI quotient·HRV 절대값 불가</li>
+        <li><b>2.4GHz only</b> → 5GHz 대비 심박 민감도 ~½ (λ 12.5cm)</li>
+      </ul>
+    </div>
+    <div class="col can">
+      <h3>✅ 우리가 통제 가능</h3>
+      <ul>
+        <li><b>전원 안정</b> (≥0.5A + 디커플링 + EN RC)</li>
+        <li><b>핀 회피</b> (스트래핑·PSRAM 핀)</li>
+        <li><b>안테나 트임</b> (6mm keepout)</li>
+        <li><b>채널 분리</b> (2.4GHz 1/6/11)</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- 진짜 집중 5가지 -->
+<section>
+  <h2>🎯 우리가 진짜 집중할 5가지</h2>
+  <table>
+    <tr><th>#</th><th>무엇</th><th>데이터시트</th><th>왜</th></tr>
+    <tr class="hot"><td>1</td><td><b>전원 ≥0.5A + 디커플링(22µF/0.1µF) + EN RC(10kΩ/1µF)</b></td><td>§4.2·4.4·6</td><td>TX 피크 355mA에 브라운아웃 → <b>CSI 패킷 끊김</b> 방지</td></tr>
+    <tr class="hot"><td>2</td><td><b>배선 시 스트래핑·PSRAM 핀 회피</b></td><td>§3</td><td>부팅 실패·핀 충돌 방지</td></tr>
+    <tr><td>3</td><td>안테나 <b>6mm keepout 트이게</b> 배치</td><td>§7.1</td><td>CSI 신호 품질</td></tr>
+    <tr><td>4</td><td>시리얼 <b>TXD0/RXD0</b> (CSI 출력 경로)</td><td>§3</td><td>측정 데이터 경로</td></tr>
+    <tr><td>5</td><td>2.4GHz <b>채널 분리(1/6/11)</b></td><td>§4.5</td><td>침대별 간섭 방지</td></tr>
+  </table>
+</section>
+
+<!-- ⚠️ 핀 회피 -->
+<section>
+  <h2>⚠️ 배선 gotcha — 이 핀들은 피해라</h2>
+  <div class="note" style="margin-top:0">센서(ToF 등)를 같이 붙일 때 아래 핀에 배선하면 <b>부팅 실패 / 충돌</b>:</div>
+  <div class="pins">
+    <span class="pin bad">GPIO0 ⚡부트</span>
+    <span class="pin bad">GPIO3 ⚡스트랩</span>
+    <span class="pin bad">GPIO45 ⚡VDD_SPI</span>
+    <span class="pin bad">GPIO46 ⚡스트랩</span>
+    <span class="pin bad">IO35/36/37 ⛔R8 PSRAM</span>
+  </div>
+  <div class="note">✅ CSI 출력용 시리얼: <span class="pin use" style="display:inline-block">TXD0=GPIO43</span> <span class="pin use" style="display:inline-block">RXD0=GPIO44</span> · USB <code>D−=IO19 / D+=IO20</code></div>
+  <div class="note">→ R8(우리 모델)은 <code>IO35·IO36·IO37</code>이 내부 PSRAM에 물려 <b>외부 사용 불가</b>. 나머지 GPIO는 I2C/SPI로 자유롭게.</div>
+</section>
+
+<!-- 전원 처방 -->
+<section>
+  <h2>🔌 전원 / 브라운아웃 처방 (패킷 끊김의 실제 해법)</h2>
+  <table>
+    <tr><th>항목</th><th>값</th><th>비고</th></tr>
+    <tr><td>동작 전압</td><td>3.0 ~ <b>3.3</b> ~ 3.6 V</td><td>3.6V 초과 = 손상</td></tr>
+    <tr class="hot"><td>외부전원 공급</td><td><b>≥ 0.5 A</b></td><td>데이터시트 권장 (TX 피크 대응)</td></tr>
+    <tr><td>TX 피크 전류</td><td><b>355 mA</b> (≈1.2W)</td><td>11b 1Mbps @20.5dBm</td></tr>
+    <tr><td>RX 전류</td><td>95 mA (≈0.3W)</td><td>CSI 수신</td></tr>
+    <tr class="hot"><td>디커플링 (VDD33)</td><td><b>22µF + 0.1µF</b></td><td>§6 권장</td></tr>
+    <tr class="hot"><td>EN RC 지연</td><td><b>10kΩ + 1µF</b></td><td>안정적 부팅</td></tr>
+    <tr><td>deep-sleep</td><td>7µA (+PSRAM 140µA)</td><td>상시 측정이라 우린 못 씀</td></tr>
+  </table>
+  <div class="note">→ <b>USB/전원이 부실하거나 케이블이 길면</b> TX 송신 순간 전압 강하 → 브라운아웃 → <b>Hz 하락·패킷 끊김</b>. <b>짧고 굵은 케이블 + 충분한 5V→3.3V 레귤레이터 + 위 디커플링</b>이 처방.</div>
+</section>
+
+<!-- 섹션별 카드 -->
+<section>
+  <h2>📑 데이터시트 섹션별 집중도</h2>
+  <div class="cards">
+    <div class="card ref"><span class="pri ref">참고</span><div class="sec">§1</div><div class="ttl">Module Overview</div>
+      <ul><li>2.4GHz b/g/n, PCB 안테나</li><li>16MB flash / <b>8MB PSRAM</b>(버퍼 여유)</li><li>−40~65°C(R8)</li></ul></div>
+
+    <div class="card must"><span class="pri must">🔴 필수</span><div class="sec">§2</div><div class="ttl">Block Diagram</div>
+      <ul><li><b>안테나 1개</b> + RF matching뿐</li><li>= quotient/HRV 불가의 시각 근거</li></ul></div>
+
+    <div class="card must"><span class="pri must">🔴 필수</span><div class="sec">§3</div><div class="ttl">Pin Definitions</div>
+      <ul><li>TXD0/RXD0 = CSI 시리얼</li><li><b>스트래핑(0/3/45/46)·IO35~37 회피</b></li></ul></div>
+
+    <div class="card must"><span class="pri must">🔴 필수</span><div class="sec">§4.2·4.4·4.5</div><div class="ttl">Electrical (전원·RF)</div>
+      <ul><li>3.3V / ≥0.5A / TX 355mA·RX 95mA</li><li>2.4GHz 2412~2484MHz, 단일스트림</li><li><span class="mono" style="color:var(--skip)">§4.6 BLE = skip</span></li></ul></div>
+
+    <div class="card must"><span class="pri must">🔴 필수</span><div class="sec">§6</div><div class="ttl">Peripheral Schematics</div>
+      <ul><li><b>디커플링 22µF/0.1µF</b></li><li><b>EN RC 10kΩ/1µF</b> → 부팅 안정</li><li>UART/USB/부트 표준 회로</li></ul></div>
+
+    <div class="card ref"><span class="pri ref">참고</span><div class="sec">§7.1·7.3</div><div class="ttl">Physical / 안테나</div>
+      <ul><li>18×25.5×3.1mm, <b>상단 6mm 안테나 keepout</b>(막지 말 것)</li><li>1U 커넥터 = U.FL/MHF I/AMC(지향성 업글 시)</li></ul></div>
+
+    <div class="card skip"><span class="pri skip">⚪ skip</span><div class="sec">§5·7.2</div><div class="ttl">Module/Land 회로</div>
+      <ul><li>보드 직접 설계 시만</li><li>(IO45 풀업 미실장 주의 정도)</li></ul></div>
+
+    <div class="card skip"><span class="pri skip">⚪ skip</span><div class="sec">§8</div><div class="ttl">Product Handling</div>
+      <ul><li>MSL3 / ESD ±2000V / 리플로우 235~250°C</li><li>모듈 직접 납땜 시만. dev board면 ESD 주의만</li></ul></div>
+  </div>
+  <div class="note">※ <b>CSI API는 이 데이터시트에 없음</b> → ESP-IDF + ESP32-S3 TRM(§9 링크) 참고.</div>
+</section>
+
+</main>
+<div class="footer">출처: ESP32-S3-WROOM-1 & WROOM-1U Datasheet v1.0 (Espressif) · 우리 모델 N16R8 기준 정리 · 자기완결 HTML</div>
+</body>
+</html>

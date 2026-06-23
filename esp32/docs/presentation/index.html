@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>마주봄 · 중간 발표</title>
+<style>
+  :root{
+    --bg:#f8fafc; --card:#ffffff; --line:#e2e8f0; --text:#1e293b; --dim:#64748b; --faint:#94a3b8;
+    --csi:#d97706; --csibg:#fffbeb; --tof:#0891b2; --tofbg:#ecfeff; --mm:#e11d48; --mmbg:#fff1f3;
+    --vio:#7c3aed; --ok:#16a34a; --caution:#ca8a04; --warn:#ea580c; --danger:#dc2626;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{height:100%}
+  body{font-family:'Noto Sans KR',system-ui,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);overflow:hidden}
+  .mono{font-family:'JetBrains Mono',ui-monospace,Menlo,monospace}
+
+  /* 슬라이드 */
+  .deck{height:100vh;width:100vw;position:relative}
+  .slide{position:absolute;inset:0;padding:6vh 7vw;display:none;flex-direction:column;animation:fade .35s ease}
+  .slide.active{display:flex}
+  @keyframes fade{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+  .kicker{font-family:'JetBrains Mono',monospace;font-size:13px;letter-spacing:2px;text-transform:uppercase;color:var(--faint)}
+  h1{font-size:clamp(28px,5vw,56px);font-weight:800;letter-spacing:-1.5px;line-height:1.1;margin:8px 0}
+  h2{font-size:clamp(22px,3.4vw,38px);font-weight:800;letter-spacing:-.8px;margin:6px 0 14px}
+  .lead{font-size:clamp(15px,1.7vw,20px);color:var(--dim);line-height:1.6;max-width:60ch}
+
+  /* 진행바·번호 */
+  .bar{position:fixed;left:0;top:0;height:4px;background:var(--csi);transition:width .3s;z-index:50}
+  .pageno{position:fixed;right:18px;bottom:14px;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--faint);z-index:50}
+  .hint{position:fixed;left:18px;bottom:14px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--faint);z-index:50}
+
+  /* 공통 컴포넌트 */
+  .imgslot{border:2px dashed var(--line);border-radius:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    color:var(--faint);background:repeating-linear-gradient(45deg,#fff,#fff 12px,#fcfcfd 12px,#fcfcfd 24px);font-size:13px;gap:4px}
+  .imgslot .ic{font-size:26px}
+  .cols{display:flex;gap:22px;flex:1;min-height:0}
+  .col{flex:1;display:flex;flex-direction:column}
+  .pills{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+  .pill{font-family:'JetBrains Mono',monospace;font-size:12px;padding:5px 12px;border-radius:20px;border:1px solid var(--line);background:#fff;color:var(--dim)}
+  ul.feat{list-style:none;margin-top:8px} ul.feat li{font-size:clamp(14px,1.5vw,17px);margin:9px 0;padding-left:24px;position:relative;color:var(--text)}
+  ul.feat li::before{content:'';position:absolute;left:4px;top:9px;width:8px;height:8px;border-radius:50%;background:var(--csi)}
+  ul.feat.tof li::before{background:var(--tof)} ul.feat.mm li::before{background:var(--mm)}
+  .tag{display:inline-flex;align-items:center;gap:7px;font-family:'JetBrains Mono',monospace;font-size:12px;padding:5px 12px;border-radius:8px;font-weight:700}
+  .small{font-size:13px;color:var(--faint);margin-top:auto;padding-top:10px}
+
+  /* 센서 카드(개요) */
+  .scards{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:18px 0}
+  .scard{border:1px solid var(--line);border-radius:14px;padding:16px;background:#fff}
+  .scard.csi{border-top:4px solid var(--csi)} .scard.tof{border-top:4px solid var(--tof)} .scard.mm{border-top:4px solid var(--mm)}
+  .scard h3{font-size:16px} .scard p{font-size:13px;color:var(--dim);margin-top:5px}
+  .arrow-row{display:flex;align-items:center;justify-content:center;gap:14px;font-size:14px;color:var(--dim);margin-top:6px;flex-wrap:wrap}
+  .chip{background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px 14px;font-weight:700;font-size:14px}
+
+  /* 라이브 임베드 */
+  .live-wrap{flex:1;display:flex;flex-direction:column;min-height:0;margin-top:10px}
+  .live-bar{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+  .live-bar input{border:1px solid var(--line);border-radius:8px;padding:7px 10px;font-family:'JetBrains Mono',monospace;font-size:12px;width:230px}
+  .live-bar button{border:1px solid var(--line);background:#fff;border-radius:8px;padding:7px 14px;cursor:pointer;font-size:12px}
+  .live-bar button:hover{border-color:var(--csi);color:var(--csi)}
+  .frame{flex:1;border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:0 10px 40px #0001;background:#0d0b1a;min-height:0}
+  .frame iframe{width:100%;height:100%;border:0;display:block}
+
+  /* 흐름도(클릭) */
+  .flow{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:18px 0}
+  .fstep{border:1px solid var(--line);border-radius:12px;padding:12px 16px;background:#fff;cursor:pointer;transition:.2s;text-align:center;min-width:96px}
+  .fstep:hover{border-color:var(--csi)} .fstep.on{background:var(--csibg);border-color:var(--csi);box-shadow:0 4px 16px #d977061a}
+  .fstep .t{font-weight:700;font-size:14px} .fstep .d{font-size:11px;color:var(--dim);margin-top:2px}
+  .fsep{color:var(--faint);font-size:18px}
+  .levels{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px}
+  .lv{flex:1;min-width:120px;border-radius:11px;padding:12px;text-align:center;font-weight:700}
+
+  /* 토글(S8) */
+  .toggle{display:inline-flex;border:1px solid var(--line);border-radius:12px;overflow:hidden;margin:6px 0 14px}
+  .toggle button{border:0;background:#fff;padding:9px 20px;cursor:pointer;font-size:14px;font-weight:700;color:var(--dim)}
+  .toggle button.on{background:var(--csi);color:#fff}
+  .tview{display:none} .tview.on{display:block;animation:fade .3s}
+  .card2{border:1px solid var(--line);border-radius:14px;padding:18px;background:#fff;margin-top:6px}
+  .card2.limit{border-left:4px solid var(--danger)} .card2.next{border-left:4px solid var(--ok)}
+
+  /* 로드맵 */
+  .road{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:14px}
+  .rcol h4{font-size:15px;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+  .rcol ul{list-style:none} .rcol li{font-size:13.5px;color:var(--dim);margin:7px 0;padding-left:16px;position:relative}
+  .rcol li::before{content:'→';position:absolute;left:0;color:var(--faint)}
+  table.contract{width:100%;border-collapse:collapse;margin-top:10px;font-size:13px}
+  table.contract td,table.contract th{border:1px solid var(--line);padding:8px 11px;text-align:left}
+  table.contract th{background:#fff;color:var(--dim);font-family:'JetBrains Mono',monospace;font-size:11px}
+  code{font-family:'JetBrains Mono',monospace;background:#f1f5f9;padding:1px 6px;border-radius:5px;font-size:.9em;color:var(--vio)}
+  .by{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--faint)}
+</style>
+</head>
+<body>
+<div class="bar" id="bar"></div>
+<div class="deck" id="deck">
+
+  <!-- 1 타이틀 -->
+  <section class="slide active" style="justify-content:center">
+    <div class="kicker">MAJUBOM · 중간 발표</div>
+    <h1>마주봄<span style="color:var(--csi)">.</span><br>비접촉 낙상 예방 모니터링</h1>
+    <p class="lead">아무것도 몸에 붙이지 않고, <b>WiFi CSI · ToF · mmWave</b> 3센서로 요양병원 환자를 24시간 지켜보며 낙상 위험을 미리 알린다.</p>
+    <div class="pills">
+      <span class="pill" style="color:var(--csi)">CSI · 심박/호흡</span>
+      <span class="pill" style="color:var(--tof)">ToF · 침상 이탈</span>
+      <span class="pill" style="color:var(--mm)">mmWave · 보행</span>
+      <span class="pill">서버 · z-score 판정</span>
+    </div>
+    <div class="imgslot" style="height:24vh;margin-top:22px;max-width:520px"><span class="ic">📷</span>대표 이미지 / 시스템 사진</div>
+    <div class="small by">팀 마주봄 · 2026</div>
+  </section>
+
+  <!-- 2 개요 -->
+  <section class="slide">
+    <div class="kicker">01 · 우리가 뭘 만드나</div>
+    <h2>침대 옆 3센서 → 서버가 판정 → 간호사 화면</h2>
+    <p class="lead">측정은 임베디드(센서)가, <b>판정·표출은 서버</b>가 — 역할을 나눴다. 3센서가 같은 형식으로 측정값만 보내면 서버가 평소 대비 변화로 위험을 매긴다.</p>
+    <div class="scards">
+      <div class="scard csi"><h3 style="color:var(--csi)">CSI · 심박/호흡</h3><p>WiFi 신호 변화로 가슴 움직임 → 심박·호흡·자율신경 추세</p></div>
+      <div class="scard tof"><h3 style="color:var(--tof)">ToF · 침상 이탈</h3><p>침대 위 거리 격자로 "사람이 침대에 있나/없나"</p></div>
+      <div class="scard mm"><h3 style="color:var(--mm)">mmWave · 보행</h3><p>레이더로 위치·속도·보행 변동성 → 낙상 예측</p></div>
+    </div>
+    <div class="arrow-row">
+      <span class="chip">3센서 측정</span> →
+      <span class="chip" style="border-color:var(--csi);color:var(--csi)">서버 · baseline·z-score·판정</span> →
+      <span class="chip">실시간 대시보드</span>
+    </div>
+    <div class="small">슬로건 — <b>"임베디드 = 측정, 서버 = 판정·표출"</b></div>
+  </section>
+
+  <!-- 3 라이브 -->
+  <section class="slide">
+    <div class="kicker">02 · 지금, 돌아갑니다 🔴 LIVE</div>
+    <h2>통합 실시간 대시보드</h2>
+    <div class="live-wrap">
+      <div class="live-bar">
+        <span class="mono" style="font-size:12px;color:var(--dim)">호스트:</span>
+        <input id="host" value="http://localhost:8089/">
+        <button onclick="reloadFrame()">새로고침</button>
+        <span class="mono" style="font-size:11px;color:var(--faint)">서버 꺼져 있으면 캡처로 대체</span>
+      </div>
+      <div class="frame"><iframe id="liveframe" src="http://localhost:8089/"></iframe></div>
+    </div>
+    <div class="small">3센서 → POST(raw+quality+presence) → 서버 z-score → <b>4단계 알람</b> → 2초 폴링 표출</div>
+  </section>
+
+  <!-- 4 데이터 흐름 -->
+  <section class="slide">
+    <div class="kicker">03 · 데이터 흐름 · 공통 계약</div>
+    <h2>3센서 공통 형식 → 서버가 위험을 매긴다</h2>
+    <table class="contract">
+      <tr><th>raw</th><th>quality</th><th>presence</th></tr>
+      <tr><td>실제 측정값 (심박·호흡·거리·속도)</td><td>신뢰도 (reliable·샘플수)</td><td>재실 (1명/2명·gate)</td></tr>
+    </table>
+    <p class="lead" style="margin-top:14px">서버 판정 흐름 — <b>단계를 클릭</b>해 보세요:</p>
+    <div class="flow" id="flow">
+      <div class="fstep" onclick="pickStep(this)"><div class="t">수신</div><div class="d">POST /csi·tof·mmw</div></div><span class="fsep">→</span>
+      <div class="fstep" onclick="pickStep(this)"><div class="t">reliable</div><div class="d">false면 무시</div></div><span class="fsep">→</span>
+      <div class="fstep" onclick="pickStep(this)"><div class="t">presence gate</div><div class="d">2명이면 보류</div></div><span class="fsep">→</span>
+      <div class="fstep" onclick="pickStep(this)"><div class="t">baseline</div><div class="d">평소 μ·σ 누적</div></div><span class="fsep">→</span>
+      <div class="fstep" onclick="pickStep(this)"><div class="t">z-score</div><div class="d">total_abs</div></div><span class="fsep">→</span>
+      <div class="fstep" onclick="pickStep(this)"><div class="t">4단계 알람</div><div class="d">색상 표출</div></div>
+    </div>
+    <div class="levels">
+      <div class="lv" style="background:#dcfce7;color:var(--ok)">정상 &lt;2</div>
+      <div class="lv" style="background:#fef9c3;color:var(--caution)">주의 2~4</div>
+      <div class="lv" style="background:#ffedd5;color:var(--warn)">경고 4~6</div>
+      <div class="lv" style="background:#fee2e2;color:var(--danger)">위험 ≥6</div>
+    </div>
+  </section>
+
+  <!-- 5 ToF -->
+  <section class="slide">
+    <div class="kicker">04 · 센서 진행 · ToF <span class="by">조우진</span></div>
+    <h2 style="color:var(--tof)">침상 재실(이탈) 감지 — 작동 중</h2>
+    <div class="cols">
+      <div class="col">
+        <ul class="feat tof">
+          <li><b>VL53L5CX × 2</b>, 침대 양쪽 레일에서 아래로</li>
+          <li><b>4×4 @ 400kHz</b> 모니터 없이 끊김 없는 안정 수신</li>
+          <li><b>2중 노이즈 필터</b> — 센서단(유효존) + 서버단(150mm·4존·연속 3프레임)</li>
+          <li>재실 판정 + 빈 침대 <b>캘리브레이션</b> 작동</li>
+        </ul>
+        <div class="pills"><span class="pill" style="color:var(--tof)">POST /tof</span><span class="pill">/tof/calibrate</span><span class="pill">침상 있음/비어있음</span></div>
+        <div class="small">트러블슈팅: 8×8/100kHz wedge → 4×4/400kHz 복원 (향후 8×8 전환)</div>
+      </div>
+      <div class="col"><div class="imgslot" style="flex:1"><span class="ic">📷</span>ToF 거리 격자 / 대시보드 캡처</div></div>
+    </div>
+  </section>
+
+  <!-- 6 mmWave -->
+  <section class="slide">
+    <div class="kicker">05 · 센서 진행 · mmWave <span class="by">유현기</span></div>
+    <h2 style="color:var(--mm)">보행 분석 — 작동 중</h2>
+    <div class="cols">
+      <div class="col">
+        <ul class="feat mm">
+          <li><b>IWR6843AOP → Pi 5</b> USB 직결, 3D People Tracking 펌웨어</li>
+          <li>설치 조건별 <b>cfg 3종</b>(wall_chest·ceiling·legs)</li>
+          <li><b>TLV 파싱</b> → 위치·속도 → 보행지표(보폭·변동성)</li>
+          <li>서버 <b>z-score 위험도</b> + 포인트클라우드 시각화</li>
+        </ul>
+        <div class="pills"><span class="pill" style="color:var(--mm)">POST /mmw</span><span class="pill">/mmw/viz</span><span class="pill">보행 변동성</span></div>
+        <div class="small">트러블슈팅: 플래싱 SOP·cfg CRLF·CLI/DATA 포트 교체로 해결</div>
+      </div>
+      <div class="col"><div class="imgslot" style="flex:1"><span class="ic">📷</span>포인트 클라우드 / 보행 지표 뷰</div></div>
+    </div>
+  </section>
+
+  <!-- 7 CSI ① -->
+  <section class="slide">
+    <div class="kicker">06 · 센서 진행 · CSI ① <span class="by">박형석</span></div>
+    <h2 style="color:var(--csi)">심박 · 호흡 · 자율신경 추세 — 작동 중</h2>
+    <div class="cols">
+      <div class="col">
+        <ul class="feat">
+          <li><b>ESP32-S3 × 2</b> (TX softAP + RX) → CSI 100Hz 수신</li>
+          <li><b>위상 자기상관 HR</b> + 진폭 호흡 + 신호강도 (애플워치 ±2bpm 검증)</li>
+          <li>재실(<b>1D CNN</b>) + <b>z-score 추세</b> + 서버 연동(raw+quality+presence)</li>
+          <li>서버가 baseline·z-score·4단계 알람 계산 (<code>csi_logic</code>)</li>
+        </ul>
+        <div class="pills"><span class="pill" style="color:var(--csi)">POST /csi :5003</span><span class="pill">HR·호흡·강도</span><span class="pill">z-score</span></div>
+      </div>
+      <div class="col"><div class="imgslot" style="flex:1"><span class="ic">📷</span>CSI 대시보드 / 로우데이터 / z-score 막대</div></div>
+    </div>
+  </section>
+
+  <!-- 8 CSI ② 한계↔향후 -->
+  <section class="slide">
+    <div class="kicker">07 · 센서 진행 · CSI ② <span class="by">박형석</span></div>
+    <h2 style="color:var(--csi)">HRV — 한계를 정확히 알고, 방향을 잡았다</h2>
+    <div class="toggle">
+      <button id="tb-limit" class="on" onclick="tview('limit')">한계</button>
+      <button id="tb-next" onclick="tview('next')">향후 방향</button>
+    </div>
+    <div class="cols">
+      <div class="col">
+        <div class="tview on" id="v-limit">
+          <div class="card2 limit">
+            <ul class="feat">
+              <li><b>HRV 절대값(SDNN ms)은 단일안테나 ESP32로 학술적 불가</b></li>
+              <li>실측: 워치 SDNN 33~35ms vs CSI 66~96ms (<b>2~3배 부풀림</b>)</li>
+              <li>근거 3중 확인 — 논문(Shirakami BHI'21, Pulse-Fi) + 딥리서치 + 실측</li>
+              <li>원인: 박동단위 위상정제(CSI quotient)는 <b>한 칩에 안테나 2개</b> 필요</li>
+            </ul>
+          </div>
+        </div>
+        <div class="tview" id="v-next">
+          <div class="card2 next">
+            <ul class="feat">
+              <li>① <b>추세 z-score로 전환 — 이미 작동</b> (자율신경 변화 = 신청서 핵심 목표 그대로)</li>
+              <li>② <b>다중안테나 PoC</b> — QCA9300/AX210 + PicoScenes로 절대 HRV 검증</li>
+              <li>③ <b>외장 지향성 안테나</b>(WROOM-1U)로 일상 HR 정확도 ↑</li>
+              <li>④ 30일 베이스라인 누적으로 z-score 신뢰도 ↑</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="col"><div class="imgslot" style="flex:1"><span class="ic">📷</span>워치 비교 그래프 / 안테나·하드웨어</div></div>
+    </div>
+    <div class="small">핵심 — "CSI가 안 되는 게 아니라, HRV 절대값만 단일안테나로 어렵다. 추세로 우회했고, 하드웨어로 확장 길도 잡았다."</div>
+  </section>
+
+  <!-- 9 로드맵 -->
+  <section class="slide">
+    <div class="kicker">08 · 향후 로드맵</div>
+    <h2>여기까지 왔고, 다음은 이렇게</h2>
+    <div class="road">
+      <div class="rcol"><h4><span style="color:var(--csi)">●</span> CSI</h4><ul>
+        <li>다중안테나 PoC (절대 HRV 검증)</li><li>외장 지향성 안테나 비교 측정</li><li>30일 베이스라인 누적</li></ul></div>
+      <div class="rcol"><h4><span style="color:var(--tof)">●</span> ToF</h4><ul>
+        <li>8×8 해상도 확장</li><li>실침대 캘리브·임계 튜닝</li></ul></div>
+      <div class="rcol"><h4><span style="color:var(--mm)">●</span> mmWave</h4><ul>
+        <li>cfg 정밀 튜닝</li><li>보행 지표 고도화</li></ul></div>
+    </div>
+    <div class="card2" style="margin-top:16px">
+      <b>공통</b> — WiFiManager(재플래시 없이 망 변경) · MQTT 무선화 · 3센서 융합 위험판정 고도화
+    </div>
+    <div class="small" style="font-size:15px;color:var(--text);margin-top:18px">
+      <b>마주봄 — 임베디드 3종 + 서버가 한 시스템으로 묶여 "지금 돌아간다". 다음은 정밀도·확장·무선화.</b>
+    </div>
+  </section>
+
+</div>
+<div class="pageno" id="pageno">1 / 9</div>
+<div class="hint">← → 또는 Space · F 풀스크린</div>
+
+<script>
+  const slides=[...document.querySelectorAll('.slide')];
+  let cur=0;
+  function show(i){
+    cur=Math.max(0,Math.min(slides.length-1,i));
+    slides.forEach((s,n)=>s.classList.toggle('active',n===cur));
+    document.getElementById('bar').style.width=((cur+1)/slides.length*100)+'%';
+    document.getElementById('pageno').textContent=(cur+1)+' / '+slides.length;
+  }
+  document.addEventListener('keydown',e=>{
+    if(e.key==='ArrowRight'||e.key===' '||e.key==='PageDown'){e.preventDefault();show(cur+1);}
+    else if(e.key==='ArrowLeft'||e.key==='PageUp'){e.preventDefault();show(cur-1);}
+    else if(e.key==='Home')show(0); else if(e.key==='End')show(slides.length-1);
+    else if(e.key==='f'||e.key==='F'){ if(!document.fullscreenElement)document.documentElement.requestFullscreen(); else document.exitFullscreen(); }
+  });
+  // 클릭 좌/우 절반으로 넘김(임베드·버튼 제외)
+  document.getElementById('deck').addEventListener('click',e=>{
+    if(e.target.closest('button,input,iframe,.fstep,.toggle,.live-bar'))return;
+    show(e.clientX > window.innerWidth/2 ? cur+1 : cur-1);
+  });
+
+  // 라이브 iframe
+  function reloadFrame(){ document.getElementById('liveframe').src=document.getElementById('host').value; }
+  // 흐름도 클릭
+  function pickStep(el){ [...document.querySelectorAll('.fstep')].forEach(s=>s.classList.remove('on')); el.classList.add('on'); }
+  // 토글
+  function tview(which){
+    document.getElementById('v-limit').classList.toggle('on',which==='limit');
+    document.getElementById('v-next').classList.toggle('on',which==='next');
+    document.getElementById('tb-limit').classList.toggle('on',which==='limit');
+    document.getElementById('tb-next').classList.toggle('on',which==='next');
+  }
+  show(0);
+</script>
+</body>
+</html>
