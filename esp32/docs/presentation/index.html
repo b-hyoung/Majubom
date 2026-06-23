@@ -78,6 +78,21 @@
   .card2{border:1px solid var(--line);border-radius:14px;padding:18px;background:#fff;margin-top:6px}
   .card2.limit{border-left:4px solid var(--danger)} .card2.next{border-left:4px solid var(--ok)}
 
+  /* 인터랙티브 측정실적 (평균 → 클릭 펼침) */
+  .msum{background:var(--csibg);border:1px solid var(--csi);border-radius:12px;padding:12px 16px;font-size:clamp(14px,1.5vw,17px)}
+  .msum b{color:var(--csi)} .hint2{color:var(--faint);font-size:12px;margin-left:8px}
+  .mtabs{display:flex;gap:6px;margin:12px 0 8px;flex-wrap:wrap}
+  .mt{border:1px solid var(--line);background:#fff;border-radius:9px;padding:7px 15px;cursor:pointer;font-size:13px;font-weight:600;color:var(--dim)}
+  .mt.on{background:var(--csi);color:#fff;border-color:var(--csi)}
+  .mviewport{flex:1;min-height:0;display:flex}
+  .mview{display:none;flex:1;min-height:0;width:100%}
+  .mview.on{display:flex;align-items:center;justify-content:center;animation:fade .25s}
+  .mimg{max-width:100%;max-height:100%;object-fit:contain;border:1px solid var(--line);border-radius:12px;background:#fff}
+  .mtable{border-collapse:collapse;font-size:13.5px;margin:auto}
+  .mtable td,.mtable th{border:1px solid var(--line);padding:6px 14px;text-align:center}
+  .mtable th{background:#f8fafc;color:var(--dim);font-family:'JetBrains Mono',monospace;font-size:11px}
+  .mtable .ok{color:var(--ok);font-weight:700}
+
   /* 로드맵 */
   .road{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:14px}
   .rcol h4{font-size:15px;margin-bottom:8px;display:flex;align-items:center;gap:8px}
@@ -210,17 +225,36 @@
   <section class="slide">
     <div class="kicker">06 · 센서 진행 · CSI ① <span class="by">박형석</span></div>
     <h2 style="color:var(--csi)">심박 · 호흡 · 자율신경 추세 — 작동 중</h2>
-    <div class="cols">
-      <div class="col">
-        <ul class="feat">
-          <li><b>ESP32-S3 × 2</b> (TX softAP + RX) → CSI 100Hz 수신</li>
-          <li><b>위상 자기상관 HR</b> + 진폭 호흡 + 신호강도 (애플워치 ±2bpm 검증)</li>
-          <li>재실(<b>1D CNN</b>) + <b>z-score 추세</b> + 서버 연동(raw+quality+presence)</li>
-          <li>서버가 baseline·z-score·4단계 알람 계산 (<code>csi_logic</code>)</li>
-        </ul>
-        <div class="pills"><span class="pill" style="color:var(--csi)">POST /csi :5003</span><span class="pill">HR·호흡·강도</span><span class="pill">z-score</span></div>
-      </div>
-      <div class="col"><img src="img/csi_signal.png" alt="CSI 위상 신호 심박 추출" style="width:100%;height:100%;object-fit:contain;border:1px solid var(--line);border-radius:14px;background:#fff"></div>
+    <ul class="feat" style="columns:2;column-gap:36px;margin-bottom:6px">
+      <li><b>ESP32-S3 ×2</b> → CSI 100Hz 수신</li>
+      <li><b>위상 자기상관 HR</b> + 진폭 호흡 + 강도</li>
+      <li>재실(<b>1D CNN</b>) + <b>z-score 추세</b></li>
+      <li>서버 baseline·z-score·4단계 (<code>csi_logic</code>)</li>
+    </ul>
+    <div class="msum">📊 <b>9회 측정</b> 평균 — <b>HR 71</b>bpm · <b>호흡 7</b>rpm · <b>강도 0.47</b> · 신뢰 <b>100%</b> (9/9)
+      <span class="hint2">아래 탭을 눌러 자세히 펼쳐 보기 ▾</span></div>
+    <div class="mtabs">
+      <button class="mt on" onclick="mtab(this,'sig')">위상신호 (심박 추출)</button>
+      <button class="mt" onclick="mtab(this,'tbl')">측정표 (9회)</button>
+      <button class="mt" onclick="mtab(this,'hr')">HR 커버리지</button>
+      <button class="mt" onclick="mtab(this,'st')">신호강도 분포</button>
+    </div>
+    <div class="mviewport">
+      <div class="mview on" data-v="sig"><img class="mimg" src="img/csi_signal.png" alt="위상 신호 심박 추출"></div>
+      <div class="mview" data-v="tbl"><table class="mtable">
+        <tr><th>측정</th><th>HR</th><th>호흡</th><th>강도</th><th>신뢰</th></tr>
+        <tr><td>rest</td><td>62</td><td>6</td><td>0.62</td><td class="ok">✓</td></tr>
+        <tr><td>rest2</td><td>76</td><td>6</td><td>0.41</td><td class="ok">✓</td></tr>
+        <tr><td>watch1</td><td>56</td><td>6</td><td>0.58</td><td class="ok">✓</td></tr>
+        <tr><td>watch2</td><td>87</td><td>9</td><td>0.49</td><td class="ok">✓</td></tr>
+        <tr><td>watch3</td><td>63</td><td>9</td><td>0.46</td><td class="ok">✓</td></tr>
+        <tr><td>hold</td><td>88</td><td>9</td><td>0.32</td><td class="ok">✓</td></tr>
+        <tr><td>hold2</td><td>74</td><td>27</td><td>0.41</td><td class="ok">✓</td></tr>
+        <tr><td>hold3</td><td>62</td><td>6</td><td>0.45</td><td class="ok">✓</td></tr>
+        <tr><td>hold4</td><td>67</td><td>6</td><td>0.47</td><td class="ok">✓</td></tr>
+      </table></div>
+      <div class="mview" data-v="hr"><img class="mimg" src="img/a_hr_coverage.png" alt="HR 커버리지"></div>
+      <div class="mview" data-v="st"><img class="mimg" src="img/c_strength_dist.png" alt="신호강도 분포"></div>
     </div>
   </section>
 
@@ -301,7 +335,7 @@
   });
   // 클릭 좌/우 절반으로 넘김(임베드·버튼 제외)
   document.getElementById('deck').addEventListener('click',e=>{
-    if(e.target.closest('button,input,iframe,.fstep,.toggle,.live-bar'))return;
+    if(e.target.closest('button,input,iframe,.fstep,.toggle,.live-bar,.mtabs,.mviewport,.mtable'))return;
     show(e.clientX > window.innerWidth/2 ? cur+1 : cur-1);
   });
 
@@ -309,6 +343,11 @@
   function reloadFrame(){ document.getElementById('liveframe').src=document.getElementById('host').value; }
   // 흐름도 클릭
   function pickStep(el){ [...document.querySelectorAll('.fstep')].forEach(s=>s.classList.remove('on')); el.classList.add('on'); }
+  // 측정실적 탭 (평균 → 클릭 펼침)
+  function mtab(btn,v){
+    btn.parentElement.querySelectorAll('.mt').forEach(b=>b.classList.remove('on')); btn.classList.add('on');
+    document.querySelectorAll('.mview').forEach(m=>m.classList.toggle('on',m.dataset.v===v));
+  }
   // 토글
   function tview(which){
     document.getElementById('v-limit').classList.toggle('on',which==='limit');
