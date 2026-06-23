@@ -224,74 +224,56 @@
   <!-- 7 CSI ① -->
   <section class="slide">
     <div class="kicker">06 · 센서 진행 · CSI ① <span class="by">박형석</span></div>
-    <h2 style="color:var(--csi)">심박 · 호흡 · 자율신경 추세 — 작동 중</h2>
-    <ul class="feat" style="columns:2;column-gap:36px;margin-bottom:6px">
-      <li><b>ESP32-S3 ×2</b> → CSI 100Hz 수신</li>
-      <li><b>위상 자기상관 HR</b> + 진폭 호흡 + 강도</li>
-      <li>재실(<b>1D CNN</b>) + <b>z-score 추세</b></li>
-      <li>서버 baseline·z-score·4단계 (<code>csi_logic</code>)</li>
-    </ul>
-    <div class="msum">📊 <b>9회 측정</b> 평균 — <b>HR 71</b>bpm · <b>호흡 7</b>rpm · <b>강도 0.47</b> · 신뢰 <b>100%</b> (9/9)
-      <span class="hint2">아래 탭을 눌러 자세히 펼쳐 보기 ▾</span></div>
-    <div class="mtabs">
-      <button class="mt on" onclick="mtab(this,'sig')">위상신호 (심박 추출)</button>
-      <button class="mt" onclick="mtab(this,'tbl')">측정표 (9회)</button>
-      <button class="mt" onclick="mtab(this,'hr')">HR 커버리지</button>
-      <button class="mt" onclick="mtab(this,'st')">신호강도 분포</button>
+    <h2 style="color:var(--csi)">CSI 측정 — "되는 것"과 "검증된 것"을 나눠서</h2>
+    <div class="cols">
+      <div class="col">
+        <div class="tag" style="background:#dcfce7;color:var(--ok)">✅ 검증됨 — 통제 환경 ±2bpm</div>
+        <ul class="feat" style="margin-top:8px">
+          <li>숨참기·에어컨off 통제에서 <b>애플워치 ±2bpm 일치</b></li>
+          <li>위상 자기상관으로 심박 주기 검출 (csi_hold4)</li>
+          <li>→ <b>자신 있게 말할 수 있는 유일한 정확도 주장</b></li>
+        </ul>
+        <img src="img/csi_signal.png" class="mimg" style="margin-top:auto;max-height:32vh">
+      </div>
+      <div class="col">
+        <div class="tag" style="background:#fef9c3;color:var(--caution)">△ 측정은 됨 — 정확도는 별개</div>
+        <ul class="feat" style="margin-top:8px">
+          <li>9회 측정 전부 <b>신호 수신 성공</b> (강도 ≥ 0.30)</li>
+          <li><b>신호 잡힘 ≠ 정확</b> — 통제 밖 정확도는 미검증</li>
+          <li>reliable = "측정 시도 가치 있음"일 뿐, 정답 보장 아님</li>
+        </ul>
+        <img src="img/c_strength_dist.png" class="mimg" style="margin-top:auto;max-height:32vh">
+      </div>
     </div>
-    <div class="mviewport">
-      <div class="mview on" data-v="sig"><img class="mimg" src="img/csi_signal.png" alt="위상 신호 심박 추출"></div>
-      <div class="mview" data-v="tbl"><table class="mtable">
-        <tr><th>측정</th><th>HR</th><th>호흡</th><th>강도</th><th>신뢰</th></tr>
-        <tr><td>rest</td><td>62</td><td>6</td><td>0.62</td><td class="ok">✓</td></tr>
-        <tr><td>rest2</td><td>76</td><td>6</td><td>0.41</td><td class="ok">✓</td></tr>
-        <tr><td>watch1</td><td>56</td><td>6</td><td>0.58</td><td class="ok">✓</td></tr>
-        <tr><td>watch2</td><td>87</td><td>9</td><td>0.49</td><td class="ok">✓</td></tr>
-        <tr><td>watch3</td><td>63</td><td>9</td><td>0.46</td><td class="ok">✓</td></tr>
-        <tr><td>hold</td><td>88</td><td>9</td><td>0.32</td><td class="ok">✓</td></tr>
-        <tr><td>hold2</td><td>74</td><td>27</td><td>0.41</td><td class="ok">✓</td></tr>
-        <tr><td>hold3</td><td>62</td><td>6</td><td>0.45</td><td class="ok">✓</td></tr>
-        <tr><td>hold4</td><td>67</td><td>6</td><td>0.47</td><td class="ok">✓</td></tr>
-      </table></div>
-      <div class="mview" data-v="hr"><img class="mimg" src="img/a_hr_coverage.png" alt="HR 커버리지"></div>
-      <div class="mview" data-v="st"><img class="mimg" src="img/c_strength_dist.png" alt="신호강도 분포"></div>
-    </div>
+    <div class="small">⚠️ 평균(예: HR 71)은 서로 다른 측정을 뭉갠 값이라 의미 없음 → 일부러 뺐다. "검증된 1건 vs 신호만 잡힌 9건"으로 분리.</div>
   </section>
 
   <!-- 8 CSI ② 한계↔향후 -->
   <section class="slide">
     <div class="kicker">07 · 센서 진행 · CSI ② <span class="by">박형석</span></div>
-    <h2 style="color:var(--csi)">HRV — 한계를 정확히 알고, 방향을 잡았다</h2>
-    <div class="toggle">
-      <button id="tb-limit" class="on" onclick="tview('limit')">한계</button>
-      <button id="tb-next" onclick="tview('next')">향후 방향</button>
-    </div>
+    <h2 style="color:var(--csi)">한계와 방향 — 숨기지 않고</h2>
     <div class="cols">
       <div class="col">
-        <div class="tview on" id="v-limit">
-          <div class="card2 limit">
-            <ul class="feat">
-              <li><b>HRV 절대값(SDNN ms)은 단일안테나 ESP32로 학술적 불가</b></li>
-              <li>실측: 워치 SDNN 33~35ms vs CSI 66~96ms (<b>2~3배 부풀림</b>)</li>
-              <li>근거 3중 확인 — 논문(Shirakami BHI'21, Pulse-Fi) + 딥리서치 + 실측</li>
-              <li>원인: 박동단위 위상정제(CSI quotient)는 <b>한 칩에 안테나 2개</b> 필요</li>
-            </ul>
-          </div>
-        </div>
-        <div class="tview" id="v-next">
-          <div class="card2 next">
-            <ul class="feat">
-              <li>① <b>추세 z-score로 전환 — 이미 작동</b> (자율신경 변화 = 신청서 핵심 목표 그대로)</li>
-              <li>② <b>다중안테나 PoC</b> — QCA9300/AX210 + PicoScenes로 절대 HRV 검증</li>
-              <li>③ <b>외장 지향성 안테나</b>(WROOM-1U)로 일상 HR 정확도 ↑</li>
-              <li>④ 30일 베이스라인 누적으로 z-score 신뢰도 ↑</li>
-            </ul>
-          </div>
-        </div>
+        <div class="tag" style="background:#fee2e2;color:var(--danger)">⚠️ 한계</div>
+        <ul class="feat" style="margin-top:8px">
+          <li><b>HRV 절대값(SDNN ms) 불가</b> — 워치 대비 2~3배 부풀림</li>
+          <li>분석 방법 바꾸면 또 달라짐(50~175ms) = 절대값 못 믿음</li>
+          <li>일상 HR 5~18bpm 오차 · <b>최강신호 선택 편향</b> 인정</li>
+          <li>원인: 박동단위 정제(quotient)는 <b>한 칩 안테나 2개</b> 필요</li>
+        </ul>
+        <img src="img/watch_vs_csi.png" class="mimg" style="margin-top:auto;max-height:30vh">
       </div>
-      <div class="col"><img src="img/watch_vs_csi.png" alt="애플워치 vs CSI 비교" style="width:100%;height:100%;object-fit:contain;border:1px solid var(--line);border-radius:14px;background:#fff"></div>
+      <div class="col">
+        <div class="tag" style="background:#dcfce7;color:var(--ok)">→ 방향</div>
+        <ul class="feat" style="margin-top:8px">
+          <li>① <b>추세 z-score 전환 — 이미 작동</b> (자율신경 변화 = 신청서 핵심)</li>
+          <li>② <b>다중안테나 PoC</b> (QCA9300/AX210) — 절대 HRV 검증</li>
+          <li>③ <b>외장 지향성 안테나</b>(WROOM-1U) — 일상 HR 정확도 ↑</li>
+          <li>④ 30일 베이스라인 — z-score 신뢰도 ↑</li>
+        </ul>
+        <div class="card2 next" style="margin-top:auto"><b>핵심</b> — "안 되는 게 아니라, 절대 HRV만 단일안테나로 어렵다. 추세로 우회 + 하드웨어로 확장."</div>
+      </div>
     </div>
-    <div class="small">핵심 — "CSI가 안 되는 게 아니라, HRV 절대값만 단일안테나로 어렵다. 추세로 우회했고, 하드웨어로 확장 길도 잡았다."</div>
   </section>
 
   <!-- 9 로드맵 -->
