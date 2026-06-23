@@ -110,9 +110,11 @@ def compute_zscore(raw: dict, stats: dict) -> dict:
     z_hr = (raw["hr_bpm"] - stats["hr_mu"]) / stats["hr_sigma"]
     z_resp = (raw["resp_rpm"] - stats["resp_mu"]) / stats["resp_sigma"]
     z_str = (raw["autocorr_strength"] - stats["strength_mu"]) / stats["strength_sigma"]
-    total_abs = abs(z_hr) + abs(z_resp) + abs(z_str)
+    # total_abs = 생체 신호(심박·호흡)만. 신호강도(z_str)는 품질 지표라 위험점수 제외 → 신뢰 게이트로만.
+    total_abs = abs(z_hr) + abs(z_resp)
     return {"hr": round(z_hr, 2), "resp": round(z_resp, 2),
-            "strength": round(z_str, 2), "total_abs": round(total_abs, 2)}
+            "strength": round(z_str, 2),   # 참고용 표시(위험점수 미합산)
+            "total_abs": round(total_abs, 2)}
 
 
 def classify_alert(total_abs: float) -> str:
