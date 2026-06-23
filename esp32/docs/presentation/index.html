@@ -313,13 +313,21 @@
     <h2>여기까지 왔고, 다음은 이렇게</h2>
     <div class="road">
       <div class="rcol"><h4><span style="color:var(--csi)">●</span> CSI</h4><ul>
-        <li>다중안테나 PoC (절대 HRV 검증)</li><li>외장 지향성 안테나 비교 측정</li><li>30일 베이스라인 누적</li></ul></div>
+        <li>HRV 절대값: <b>AX210+FeitCSI</b> PoC</li><li>지향성 안테나로 일상 정확도 ↑</li><li>30일 베이스라인 누적</li></ul></div>
       <div class="rcol"><h4><span style="color:var(--tof)">●</span> ToF</h4><ul>
         <li>8×8 해상도 확장</li><li>실침대 캘리브·임계 튜닝</li></ul></div>
       <div class="rcol"><h4><span style="color:var(--mm)">●</span> mmWave</h4><ul>
         <li>cfg 정밀 튜닝</li><li>보행 지표 고도화</li></ul></div>
     </div>
-    <div class="card2" style="margin-top:16px">
+    <div class="card2" style="margin-top:14px;border-left:4px solid var(--csi)">
+      <b>고려사항 — CSI HRV 확장 시</b>
+      <ul class="feat" style="margin-top:6px">
+        <li><b>하드웨어</b>: AX210(2안테나·현행 ~₩3만) + FeitCSI(Pi/ARM 가능) → quotient로 HRV 정제. <b>Pi5는 PCIe 어댑터 필요(까다로움), x86이 수월</b></li>
+        <li><b>검증 부담</b>: 선행 preprint(논문 B) 재현 실패 → 자체 ground-truth(ECG/워치) 검증 필수</li>
+        <li><b>z-score 범위</b>: 위험점수=생체 2신호(HR·호흡)만, 신호강도는 신뢰 게이트 (정합 완료)</li>
+      </ul>
+    </div>
+    <div class="card2" style="margin-top:12px">
       <b>공통</b> — WiFiManager(재플래시 없이 망 변경) · MQTT 무선화 · 3센서 융합 위험판정 고도화
     </div>
     <div class="small" style="font-size:15px;color:var(--text);margin-top:18px">
