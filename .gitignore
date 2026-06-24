@@ -42,5 +42,7 @@ esp32/*.csv
 
 *.txt
 *.png
+# 발표 자료 이미지는 의도된 산출물 → 추적 허용
+!esp32/docs/presentation/img/*.png
 # 런타임 생성 — 빈 침대 캘리브레이션 베이스라인(환경별로 다름)
 server/tof_baseline.json
