@@ -227,15 +227,18 @@
     <div class="cols">
       <div class="col">
         <ul class="feat mm">
-          <li><b>IWR6843AOP → Pi 5</b> USB 직결, 3D People Tracking 펌웨어</li>
-          <li>설치 조건별 <b>cfg 3종</b>(wall_chest·ceiling·legs)</li>
-          <li><b>TLV 파싱</b> → 위치·속도 → 보행지표(보폭·변동성)</li>
-          <li>서버 <b>z-score 위험도</b> + 포인트클라우드 시각화</li>
+          <li><b>IWR6843AOP → Pi 5</b> USB 직결 · TLV 파싱으로 위치·속도 추출</li>
+          <li><b>보행 지표 7종</b> — 속도·속도변동·흔들림·멈춤비율·보폭·보폭변동 + 높이하강</li>
+          <li>서버 <b>z-score 6종 → 4단계 위험판정</b> (높이하강은 <b>절대임계 &gt;1.2m</b> 즉시 위험)</li>
+          <li>모니터링 도구 <b>3종</b> — Java 모니터(시뮬 내장)·3D 포인트클라우드 뷰어·녹화/재생</li>
         </ul>
-        <div class="pills"><span class="pill" style="color:var(--mm)">POST /mmw</span><span class="pill">/mmw/viz</span><span class="pill">보행 변동성</span></div>
+        <div class="pills"><span class="pill" style="color:var(--mm)">POST /mmw</span><span class="pill">GET /mmw/latest·live</span><span class="pill">Flask :5002</span></div>
         <div class="small">트러블슈팅: 플래싱 SOP·cfg CRLF·CLI/DATA 포트 교체로 해결</div>
       </div>
-      <div class="col"><div class="imgslot" style="flex:1"><span class="ic">📷</span>포인트 클라우드 / 보행 지표 뷰</div></div>
+      <div class="col" style="justify-content:center">
+        <img src="img/mmw_monitor.png" class="mimg" style="width:100%;object-fit:contain" alt="mmWave 보행 모니터 (시뮬레이션) — CAUTION">
+        <div style="font-size:13px;color:var(--faint);margin-top:10px;text-align:center">Java 모니터(시뮬) — 탑뷰 포인트클라우드 · 보행 7지표 · z-score 4단계 (이상보행 → CAUTION)</div>
+      </div>
     </div>
   </section>
 
