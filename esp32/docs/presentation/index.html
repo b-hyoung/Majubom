@@ -123,14 +123,14 @@
   <section class="slide active" style="justify-content:center">
     <div class="kicker">MAJUBOM · 중간 발표</div>
     <h1>마주봄<span style="color:var(--csi)">.</span><br>비접촉 낙상 예방 모니터링</h1>
-    <p class="lead">아무것도 몸에 붙이지 않고, <b>WiFi CSI · ToF · mmWave</b> 3센서로 요양병원 환자를 24시간 지켜보며 낙상 위험을 미리 알린다.</p>
+    <p class="lead">아무것도 몸에 붙이지 않고, <b>WiFi CSI · ToF · mmWave</b> 3센서로 요양병원 환자를 24시간 지켜보며 <br/>낙상 위험을 미리 알린다.</p>
     <div class="pills">
       <span class="pill" style="color:var(--csi)">CSI · 심박/호흡</span>
       <span class="pill" style="color:var(--tof)">ToF · 침상 이탈</span>
       <span class="pill" style="color:var(--mm)">mmWave · 보행</span>
       <span class="pill">서버 · z-score 판정</span>
     </div>
-    <div class="imgslot" style="height:30vh;margin-top:26px;max-width:660px"><span class="ic">📷</span>대표 이미지 / 시스템 사진</div>
+    <img src="img/hero_concept.png" alt="시스템 개념도 — 침실 3센서 → 서버 z-score → 간호사 대시보드" style="margin-top:24px;width:100%;max-width:800px;border:1px solid var(--line);border-radius:14px">
     <div class="small by">팀 마주봄 · 2026</div>
   </section>
 
@@ -161,13 +161,13 @@
     <div class="live-wrap">
       <div class="live-bar">
         <span class="mono" style="font-size:12px;color:var(--dim)">호스트:</span>
-        <input id="host" value="http://localhost:8089/">
+        <input id="host" value="../dashboard/index.html?sim=1">
         <button onclick="reloadFrame()">새로고침</button>
-        <span class="mono" style="font-size:11px;color:var(--faint)">서버 꺼져 있으면 캡처로 대체</span>
+        <span class="mono" style="font-size:11px;color:var(--faint)">실제 통합 대시보드 · 시뮬레이터 데모(백엔드 없이 동작)</span>
       </div>
-      <div class="frame"><iframe id="liveframe" src="http://localhost:8089/"></iframe></div>
+      <div class="frame"><iframe id="liveframe" src="../dashboard/index.html?sim=1"></iframe></div>
     </div>
-    <div class="small">3센서 → POST(raw+quality+presence) → 서버 z-score → <b>4단계 알람</b> → 2초 폴링 표출</div>
+    <div class="small">실제 통합 대시보드(site/index.html) — 3센서 → POST(raw+quality+presence) → 서버 z-score → <b>4단계 알람</b>. 발표용 <b>시뮬레이터</b>로 데모 데이터 순환.</div>
   </section>
 
   <!-- 4 데이터 흐름 -->
@@ -198,26 +198,27 @@
     <div class="small"><b>total_abs = |z_HR| + |z_호흡|</b> (생체 신호 2개). 신호강도는 <b>신뢰 게이트</b>로만 — 품질 지표라 위험점수엔 미포함.</div>
   </section>
 
-  <!-- 5 ToF -->
+  <!-- 5 ToF (가로형) -->
   <section class="slide">
     <div class="kicker">04 · 센서 진행 · ToF <span class="by">조우진</span></div>
     <h2 style="color:var(--tof)">침상 재실(이탈) 감지 — 작동 중</h2>
-    <div class="cols">
-      <div class="col">
-        <ul class="feat tof">
-          <li><b>VL53L5CX × 2</b>, 침대 양쪽 레일에서 아래로</li>
-          <li><b>4×4 @ 400kHz</b> 모니터 없이 끊김 없는 안정 수신</li>
-          <li><b>2중 노이즈 필터</b> — 센서단(유효존) + 서버단(150mm·4존·연속 3프레임)</li>
-          <li>재실 판정 + 빈 침대 <b>캘리브레이션</b> 작동</li>
-        </ul>
-        <div class="pills"><span class="pill" style="color:var(--tof)">POST /tof</span><span class="pill">/tof/calibrate</span><span class="pill">침상 있음/비어있음</span></div>
-        <div class="small">트러블슈팅: 8×8/100kHz wedge → 4×4/400kHz 복원 (향후 8×8 전환)</div>
-      </div>
-      <div class="col">
-        <img src="img/tof_demo1.gif" class="mimg" style="flex:1;min-height:0;max-height:31vh" alt="ToF 침대 Top view 데모">
-        <img src="img/tof_demo2.gif" class="mimg" style="flex:1;min-height:0;margin-top:12px;max-height:31vh" alt="ToF 라이브 대시보드 데모">
-      </div>
+    <ul class="feat tof" style="display:flex;flex-wrap:wrap;gap:4px 32px;margin-top:4px">
+      <li style="flex:1 1 44%"><b>VL53L5CX × 2</b>, 침대 양쪽 레일에서 아래로</li>
+      <li style="flex:1 1 44%"><b>4×4 @ 400kHz</b> 모니터 없이 안정 수신</li>
+      <li style="flex:1 1 44%"><b>2중 노이즈 필터</b> — 센서단 + 서버단(150mm·4존·3프레임)</li>
+      <li style="flex:1 1 44%">재실 판정 + 빈 침대 <b>캘리브레이션</b> 작동</li>
+    </ul>
+    <div style="display:flex;gap:22px;flex:1;min-height:0;margin-top:14px">
+      <figure style="flex:1;min-height:0;display:flex;flex-direction:column;margin:0">
+        <img src="img/tof_demo1.gif" class="mimg" style="flex:1;min-height:0" alt="ToF 침대 Top view 데모">
+        <figcaption style="font-size:12.5px;color:var(--faint);text-align:center;margin-top:7px">침대 Top view — ToF1(머리)·ToF2(발) 감지존</figcaption>
+      </figure>
+      <figure style="flex:1.3;min-height:0;display:flex;flex-direction:column;margin:0">
+        <img src="img/tof_demo2.gif" class="mimg" style="flex:1;min-height:0" alt="ToF 라이브 대시보드 데모">
+        <figcaption style="font-size:12.5px;color:var(--faint);text-align:center;margin-top:7px">라이브 대시보드 — 4×4 격자·캘리브·수신로그 (1초 갱신)</figcaption>
+      </figure>
     </div>
+    <div class="small"><span class="pill" style="color:var(--tof)">POST /tof</span> <span class="pill">/tof/calibrate</span> &nbsp;·&nbsp; 트러블슈팅: 8×8/100kHz wedge → 4×4/400kHz 복원 (향후 8×8 전환)</div>
   </section>
 
   <!-- 6 mmWave -->
@@ -323,7 +324,7 @@
   <!-- 9 로드맵 -->
   <section class="slide">
     <div class="kicker">07 · 향후 로드맵</div>
-    <h2>여기까지 왔고, 다음은 이렇게</h2>
+    <h2>향후 방향성</h2>
     <div class="body">
     <div class="road">
       <div class="rcol"><h4><span style="color:var(--csi)">●</span> CSI</h4><ul>
@@ -333,20 +334,20 @@
       <div class="rcol"><h4><span style="color:var(--mm)">●</span> mmWave</h4><ul>
         <li>cfg 정밀 튜닝</li><li>보행 지표 고도화</li></ul></div>
     </div>
-    <div class="card2" style="margin-top:14px;border-left:4px solid var(--csi)">
-      <b>고려사항 — CSI HRV 확장 시</b>
+    <div class="card2" style="margin-top:14px;border-left:4px solid var(--vio)">
+      <b>핵심 방향 — CSI ⊕ mmWave 융합 <span style="color:var(--vio)">→ 통합 조기 낙상위험점수</span></b>
       <ul class="feat dense" style="margin-top:6px">
-        <li><b>하드웨어</b>: AX210(2안테나·현행 ~₩3만) + FeitCSI(Pi/ARM 가능) → quotient로 HRV 정제. <b>Pi5는 PCIe 어댑터 필요(까다로움), x86이 수월</b></li>
-        <li><b>검증 부담</b>: 선행 preprint(논문 B) 재현 실패 → 자체 ground-truth(ECG/워치) 검증 필수</li>
-        <li><b>z-score 범위</b>: 위험점수=생체 2신호(HR·호흡)만, 신호강도는 신뢰 게이트 (정합 완료)</li>
+        <li><b>mmWave 보행 변동성 ⊕ CSI 생체·자율신경 추세</b>를 합쳐 위험을 <b>점수 하나로</b> (조기 예측)</li>
+        <li>문헌 조사 결과 <b>이 두 신호를 합친 낙상예측은 거의 빈자리</b>(선행연구 미발견) — 각 신호 단독 근거는 있음 → 시도할 가치</li>
+        <li>⚠️ <b>단, "어떻게 합칠지"는 아직 탐색 중</b>: 생체(누워 안정시)·보행(걸을 때만)이 <b>다른 시각에 측정</b>돼 동시각 합산 불가 → 우선 <b>같은 타임라인에 정렬·기록 → 관찰</b>부터, 임계는 단정하지 않음</li>
       </ul>
     </div>
     <div class="card2" style="margin-top:12px">
-      <b>공통</b> — WiFiManager(재플래시 없이 망 변경) · MQTT 무선화 · 3센서 융합 위험판정 고도화
+      <b>공통</b> — WiFiManager(재플래시 없이 망 변경) · MQTT 무선화 · <b>실측 낙상 라벨 데이터 수집</b>(융합 검증의 전제)
     </div>
     </div>
     <div class="small" style="font-size:16px;color:var(--text);margin-top:10px">
-      <b>마주봄 — 임베디드 3종 + 서버가 하나의 시스템으로 통합 동작. 향후: 정밀도 · 확장 · 무선화.</b>
+      <b>마주봄 — 임베디드 3종 + 서버가 하나의 시스템으로 통합 동작. 향후: <span style="color:var(--vio)">CSI⊕mmWave 융합 위험점수</span> · 정밀도 · 무선화.</b>
     </div>
   </section>
 
