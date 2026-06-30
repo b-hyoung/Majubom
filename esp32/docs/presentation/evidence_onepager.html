@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>마주봄 · 근거 → 시스템 한 장</title>
+<style>
+  :root{
+    --bg:#f8fafc; --card:#ffffff; --line:#e2e8f0; --text:#1e293b; --dim:#475569; --faint:#94a3b8;
+    --csi:#d97706; --csibg:#fffbeb; --tof:#0891b2; --tofbg:#ecfeff; --mm:#e11d48; --mmbg:#fff1f3;
+    --vio:#7c3aed; --viobg:#f5f3ff; --ok:#16a34a; --okbg:#f0fdf4; --warn:#ea580c; --danger:#dc2626;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  @page{size:A4 landscape;margin:0}
+  body{font-family:'Noto Sans KR','AppleSDGothicNeo',system-ui,sans-serif;background:var(--bg);color:var(--text);
+    -webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .mono{font-family:'JetBrains Mono',ui-monospace,Menlo,monospace}
+  a{color:inherit;text-decoration:none;border-bottom:1px dotted var(--faint)}
+
+  .page{width:297mm;height:210mm;padding:9mm 11mm;display:flex;flex-direction:column}
+
+  /* 헤더 */
+  .head{display:flex;align-items:flex-end;justify-content:space-between;border-bottom:2px solid var(--text);padding-bottom:8px;margin-bottom:11px}
+  .kicker{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--faint)}
+  h1{font-size:27px;font-weight:800;letter-spacing:-.6px;line-height:1.1;margin-top:3px}
+  .head .sub{font-size:13px;color:var(--dim);text-align:right;line-height:1.5}
+
+  .cols{flex:1;display:flex;gap:13px;min-height:0}
+  .col{display:flex;flex-direction:column;gap:9px}
+  .left{flex:1.05} .right{flex:1}
+
+  .sech{font-size:14px;font-weight:800;letter-spacing:-.2px;display:flex;align-items:center;gap:7px}
+  .sech .n{font-family:'JetBrains Mono',monospace;font-size:11px;color:#fff;background:var(--text);border-radius:5px;padding:2px 7px}
+
+  .card{border:1px solid var(--line);border-radius:11px;background:#fff;padding:11px 13px}
+  .card.proven{border-left:4px solid var(--ok)}
+  .card.gap{border-left:4px solid var(--danger);background:#fffafa}
+  .card.fill{border-left:4px solid var(--vio);background:var(--viobg)}
+
+  .claim{font-size:14.5px;font-weight:700;line-height:1.35;margin-bottom:6px}
+  .refs{list-style:none;display:flex;flex-direction:column;gap:4px}
+  .refs li{font-size:12.5px;color:var(--dim);line-height:1.45;padding-left:15px;position:relative}
+  .refs li::before{content:'▸';position:absolute;left:0;color:var(--faint);font-size:10px;top:2px}
+  .refs a{font-weight:600;color:var(--text);border-bottom:1px solid var(--csi)}
+  .num{font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--csi)}
+
+  .gaptxt{font-size:13.5px;line-height:1.55;color:var(--text)}
+  .gaptxt b{color:var(--danger)}
+  .causes{font-size:12.5px;color:var(--dim);margin-top:7px;line-height:1.5}
+  .causes a{border-bottom:1px solid var(--faint);font-weight:600;color:var(--dim)}
+  .filltxt{font-size:14px;line-height:1.6;font-weight:600}
+  .filltxt .hl{color:var(--vio)}
+
+  /* 오른쪽 시스템 플로우 */
+  .flow{display:flex;flex-direction:column;gap:8px;flex:1}
+  .mode{border:1px solid var(--line);border-radius:11px;padding:9px 9px 10px;display:flex;flex-direction:column;gap:5px}
+  .mode.night{background:#f1f5f9;border-color:#cbd5e1}
+  .mode.day{background:#fffdf5;border-color:#fde9b8}
+  .modehd{font-size:13px;font-weight:800;display:flex;align-items:center;gap:6px;margin-bottom:1px}
+  .modehd .tt{font-weight:600;color:var(--dim);font-size:11.5px}
+  .fstep{border:1px solid var(--line);border-radius:10px;padding:9px 12px;background:#fff;position:relative}
+  .fstep .lab{display:inline-flex;align-items:center;gap:6px;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;
+    padding:3px 10px;border-radius:20px;margin-bottom:5px}
+  .fstep .ft{font-size:14px;font-weight:700;line-height:1.35}
+  .fstep .fd{font-size:12px;color:var(--dim);line-height:1.45;margin-top:4px}
+  .fstep.tof{border-top:3px solid var(--tof)} .lab.tof{background:var(--tofbg);color:var(--tof)}
+  .fstep.trig{border-top:3px solid var(--csi)} .lab.trig{background:var(--csibg);color:var(--csi)}
+  .fstep.csi{border-top:3px solid var(--csi);background:#fffdf6} .lab.csi{background:var(--csibg);color:var(--csi)}
+  .divtxt{text-align:center;font-size:10px;font-weight:700;color:var(--faint);margin:1px 0;letter-spacing:.3px}
+  .fstep.mm{border-top:3px solid var(--mm)} .lab.mm{background:var(--mmbg);color:var(--mm)}
+  .fstep.risk{border-top:3px solid var(--vio)} .lab.risk{background:var(--viobg);color:var(--vio)}
+  .fstep.alert{border-top:3px solid var(--danger);background:#fff5f5} .lab.alert{background:#fee2e2;color:var(--danger)}
+  .down{text-align:center;color:var(--faint);font-size:14px;line-height:.5;margin:-1px 0}
+  .cond{font-size:11.5px;color:var(--mm);font-weight:700;margin-top:4px;line-height:1.4}
+  .cite{font-size:11px;line-height:1.45;margin-top:6px;padding-top:5px;border-top:1px dashed var(--line);color:var(--dim)}
+  .cite a{font-weight:600;color:var(--text);border-bottom:1px solid var(--ok)}
+  .cite .ok{color:var(--ok);font-weight:700}
+  .cite .ours{color:var(--vio);font-weight:700}
+
+  .foot{margin-top:9px;border-top:1px solid var(--line);padding-top:7px;display:flex;justify-content:space-between;
+    font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--faint)}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="head">
+    <div>
+      <div class="kicker">MAJUBOM · PROBLEM → SYSTEM</div>
+      <h1>치매 어르신 야간 침대이탈 — 근거와 마주봄의 대응</h1>
+    </div>
+    <div class="sub">비접촉 야간 침상 모니터링<br>ToF + mmWave + CSI 융합</div>
+  </div>
+
+  <div class="cols">
+
+    <!-- 왼쪽: 근거 -->
+    <div class="col left">
+      <div class="sech"><span class="n">EVIDENCE</span> 무엇이 입증됐고, 무엇이 공백인가</div>
+
+      <div class="card proven">
+        <div class="claim">① 치매 어르신은 낙상이 <span class="num">1.7~3배</span> 더 많다 <span style="color:var(--ok);font-size:10px">· 대조군 직접비교</span></div>
+        <ul class="refs">
+          <li><a href="https://pubmed.ncbi.nlm.nih.gov/12919232/">van Doorn et al. 2003, <i>JAGS</i></a> — 요양원 2,015명: 치매 <b>4.05</b> vs 비치매 <b>2.33</b>회/년 (독립 위험인자)</li>
+          <li><a href="https://bmcgeriatr.biomedcentral.com/articles/10.1186/s12877-021-02641-9">BMC Geriatrics 2021 메타분석</a> — 인지정상 노인 대비 <b>2~3배</b>, 연 60~80% 낙상</li>
+        </ul>
+      </div>
+
+      <div class="card proven">
+        <div class="claim">② 치매 어르신은 야간 수면장애·뒤척임·배회가 압도적이다</div>
+        <ul class="refs">
+          <li><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC7157185/">Webster et al. 2019, <i>Sleep</i></a> (메타) — 실측(액티그래피) 수면장애 <b>70%</b></li>
+          <li><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12741328/">Guu et al. 2025, <i>Alzheimer's &amp; Dementia</i></a> — 말기치매+초조: NPI 62 / PSQI 72 / 실측 52%</li>
+          <li><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8855416/">night-wandering 연구</a> — 치매 어르신 <b>절반 이상</b>이 야간 배회 경험</li>
+        </ul>
+      </div>
+
+      <div class="card proven">
+        <div class="claim">③ 노인 야간낙상의 상당수 = "밤에 화장실 가려고 혼자 일어서다" 발생</div>
+        <ul class="refs">
+          <li><a href="https://pubmed.ncbi.nlm.nih.gov/31321899/">Rose et al. 2020, <i>Australas J Ageing</i></a> — 화장실(배뇨) 관련 낙상의 <b>≥44%가 야간</b>, 무인 이동 OR <b>5.25</b></li>
+          <li><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10254614/">급성기 toileting 낙상</a> — 야간 화장실 낙상의 <b>63%가 00–06시</b>에 집중 (단, 치매 한정 아님)</li>
+        </ul>
+      </div>
+
+      <div class="card gap">
+        <div class="sech" style="margin-bottom:4px"><span class="n" style="background:var(--danger)">GAP</span> 아직 비어 있는 인과</div>
+        <div class="gaptxt"><b>"치매가 더 넘어지는 이유 = 야간 침대이탈·뒤척임"</b>을 비치매와 대조해 정량 입증한 연구는 <b>아직 없다.</b></div>
+        <div class="causes">학계가 지목하는 직접 원인은 <a href="https://pubmed.ncbi.nlm.nih.gov/30520404/">보행·균형장애</a> · <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC9231445/">병식결여(위험행동 3배)</a> · <a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7716922/">향정신약</a> · 배회 — "야간 침대이탈"은 강하게 의심되나 측정·입증이 빈약하다.</div>
+      </div>
+
+      <div class="card fill">
+        <div class="filltxt">→ <span class="hl">마주봄은 바로 그 공백을 향한다.</span> 야간 무인 침대이탈·뒤척임을 <b>비접촉으로 정량 수집·기록</b>하는 것을 목표로 한다.</div>
+      </div>
+    </div>
+
+    <!-- 오른쪽: 시간대별 시스템 모드 -->
+    <div class="col right">
+      <div class="sech"><span class="n">SYSTEM</span> 시간대별 동작 — 야간/주간 모드</div>
+
+      <div class="flow">
+        <!-- 야간 모드 -->
+        <div class="mode night">
+          <div class="modehd">🌙 야간 20:00–08:00 <span class="tt">· 급성 안전(이탈·낙상) + 생체 베이스라인</span></div>
+
+          <div class="fstep csi">
+            <span class="lab csi">∥ CSI · 수면 중 병행</span>
+            <div class="ft">자는 동안 HR·호흡 베이스라인 측정</div>
+            <div class="fd">누워 안정 시 = CSI 측정 <b>최적 구간</b>(움직이면 신호 깨짐) → 개인 생체 기준선 확보.</div>
+          </div>
+          <div class="divtxt">── 동시에, 이탈·낙상 트랙 ──</div>
+
+          <div class="fstep tof">
+            <span class="lab tof">● ToF · 상시 게이트</span>
+            <div class="ft">뒤척임 → 가장자리 치우침 → 침대 이탈 감지까지</div>
+            <div class="fd">이탈 여부 판정은 ToF가 1차로 담당.</div>
+          </div>
+          <div class="down">▼</div>
+          <div class="fstep mm">
+            <span class="lab mm">● mmWave · 더블체크 + 낙상</span>
+            <div class="ft">이탈 전조 더블체크 + 낙상 감지</div>
+            <div class="fd">앉음·다리 내림 더블체크 → 이탈 후 <b>높이 급강하(서있다 바닥)</b>로 낙상 확정.</div>
+            <div class="cite">
+              <span class="ok">✓ 선행연구 있음:</span>
+              <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11598318/">눕·앉·서 자세 분류 96% (Sensors 2024.11)</a> ·
+              <a href="https://arxiv.org/abs/2411.14656">앉→서 전이(sit-to-stand, 2024.11)</a> ·
+              <a href="https://www.nature.com/articles/s41598-026-40330-y">낙상 감지 97~99% (Sci Rep 2026)</a><br>
+              <span class="ours">⚑ 단, '이탈 사전예측' 더블체크는 우리 기여(미검증 가설)</span>
+            </div>
+          </div>
+          <div class="down">▼</div>
+          <div class="fstep alert">
+            <span class="lab alert">● 알림</span>
+            <div class="ft">간호사에게 즉시 경보 (사용자별 위험도 가중)</div>
+          </div>
+        </div>
+
+        <!-- 주간 모드 -->
+        <div class="mode day">
+          <div class="modehd">☀️ 주간 08:00–20:00 <span class="tt">· 만성 위험 추세</span></div>
+          <div class="fstep risk">
+            <span class="lab risk">● mmWave 보행 변동성</span>
+            <div class="ft">걸을 때 보행 변동성 누적 → <b>야간 CSI 생체 + 주간 보행</b>을 합쳐 사용자별 위험도 갱신</div>
+            <div class="fd">↑ 이 위험도가 <b>야간 알림 민감도</b>를 조절 (선순환).</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="foot">
+    <span>팀 마주봄 · 2026 · 문제정의 근거 → 시스템 매핑</span>
+    <span>※ 본 문서의 모든 논문 인용은 클릭 시 원문으로 연결됩니다</span>
+  </div>
+
+</div>
+</body>
+</html>
