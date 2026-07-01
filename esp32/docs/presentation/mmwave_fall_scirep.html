@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>마주봄 · 다인 낙상 감지 (Sci Rep 2026) 상세</title>
+<style>
+  :root{
+    --bg:#f8fafc; --card:#ffffff; --line:#e2e8f0; --text:#1e293b; --dim:#475569; --faint:#94a3b8;
+    --tof:#0891b2; --tofbg:#ecfeff; --mm:#e11d48; --mmbg:#fff1f3;
+    --vio:#7c3aed; --viobg:#f5f3ff; --ok:#16a34a; --okbg:#f0fdf4; --warn:#ea580c; --danger:#dc2626;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  @page{size:A4 landscape;margin:0}
+  body{font-family:'Noto Sans KR','AppleSDGothicNeo',system-ui,sans-serif;background:var(--bg);color:var(--text);
+    -webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .mono{font-family:'JetBrains Mono',ui-monospace,Menlo,monospace}
+  a{color:inherit;text-decoration:none;border-bottom:1px dotted var(--faint)}
+
+  .page{width:297mm;min-height:210mm;padding:9mm 11mm;display:flex;flex-direction:column}
+
+  /* 헤더 */
+  .head{display:flex;align-items:flex-end;justify-content:space-between;border-bottom:2px solid var(--text);padding-bottom:8px;margin-bottom:10px}
+  .kicker{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--faint)}
+  h1{font-size:25px;font-weight:800;letter-spacing:-.6px;line-height:1.1;margin-top:3px}
+  h1 .acc{font-family:'JetBrains Mono',monospace;font-size:16px;color:var(--mm);margin-left:8px}
+  .head .sub{font-size:12px;color:var(--dim);text-align:right;line-height:1.5}
+  .head .sub a{border-bottom:1px solid var(--ok);font-weight:600;color:var(--text)}
+  .hint{font-size:11px;color:var(--mm);font-weight:700;margin-top:3px}
+
+  /* HW 매칭 배너 */
+  .hwbar{background:var(--okbg);border:1px solid #bbf7d0;border-left:4px solid var(--ok);border-radius:11px;
+    padding:9px 13px;margin-bottom:10px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+  .hwbar .tt{font-size:13px;font-weight:800;color:var(--ok);flex:none}
+  .hwbar .it{font-size:11.5px;color:var(--text);font-family:'JetBrains Mono',monospace}
+  .hwbar .it b{color:var(--ok)}
+
+  .cols{flex:1;display:flex;gap:13px;min-height:0}
+  .col{display:flex;flex-direction:column;gap:9px}
+  .left{flex:1.12} .right{flex:1}
+  .sech{font-size:13.5px;font-weight:800;display:flex;align-items:center;gap:7px}
+  .sech .n{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:#fff;background:var(--mm);border-radius:5px;padding:2px 7px}
+
+  .card{border:1px solid var(--line);border-radius:11px;background:#fff;padding:10px 13px}
+  .card .ch{font-size:12px;font-weight:800;color:var(--dim);margin-bottom:7px}
+
+  /* 파이프라인 */
+  .pipe{display:flex;align-items:center;flex-wrap:wrap;gap:0;row-gap:6px}
+  .pstep{background:#f8fafc;border:1px solid var(--line);border-radius:9px;padding:6px 10px;font-size:12px;
+    font-weight:600;line-height:1.25;color:var(--text);cursor:pointer;transition:transform .08s,box-shadow .08s,border-color .08s}
+  .pstep:hover{transform:translateY(-1px);box-shadow:0 3px 10px rgba(0,0,0,.08);border-color:var(--mm)}
+  .pstep .sub{display:block;font-size:10px;font-weight:500;color:var(--faint);margin-top:1px;font-family:'JetBrains Mono',monospace}
+  .pstep.out{background:var(--mmbg);border-color:#fecdd3;color:var(--mm);font-weight:700}
+  .arr{padding:0 6px;color:var(--faint);font-size:14px;font-weight:700;flex:none}
+  .lbl{font-size:10.5px;font-weight:800;color:var(--mm);letter-spacing:.3px;margin:3px 0 1px}
+
+  /* 낙상 판정 2단계 */
+  .phases{display:flex;gap:9px}
+  .phase{flex:1;background:var(--mmbg);border:1px solid #fecdd3;border-radius:10px;padding:9px 11px;cursor:pointer;
+    transition:transform .08s,box-shadow .08s}
+  .phase:hover{transform:translateY(-1px);box-shadow:0 3px 10px rgba(225,29,72,.15)}
+  .phase .pn{font-size:11px;font-weight:800;color:var(--mm)}
+  .phase .pf{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;margin-top:4px;line-height:1.4}
+  .phase .pdesc{font-size:10.5px;color:var(--dim);margin-top:3px;line-height:1.4}
+
+  /* 결과 표 */
+  .restable{width:100%;border-collapse:collapse;font-size:12px}
+  .restable th,.restable td{border:1px solid var(--line);padding:4px 8px;text-align:center}
+  .restable th{background:#f1f5f9;font-weight:700;color:var(--dim);font-size:11px}
+  .restable td.k{text-align:left;font-weight:600}
+  .restable .mono{font-family:'JetBrains Mono',monospace}
+  .restable tr.hi td{background:var(--mmbg);color:var(--mm);font-weight:700}
+
+  .stats{display:flex;flex-direction:column;gap:5px;font-size:11.5px;color:var(--text);line-height:1.5}
+  .stats b{color:var(--mm)} .stats .ok{color:var(--ok);font-weight:700}
+
+  .lim{list-style:none;display:flex;flex-direction:column;gap:3px}
+  .lim li{font-size:11.5px;color:var(--dim);line-height:1.4;padding-left:14px;position:relative}
+  .lim li::before{content:'▸';position:absolute;left:0;color:var(--danger);font-size:9px;top:3px}
+
+  .fill{border:1px solid var(--line);border-left:4px solid var(--vio);background:var(--viobg);border-radius:11px;padding:10px 13px}
+  .fill .ttl{font-size:12.5px;font-weight:800;color:var(--vio);margin-bottom:5px}
+  .filltxt{font-size:12px;line-height:1.55;color:var(--text)}
+  .filltxt b{color:var(--vio)} .filltxt .mono{font-weight:700} .filltxt .danger{color:var(--danger);font-weight:700}
+
+  .foot{margin-top:9px;border-top:1px solid var(--line);padding-top:7px;display:flex;justify-content:space-between;
+    font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--faint)}
+
+  /* ── 설명 모달 ── */
+  .ov{position:fixed;inset:0;background:rgba(15,23,42,.55);backdrop-filter:blur(2px);
+    display:none;align-items:center;justify-content:center;z-index:50;padding:24px}
+  .ov.on{display:flex}
+  .modal{background:#fff;border-radius:16px;max-width:560px;width:100%;max-height:84vh;overflow:auto;
+    box-shadow:0 24px 60px rgba(0,0,0,.35);border-top:6px solid var(--mm);animation:pop .14s ease-out}
+  @keyframes pop{from{transform:scale(.96);opacity:0}to{transform:scale(1);opacity:1}}
+  .mhd{display:flex;align-items:flex-start;gap:10px;padding:18px 22px 10px}
+  .mtag{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;color:#fff;background:var(--mm);
+    border-radius:6px;padding:3px 9px;flex:none;margin-top:3px}
+  .mterm{font-size:20px;font-weight:800;line-height:1.25}
+  .mterm .en{display:block;font-size:12px;font-weight:600;color:var(--faint);font-family:'JetBrains Mono',monospace;margin-top:2px}
+  .mclose{margin-left:auto;flex:none;background:#f1f5f9;border:none;border-radius:8px;width:30px;height:30px;
+    font-size:17px;color:var(--dim);cursor:pointer;line-height:1}
+  .mclose:hover{background:#e2e8f0}
+  .mbody{padding:6px 22px 20px;display:flex;flex-direction:column;gap:13px}
+  .mblock .lab{font-size:11px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--mm);margin-bottom:4px}
+  .mblock .txt{font-size:14px;line-height:1.65;color:var(--text)}
+  .mblock .txt .mono{font-family:'JetBrains Mono',monospace;font-size:13px;background:#f1f5f9;padding:1px 5px;border-radius:4px}
+
+  @media print{.hint{display:none} .pstep,.phase{cursor:default} .ov{display:none!important} .page{min-height:0}}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="head">
+    <div>
+      <div class="kicker">MAJUBOM · MMWAVE · PAPER ③ DEEP-DIVE</div>
+      <h1>다인 낙상 감지 — 어떻게 하고, 어떻게 나왔나 <span class="acc">97.9%</span></h1>
+      <div class="hint">▸ 박스를 클릭하면 그 알고리즘이 뭐고 어떻게 동작하는지 상세 설명이 뜹니다</div>
+    </div>
+    <div class="sub">Chen et al., <a href="https://www.nature.com/articles/s41598-026-40330-y"><i>Scientific Reports</i> 16:8859 (2026)</a><br>
+      Nature 계열 · 동료심사 · 전문 PMC12988233</div>
+  </div>
+
+  <!-- HW 매칭 -->
+  <div class="hwbar">
+    <span class="tt">★ 이 논문 = 우리 하드웨어</span>
+    <span class="it">칩 <b>TI IWR6843</b>(우리 AOP와 동일군)</span>
+    <span class="it"><b>60–64GHz · 3TX/4RX</b></span>
+    <span class="it">설치 <b>2m·고도각 30°</b> ≈ 우리 <span style="color:var(--text)">AOP_v_C_legs_safe.cfg (2m·35°)</span></span>
+    <span class="it">추적 <b>GTRACK = trackingCfg</b></span>
+  </div>
+
+  <div class="cols">
+
+    <!-- 왼쪽: 어떻게 하나 -->
+    <div class="col left">
+      <div class="sech"><span class="n">방법</span> 어떤 식으로 — 신호부터 낙상 판정까지</div>
+
+      <div class="card">
+        <div class="ch">① 신호 → 포인트클라우드 → 트랙 (센서 1대 기준)</div>
+        <div class="lbl">DETECTION LAYER</div>
+        <div class="pipe">
+          <span class="pstep" data-k="fft">2D-FFT<span class="sub">Range-Doppler Map</span></span>
+          <span class="arr">→</span>
+          <span class="pstep" data-k="clutter">정적 클러터 제거<span class="sub">0속도 빈 감산</span></span>
+          <span class="arr">→</span>
+          <span class="pstep" data-k="cfar">CFAR-CASO<span class="sub">표적 검출</span></span>
+          <span class="arr">→</span>
+          <span class="pstep" data-k="capon">Capon 빔포밍<span class="sub">각도 추정</span></span>
+          <span class="arr">→</span>
+          <span class="pstep" data-k="pcd">3D 포인트클라우드<span class="sub">희소</span></span>
+        </div>
+        <div class="lbl">TRACKING LAYER · GTRACK</div>
+        <div class="pipe">
+          <span class="pstep" data-k="ekf">Extended Kalman Filter<span class="sub">[x,y,z,v,a]</span></span>
+          <span class="arr">→</span>
+          <span class="pstep" data-k="gate">타원 게이팅<span class="sub">점↔트랙 연관</span></span>
+          <span class="arr">→</span>
+          <span class="pstep" data-k="occl">가림 외삽<span class="sub">1–2s 유지</span></span>
+          <span class="arr">→</span>
+          <span class="pstep" data-k="fusion">다센서 융합<span class="sub">4대 → 월드좌표</span></span>
+          <span class="arr">→</span>
+          <span class="pstep out" data-k="track">트랙(중심점)<span class="sub">x,y,z,v_z</span></span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="ch">② 낙상 판정 — 2단계 (높이 h · 수직속도 v_z) <span style="color:var(--ok);font-weight:700">우리 posZ/velZ로 그대로 이식</span></div>
+        <div class="phases">
+          <div class="phase" data-k="phase1">
+            <div class="pn">PHASE 1 · 충격 트리거</div>
+            <div class="pf">v_z &lt; −0.30 m/s<br>AND  h &lt; 1.0 m</div>
+            <div class="pdesc">빠른 하강 + 낮은 자세 → 낙상 의심</div>
+          </div>
+          <div class="phase" data-k="phase2">
+            <div class="pn">PHASE 2 · 정지 확인</div>
+            <div class="pf">안정화 후<br>h_end &lt; 0.9 m</div>
+            <div class="pdesc">계속 바닥 근처 → 낙상 확정<br>(신발끈 등 ADL은 곧 일어남 → 제외)</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="ch">③ 임계값 튜닝 · 검증</div>
+        <div class="pipe">
+          <span class="pstep" data-k="loocv">LOOCV + 그리드서치<span class="sub">임계 최적화 · 150파일</span></span>
+          <span class="arr">+</span>
+          <span class="pstep" data-k="imu">IMU 정답표<span class="sub">Movella DOT · 비디오</span></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 오른쪽: 어떻게 나왔나 -->
+    <div class="col right">
+      <div class="sech"><span class="n">결과</span> 어떻게 나왔나</div>
+
+      <div class="card">
+        <div class="ch">인원수별 성능 (1인 → 10인)</div>
+        <table class="restable">
+          <tr><th>인원</th><th>민감도</th><th>정밀도</th><th>F1</th></tr>
+          <tr><td class="k">1명</td><td class="mono">0.989</td><td class="mono">1.000</td><td class="mono">0.994</td></tr>
+          <tr><td class="k">2명</td><td class="mono">0.978</td><td class="mono">1.000</td><td class="mono">0.989</td></tr>
+          <tr><td class="k">4명</td><td class="mono">0.989</td><td class="mono">1.000</td><td class="mono">0.994</td></tr>
+          <tr class="hi"><td class="k">10명</td><td class="mono">0.935</td><td class="mono">1.000</td><td class="mono">0.961</td></tr>
+        </table>
+      </div>
+
+      <div class="card">
+        <div class="ch">핵심 수치</div>
+        <div class="stats">
+          <div>· 종합 <b>97.9%</b> · ROC 1·4명 <span class="ok">0.994</span> → 10명 0.967</div>
+          <div>· <b>인원↑ → 미탐(FNR)↑</b>: 1명 0.011 → 10명 0.065 (상관 r=0.895)</div>
+          <div>· 센서수: 4개 ROC 0.947 &gt; 1개 0.847 · 위치오차 대각선 2개가 최소(0.084m)</div>
+          <div>· 유효 범위: 방위 <b>−45~+45°</b> · 거리 <b>3–6m</b> (±60° 끝은 신호 약함)</div>
+          <div>· 탐지 지연 <b>3.06±2.08초</b> → 부상예방(≤300ms) ✗ / 사후 구조 ○</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="ch" style="color:var(--danger)">⚠ 한계 (저자 명시)</div>
+        <ul class="lim">
+          <li>피험자 10명·건강한 성인 → 노인 낙상역학 미반영</li>
+          <li>연기된 '소프트 낙상'만 (실제 수직붕괴 없음)</li>
+          <li>ADL 구분 86.5% — 임상엔 부족</li>
+          <li>중앙 기둥 등 장애물 영향 미분석 · 다인 가림 → FNR↑</li>
+        </ul>
+      </div>
+
+      <div class="fill">
+        <div class="ttl">⚑ 우리 적용</div>
+        <div class="filltxt">
+          우리 <span class="mono">height_drop&gt;1.2m</span> 단일임계보다 이 논문의 <b>2단계(v_z+h → 정지높이 재확인)</b>가 정교 →
+          <span class="mono">send_mmw.py</span>의 <span class="mono">posZ·velZ</span>로 바로 이식. 설치 2m·35°도 근거 확보.
+          단 <b>1대면 방위 ±45°·3–6m</b>가 현실 범위 → 침대 한 대 커버엔 충분.
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="foot">
+    <span>팀 마주봄 · 2026 · Sci Rep 다인 낙상 감지 상세 정리</span>
+    <span>※ 박스 클릭 = 알고리즘 상세 · 제목 클릭 = 원문</span>
+  </div>
+
+</div>
+
+<!-- 설명 모달 -->
+<div class="ov" id="ov">
+  <div class="modal" id="modal">
+    <div class="mhd">
+      <span class="mtag">③</span>
+      <div class="mterm" id="mterm">—<span class="en" id="men"></span></div>
+      <button class="mclose" id="mclose">✕</button>
+    </div>
+    <div class="mbody" id="mbody"></div>
+  </div>
+</div>
+
+<script>
+// 단계별 상세 — blocks=[{lab,txt}]. lab: 쉽게 말하면 / 정확히 뭔가 / 쓰는 알고리즘 / 우리 시스템에선
+const D = {
+  "fft":{term:"2D-FFT (Range-Doppler Map)",en:"range × velocity",blocks:[
+    {lab:"쉽게 말하면",txt:"한 번에 '거리'와 '속도'를 가로·세로로 펼친 지도를 만드는 단계. 어디에(거리) 얼마 속도로 움직이는 게 있는지 한 장에 보인다."},
+    {lab:"정확히 뭔가",txt:"raw ADC 신호에 FFT를 두 축으로 적용 — fast-time(한 chirp 안)으로 거리, slow-time(연속 chirp 간 위상변화)으로 속도를 분해해 Range-Doppler Map을 만든다."},
+    {lab:"우리 시스템에선",txt:"IWR6843 칩 내부 DSP가 처리한다. 우리는 결과(TLV)만 받는다."}]},
+  "clutter":{term:"정적 클러터 제거",en:"static clutter removal",blocks:[
+    {lab:"쉽게 말하면",txt:"벽·가구처럼 '안 움직이는 것'의 반사를 빼버려, 움직이는 사람만 남기는 청소 단계."},
+    {lab:"정확히 뭔가",txt:"속도가 0인 도플러 빈(=정지 반사)에 신호가 몰린다. 그 빈의 복소 표본 평균을 매 프레임 감산하면 정지 클러터가 사라진다."},
+    {lab:"쓰는 알고리즘",txt:"mean subtraction(평균 감산) 방식의 static clutter removal. 가장 가볍고 표준적인 MTI(이동표적표시) 기법."},
+    {lab:"우리 시스템에선",txt:"<span class='mono'>.cfg</span>의 static/dynamic CFAR 설정과 함께 칩이 수행한다."}]},
+  "cfar":{term:"CFAR-CASO",en:"Cell-Averaging Smallest-Of CFAR",blocks:[
+    {lab:"쉽게 말하면",txt:"'이 셀이 진짜 표적인가, 잡음인가'를 주변을 보고 자동으로 판단하는 문턱. 주변이 시끄러우면 문턱을 올려 오탐을 막는다."},
+    {lab:"정확히 뭔가",txt:"CFAR = Constant False Alarm Rate. 검사 셀 양옆의 참조 셀로 잡음 레벨을 추정해 적응적 문턱을 만든다. <b>CASO</b>=양쪽 두 윈도우 중 '작은(Smallest-Of)' 평균을 쓰는 변형."},
+    {lab:"쓰는 알고리즘",txt:"이 논문은 <b>2-pass CFAR-CASO</b>. CASO는 실내처럼 클러터가 한쪽에 몰린 '비균질 엣지'에서 표적을 덜 놓쳐 강건하다. (CA-CFAR 대비)"},
+    {lab:"우리 시스템에선",txt:"우리 <span class='mono'>.cfg</span>의 <span class='mono'>dynamicRACfarCfg</span>·<span class='mono'>staticRACfarCfg</span>가 바로 이 CFAR 파라미터다."}]},
+  "capon":{term:"Capon 빔포밍",en:"MVDR beamforming",blocks:[
+    {lab:"쉽게 말하면",txt:"신호가 '어느 방향'에서 왔는지 정밀하게 찾아내는 단계. 여러 안테나가 받은 신호의 위상차로 방향을 잰다."},
+    {lab:"정확히 뭔가",txt:"Capon = MVDR(Minimum Variance Distortionless Response). 보고 싶은 방향 신호는 그대로 두고 나머지 방향 전력은 최소화하도록 가중치를 풀어, 방위각·고도각을 추정한다."},
+    {lab:"쓰는 알고리즘",txt:"단순 FFT 빔포밍보다 <b>각도 분해능이 높은 적응형(adaptive)</b> 방법. 안테나가 적어도 방향을 더 또렷이 가른다."},
+    {lab:"우리 시스템에선",txt:"우리 People-Tracking 데모는 보통 FFT 기반 각도추정을 쓴다 — Capon은 더 정밀한 변형이라 참고 포인트."}]},
+  "pcd":{term:"3D 포인트클라우드",en:"sparse point cloud",blocks:[
+    {lab:"쉽게 말하면",txt:"검출+방향까지 끝난 결과 = 공간에 찍힌 '움직이는 점' 무더기. 사람 한 명이 점 몇~수십 개."},
+    {lab:"정확히 뭔가",txt:"각 점은 (x,y,z) + 속도·SNR. 3TX/4RX라 점이 희소하다(=듬성).",},
+    {lab:"우리 시스템에선",txt:"우리도 동일하게 희소한 점이 나온다 → 그래서 점 자체보다 '트랙'을 쓴다."}]},
+  "ekf":{term:"Extended Kalman Filter (GTRACK)",en:"EKF · TI group tracker",blocks:[
+    {lab:"쉽게 말하면",txt:"흔들리는 점들의 중심을 '부드럽게' 따라가며 다음 위치까지 예측하는 필터. 노이즈가 껴도 궤적이 안 튄다."},
+    {lab:"정확히 뭔가",txt:"상태 벡터 = [x, y, z, 속도, 가속도], 3D 등가속(CA) 모델. 매 프레임 '예측 → 측정으로 보정'을 반복한다. 측정이 비선형이라 일반 칼만이 아닌 <b>확장(Extended)</b> 칼만필터."},
+    {lab:"쓰는 알고리즘",txt:"TI의 <b>GTRACK</b>(group tracker) — 점들을 사람 단위 그룹으로 묶어 EKF로 추적하는 표준 라이브러리."},
+    {lab:"우리 시스템에선",txt:"우리 <span class='mono'>.cfg</span>의 <span class='mono'>trackingCfg</span>가 부르는 바로 그 트래커. 출력 track의 <span class='mono'>posX/Y/Z</span>가 추적된 중심점이다."}]},
+  "gate":{term:"타원 게이팅",en:"ellipsoidal gating",blocks:[
+    {lab:"쉽게 말하면",txt:"'이 점이 이 사람 트랙의 것일 가능성' 영역을 타원으로 그려, 그 안에 든 점만 그 트랙에 연결한다."},
+    {lab:"정확히 뭔가",txt:"예측 위치 주변의 <b>마할라노비스 거리</b>(불확실성을 반영한 거리)가 게이팅 게인 G보다 작으면 그 트랙에 연관(association)한다."},
+    {lab:"우리 시스템에선",txt:"우리 <span class='mono'>.cfg</span>의 <span class='mono'>gatingParam</span>이 이 타원 크기를 정한다."}]},
+  "occl":{term:"가림 외삽",en:"occlusion handling",blocks:[
+    {lab:"쉽게 말하면",txt:"사람이 잠깐 다른 사람/기둥에 가려 안 보여도, 1~2초는 '아까 가던 속도로 갔겠지' 하고 트랙을 살려둔다."},
+    {lab:"정확히 뭔가",txt:"트랙 상태기계(FREE→DETECT→ACTIVE)에서 측정이 끊기면, EKF의 예측만으로 위치를 외삽하며 일정 시간 유지하다가 계속 없으면 소멸시킨다."},
+    {lab:"우리 시스템에선",txt:"<span class='mono'>.cfg</span>의 <span class='mono'>stateParam</span>(유지/소멸 프레임 수)이 이 동작을 정한다."}]},
+  "fusion":{term:"다센서 융합",en:"multi-radar fusion",blocks:[
+    {lab:"쉽게 말하면",txt:"방 네 모서리 센서 4대가 각자 본 '같은 사람'을 하나로 합치는 단계."},
+    {lab:"정확히 뭔가",txt:"각 센서 좌표를 회전+이동으로 공통 월드좌표로 변환한 뒤, 서로 0.5m 이내면 같은 사람으로 보고 위치를 평균낸다."},
+    {lab:"쓰는 알고리즘",txt:"nearest-neighbor 연관(가장 가까운 것끼리 매칭) + 좌표 평균."},
+    {lab:"우리 시스템에선",txt:"우리는 침대당 센서 1대 구성이라 이 단계는 불필요 — 단일 센서 기준 ±45°·3–6m 범위만 기억하면 된다."}]},
+  "track":{term:"트랙 (중심점 출력)",en:"track centroid",blocks:[
+    {lab:"쉽게 말하면",txt:"이 모든 처리의 최종 산출물 = 사람마다 한 점(중심)의 위치·속도 시계열."},
+    {lab:"정확히 뭔가",txt:"각 트랙이 (x, y, z, 속도)를 프레임마다 출력. 낙상 판정은 이 중 <b>높이 z</b>와 <b>수직속도 v_z</b>만 쓴다."},
+    {lab:"우리 시스템에선",txt:"<span class='mono'>send_mmw.py</span>가 이미 받는 track <span class='mono'>posX/Y/Z·velX/Y/Z</span>가 정확히 이것. 추가 수집 없이 낙상 판정 이식 가능."}]},
+  "phase1":{term:"Phase 1 · 충격 트리거",en:"impact trigger",blocks:[
+    {lab:"쉽게 말하면",txt:"'갑자기 빠르게 아래로 + 자세가 낮아짐' = 일단 낙상으로 의심하고 경보 후보로 잡는 1차 관문."},
+    {lab:"정확히 뭔가",txt:"조건 = <span class='mono'>v_z &lt; −0.30 m/s</span> (빠른 하강) <b>AND</b> <span class='mono'>h &lt; 1.0 m</span> (낮은 높이). 둘 다 만족해야 트리거."},
+    {lab:"쓰는 알고리즘",txt:"단순 임계 규칙(rule-based). 임계값은 그리드서치+LOOCV로 최적화. 다인 시엔 h 임계 0.8m로 더 보수적."},
+    {lab:"우리 시스템에선",txt:"<span class='mono'>send_mmw.py</span>의 매 프레임 <span class='mono'>velZ</span>·<span class='mono'>posZ</span>로 바로 계산 가능 — 지금 코드에 조건문만 추가."}]},
+  "phase2":{term:"Phase 2 · 정지 확인",en:"post-fall confirmation",blocks:[
+    {lab:"쉽게 말하면",txt:"의심된 뒤 잠깐 기다렸다가 '여전히 바닥 근처'면 진짜 낙상으로 확정. 신발끈 묶기·깊은 스쿼트처럼 곧 일어나는 동작을 걸러낸다."},
+    {lab:"정확히 뭔가",txt:"안정화 기간 후 최종 높이 <span class='mono'>h_end &lt; 0.9 m</span>이면 낙상 확정. 이 2단계 구조가 ADL 오탐을 크게 줄인다."},
+    {lab:"쓰는 알고리즘",txt:"임계 + 시간지연 확인(state machine). 이게 우리 단일임계 <span class='mono'>height_drop&gt;1.2m</span>보다 정교한 핵심."},
+    {lab:"우리 시스템에선",txt:"우리 10초 윈도우 끝에서 posZ가 여전히 낮은지 재확인하는 한 줄을 더하면 그대로 구현된다."}]},
+  "loocv":{term:"LOOCV + 그리드서치",en:"Leave-One-Out CV",blocks:[
+    {lab:"쉽게 말하면",txt:"데이터 1개를 빼고 나머지로 임계값을 정한 뒤, 뺀 1개로 시험 — 이를 모든 데이터에 대해 돌려가며 반복해 임계값이 과적합 안 되게 한다."},
+    {lab:"정확히 뭔가",txt:"Leave-One-Out Cross-Validation, N=150 파일. 각 반복마다 1개 테스트 / N−1개로 그리드서치(v_z, h, h_end, a_z 등) 임계 최적화."},
+    {lab:"우리 시스템에선",txt:"우리 낙상·자세 임계값도 데이터가 모이면 이 방식으로 환자별 튜닝할 수 있다."}]},
+  "imu":{term:"IMU 정답표 (검증)",en:"ground truth",blocks:[
+    {lab:"쉽게 말하면",txt:"가슴에 작은 동작센서를 차고 '진짜 낙상이 언제 일어났나'의 정답표를 만들어, 레이더 판정과 맞춰본다."},
+    {lab:"정확히 뭔가",txt:"<b>Movella DOT</b> IMU(60Hz)에서 가속도 G값 차이 &gt;600을 낙상으로 라벨. 비디오로 시각 보정, UDP 타임스탬프로 레이더와 동기화."},
+    {lab:"우리 시스템에선",txt:"우리도 실측 검증 때 웨어러블/영상으로 같은 식의 정답표를 만들면 된다."}]},
+};
+
+const ov=document.getElementById('ov'), mbody=document.getElementById('mbody');
+function open(k){
+  const d=D[k]; if(!d) return;
+  document.getElementById('mterm').firstChild.textContent=d.term;
+  document.getElementById('men').textContent=d.en;
+  mbody.innerHTML=d.blocks.map(b=>
+    `<div class="mblock"><div class="lab">${b.lab}</div><div class="txt">${b.txt}</div></div>`).join('');
+  document.getElementById('modal').scrollTop=0;
+  ov.classList.add('on');
+}
+function close(){ov.classList.remove('on')}
+document.querySelectorAll('[data-k]').forEach(el=>el.addEventListener('click',()=>open(el.dataset.k)));
+document.getElementById('mclose').addEventListener('click',close);
+ov.addEventListener('click',e=>{if(e.target===ov)close()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')close()});
+</script>
+</body>
+</html>

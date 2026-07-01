@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>마주봄 · mmWave 자세·낙상 감지 — 선행연구 구현 방법</title>
+<style>
+  :root{
+    --bg:#f8fafc; --card:#ffffff; --line:#e2e8f0; --text:#1e293b; --dim:#475569; --faint:#94a3b8;
+    --csi:#d97706; --csibg:#fffbeb; --tof:#0891b2; --tofbg:#ecfeff; --mm:#e11d48; --mmbg:#fff1f3;
+    --vio:#7c3aed; --viobg:#f5f3ff; --ok:#16a34a; --okbg:#f0fdf4; --warn:#ea580c; --danger:#dc2626;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  @page{size:A4 landscape;margin:0}
+  body{font-family:'Noto Sans KR','AppleSDGothicNeo',system-ui,sans-serif;background:var(--bg);color:var(--text);
+    -webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .mono{font-family:'JetBrains Mono',ui-monospace,Menlo,monospace}
+  a{color:inherit;text-decoration:none;border-bottom:1px dotted var(--faint)}
+
+  .page{width:297mm;height:210mm;padding:9mm 11mm;display:flex;flex-direction:column}
+
+  /* 헤더 */
+  .head{display:flex;align-items:flex-end;justify-content:space-between;border-bottom:2px solid var(--text);padding-bottom:8px;margin-bottom:11px}
+  .kicker{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--faint)}
+  h1{font-size:27px;font-weight:800;letter-spacing:-.6px;line-height:1.1;margin-top:3px}
+  .head .sub{font-size:13px;color:var(--dim);text-align:right;line-height:1.5}
+  .hint{font-size:11px;color:var(--vio);font-weight:700;margin-top:3px}
+
+  .stack{flex:1;display:flex;flex-direction:column;gap:11px;min-height:0}
+
+  /* 논문 카드 */
+  .paper{border:1px solid var(--line);border-radius:12px;background:#fff;padding:11px 14px 13px;display:flex;flex-direction:column;gap:8px}
+  .paper.p1{border-top:4px solid var(--vio)}
+  .paper.p2{border-top:4px solid var(--tof)}
+  .paper.p3{border-top:4px solid var(--mm)}
+
+  .phd{display:flex;align-items:center;gap:9px}
+  .pnum{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:#fff;border-radius:6px;padding:3px 9px;flex:none}
+  .p1 .pnum{background:var(--vio)} .p2 .pnum{background:var(--tof)} .p3 .pnum{background:var(--mm)}
+  .ptitle{font-size:14.5px;font-weight:700;line-height:1.25}
+  .ptitle .ven{font-weight:600;color:var(--dim);font-size:12px}
+  .ptitle a{border-bottom:1px solid var(--faint)}
+  .acc{margin-left:auto;flex:none;font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:800;
+    padding:4px 12px;border-radius:20px;white-space:nowrap}
+  .p1 .acc{background:var(--viobg);color:var(--vio)}
+  .p2 .acc{background:var(--tofbg);color:var(--tof)}
+  .p3 .acc{background:var(--mmbg);color:var(--mm)}
+
+  /* 파이프라인 도식 */
+  .pipe{display:flex;align-items:center;flex-wrap:wrap;gap:0;row-gap:7px}
+  .pstep{background:#f8fafc;border:1px solid var(--line);border-radius:9px;padding:7px 11px;font-size:12.5px;
+    font-weight:600;line-height:1.3;color:var(--text);cursor:pointer;transition:transform .08s,box-shadow .08s,border-color .08s}
+  .pstep:hover{transform:translateY(-1px);box-shadow:0 3px 10px rgba(0,0,0,.08);border-color:var(--vio)}
+  .p2 .pstep:hover{border-color:var(--tof)} .p3 .pstep:hover{border-color:var(--mm)}
+  .pstep .sub{display:block;font-size:10.5px;font-weight:500;color:var(--faint);margin-top:1px;
+    font-family:'JetBrains Mono',monospace}
+  .pstep.out{font-weight:700}
+  .p1 .pstep.out{background:var(--viobg);border-color:#ddd6fe;color:var(--vio)}
+  .p2 .pstep.out{background:var(--tofbg);border-color:#a5f3fc;color:var(--tof)}
+  .p3 .pstep.out{background:var(--mmbg);border-color:#fecdd3;color:var(--mm)}
+  .arr{padding:0 8px;color:var(--faint);font-size:15px;font-weight:700;flex:none}
+
+  .hw{font-size:11.5px;color:var(--dim);line-height:1.5;font-family:'JetBrains Mono',monospace}
+  .hw b{color:var(--text)} .hw .tag{color:var(--ok);font-weight:700}
+  .hw .danger{color:var(--danger);font-weight:700}
+
+  /* 하단: 우리 적용 */
+  .fill{border:1px solid var(--line);border-left:4px solid var(--vio);background:var(--viobg);border-radius:11px;padding:11px 14px}
+  .fill .ttl{font-size:13px;font-weight:800;color:var(--vio);margin-bottom:5px;display:flex;align-items:center;gap:6px}
+  .filltxt{font-size:13px;line-height:1.6;color:var(--text)}
+  .filltxt b{color:var(--vio)} .filltxt .mono{color:var(--text);font-weight:700}
+  .filltxt .danger{color:var(--danger);font-weight:700}
+
+  .foot{margin-top:9px;border-top:1px solid var(--line);padding-top:7px;display:flex;justify-content:space-between;
+    font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--faint)}
+
+  /* ── 설명 모달 ── */
+  .ov{position:fixed;inset:0;background:rgba(15,23,42,.55);backdrop-filter:blur(2px);
+    display:none;align-items:center;justify-content:center;z-index:50;padding:24px}
+  .ov.on{display:flex}
+  .modal{background:#fff;border-radius:16px;max-width:560px;width:100%;max-height:82vh;overflow:auto;
+    box-shadow:0 24px 60px rgba(0,0,0,.35);border-top:6px solid var(--vio);animation:pop .14s ease-out}
+  .modal.t2{border-top-color:var(--tof)} .modal.t3{border-top-color:var(--mm)}
+  @keyframes pop{from{transform:scale(.96);opacity:0}to{transform:scale(1);opacity:1}}
+  .mhd{display:flex;align-items:flex-start;gap:10px;padding:18px 22px 10px}
+  .mtag{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;color:#fff;background:var(--vio);
+    border-radius:6px;padding:3px 9px;flex:none;margin-top:3px}
+  .t2 .mtag{background:var(--tof)} .t3 .mtag{background:var(--mm)}
+  .mterm{font-size:20px;font-weight:800;line-height:1.25}
+  .mterm .en{display:block;font-size:12px;font-weight:600;color:var(--faint);font-family:'JetBrains Mono',monospace;margin-top:2px}
+  .mclose{margin-left:auto;flex:none;background:#f1f5f9;border:none;border-radius:8px;width:30px;height:30px;
+    font-size:17px;color:var(--dim);cursor:pointer;line-height:1}
+  .mclose:hover{background:#e2e8f0}
+  .mbody{padding:6px 22px 20px;display:flex;flex-direction:column;gap:14px}
+  .mblock .lab{font-size:11px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--vio);margin-bottom:4px}
+  .t2 .mblock .lab{color:var(--tof)} .t3 .mblock .lab{color:var(--mm)}
+  .mblock .txt{font-size:14px;line-height:1.65;color:var(--text)}
+  .mblock .txt .mono{font-family:'JetBrains Mono',monospace;font-size:13px;background:#f1f5f9;padding:1px 5px;border-radius:4px}
+
+  @media print{.hint{display:none} .pstep{cursor:default} .ov{display:none!important}}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="head">
+    <div>
+      <div class="kicker">MAJUBOM · MMWAVE · POSTURE & FALL</div>
+      <h1>mmWave 자세·낙상 감지 — 선행연구는 어떻게 구현했나</h1>
+      <div class="hint">▸ 각 단계 박스를 클릭하면 그 용어가 무엇이고 어떻게 구현하는지 상세 설명이 뜹니다</div>
+    </div>
+    <div class="sub">입력 신호 → 처리 → 출력 파이프라인 요약<br>TI IWR6843AOP 적용 관점</div>
+  </div>
+
+  <div class="stack">
+
+    <!-- ① 자세 분류 -->
+    <div class="paper p1">
+      <div class="phd">
+        <span class="pnum">①</span>
+        <div class="ptitle">눕·앉·서 자세 분류
+          <span class="ven">·
+            <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11598318/">Abdullah et al., <i>Sensors</i> 2024.11</a>
+          </span>
+        </div>
+        <span class="acc">96%</span>
+      </div>
+      <div class="pipe">
+        <span class="pstep" data-k="p1-adc">Raw ADC<span class="sub">FMCW chirp</span></span>
+        <span class="arr">→</span>
+        <span class="pstep" data-k="p1-fft">Range / Doppler / Angle-FFT<span class="sub">r, θ, φ</span></span>
+        <span class="arr">→</span>
+        <span class="pstep" data-k="p1-pcd">3D 포인트클라우드<span class="sub">구면→데카르트 (x,y,z)</span></span>
+        <span class="arr">→</span>
+        <span class="pstep" data-k="p1-dbscan">DBSCAN 클러스터링<span class="sub">다인 분리</span></span>
+        <span class="arr">→</span>
+        <span class="pstep" data-k="p1-img">(x,z) 2D 이미지<span class="sub">투영</span></span>
+        <span class="arr">→</span>
+        <span class="pstep" data-k="p1-densenet">DenseNet<span class="sub">CNN 분류</span></span>
+        <span class="arr">→</span>
+        <span class="pstep out" data-k="p1-out">4자세<span class="sub">서기·의자앉기·바닥앉기·눕기</span></span>
+      </div>
+      <div class="hw">HW: <b>TI MMWCAS-RF-EVM</b> · 77GHz · <b>12TX / 16RX 캐스케이드</b> ·
+        정확도 <span class="tag">비겹침 96%</span> / 33%겹침 ~95% / 66%겹침 ~91%</div>
+    </div>
+
+    <!-- ② 앉→서 전이 -->
+    <div class="paper p2">
+      <div class="phd">
+        <span class="pnum">②</span>
+        <div class="ptitle">앉→서 전이 (Sit-to-Stand)
+          <span class="ven">·
+            <a href="https://arxiv.org/abs/2411.14656">Hu et al., <i>arXiv</i> 2024.11</a>
+          </span>
+        </div>
+        <span class="acc">비교검증</span>
+      </div>
+      <div class="pipe">
+        <span class="pstep" data-k="p2-pcd">포인트클라우드<span class="sub">60GHz 레이더</span></span>
+        <span class="arr">→</span>
+        <span class="pstep" data-k="p2-pose">딥러닝 자세추정<span class="sub">skeleton 골격</span></span>
+        <span class="arr">→</span>
+        <span class="pstep" data-k="p2-ik">역기구학 (IK)<span class="sub">관절각 계산</span></span>
+        <span class="arr">→</span>
+        <span class="pstep" data-k="p2-seg">STS 구간 분할<span class="sub">전이 구간 검출</span></span>
+        <span class="arr">→</span>
+        <span class="pstep out" data-k="p2-out">앉→서 동작<span class="sub">vs 웨어러블·Kinect 검증</span></span>
+      </div>
+      <div class="hw">HW: <b>60GHz mmWave</b> <span class="tag">← 우리 IWR6843AOP와 동일 대역</span> ·
+        큰 관절(몸통) 움직임 포착에 효과적 · 구체 정확도 수치는 비교연구 성격상 미명시</div>
+    </div>
+
+    <!-- ③ 낙상 감지 -->
+    <div class="paper p3">
+      <div class="phd">
+        <span class="pnum">③</span>
+        <div class="ptitle">다인 낙상 감지
+          <span class="ven">·
+            <a href="https://www.nature.com/articles/s41598-026-40330-y">Chen et al., <i>Sci Rep</i> 16:8859 (2026)</a>
+          </span>
+        </div>
+        <span class="acc">97.9%</span>
+      </div>
+      <div class="pipe">
+        <span class="pstep" data-k="p3-doppler">Doppler 신호<span class="sub">mmWave</span></span>
+        <span class="arr">→</span>
+        <span class="pstep" data-k="p3-pcd">인체 포인트클라우드<span class="sub">body cloud</span></span>
+        <span class="arr">→</span>
+        <span class="pstep" data-k="p3-centroid">중심점(centroid) 추적<span class="sub">center point</span></span>
+        <span class="arr">→</span>
+        <span class="pstep" data-k="p3-pos">신체 위치 추정<span class="sub">position</span></span>
+        <span class="arr">→</span>
+        <span class="pstep out" data-k="p3-out">낙상 이벤트<span class="sub">12×12m 실내 · 다인</span></span>
+      </div>
+      <div class="hw">HW: mmWave Doppler · 다인 시나리오 10종 <span class="tag">97.9%</span> ·
+        <span class="danger">인원↑ → 가림(occlusion) → 미탐(FN)↑</span></div>
+    </div>
+
+    <!-- 우리 적용 -->
+    <div class="fill">
+      <div class="ttl">⚑ 우리 IWR6843AOP 적용 — 무엇을 그대로 쓰고, 무엇을 줄이나</div>
+      <div class="filltxt">
+        공통 핵심 = <b>포인트클라우드 → 중심점·높이 추적</b>. ①③ 모두 centroid 높이가 자세·낙상의 1차 신호다.
+        우리 <b>IWR6843AOP(3TX/4RX)</b>는 포인트가 희소 → ①의 DenseNet 이미지분류·②의 skeleton+IK는 무겁다.
+        현재 <span class="mono">send_mmw.py</span>가 이미 뽑는 track <span class="mono">posZ</span>(높이)·<span class="mono">velZ</span>로
+        <b>높이-임계 자세분류(눕/앉/서) + ③식 중심점 추적</b>이 현실적 1차 접근. — 단, '이탈 사전예측' 더블체크는 <span class="danger">우리 기여(미검증 가설)</span>.
+      </div>
+    </div>
+
+  </div>
+
+  <div class="foot">
+    <span>팀 마주봄 · 2026 · mmWave 자세·낙상 선행연구 구현 방법</span>
+    <span>※ 논문 제목 클릭 시 원문으로 연결됩니다</span>
+  </div>
+
+</div>
+
+<!-- 설명 모달 -->
+<div class="ov" id="ov">
+  <div class="modal" id="modal">
+    <div class="mhd">
+      <span class="mtag" id="mtag">①</span>
+      <div class="mterm" id="mterm">—<span class="en" id="men"></span></div>
+      <button class="mclose" id="mclose">✕</button>
+    </div>
+    <div class="mbody" id="mbody"></div>
+  </div>
+</div>
+
+<script>
+// 단계별 상세 설명: tier=색상(1 자세/2 STS/3 낙상), blocks=[{lab,txt}...]
+// lab 종류: 쉽게 말하면 / 정확히 뭔가 / 쓰는 알고리즘 / 우리 시스템에선
+const D = {
+  // ── ① 자세 분류 ──────────────────────────────────────────────
+  "p1-adc":{tier:1,tag:"①",term:"Raw ADC",en:"FMCW chirp 원시 샘플",blocks:[
+    {lab:"쉽게 말하면",txt:"박쥐가 소리를 쏘고 메아리로 거리를 재듯, 레이더는 전파를 쏘고 반사를 듣는다. FMCW는 '삐~↗' 하고 음정이 점점 높아지는 전파를 쏘는 방식이다."},
+    {lab:"정확히 뭔가",txt:"<span class='mono'>chirp</span>은 시간이 갈수록 주파수가 선형으로 올라가는 신호다. 멀리 있는 물체일수록 반사가 늦게 돌아오고, 그 사이 송신 주파수는 더 올라가 있다. 그래서 송신 신호와 수신 신호의 <b>주파수 차이(beat)</b>가 곧 거리에 비례한다."},
+    {lab:"쓰는 알고리즘",txt:"<b>De-chirping(de-ramp)</b>: 수신 신호를 송신 chirp와 믹서로 곱한 뒤 저역통과 필터를 거치면 거리에 비례하는 낮은 beat 주파수만 남는다. 이걸 ADC로 디지털 샘플링한다. (먼 거리 = 높은 beat 주파수)"},
+    {lab:"우리 시스템에선",txt:"이 단계는 <b>IWR6843 칩 내부 DSP</b>가 처리한다. <span class='mono'>send_mmw.py</span>는 raw ADC를 직접 안 만지고, 칩이 다 가공해 USB로 보낸 결과(TLV)만 받는다."}]},
+  "p1-fft":{tier:1,tag:"①",term:"Range / Doppler / Angle-FFT",en:"3단 FFT → (r, θ, φ)",blocks:[
+    {lab:"쉽게 말하면",txt:"한 신호 안에 거리·속도·방향이 화음처럼 섞여 있다. FFT는 그 화음을 음표(주파수)별로 쪼개는 도구다. 축을 바꿔가며 세 번 적용해 셋을 분리한다."},
+    {lab:"정확히 뭔가",txt:"<b>FFT</b>(고속 푸리에 변환)는 시간 신호를 주파수 성분으로 분해한다. ①<b>Range-FFT</b>(한 chirp 안 샘플) → beat 주파수 → 거리. ②<b>Doppler-FFT</b>(연속 chirp 간 위상 회전) → 속도. ③<b>Angle-FFT</b>(안테나 배열 간 위상차) → 도래각(방위 θ·고도 φ)."},
+    {lab:"쓰는 알고리즘",txt:"Range·Doppler 2D-FFT로 <b>Range-Doppler Map</b>을 만든 뒤, <b>CFAR</b>(Constant False Alarm Rate)로 표적만 검출한다. CFAR = 셀 주변 잡음 레벨을 보고 문턱을 적응적으로 정하는 검출기. 각도는 안테나 배열에 FFT(또는 MUSIC) 적용."},
+    {lab:"우리 시스템에선",txt:"<span class='mono'>.cfg</span>의 <span class='mono'>dynamicRACfarCfg</span>·<span class='mono'>staticRACfarCfg</span>가 바로 이 CFAR 파라미터다. 칩이 이 단계를 수행한다."}]},
+  "p1-pcd":{tier:1,tag:"①",term:"3D 포인트클라우드",en:"구면 → 데카르트 (x,y,z)",blocks:[
+    {lab:"쉽게 말하면",txt:"검출된 반사점들을 공간에 찍은 '반짝이는 점 무더기'. 사람 한 명이 수십~수백 개 점으로 표현된다."},
+    {lab:"정확히 뭔가",txt:"각 점의 구면좌표 (거리 r, 방위 θ, 고도 φ)를 데카르트 (x, y, z)로 바꾼 것. <b>z가 높이축</b>이라 서기/눕기 같은 자세 판별의 핵심이 된다."},
+    {lab:"쓰는 알고리즘",txt:"단순 좌표 변환 — <span class='mono'>x=r·cosφ·sinθ, y=r·cosφ·cosθ, z=r·sinφ</span>. 점마다 SNR·도플러 속도가 속성으로 따라붙는다."},
+    {lab:"우리 시스템에선",txt:"우리 칩은 수신 안테나가 4개(4RX)뿐이라 점이 희소하다. 그래서 점 자체보다 칩이 묶어준 <b>track</b>을 쓴다."}]},
+  "p1-dbscan":{tier:1,tag:"①",term:"DBSCAN 클러스터링",en:"Density-Based Spatial Clustering",blocks:[
+    {lab:"쉽게 말하면",txt:"점들이 빽빽하게 모인 곳을 '저긴 한 덩어리(사람)'라고 묶고, 혼자 외따로 떨어진 점은 잡음으로 버리는 알고리즘."},
+    {lab:"정확히 뭔가",txt:"파라미터 2개 — <b>eps</b>(이웃 반경)와 <b>minPts</b>(최소 이웃 수). 한 점의 eps 반경 안에 minPts 이상이 있으면 <b>core point</b>, 서로 닿는 core들이 한 클러스터가 된다. 어디에도 안 붙으면 noise."},
+    {lab:"쓰는 알고리즘",txt:"K-means와 달리 <b>군집 개수를 미리 정할 필요가 없고</b>, 임의 모양 군집도 잡으며 노이즈에 강건하다. 두 사람이 동시에 있을 때 각자의 점 구름을 떼어내고, 군집 무게중심으로 겹침까지 판단한다."},
+    {lab:"우리 시스템에선",txt:"우리는 DBSCAN 대신 <b>칩 내장 group tracker(칼만필터 기반)</b>가 비슷한 역할을 한다 — <span class='mono'>trackingCfg</span>·<span class='mono'>gatingParam</span>·<span class='mono'>allocationParam</span>."}]},
+  "p1-img":{tier:1,tag:"①",term:"(x, z) 2D 이미지",en:"point → image projection",blocks:[
+    {lab:"쉽게 말하면",txt:"점 구름을 옆에서 본 '그림자(실루엣)'로 만드는 것. 서면 세로로 길쭉, 누우면 납작하게 퍼진 모양이 그림으로 드러난다."},
+    {lab:"정확히 뭔가",txt:"좌우(x)–높이(z) 평면에 점 개수를 세어 <b>2D 히스토그램(=흑백 이미지)</b>으로 만든다. 픽셀 밝기 = 그 칸에 떨어진 점 수."},
+    {lab:"쓰는 알고리즘",txt:"왜 굳이 이미지로? CNN은 이미지 입력에 최적화돼 있어서, 점 구름을 이미지로 바꾸면 검증된 이미지 분류망(DenseNet)을 그대로 쓸 수 있다."},
+    {lab:"우리 시스템에선",txt:"점이 희소하면 이미지가 듬성듬성해 분류가 어렵다 → 우리 4RX 환경엔 부적합한 단계다."}]},
+  "p1-densenet":{tier:1,tag:"①",term:"DenseNet",en:"Densely Connected CNN",blocks:[
+    {lab:"쉽게 말하면",txt:"층마다 '앞선 모든 층의 필기'를 다 참고하는 CNN. 정보가 끝까지 잘 전달돼 적은 데이터로도 잘 배운다."},
+    {lab:"정확히 뭔가",txt:"Dense Block 안에서 각 층이 이전 <b>모든</b> 층의 feature map을 이어붙여(concat) 입력으로 받는다. 덕분에 gradient 소실이 줄고, feature 재사용이 늘어 파라미터 효율이 높다. (ResNet의 진화형)"},
+    {lab:"쓰는 알고리즘",txt:"지도학습 이미지 분류 CNN. 라벨된 자세 이미지로 <b>cross-entropy 손실</b>을 최소화하도록 학습한다. 위치·각도가 바뀌어도 유지되게(distance/angle insensitive) 다양한 위치 데이터로 훈련했다."},
+    {lab:"우리 시스템에선",txt:"딥러닝은 무겁고 학습 데이터가 필요하다 → 우리 1차 접근은 <b>규칙기반 높이 임계</b>로 대체한다."}]},
+  "p1-out":{tier:1,tag:"①",term:"4자세 분류 결과",en:"stand / chair-sit / floor-sit / lie",blocks:[
+    {lab:"쉽게 말하면",txt:"최종 답 = 서기 · 의자앉기 · 바닥앉기 · 눕기 중 하나."},
+    {lab:"정확히 뭔가",txt:"<b>softmax</b>로 4클래스 확률을 내고 가장 높은 것을 고른다. 비겹침 시 평균 96%."},
+    {lab:"우리 시스템에선",txt:"이 '눕/앉/서' 판단이 침대 <b>이탈 전조(앉음 → 다리 내림)</b>를 잡는 더블체크 신호가 된다."}]},
+
+  // ── ② 앉→서 전이 ────────────────────────────────────────────
+  "p2-pcd":{tier:2,tag:"②",term:"포인트클라우드 (60GHz)",en:"60GHz radar point cloud",blocks:[
+    {lab:"쉽게 말하면",txt:"우리 칩과 같은 60GHz 전파로 찍은 점 구름."},
+    {lab:"정확히 뭔가",txt:"60GHz FMCW 레이더로 ①과 같은 FFT→CFAR 과정을 거쳐 얻는다. 대역폭이 넓어 거리 해상도가 좋다."},
+    {lab:"우리 시스템에선",txt:"<b>IWR6843AOP와 동일 대역</b>이라 하드웨어 관점에서 가장 참고할 만한 논문이다. 단 안테나 수 차이로 점 밀도는 다르다."}]},
+  "p2-pose":{tier:2,tag:"②",term:"딥러닝 자세추정 (skeleton)",en:"radar pose estimation",blocks:[
+    {lab:"쉽게 말하면",txt:"점 구름만 보고 사람의 '뼈대 그림(관절 위치)'을 그려내는 AI. 카메라 없이 자세를 복원한다."},
+    {lab:"정확히 뭔가",txt:"레이더 점 구름 → 관절 키포인트(예: 머리·어깨·골반·무릎 등 17개)의 3D 좌표를 출력하는 회귀(regression) 신경망."},
+    {lab:"쓰는 알고리즘",txt:"보통 <b>PointNet/PointNet++</b>(점 집합을 직접 처리하는 망) 인코더 + 좌표 회귀 헤드를 쓴다. 정답 라벨은 Kinect나 모션캡처로 만든다. 시간 정보가 필요하면 RNN/Transformer를 얹는다."},
+    {lab:"우리 시스템에선",txt:"매우 무겁고 대량의 학습 데이터가 필요 → 우리 범위 밖. 골격 대신 높이/속도로 근사한다."}]},
+  "p2-ik":{tier:2,tag:"②",term:"역기구학 (IK)",en:"Inverse Kinematics",blocks:[
+    {lab:"쉽게 말하면",txt:"손끝이 어디 있는지 알 때, 팔꿈치·어깨가 몇 도로 꺾였는지를 거꾸로 푸는 계산. 로봇팔 제어에서 온 개념이다."},
+    {lab:"정확히 뭔가",txt:"순기구학(각도→위치)의 반대. 관절 <b>좌표</b>로부터 관절 <b>각도</b>(무릎 굽힘각, 고관절각 등)를 역산한다."},
+    {lab:"쓰는 알고리즘",txt:"해석적 IK(삼각함수로 직접) 또는 <b>Jacobian 기반 반복 최적화</b>(예: damped least squares). 사람 골격은 뼈 길이 고정 + 관절 가동범위 제약을 걸고 푼다."},
+    {lab:"우리 시스템에선",txt:"관절각 임상지표가 필요할 때만 쓰는 단계 → 우리는 안 쓴다."}]},
+  "p2-seg":{tier:2,tag:"②",term:"STS 구간 분할",en:"sit-to-stand segmentation",blocks:[
+    {lab:"쉽게 말하면",txt:"긴 동작 기록에서 '앉→서' 한 번의 시작과 끝을 자동으로 오려내는 것. STS는 노인 하지 근력·균형을 보는 핵심 임상 동작이다."},
+    {lab:"정확히 뭔가",txt:"관절각/높이 시계열에서 전이 이벤트를 찾는다. 몸통이 앞으로 숙였다 펴지고, 고관절·무릎이 펴지는 패턴이 STS의 신호다."},
+    {lab:"쓰는 알고리즘",txt:"<b>임계 + 상태기계(state machine)</b>로 앉음→기립 상태 전이를 잡거나, 슬라이딩 윈도우 시계열 분류기/HMM을 쓴다. 속도 곡선의 peak·zero-crossing 검출도 흔하다."},
+    {lab:"우리 시스템에선",txt:"우리는 <span class='mono'>posZ</span> 상승 + <span class='mono'>velZ&gt;0</span> + 지속시간 조건으로 가볍게 근사할 수 있다."}]},
+  "p2-out":{tier:2,tag:"②",term:"앉→서 동작 결과",en:"validated STS metrics",blocks:[
+    {lab:"쉽게 말하면",txt:"결과 = '앉았다 일어서기' 1회와 그 품질(걸린 시간, 부드러움 등)."},
+    {lab:"정확히 뭔가",txt:"STS 전이 구간과 관절각 궤적·소요시간을 출력하고, 웨어러블 IMU·Kinect와 비교해 오차·상관으로 검증했다."},
+    {lab:"우리 시스템에선",txt:"'일어서려는 순간'을 잡는 이탈 전조 신호로 연결 — 단 골격 없이 높이/속도로 근사한다."}]},
+
+  // ── ③ 낙상 감지 ─────────────────────────────────────────────
+  "p3-doppler":{tier:3,tag:"③",term:"Doppler 신호",en:"Doppler effect",blocks:[
+    {lab:"쉽게 말하면",txt:"다가오는 사이렌은 높고, 멀어지면 낮게 들리는 그 효과. 빠른 낙상은 큰 도플러를 만들어 멈춰 있는 가구와 사람을 구분해준다."},
+    {lab:"정확히 뭔가",txt:"움직이는 물체의 반사는 주파수가 천이된다 — <span class='mono'>f_d = 2v/λ</span> (v=시선속도, λ=파장). 60GHz는 파장이 5mm로 짧아 작은 속도도 큰 도플러로 나타나 <b>아주 민감</b>하다."},
+    {lab:"쓰는 알고리즘",txt:"Doppler-FFT(slow-time)로 속도 성분을 뽑고, <b>MTI/클러터 제거</b>로 0속도 빈(정지 반사)을 버려 '움직이는 점'만 남긴다."},
+    {lab:"우리 시스템에선",txt:"우리 track의 <span class='mono'>velX/Y/Z</span>가 바로 이 도플러 기반 속도다."}]},
+  "p3-pcd":{tier:3,tag:"③",term:"인체 포인트클라우드",en:"human body cloud",blocks:[
+    {lab:"쉽게 말하면",txt:"도플러로 걸러낸 '움직이는 점'만 모은 사람 덩어리."},
+    {lab:"정확히 뭔가",txt:"이동 점들을 군집화해 사람 단위로 묶은 점 집합. 12×12m 넓은 실내에서 여러 명을 동시에 다룬다."},
+    {lab:"쓰는 알고리즘",txt:"CFAR로 표적 검출 후 클러스터링(거리 기반 그룹핑)으로 사람별로 나눈다."}]},
+  "p3-centroid":{tier:3,tag:"③",term:"중심점(centroid) 추적",en:"center point tracking",blocks:[
+    {lab:"쉽게 말하면",txt:"사람 점들의 평균인 '무게중심 한 점'을 매 순간 따라가는 것. 점 전체보다 가볍고 여러 명도 동시에 추적된다."},
+    {lab:"정확히 뭔가",txt:"centroid = 그 사람 점들의 평균 (x,y,z). 프레임마다 구한 centroid를 시간으로 이어 하나의 트랙으로 만든다."},
+    {lab:"쓰는 알고리즘",txt:"<b>칼만필터(Kalman filter)</b>로 위치·속도를 추정·예측하고, <b>데이터 연관</b>(어느 점이 어느 트랙인지: nearest-neighbor 또는 Hungarian)으로 트랙을 잇는다. 잠깐 가려져도 예측으로 트랙을 유지한다."},
+    {lab:"우리 시스템에선",txt:"<b>우리 <span class='mono'>send_mmw.py</span>가 이미 하는 일</b> — track의 <span class='mono'>posX/Y/Z</span>가 곧 이 centroid다. 칩의 group tracker가 칼만필터를 돌린다."}]},
+  "p3-pos":{tier:3,tag:"③",term:"신체 위치 추정",en:"body position estimate",blocks:[
+    {lab:"쉽게 말하면",txt:"그 한 점이 '어디에, 얼마나 높이' 있는지 읽는 것."},
+    {lab:"정확히 뭔가",txt:"중심점의 (x,y)=바닥 위 위치, z=높이. <b>z의 시간 변화</b>가 낙상 판정의 핵심이다 — 서면 높고, 주저앉거나 누우면 낮다."},
+    {lab:"우리 시스템에선",txt:"우리 track의 <span class='mono'>posZ</span>가 이 높이값이다."}]},
+  "p3-out":{tier:3,tag:"③",term:"낙상 이벤트 판정",en:"fall event",blocks:[
+    {lab:"쉽게 말하면",txt:"높이가 갑자기 뚝 떨어졌다가 바닥 근처에서 멈추면 '넘어졌다'고 판정."},
+    {lab:"정확히 뭔가",txt:"z의 급강하 속도 + 최종 낮은 높이 + 그 상태 지속을 함께 본다. 다인 10종 시나리오에서 97.9%. 사람이 많아 가려지면(occlusion) 놓치는 경우(FN)가 는다."},
+    {lab:"쓰는 알고리즘",txt:"임계 규칙(높이 강하율·최종 높이) 또는 높이·속도 feature를 분류기에 넣는 방식."},
+    {lab:"우리 시스템에선",txt:"우리 <span class='mono'>height_drop &gt; 1.2m</span> 절대임계 → 즉시 critical 규칙이 정확히 이 원리다."}]},
+};
+
+const ov=document.getElementById('ov'), modal=document.getElementById('modal'), mbody=document.getElementById('mbody');
+function open(k){
+  const d=D[k]; if(!d) return;
+  modal.className='modal'+(d.tier>1?' t'+d.tier:'');
+  document.getElementById('mtag').textContent=d.tag;
+  document.getElementById('mterm').firstChild.textContent=d.term;
+  document.getElementById('men').textContent=d.en;
+  mbody.innerHTML=d.blocks.map(b=>
+    `<div class="mblock"><div class="lab">${b.lab}</div><div class="txt">${b.txt}</div></div>`).join('');
+  modal.scrollTop=0;
+  ov.classList.add('on');
+}
+function close(){ov.classList.remove('on')}
+document.querySelectorAll('.pstep').forEach(el=>el.addEventListener('click',()=>open(el.dataset.k)));
+document.getElementById('mclose').addEventListener('click',close);
+ov.addEventListener('click',e=>{if(e.target===ov)close()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')close()});
+</script>
+</body>
+</html>
