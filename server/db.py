@@ -13,6 +13,7 @@ from datetime import datetime, timedelta, timezone
 
 DB_PATH      = os.path.join(os.path.dirname(os.path.abspath(__file__)), "majubom.db")
 BASELINE_DAYS = 30   # baseline 집계 기간 (일)
+TOF_ZONES     = 16   # ToF 4x4 존 개수 (distances_mm 를 d0..d15 컬럼으로 펼침)
 
 
 # ── 연결 ──────────────────────────────────────────────────────────────
@@ -75,6 +76,57 @@ def init_db():
                 updated_at     TEXT,
                 FOREIGN KEY (bed_id) REFERENCES beds(bed_id)
             );
+        """)
+
+        # ToF/mmWave raw 테이블 — 배열(distances/targets)은 존별 컬럼으로 펼침(JSON 미사용)
+        _d_cols = ",\n                ".join(f"d{i} INTEGER" for i in range(TOF_ZONES))
+        _t_cols = ",\n                ".join(f"t{i} INTEGER" for i in range(TOF_ZONES))
+        conn.executescript(f"""
+            CREATE TABLE IF NOT EXISTS tof_readings (
+                id          INTEGER PRIMARY KEY AUTOINCREMENT,
+                timestamp   TEXT NOT NULL,
+                sensor      TEXT NOT NULL,          -- tof1 / tof2
+                resolution  TEXT,                   -- 4x4 / 8x8
+                {_d_cols},                           -- distances_mm 존별 (mm, 실패존 -1)
+                {_t_cols},                           -- targets 존별 (0/1)
+                min_mm      INTEGER,                 -- 유효존 최솟값(요약)
+                valid_zones INTEGER,                 -- 유효존 개수(요약)
+                occupied    INTEGER,                 -- 점유 존 개수
+                in_bed      INTEGER,                 -- 침상 재실 0/1
+                created_at  TEXT DEFAULT (datetime('now'))
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_tof_sensor_ts
+                ON tof_readings(sensor, timestamp);
+
+            CREATE TABLE IF NOT EXISTS mmw_readings (
+                id                  INTEGER PRIMARY KEY AUTOINCREMENT,
+                timestamp           TEXT NOT NULL,
+                target_id           TEXT NOT NULL,
+                -- raw 보행 지표
+                speed               REAL,
+                speed_cv            REAL,
+                sway                REAL,
+                freeze_ratio        REAL,
+                height_drop         REAL,
+                stride_length       REAL,
+                stride_cv           REAL,
+                -- quality
+                reliable            INTEGER,          -- 0/1
+                samples_count       INTEGER,
+                duration_sec        REAL,
+                -- presence
+                presence_count      INTEGER,
+                presence_confidence REAL,
+                gate_active         INTEGER,          -- 0/1
+                -- 서버 계산값
+                total_abs           REAL,
+                alert_level         TEXT,
+                created_at          TEXT DEFAULT (datetime('now'))
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_mmw_target_ts
+                ON mmw_readings(target_id, timestamp);
         """)
     print(f"[DB] 초기화 완료 → {DB_PATH}")
 
@@ -261,6 +313,67 @@ def insert_csi(
             int(bool(reliable)), samples_count, duration_sec,
             presence_count, presence_confidence, int(bool(gate_active)),
             z_hr, z_resp, z_strength, total_abs, alert_level,
+        ))
+
+
+def insert_tof(sensor, timestamp, resolution, distances, targets,
+               occupied=None, in_bed=None):
+    """ToF 한 프레임 저장. distances/targets 는 존별 컬럼(d0.., t0..)으로 펼침."""
+    d = list(distances or [])
+    if len(d) > TOF_ZONES:
+        print(f"[DB] WARN tof distances {len(d)} > {TOF_ZONES}, truncated ({sensor})")
+    d = (d + [None] * TOF_ZONES)[:TOF_ZONES]
+
+    t = list(targets or [])
+    t = (t + [None] * TOF_ZONES)[:TOF_ZONES]
+
+    valid = [x for x in d if isinstance(x, (int, float)) and x and x > 0]
+    min_mm = int(min(valid)) if valid else None
+    valid_zones = len(valid)
+
+    d_cols = [f"d{i}" for i in range(TOF_ZONES)]
+    t_cols = [f"t{i}" for i in range(TOF_ZONES)]
+    cols = ["timestamp", "sensor", "resolution"] + d_cols + t_cols + \
+           ["min_mm", "valid_zones", "occupied", "in_bed"]
+    vals = [timestamp, sensor, resolution] + d + t + [
+        min_mm, valid_zones,
+        int(occupied) if occupied is not None else None,
+        int(bool(in_bed)) if in_bed is not None else None,
+    ]
+    placeholders = ",".join(["?"] * len(cols))
+    with get_conn() as conn:
+        conn.execute(
+            f"INSERT INTO tof_readings ({','.join(cols)}) VALUES ({placeholders})",
+            vals,
+        )
+
+
+def insert_mmw(target_id, timestamp, raw, quality, presence,
+               total_abs=None, alert_level=None):
+    """mmWave 한 프레임 저장 (scalar 컬럼)."""
+    raw = raw or {}
+    quality = quality or {}
+    presence = presence or {}
+    with get_conn() as conn:
+        conn.execute("""
+            INSERT INTO mmw_readings
+                (timestamp, target_id,
+                 speed, speed_cv, sway, freeze_ratio, height_drop,
+                 stride_length, stride_cv,
+                 reliable, samples_count, duration_sec,
+                 presence_count, presence_confidence, gate_active,
+                 total_abs, alert_level)
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+        """, (
+            timestamp, target_id,
+            raw.get("speed"), raw.get("speed_cv"), raw.get("sway"),
+            raw.get("freeze_ratio"), raw.get("height_drop"),
+            raw.get("stride_length"), raw.get("stride_cv"),
+            int(bool(quality.get("reliable", True))),
+            quality.get("samples_count"), quality.get("duration_sec"),
+            presence.get("count"), presence.get("confidence"),
+            int(bool(presence.get("gate_active", True))),
+            total_abs, alert_level,
         ))
 
 

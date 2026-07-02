@@ -27,6 +27,7 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 
 import mmw_logic as L
+import db
 
 PORT = 5002
 
@@ -70,6 +71,19 @@ def receive_mmw():
     mmw_log.append(result)
     if len(mmw_log) > 100:
         mmw_log.pop(0)
+
+    # raw + 계산값 SQLite 저장 (AI 학습용 원천 데이터 누적)
+    z = result.get("zscore") or {}
+    try:
+        db.insert_mmw(
+            result["target_id"],
+            result.get("received_at") or datetime.now().isoformat(),
+            raw, data.get("quality") or {}, data.get("presence") or {},
+            total_abs=z.get("total_abs"),
+            alert_level=result.get("alert_level"),
+        )
+    except Exception as e:
+        print(f"[DB] MMW insert failed: {e}")
 
     # 콘솔 로그 (ASCII만)
     lvl = result.get("alert_level") or "ignored"
@@ -305,6 +319,7 @@ def index():
 
 
 if __name__ == "__main__":
+    db.init_db()
     print(f"mmWave server start -> http://0.0.0.0:{PORT}  (POST /mmw)")
     print(f"baseline targets loaded: {list(baseline_store.keys()) or 'none'}")
     app.run(host="0.0.0.0", port=PORT, debug=True)

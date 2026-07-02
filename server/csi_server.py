@@ -25,6 +25,7 @@ from flask import Flask, request, jsonify, Response
 from flask_cors import CORS
 
 import csi_logic as L
+import db
 
 PORT = 5003
 _HERE = os.path.dirname(os.path.abspath(__file__))
@@ -64,6 +65,26 @@ def receive_csi():
     csi_log.append(result)
     if len(csi_log) > 100:
         csi_log.pop(0)
+
+    # raw + 계산값 SQLite 저장 (AI 학습용 원천 데이터 누적)
+    quality = data.get("quality") or {}
+    presence = data.get("presence") or {}
+    z = result.get("zscore") or {}
+    try:
+        db.upsert_bed(result["bed_id"])
+        db.insert_csi(
+            result["bed_id"],
+            result.get("received_at") or datetime.now().isoformat(),
+            raw.get("hr_bpm"), raw.get("resp_rpm"), raw.get("autocorr_strength"),
+            bool(quality.get("reliable", True)),
+            quality.get("samples_count"), quality.get("duration_sec"),
+            presence.get("count", 1), presence.get("confidence"),
+            bool(presence.get("gate_active", True)),
+            z.get("hr"), z.get("resp"), z.get("strength"), z.get("total_abs"),
+            result.get("alert_level"),
+        )
+    except Exception as e:
+        print(f"[DB] CSI insert 실패: {e}")
 
     # 콘솔 로그 (ASCII만)
     lvl = result.get("alert_level") or "ignored"
@@ -163,6 +184,7 @@ def index():
 
 
 if __name__ == "__main__":
+    db.init_db()
     print(f"CSI server start -> http://0.0.0.0:{PORT}  (POST /csi, GET /dashboard)")
     print(f"baseline beds loaded: {list(baseline_store.keys()) or 'none'}")
     app.run(host="0.0.0.0", port=PORT, debug=True)

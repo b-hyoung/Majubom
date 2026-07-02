@@ -1,7 +1,8 @@
 """
-서버 일괄 실행 — CSI(5003) + ToF(5001)를 한 번에 띄움
-======================================================
-각 서버(csi_server.py / tof_server.py)는 그대로 두고, 프로세스만 함께 spawn.
+서버 일괄 실행 — CSI(5003) + ToF(5001) + mmWave(5002)를 한 번에 띄움
+====================================================================
+각 서버는 자기 센서만 담당하고, raw 데이터를 SQLite(majubom.db)의
+센서별 테이블(csi_readings / tof_readings / mmw_readings)에 누적 저장.
 
 사용:
   python run_all.py            # server/ 폴더에서 실행
@@ -10,8 +11,9 @@
 필요:
   pip install -r ../requirements.txt   # flask, flask-cors
 
-대시보드: http://localhost:5003/dashboard
-※ mmWave(:5002)는 아직 미구현이라 제외.
+대시보드(같은 네트워크의 다른 PC/노트북에서도 접속 가능):
+  http://<이 PC의 IP>:5003/dashboard   예) http://192.168.1.57:5003/dashboard
+  로컬에서는 http://localhost:5003/dashboard
 """
 import os
 import sys
@@ -26,6 +28,7 @@ POSIX = os.name == "posix"
 SERVERS = [
     ("CSI", "csi_server.py", 5003),
     ("ToF", "tof_server.py", 5001),
+    ("mmWave", "mmw_server.py", 5002),
 ]
 
 
@@ -75,11 +78,11 @@ print("=" * 52)
 for name, script, port in SERVERS:
     p = spawn(script)
     procs.append((name, script, p))
-    print(f"  ▶ {name:4} → :{port}   ({script}, pid {p.pid})")
-print("  · mmWave(:5002) 미구현 → 제외")
+    print(f"  > {name:6} -> :{port}   ({script}, pid {p.pid})")
 print("=" * 52)
-print("  대시보드 : http://localhost:5003/dashboard")
-print("  종료     : Ctrl+C")
+print("  Dashboard : http://localhost:5003/dashboard")
+print("  LAN       : http://<this-PC-IP>:5003/dashboard")
+print("  Stop      : Ctrl+C")
 print("=" * 52)
 
 # 자식이 죽으면 알림 (flask 미설치 등). 모두 죽으면 런처도 종료.

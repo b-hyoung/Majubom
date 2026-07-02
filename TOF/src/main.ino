@@ -7,7 +7,7 @@
 // ─── 사용자 설정 ─────────────────────────────────────
 const char* WIFI_SSID  = "Jvision_Lab";
 const char* WIFI_PASS  = "1234567890";
-const char* SERVER_URL = "http://192.168.0.22:5001/tof";
+const char* SERVER_URL = "http://192.168.1.57:5001/tof";
 // ─────────────────────────────────────────────────────
 
 #define SDA_PIN      8
