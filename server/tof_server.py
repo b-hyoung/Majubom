@@ -10,11 +10,13 @@ POST /tof/calibrate    — 빈 침대 베이스라인 저장
 ※ CSI 는 csi_server.py(:5003) 전담 (여기서 분리).
 """
 
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 from datetime import datetime
 import os, json
 import db
+
+HERE = os.path.dirname(os.path.abspath(__file__))
 
 app = Flask(__name__)
 CORS(app)
@@ -207,6 +209,12 @@ def get_presence():
 @app.route("/tof/latest", methods=["GET"])
 def get_latest():
     return jsonify(latest)
+
+
+@app.route("/tof/3d", methods=["GET"])
+def tof_3d():
+    """ToF 자세 3D 뷰어 (같은 출처에서 /tof/latest·/tof/presence 를 읽음)."""
+    return send_from_directory(HERE, "tof_3d.html")
 
 
 @app.route("/tof/log", methods=["GET"])
