@@ -26,8 +26,11 @@ CORS(app)
 # 빈 침대 베이스라인 대비, 그보다 PRESENCE_DELTA_MM 이상 "가까운" 존 =
 # 매트리스 위에 몸/이불이 올라온 것 → 그런 존이 일정 개수 이상이면 사람 있음.
 PRESENCE_DELTA_MM  = 150    # 베이스라인보다 이만큼(mm) 가까우면 점유 존
-PRESENCE_MIN_ZONES = 4      # 점유 존이 이 개수 이상이면 그 센서는 "감지"
-CONFIRM_FRAMES     = 3      # 상태 전환에 필요한 연속 프레임 (뒤척임 오탐 방지)
+PRESENCE_MIN_ZONES = 4      # 들어올 때: 점유 존이 이 개수 이상이면 그 센서는 "감지"
+STAY_MIN_ZONES     = 1      # 이미 재실 중엔 이 개수만 넘어도 유지 (히스테리시스 하한)
+CONFIRM_ENTER      = 3      # 이탈→재실 확정에 필요한 연속 프레임 (빠르게 진입)
+CONFIRM_EXIT       = 24     # 재실→이탈 확정에 필요한 연속 프레임 (약 2.4초, 깜빡임 억제)
+CONFIRM_FRAMES     = 3      # (하위호환) 사용 안 함
 ABS_FALLBACK_MM    = 1500   # 베이스라인 없을 때: 이보다 가까운 유효 존을 점유로 간주
 ROI_MAX_MM         = 2300   # 침대 ROI: 빈 침대 기준거리가 이보다 먼 존은 벽·바닥으로 보고
                             # 감지에서 제외 (벽쪽 오탐 방지). 침대 near~far가 이 안에 들어오게 설정.
@@ -93,12 +96,19 @@ def update_presence(sensor_id, distances, now):
     detected = occ >= PRESENCE_MIN_ZONES
     presence[sensor_id] = {"occupied": occ, "detected": detected, "at": now}
 
-    # 두 센서 중 하나라도 감지하면 침상에 사람 있음
-    overall = presence["tof1"]["detected"] or presence["tof2"]["detected"]
+    t1o = presence["tof1"]["occupied"]
+    t2o = presence["tof2"]["occupied"]
+    # 히스테리시스(Schmitt): 들어올 땐 MIN_ZONES 이상, 이미 재실 중엔 STAY_MIN_ZONES만
+    # 넘어도 유지. + 이탈 확정은 CONFIRM_EXIT 프레임(약 2.4초) 지속돼야 함 → 깜빡임 제거.
+    if presence["in_bed"]:
+        overall = (t1o >= STAY_MIN_ZONES) or (t2o >= STAY_MIN_ZONES)
+    else:
+        overall = (t1o >= PRESENCE_MIN_ZONES) or (t2o >= PRESENCE_MIN_ZONES)
 
     if overall != presence["in_bed"]:
         presence["pending"] += 1
-        if presence["pending"] >= CONFIRM_FRAMES:
+        need = CONFIRM_ENTER if overall else CONFIRM_EXIT
+        if presence["pending"] >= need:
             presence["in_bed"] = overall
             presence["since"] = now
             presence["pending"] = 0
