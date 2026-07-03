@@ -174,8 +174,8 @@ const LEAVE_HOLD_MS = 2500;  // 이탈이 이 시간 이상 지속돼야 배경 
 const BG_MARGIN = 150;   // 최소 편차 임계(mm) — σ가 작아도 이만큼은 벗어나야 전경
 const BG_K = 2.5;        // 배경 σ의 배수 임계 (Wren 1997 / Stauffer-Grimson 계열)
 const BG_FRAMES = 8;     // 배경 통계에 쓸 프레임 수
-const BG_A_BG = 0.06;    // 배경 존 학습률 (빠르게 따라감)
-const BG_A_FG = 0.02;    // 전경 존 학습률 (잔상 서서히 소멸 + 튀는 존 σ 흡수). 움직이는 사람은 유지
+const BG_A_BG = 0.06;    // 배경 존 학습률 (빈 침대 드리프트 추적 + σ 성장)
+const BG_A_FG = 0.0;     // 전경(사람) 존은 배경 학습 제외(selective update) → 사람 절대 안 먹힘
 const ROI_PAD_L = 0.10;  // 길이(머리~발) 경계 여유(m) — 끝단은 약간 여유
 const ROI_PAD_W = 0.04;  // 폭(양옆) 경계 여유(m) — 침대 밖 엄격 컷
 const ROI_ZMIN = -0.15;  // 매트리스 아래로 이만큼까지 허용
@@ -273,7 +273,7 @@ function finalizeBg(frames){
     if(vals.length >= Math.max(2, frames.length*0.4)){
       const m=vals.reduce((a,b)=>a+b,0)/vals.length;
       const va=vals.reduce((a,b)=>a+(b-m)*(b-m),0)/vals.length;
-      mean[z]=m; std[z]=Math.sqrt(va);
+      mean[z]=m; std[z]=Math.max(50, Math.sqrt(va));   // σ 하한(관대) → 튀는 존 잔상 억제
     }   // 유효 프레임이 적으면 배경 무효(mean=null)
   }
   return {mean, std};
@@ -284,15 +284,9 @@ function isForeground(B, z, d){
   const thr=Math.max(BG_MARGIN, BG_K*(B.std[z]||0));
   return Math.abs(d - mu) > thr;                   // 양방향 편차
 }
-// 이탈 순간: 현재(빈 침대) 프레임을 새 배경으로 즉시 덮어씀 → 유령 즉시 제거
+// 이탈 확정 순간: 빈 침대를 여러 프레임으로 재학습(제대로 된 μ·σ) → 잔상 제거
 function resetBgNow(lr){
-  for(const sid of ['tof1','tof2']){
-    const s=lr[sid]; if(!s || !s.distances_mm) continue;
-    const dd=s.distances_mm;
-    bg[sid]={ mean: dd.map(v=>(v!=null&&v>0)?v:null),
-              std:  dd.map(v=>(v!=null&&v>0)?40:0) };
-  }
-  bgSub=true; const bs=document.getElementById('b-bgsub'); if(bs) bs.classList.add('on');
+  bgCap = { tof1:[], tof2:[], lastAt:{tof1:null,tof2:null} };  // accumulateBg가 완료 처리
 }
 // 적응형 배경 갱신 (Stauffer-Grimson running Gaussian) — 새 프레임마다 μ·σ 를 천천히 이동
 function updateBgModel(lr){
