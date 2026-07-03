@@ -14,6 +14,13 @@ FOV_DEG  = 45
 GRID     = 4
 Y_MARGIN = 0.08                      # 경계 여유(m) — 가장자리 누운 사람 보존
 
+# ── 좌우 정렬 보정 (센서가 정중앙·정면이 아닐 때) ─────────
+#  YAW_DEG: 센서 좌우 회전(도). 한쪽이 침대 밖으로 더 나가면 조정(거리 비례로 보정).
+#  Y_OFF  : 센서가 침대 중심에서 벗어난 정도(m, 좌우 평행이동).
+#  calibrate_roi.py 로 현재 프레임 보며 맞춘 뒤 이 값을 넣으면 됨.
+YAW_DEG = {"tof1": 0.0, "tof2": 0.0}
+Y_OFF   = {"tof1": 0.0, "tof2": 0.0}
+
 
 def _norm(v):
     l = math.sqrt(sum(c * c for c in v)) or 1.0
@@ -25,10 +32,14 @@ def _cross(a, b):
 def _sensor(sensor_id):
     t  = math.radians(TILT1_DEG if sensor_id == "tof1" else TILT2_DEG)
     hl = SEP / 2
+    yoff = Y_OFF[sensor_id]
     if sensor_id == "tof1":
-        pos = [-hl, 0.0, SENSOR_H1]; d = _norm([math.sin(t), 0, -math.cos(t)])
+        pos = [-hl, yoff, SENSOR_H1]; d = [math.sin(t), 0, -math.cos(t)]
     else:
-        pos = [ hl, 0.0, SENSOR_H2]; d = _norm([-math.sin(t), 0, -math.cos(t)])
+        pos = [ hl, yoff, SENSOR_H2]; d = [-math.sin(t), 0, -math.cos(t)]
+    # 좌우 회전(yaw) 보정: 월드 수직(Z)축 기준 회전
+    yw = math.radians(YAW_DEG[sensor_id]); cy, sy = math.cos(yw), math.sin(yw)
+    d  = _norm([d[0]*cy - d[1]*sy, d[0]*sy + d[1]*cy, d[2]])
     ref   = [0, 1, 0] if abs(d[2]) > 0.9 else [0, 0, 1]
     right = _norm(_cross(d, ref))
     up    = _norm(_cross(right, d))
