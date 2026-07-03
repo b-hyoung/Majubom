@@ -1,0 +1,644 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ToF 자세 3D 재구성 — Majubom</title>
+<style>
+  :root { --bg:#0a0e16; --panel:#131a29; --line:#26334c; --tx:#e8eef7; --dim:#89a0be;
+    --ok:#38d39f; --warn:#ffb454; --bad:#ff5d6c; --t1:#ff7a59; --t2:#4aa8ff; }
+  * { box-sizing:border-box; }
+  html,body { margin:0; height:100%; background:var(--bg); color:var(--tx);
+    font-family:"Malgun Gothic","맑은 고딕",system-ui,sans-serif; overflow:hidden; }
+  canvas { display:block; width:100%; height:100%; cursor:grab; }
+  canvas:active { cursor:grabbing; }
+  .hud { position:fixed; pointer-events:none; z-index:5; }
+  #top { top:12px; left:16px; }
+  #top h1 { margin:0 0 2px; font-size:16px; letter-spacing:.4px; }
+  #top .sub { font-size:11.5px; color:var(--dim); max-width:340px; line-height:1.5; }
+  #status { top:12px; right:16px; text-align:right; }
+  .pill { display:inline-block; padding:4px 12px; border-radius:999px; font-size:13px; font-weight:700;
+    background:var(--panel); border:1px solid var(--line); }
+  .pill.in { color:#08110c; background:var(--ok); border-color:var(--ok); }
+  .pill.out { color:#1a1207; background:var(--warn); border-color:var(--warn); }
+  .pill.err { color:#fff; background:var(--bad); border-color:var(--bad); }
+  #status .meta { margin-top:6px; font-size:11px; color:var(--dim); line-height:1.5; }
+  #panel { position:fixed; left:16px; bottom:14px; z-index:6; pointer-events:auto;
+    background:rgba(19,26,41,.92); border:1px solid var(--line); border-radius:12px;
+    padding:12px 14px; width:236px; backdrop-filter:blur(4px); }
+  #panel h2 { margin:0 0 8px; font-size:12px; color:var(--dim); letter-spacing:1px; font-weight:700; }
+  .ctl { margin:9px 0; }
+  .ctl label { display:flex; justify-content:space-between; font-size:11.5px; color:var(--dim); margin-bottom:3px; }
+  .ctl label b { color:var(--tx); font-weight:600; }
+  .ctl input[type=range] { width:100%; accent-color:var(--t2); }
+  .btns { display:flex; gap:8px; margin-top:10px; }
+  .btns button { flex:1; background:#1c2740; color:var(--tx); border:1px solid var(--line);
+    border-radius:8px; padding:6px 0; font-size:11.5px; cursor:pointer; }
+  .btns button:hover { background:#243254; }
+  .btns button.on { background:var(--t2); color:#04121f; border-color:var(--t2); font-weight:700; }
+  #legend { position:fixed; right:16px; bottom:14px; z-index:5; font-size:11px; color:var(--dim); text-align:right; }
+  #legend .k { display:inline-block; width:11px; height:11px; border-radius:3px; vertical-align:-1px; margin:0 3px 0 8px; }
+  #help { position:fixed; right:16px; bottom:70px; z-index:5; text-align:right; font-size:11px; color:var(--dim); line-height:1.6; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+
+<div class="hud" id="top">
+  <h1>🧍 ToF 자세 3D 재구성</h1>
+  <div class="sub">머리맡·발치의 VL53L5CX 2개가 매트리스 길이 방향으로 마주보며 각 16존을 광선으로 쏨 →
+    맞은 지점을 3D로 복원한 <b>사람 표면</b>. 슬라이더로 센서 높이·기울기를 실제와 맞추세요.</div>
+</div>
+
+<div class="hud" id="status">
+  <span id="pill" class="pill">연결 중…</span>
+  <div class="meta" id="meta"></div>
+</div>
+
+<div id="panel">
+  <h2>센서 배치 (실물과 맞추기)</h2>
+  <div class="ctl">
+    <label><span style="color:var(--t1)">머리쪽</span> 높이 <b><span id="v-h1">0.30</span> m</b></label>
+    <input id="s-h1" type="range" min="0.1" max="2.2" step="0.02" value="0.30">
+  </div>
+  <div class="ctl">
+    <label><span style="color:var(--t2)">발쪽</span> 높이 <b><span id="v-h2">0.72</span> m</b></label>
+    <input id="s-h2" type="range" min="0.1" max="2.2" step="0.02" value="0.72">
+  </div>
+  <div class="ctl">
+    <label><span style="color:var(--t1)">머리쪽</span> 기울기 <b><span id="v-t1">90</span>°</b></label>
+    <input id="s-t1" type="range" min="0" max="90" step="1" value="90">
+  </div>
+  <div class="ctl">
+    <label><span style="color:var(--t2)">발쪽</span> 기울기 <b><span id="v-t2">65</span>°</b></label>
+    <input id="s-t2" type="range" min="0" max="90" step="1" value="65">
+  </div>
+  <div class="ctl">
+    <label>센서 간 거리(머리~발) <b><span id="v-w">2.12</span> m</b></label>
+    <input id="s-w" type="range" min="1.2" max="2.4" step="0.01" value="2.12">
+  </div>
+  <div class="ctl">
+    <label title="이보다 먼 값(바닥·벽·반대편)은 버림 → 사람만 남김">최대 사거리 <b><span id="v-r">2120</span> mm</b></label>
+    <input id="s-r" type="range" min="600" max="3500" step="20" value="2120">
+  </div>
+  <div class="btns">
+    <button id="b-surf" class="on">표면</button>
+    <button id="b-ray">광선</button>
+    <button id="b-reset">시점 R</button>
+  </div>
+  <div class="btns">
+    <button id="b-bgcap" title="빈 침대 상태를 배경으로 저장">배경 저장</button>
+    <button id="b-bgsub" title="배경에서 벗어난 것(사람)만 표시">배경 빼기</button>
+    <button id="b-bgadapt" class="on" title="배경을 시간에 따라 자동 갱신(유령 제거)">자동갱신</button>
+  </div>
+  <div class="btns">
+    <button id="b-flip" title="센서 열 방향이 실제와 반대일 때">좌우 반전</button>
+    <button id="b-roi" class="on" title="길이·높이 범위 밖(벽·바닥) 히트 제거">침대 안만</button>
+  </div>
+  <div class="btns">
+    <button id="b-body" class="on" title="두 센서 융합 → 누운 몸 하나로 (Shepard IDW)">사람 형태</button>
+    <button id="b-detail" class="on" title="bicubic 업샘플 정밀 곡면 (Keys 1981)">정밀 표면</button>
+  </div>
+  <div class="ctl">
+    <label>몸 최대 높이 <b><span id="v-zc">0.60</span> m</b></label>
+    <input id="s-zc" type="range" min="0.2" max="1.2" step="0.02" value="0.60">
+  </div>
+</div>
+
+<div class="hud" id="coord" style="top:96px; right:16px; text-align:right; font-size:11px; line-height:1.55; color:var(--dim); font-family:'JetBrains Mono',monospace;"></div>
+<div class="hud" id="help">드래그 회전 · 휠 줌 · R 리셋</div>
+<div class="hud" id="legend">
+  높이(색): 매트리스<span class="k" style="background:hsl(215 80% 55%)"></span>낮음
+  <span class="k" style="background:hsl(120 70% 50%)"></span>중간
+  <span class="k" style="background:hsl(10 85% 56%)"></span>높음(몸)<br>
+  센서: <span class="k" style="background:#ff7a59"></span>tof1
+  <span class="k" style="background:#4aa8ff"></span>tof2
+</div>
+
+<script>
+// ── 설정 ──────────────────────────────────────────────
+const SERVER = "";   // 같은 출처(이 PC 중계서버)로 요청 → 크롬 사설망 차단 회피
+const POLL_MS = 100;   // 10Hz 펌웨어에 맞춰 폴링
+const GRID = 4;
+const FOV_DEG = 45;                    // 4×4 축당 시야각(대각 63° → 축 ≈45°)
+const BED_WID = 0.95;                  // 매트리스 폭(양옆 사이, Y, m)
+
+// 조절값
+let SENSOR_H1 = 0.30, SENSOR_H2 = 0.72, TILT1 = 90, TILT2 = 65, SEP = 2.12, MAX_MM = 2120;
+let showSurf = true, showRay = false;
+
+// 시점
+let yaw = -0.7, pitch = 0.62, scale = 210;
+let dragging=false, lastX=0, lastY=0;
+
+let data = { tof1:null, tof2:null }, presence=null, connected=false, dataStale=false;
+// 존별 median 필터(내장) — 프록시 없이도 스파이크 제거 (라즈베리파이 직접 서빙 대응)
+const MED_WIN = 3;
+let medBuf = { tof1:[], tof2:[] }, medAt = { tof1:null, tof2:null };
+function medianFilter(sid, arr, at){
+  if(!arr) return arr;
+  if(at !== medAt[sid]){                 // 새 프레임만 버퍼에 누적
+    medBuf[sid].push(arr.slice());
+    if(medBuf[sid].length > MED_WIN) medBuf[sid].shift();
+    medAt[sid] = at;
+  }
+  const frames=medBuf[sid], n=arr.length, out=new Array(n);
+  for(let z=0; z<n; z++){
+    const vals=[]; for(const f of frames){ const v=f[z]; if(v!=null && v>0) vals.push(v); }
+    if(vals.length){ vals.sort((a,b)=>a-b); out[z]=Math.round(vals[(vals.length-1)>>1]); }
+    else out[z]=-1;
+  }
+  return out;
+}
+let disp = { tof1:null, tof2:null };   // 화면표시용 보간(EMA) 버퍼
+const EMA_A = 0.16;                    // 보간 계수(작을수록 부드럽지만 느림)
+// 2Hz 데이터를 60fps로 부드럽게: 목표 거리로 존별 EMA 이동 (무효는 스냅)
+function easeDisp(sid){
+  const tgt=data[sid];
+  if(!tgt){ disp[sid]=null; return null; }
+  let cur=disp[sid];
+  if(!cur || cur.length!==tgt.length){ cur=tgt.slice(); disp[sid]=cur; return cur; }
+  for(let z=0;z<tgt.length;z++){
+    const t=tgt[z];
+    if(t==null || t<0){ cur[z]=t; continue; }            // 무효는 그대로
+    if(cur[z]==null || cur[z]<0){ cur[z]=t; continue; }  // 이전 무효면 즉시 스냅
+    cur[z]+=(t-cur[z])*EMA_A;                             // 유효→유효는 부드럽게
+  }
+  return cur;
+}
+let bg = { tof1:null, tof2:null }, bgSub=false, flipLR=false, roiOn=true, ROI_ZMAX=0.60, detailOn=true, bodyMode=true;
+let bgCap = null;        // 배경 수집중 버퍼 {tof1:[frame..], tof2:[..], lastAt:{}}
+let bgAdapt = true;      // 적응형 배경(자동 갱신) on/off
+let leaveT = 0;          // 이탈 시작 시각(ms) — 지속 확인용
+const LEAVE_HOLD_MS = 2500;  // 이탈이 이 시간 이상 지속돼야 배경 리셋(깜빡임 무시)
+const BG_MARGIN = 150;   // 최소 편차 임계(mm) — σ가 작아도 이만큼은 벗어나야 전경
+const BG_K = 2.5;        // 배경 σ의 배수 임계 (Wren 1997 / Stauffer-Grimson 계열)
+const BG_FRAMES = 8;     // 배경 통계에 쓸 프레임 수
+const BG_A_BG = 0.06;    // 배경 존 학습률 (빈 침대 드리프트 추적 + σ 성장)
+const BG_A_FG = 0.0;     // 전경(사람) 존은 배경 학습 제외(selective update) → 사람 절대 안 먹힘
+const ROI_PAD_L = 0.10;  // 길이(머리~발) 경계 여유(m) — 끝단은 약간 여유
+const ROI_PAD_W = 0.04;  // 폭(양옆) 경계 여유(m) — 침대 밖 엄격 컷
+const ROI_ZMIN = -0.15;  // 매트리스 아래로 이만큼까지 허용
+
+const cv = document.getElementById('c'), ctx = cv.getContext('2d');
+let W=0,H=0,DPR=1;
+function resize(){ DPR=Math.min(window.devicePixelRatio||1,2); W=cv.clientWidth;H=cv.clientHeight;
+  cv.width=W*DPR; cv.height=H*DPR; ctx.setTransform(DPR,0,0,DPR,0,0); }
+window.addEventListener('resize', resize);
+
+// ── 벡터 유틸 ─────────────────────────────────────────
+const sub=(a,b)=>[a[0]-b[0],a[1]-b[1],a[2]-b[2]];
+const add=(a,b)=>[a[0]+b[0],a[1]+b[1],a[2]+b[2]];
+const mul=(a,s)=>[a[0]*s,a[1]*s,a[2]*s];
+const cross=(a,b)=>[a[1]*b[2]-a[2]*b[1], a[2]*b[0]-a[0]*b[2], a[0]*b[1]-a[1]*b[0]];
+const len=a=>Math.hypot(a[0],a[1],a[2]);
+const norm=a=>{const l=len(a)||1; return [a[0]/l,a[1]/l,a[2]/l];};
+
+// ── 투영 (yaw/pitch 정사영) ──────────────────────────
+function project(p){
+  const cy=Math.cos(yaw), sy=Math.sin(yaw);
+  let xr = p[0]*cy - p[1]*sy;
+  let yr = p[0]*sy + p[1]*cy;
+  const cp=Math.cos(pitch), sp=Math.sin(pitch);
+  let yr2 = yr*cp - p[2]*sp;
+  let zr2 = yr*sp + p[2]*cp;
+  return { sx:W/2 + xr*scale, sy:H/2 - zr2*scale + 30, depth:yr2 };
+}
+
+// ── 센서 정의 (머리맡·발치에서 안쪽·아래로) ───────────
+function sensors(){
+  const t1 = TILT1*Math.PI/180, t2 = TILT2*Math.PI/180;
+  const hl = SEP/2;   // 센서는 각 끝(±SEP/2)에 위치
+  return [
+    { id:'tof1', key:'tof1(머리)', tint:[255,122,89],
+      pos:[-hl, 0, SENSOR_H1], dir:norm([ Math.sin(t1), 0, -Math.cos(t1)]) },
+    { id:'tof2', key:'tof2(발)', tint:[74,168,255],
+      pos:[ hl, 0, SENSOR_H2], dir:norm([-Math.sin(t2), 0, -Math.cos(t2)]) },
+  ];
+}
+// 존(row,col) 광선 방향
+function zoneDir(dir){
+  const ref = Math.abs(dir[2])>0.9 ? [0,1,0] : [0,0,1];
+  const right = norm(cross(dir, ref));
+  const up = norm(cross(right, dir));
+  const step = (FOV_DEG/GRID)*Math.PI/180;
+  const rays = [];
+  for (let r=0;r<GRID;r++) for (let c=0;c<GRID;c++){
+    const ac=(flipLR?(1.5-c):(c-1.5))*step, ar=(1.5-r)*step;
+    const d = norm(add(add(dir, mul(right, Math.tan(ac))), mul(up, Math.tan(ar))));
+    rays[r*GRID+c]=d;
+  }
+  return rays;
+}
+// 히트포인트 계산
+function hits(sensor, rawArr, posArr){
+  const rays = zoneDir(sensor.dir);
+  const B = (bgSub && bg[sensor.id]) ? bg[sensor.id] : null;
+  const out = [];
+  for (let z=0; z<GRID*GRID; z++){
+    // 멤버십(사람 여부)은 원본(median) 값으로 즉각 판정 → 떠난 존 바로 사라짐(잔상 제거)
+    const d = rawArr ? rawArr[z] : -1;
+    if (d==null || d<50 || d>MAX_MM){ out[z]=null; continue; }
+    // 배경 빼기(통계 모델): 배경에서 벗어난 존(=사람)만 남김
+    if (B && !isForeground(B, z, d)){ out[z]=null; continue; }
+    // 위치는 EMA 보간값으로 부드럽게 (없으면 원본)
+    const dp = (posArr && posArr[z] > 0) ? posArr[z] : d;
+    const p = add(sensor.pos, mul(rays[z], dp/1000));
+    // 침대 영역(bed box) 밖이면 제거 — 벽·바닥·노이즈 컷
+    if (roiOn){
+      const hlB=SEP/2;
+      // 길이(머리~발)·높이 범위만 컷 — 폭(양옆) 컷은 제거(가장자리 누운 사람 보존)
+      if (p[0] < -hlB-ROI_PAD_L || p[0] > hlB+ROI_PAD_L ||
+          p[2] < ROI_ZMIN       || p[2] > ROI_ZMAX){ out[z]=null; continue; }
+    }
+    out[z] = p;
+  }
+  return out;
+}
+// 높이 → 색 (0 매트리스=파랑 → 높음=빨강)
+function heightColor(z){
+  const t = Math.max(0, Math.min(1, z/0.45));
+  const hue = 215 - 205*t;          // 215(파)→10(빨)
+  return `hsl(${hue} 80% ${42+18*t}%)`;
+}
+
+// ── 깊이 기반 배경 모델 (Wren 1997 Pfinder / Stauffer-Grimson 1999) ──
+//  존별 배경을 평균 μ·표준편차 σ 로 모델링 → 전경(사람) = |d-μ| > max(margin, k·σ).
+//  가까워지든 멀어지든 배경에서 벗어나면 사람. 배경이 무효였던 존에 값이 생겨도 전경.
+function finalizeBg(frames){
+  const n=GRID*GRID, mean=new Array(n).fill(null), std=new Array(n).fill(0);
+  for(let z=0; z<n; z++){
+    const vals=[];
+    for(const f of frames){ const v=f[z]; if(v!=null && v>0) vals.push(v); }
+    if(vals.length >= Math.max(2, frames.length*0.4)){
+      const m=vals.reduce((a,b)=>a+b,0)/vals.length;
+      const va=vals.reduce((a,b)=>a+(b-m)*(b-m),0)/vals.length;
+      mean[z]=m; std[z]=Math.max(50, Math.sqrt(va));   // σ 하한(관대) → 튀는 존 잔상 억제
+    }   // 유효 프레임이 적으면 배경 무효(mean=null)
+  }
+  return {mean, std};
+}
+function isForeground(B, z, d){
+  const mu=B.mean[z];
+  if(mu==null) return true;                       // 배경 무효였던 곳에 값 생김 → 전경(출현)
+  const thr=Math.max(BG_MARGIN, BG_K*(B.std[z]||0));
+  return Math.abs(d - mu) > thr;                   // 양방향 편차
+}
+// 이탈 확정 순간: 빈 침대를 여러 프레임으로 재학습(제대로 된 μ·σ) → 잔상 제거
+function resetBgNow(lr){
+  bgCap = { tof1:[], tof2:[], lastAt:{tof1:null,tof2:null} };  // accumulateBg가 완료 처리
+}
+// 적응형 배경 갱신 (Stauffer-Grimson running Gaussian) — 새 프레임마다 μ·σ 를 천천히 이동
+function updateBgModel(lr){
+  for(const sid of ['tof1','tof2']){
+    const B=bg[sid], s=lr[sid];
+    if(!B || !s || !s.distances_mm) continue;
+    const dd=s.distances_mm;
+    for(let z=0; z<dd.length; z++){
+      const d=dd[z]; if(d==null || d<=0) continue;
+      const mu=B.mean[z];
+      if(mu==null){ B.mean[z]=d; B.std[z]=40; continue; }  // 무효였던 배경 채움
+      const thr=Math.max(BG_MARGIN, BG_K*(B.std[z]||0));
+      const a = (Math.abs(d-mu) > thr) ? BG_A_FG : BG_A_BG;  // 전경은 느리게, 배경은 빠르게
+      const nm = mu + a*(d-mu);
+      B.std[z] = Math.sqrt(Math.max(1, (1-a)*B.std[z]*B.std[z] + a*(d-mu)*(d-mu)));
+      B.mean[z] = nm;
+    }
+  }
+}
+
+// ── 정밀 표면 복원 (논문 기법 기반) ───────────────────────
+//  · Keys(1981) cubic convolution(=Catmull-Rom) 로 4×4 깊이맵을 연속 곡면으로 업샘플
+//  · 결측 존은 이웃 확산(diffusion) 인페인팅 후 보간
+//  · 원본 유효존 신뢰도(bilinear)로 데이터 없는 곳은 곡면 생략(허상 방지)
+//  · 시간적 median(프록시)로 이미 디노이즈된 값을 입력으로 사용
+const catmull = (p0,p1,p2,p3,t) => {
+  const t2=t*t, t3=t2*t;
+  return 0.5*((2*p1) + (-p0+p2)*t + (2*p0-5*p1+4*p2-p3)*t2 + (-p0+3*p1-3*p2+p3)*t3);
+};
+const clampIdx = i => Math.max(0, Math.min(GRID-1, i));
+function bicubicDepth(F, rr, cc){
+  const r1=Math.floor(rr), c1=Math.floor(cc), tr=rr-r1, tc=cc-c1;
+  const rowAt = (r) => {
+    const g = (c) => F[clampIdx(r)*GRID + clampIdx(c)];
+    return catmull(g(c1-1), g(c1), g(c1+1), g(c1+2), tc);
+  };
+  return catmull(rowAt(r1-1), rowAt(r1), rowAt(r1+1), rowAt(r1+2), tr);
+}
+function bilinConf(V, rr, cc){
+  const r0=Math.floor(rr), c0=Math.floor(cc), tr=rr-r0, tc=cc-c0;
+  const g=(r,c)=>V[clampIdx(r)*GRID+clampIdx(c)];
+  const a=g(r0,c0)*(1-tc)+g(r0,c0+1)*tc, b=g(r0+1,c0)*(1-tc)+g(r0+1,c0+1)*tc;
+  return a*(1-tr)+b*tr;
+}
+// 4×4 깊이 결측(-1) 인페인팅: 유효 이웃 평균으로 확산
+function inpaint(F){
+  for(let it=0; it<10; it++){
+    let changed=false;
+    for(let r=0;r<GRID;r++) for(let c=0;c<GRID;c++){
+      const i=r*GRID+c; if(!isNaN(F[i])) continue;
+      let s=0,n=0;
+      for(const [dr,dc] of [[-1,0],[1,0],[0,-1],[0,1]]){
+        const rr=r+dr, cc=c+dc;
+        if(rr<0||rr>=GRID||cc<0||cc>=GRID) continue;
+        const j=rr*GRID+cc; if(!isNaN(F[j])){ s+=F[j]; n++; }
+      }
+      if(n>0){ F[i]=s/n; changed=true; }
+    }
+    if(!changed) break;
+  }
+  const vv=F.filter(v=>!isNaN(v)); if(!vv.length) return false;
+  const gm=vv.reduce((a,b)=>a+b,0)/vv.length;
+  for(let i=0;i<F.length;i++) if(isNaN(F[i])) F[i]=gm;
+  return true;
+}
+const DENSE_N = 12;   // 4×4 → 12×12 업샘플
+// 한 센서의 정밀 곡면을 faces에 추가
+function denseSurface(sensor, dist, faces){
+  const [R,G,B]=sensor.tint;
+  const BGM = (bgSub && bg[sensor.id]) ? bg[sensor.id] : null;
+  // 1) 입력 깊이/신뢰도 그리드 (거리범위·배경빼기 게이트 적용)
+  const D=new Array(GRID*GRID), V=new Array(GRID*GRID);
+  for(let z=0; z<GRID*GRID; z++){
+    let d = dist?dist[z]:-1, ok=(d!=null && d>=50 && d<=MAX_MM);
+    if(ok && BGM){ ok = isForeground(BGM, z, d); }
+    D[z]= ok? d : NaN; V[z]= ok?1:0;
+  }
+  if(V.reduce((a,b)=>a+b,0) < 3) return;   // 유효 3존 미만이면 곡면 생략
+  if(!inpaint(D)) return;
+  // 2) 센서 좌표계
+  const dir=sensor.dir, ref=Math.abs(dir[2])>0.9?[0,1,0]:[0,0,1];
+  const right=norm(cross(dir,ref)), up=norm(cross(right,dir));
+  const step=(FOV_DEG/GRID)*Math.PI/180, hlB=SEP/2;
+  // 3) N×N 곡면 노드
+  const grid=[];
+  for(let i=0;i<DENSE_N;i++){ grid[i]=[];
+    for(let j=0;j<DENSE_N;j++){
+      const rr=i/(DENSE_N-1)*(GRID-1), cc=j/(DENSE_N-1)*(GRID-1);
+      let node=null;
+      if(bilinConf(V,rr,cc) > 0.5){
+        const depth=bicubicDepth(D,rr,cc);
+        const ac=(flipLR?((GRID-1)/2-cc):(cc-(GRID-1)/2))*step;
+        const ar=((GRID-1)/2-rr)*step;
+        const zd=norm(add(add(dir, mul(right,Math.tan(ac))), mul(up,Math.tan(ar))));
+        const p=add(sensor.pos, mul(zd, depth/1000));
+        if(!(roiOn && (p[0]<-hlB-ROI_PAD_L||p[0]>hlB+ROI_PAD_L||p[2]<ROI_ZMIN||p[2]>ROI_ZMAX)))
+          node={p, z:p[2]};
+      }
+      grid[i][j]=node;
+    }
+  }
+  // 4) 삼각형 메시
+  const tri=(a,b,c)=>{ if(!a||!b||!c) return;
+    const pts=[a.p,b.p,c.p].map(project);
+    const avgZ=(a.z+b.z+c.z)/3;
+    faces.push({pts, depth:pts.reduce((s,p)=>s+p.depth,0)/3,
+      fill:heightColor(avgZ), alpha:0.9, edge:`rgba(${R},${G},${B},.18)`});
+  };
+  for(let i=0;i<DENSE_N-1;i++) for(let j=0;j<DENSE_N-1;j++){
+    const A=grid[i][j],Bn=grid[i][j+1],Cn=grid[i+1][j+1],Dn=grid[i+1][j];
+    tri(A,Bn,Cn); tri(A,Cn,Dn);
+  }
+}
+
+// ── 사람 형태: 두 센서 점 융합 → 침대 위 높이지형 (Shepard IDW 1968) ──
+//  흩어진 전경 점들을 침대 평면 격자에 역거리가중(IDW)으로 보간해
+//  하나의 연속된 "누운 몸" 곡면으로 만든다. 점 근처만 그려 허상 방지.
+const BODY_GX = 46, BODY_GY = 20;   // 침대 격자 해상도
+const BODY_R  = 0.26;               // 이 반경 밖(점 없음)은 곡면 생략(m)
+function bodySurface(pts, faces){
+  if(pts.length < 3) return;
+  const hl=SEP/2, hw=BED_WID/2, R2=BODY_R*BODY_R;
+  const nd=[];
+  for(let i=0;i<BODY_GX;i++){ nd[i]=[];
+    const x=-hl + 2*hl*i/(BODY_GX-1);
+    for(let j=0;j<BODY_GY;j++){
+      const y=-hw + 2*hw*j/(BODY_GY-1);
+      let sw=0, swz=0, near=1e9;
+      for(const p of pts){
+        const dx=p[0]-x, dy=p[1]-y, d2=dx*dx+dy*dy;
+        if(d2<near) near=d2;
+        const w=1/(d2+2e-3);        // IDW 가중 (거리²)
+        sw+=w; swz+=w*p[2];
+      }
+      nd[i][j] = (near<=R2 && sw>0) ? {x,y,z:swz/sw} : null;
+    }
+  }
+  const tri=(a,b,c)=>{ if(!a||!b||!c) return;
+    const P=[[a.x,a.y,a.z],[b.x,b.y,b.z],[c.x,c.y,c.z]].map(project);
+    const avgZ=(a.z+b.z+c.z)/3;
+    faces.push({pts:P, depth:P.reduce((s,p)=>s+p.depth,0)/3,
+      fill:heightColor(avgZ), alpha:0.95, edge:'rgba(255,255,255,.06)'});
+  };
+  for(let i=0;i<BODY_GX-1;i++) for(let j=0;j<BODY_GY-1;j++){
+    tri(nd[i][j],nd[i][j+1],nd[i+1][j+1]);
+    tri(nd[i][j],nd[i+1][j+1],nd[i+1][j]);
+  }
+}
+
+// 검출된 전경 점들의 X/Y/Z 좌표(cm) 분류를 화면에 표시
+function updateCoordReadout(pts){
+  const el=document.getElementById('coord'); if(!el) return;
+  if(!pts.length){ el.innerHTML='<b>좌표(cm)</b>  전경 없음'; return; }
+  let cx=0,cy=0,cz=0,x0=1e9,x1=-1e9,y0=1e9,y1=-1e9,z0=1e9,z1=-1e9;
+  for(const p of pts){ const x=p[0],y=p[1],z=p[2]; cx+=x;cy+=y;cz+=z;
+    if(x<x0)x0=x; if(x>x1)x1=x; if(y<y0)y0=y; if(y>y1)y1=y; if(z<z0)z0=z; if(z>z1)z1=z; }
+  const n=pts.length, C=v=>Math.round(v*100);
+  el.innerHTML =
+    `<b>좌표 분류(cm)</b> · 점 ${n}<br>`+
+    `X 머리↔발 : <b>${C(cx/n)}</b> <span>[${C(x0)}~${C(x1)}]</span><br>`+
+    `Y 좌↔우 &nbsp;: <b>${C(cy/n)}</b> <span>[${C(y0)}~${C(y1)}]</span><br>`+
+    `Z 높이 &nbsp;&nbsp;&nbsp;: <b>${C(cz/n)}</b> <span>[${C(z0)}~${C(z1)}]</span>`;
+}
+
+// ── 그리기 ────────────────────────────────────────────
+function draw(){
+  ctx.clearRect(0,0,W,H);
+  const faces=[]; const lines=[]; const dots=[];
+  const hw=BED_WID/2, hl=SEP/2 - 0.05;   // 매트리스는 센서보다 살짝 안쪽
+
+  // 매트리스 상판
+  const bed=[[-hl,-hw,0],[hl,-hw,0],[hl,hw,0],[-hl,hw,0]].map(project);
+  faces.push({pts:bed, depth:bed.reduce((a,p)=>a+p.depth,0)/4,
+    fill:'#0e1526', stroke:'#2b3a58', bed:true});
+  // 매트리스 격자선
+  for(let i=1;i<8;i++){ const x=-hl+i*(2*hl/8);
+    lines.push({a:project([x,-hw,0.001]),b:project([x,hw,0.001]),col:'rgba(70,90,125,.28)',w:0.8}); }
+  for(let i=1;i<4;i++){ const y=-hw+i*(BED_WID/4);
+    lines.push({a:project([-hl,y,0.001]),b:project([hl,y,0.001]),col:'rgba(70,90,125,.28)',w:0.8}); }
+
+  const S=sensors();
+  const allPts=[];   // 사람 형태 모드용 융합 점
+  for (const s of S){
+    const raw = data[s.id];        // median 원본 (멤버십 판정용)
+    const pos = easeDisp(s.id);    // EMA 보간 위치
+    const hp = hits(s, raw, pos);
+    const [R,G,B]=s.tint;
+
+    // 센서 본체
+    const sp=project(s.pos);
+    dots.push({p:sp, r:7, fill:`rgb(${R},${G},${B})`, ring:'#0a0e16', z:s.pos[2], label:s.key,
+      labAt:project(add(s.pos,[0,0,0.12]))});
+
+    // 광선
+    if (showRay){
+      for(let z=0;z<hp.length;z++){ if(!hp[z])continue;
+        lines.push({a:sp, b:project(hp[z]), col:`rgba(${R},${G},${B},.20)`, w:0.7}); }
+    }
+    // 전경 점 수집 (사람형태 곡면 + 좌표 readout 공용)
+    for(let z=0;z<hp.length;z++) if(hp[z]) allPts.push(hp[z]);
+    // 표면
+    if (showSurf && bodyMode){
+      // 사람 형태 모드: 융합 곡면은 아래에서 allPts로 렌더
+    } else if (showSurf){
+      if (detailOn){
+        // 정밀 모드: bicubic 업샘플 곡면 (논문 기반 복원)
+        denseSurface(s, raw, faces);
+      } else {
+        // 기본 모드: 원본 4×4 삼각형(3존 이상 유효 시)
+        const tri=(a,b,cc)=>{
+          if(!a||!b||!cc) return;
+          const pts=[a,b,cc].map(project);
+          const avgZ=(a[2]+b[2]+cc[2])/3;
+          faces.push({pts, depth:pts.reduce((s,p)=>s+p.depth,0)/3,
+            fill:heightColor(avgZ), alpha:0.72, edge:`rgba(${R},${G},${B},.5)`});
+        };
+        for(let r=0;r<GRID-1;r++) for(let c=0;c<GRID-1;c++){
+          const A=hp[r*GRID+c], B=hp[r*GRID+c+1], D=hp[(r+1)*GRID+c+1], E=hp[(r+1)*GRID+c];
+          tri(A,B,D); tri(A,D,E);
+        }
+      }
+    }
+    // 히트포인트
+    for(let z=0;z<hp.length;z++){ if(!hp[z])continue;
+      const p=project(hp[z]);
+      dots.push({p, r:3.1, fill:heightColor(hp[z][2]), ring:`rgba(${R},${G},${B},.9)`, z:hp[z][2]});
+    }
+  }
+
+  // 사람 형태: 두 센서 융합 점으로 몸 곡면 렌더
+  if (showSurf && bodyMode) bodySurface(allPts, faces);
+
+  updateCoordReadout(allPts);   // X/Y/Z 좌표 분류 표시
+
+  // 바닥(먼 것)부터
+  faces.sort((a,b)=>b.depth-a.depth);
+  for(const f of faces){
+    ctx.globalAlpha = f.alpha!=null? f.alpha : 1;
+    ctx.beginPath(); ctx.moveTo(f.pts[0].sx,f.pts[0].sy);
+    for(let i=1;i<f.pts.length;i++) ctx.lineTo(f.pts[i].sx,f.pts[i].sy);
+    ctx.closePath();
+    ctx.fillStyle=f.fill; ctx.fill();
+    ctx.globalAlpha=1;
+    if(f.bed){ ctx.strokeStyle=f.stroke; ctx.lineWidth=1.4; ctx.stroke(); }
+    else if(f.edge){ ctx.strokeStyle=f.edge; ctx.lineWidth=0.8; ctx.stroke(); }
+  }
+  for(const ln of lines){ ctx.strokeStyle=ln.col; ctx.lineWidth=ln.w;
+    ctx.beginPath(); ctx.moveTo(ln.a.sx,ln.a.sy); ctx.lineTo(ln.b.sx,ln.b.sy); ctx.stroke(); }
+  dots.sort((a,b)=>a.p.depth-b.p.depth); // 가까운 점 위로
+  for(const d of dots.slice().sort((a,b)=>b.p.depth-a.p.depth)){
+    ctx.beginPath(); ctx.arc(d.p.sx,d.p.sy,d.r,0,7); ctx.fillStyle=d.fill; ctx.fill();
+    ctx.lineWidth=1; ctx.strokeStyle=d.ring; ctx.stroke();
+    if(d.label){ ctx.fillStyle='#c9d6ea'; ctx.font='700 12px Malgun Gothic'; ctx.textAlign='center';
+      ctx.fillText(d.label, d.labAt.sx, d.labAt.sy); }
+  }
+}
+
+// ── 데이터 ────────────────────────────────────────────
+async function poll(){
+  try{
+    const [lres,pres]=await Promise.all([
+      fetch(SERVER+'/tof/latest',{cache:'no-store'}),
+      fetch(SERVER+'/tof/presence',{cache:'no-store'}),
+    ]);
+    if(!lres.ok || !pres.ok) throw new Error('server '+lres.status+'/'+pres.status);
+    const lr=await lres.json(), pr=await pres.json();
+    if(lr.error || pr.error) throw new Error(lr.error||pr.error);
+    // 데이터가 너무 오래됐으면(마지막 수신 8초 초과) 센서 끊김으로 간주
+    const at = lr.tof1 && lr.tof1.received_at ? lr.tof1.received_at : (lr.tof2 && lr.tof2.received_at);
+    const stale = at ? (Date.now() - new Date(at).getTime() > 8000) : true;
+    data.tof1 = lr.tof1? medianFilter('tof1', lr.tof1.distances_mm, lr.tof1.received_at) : null;
+    data.tof2 = lr.tof2? medianFilter('tof2', lr.tof2.distances_mm, lr.tof2.received_at) : null;
+    presence = pr; connected=true; dataStale=stale;
+    // 이탈이 LEAVE_HOLD_MS 이상 "지속"될 때만 배경 리셋 (순간 깜빡임엔 사람 안 지움)
+    const nowIn = !!(presence && presence.in_bed);
+    if(nowIn){ leaveT=0; }
+    else {
+      if(!leaveT) leaveT=Date.now();
+      else if(Date.now()-leaveT >= LEAVE_HOLD_MS){ resetBgNow(lr); leaveT=Date.now()+3.6e6; }
+    }
+    if(bgCap) accumulateBg(lr);                         // 배경 통계 수집중이면 프레임 누적
+    else if(bgAdapt && (bg.tof1||bg.tof2)) updateBgModel(lr);  // 적응형 배경 갱신
+  }catch(e){ connected=false; data.tof1=null; data.tof2=null; presence=null; }
+  updateHUD();
+}
+// 배경 수집: 새 프레임(received_at 변경)만 모아 BG_FRAMES개 채우면 μ·σ 확정
+function accumulateBg(lr){
+  for(const sid of ['tof1','tof2']){
+    const s=lr[sid];
+    if(s && s.distances_mm && s.received_at!==bgCap.lastAt[sid]){
+      bgCap[sid].push(s.distances_mm.slice()); bgCap.lastAt[sid]=s.received_at;
+    }
+  }
+  if(bgCap.tof1.length>=BG_FRAMES && bgCap.tof2.length>=BG_FRAMES){
+    bg.tof1=finalizeBg(bgCap.tof1); bg.tof2=finalizeBg(bgCap.tof2);
+    bgCap=null; bgSub=true;
+    const bt=document.getElementById('b-bgcap');
+    if(bt){ bt.textContent='배경 저장됨'; setTimeout(()=>bt.textContent='배경 저장',1500); }
+    const bs=document.getElementById('b-bgsub'); if(bs) bs.classList.add('on');
+  }
+}
+function updateHUD(){
+  const pill=document.getElementById('pill'), meta=document.getElementById('meta');
+  if(!connected){ pill.className='pill err'; pill.textContent='⚠ 서버 연결 끊김'; meta.textContent='서버 응답 없음'; return; }
+  if(dataStale){ pill.className='pill err'; pill.textContent='⚠ 센서 신호 없음'; meta.textContent='서버는 켜짐 · ESP32 전송 끊김(8초+)'; return; }
+  if(presence){
+    if(presence.in_bed){ pill.className='pill in'; pill.textContent='🟢 재실 (IN BED)'; }
+    else { pill.className='pill out'; pill.textContent='🟡 이탈 (EMPTY)'; }
+    const o1=presence.tof1?presence.tof1.occupied:'–', o2=presence.tof2?presence.tof2.occupied:'–';
+    meta.innerHTML='점유존  tof1:'+o1+' · tof2:'+o2;
+  } else { pill.className='pill'; pill.textContent='연결됨'; meta.textContent=''; }
+}
+
+// ── 컨트롤 ────────────────────────────────────────────
+function bindRange(id, val, fmt, set){
+  const el=document.getElementById(id), out=document.getElementById(val);
+  el.addEventListener('input', ()=>{ set(parseFloat(el.value)); out.textContent=fmt(parseFloat(el.value)); });
+}
+bindRange('s-h1','v-h1', v=>v.toFixed(2), v=>SENSOR_H1=v);
+bindRange('s-h2','v-h2', v=>v.toFixed(2), v=>SENSOR_H2=v);
+bindRange('s-t1','v-t1', v=>v.toFixed(0), v=>TILT1=v);
+bindRange('s-t2','v-t2', v=>v.toFixed(0), v=>TILT2=v);
+bindRange('s-w','v-w', v=>v.toFixed(2), v=>SEP=v);
+bindRange('s-r','v-r', v=>v.toFixed(0), v=>MAX_MM=v);
+document.getElementById('b-surf').onclick=e=>{ showSurf=!showSurf; e.target.classList.toggle('on',showSurf); };
+document.getElementById('b-ray').onclick =e=>{ showRay=!showRay; e.target.classList.toggle('on',showRay); };
+document.getElementById('b-reset').onclick=()=>{ yaw=-0.7; pitch=0.62; scale=210; };
+document.getElementById('b-bgcap').onclick=e=>{
+  // 여러 프레임(BG_FRAMES)을 모아 배경 μ·σ 를 계산 (통계적 배경 모델)
+  bgCap={tof1:[],tof2:[],lastAt:{tof1:null,tof2:null}};
+  e.target.textContent='배경 수집중…';
+};
+document.getElementById('b-bgsub').onclick=e=>{ bgSub=!bgSub; e.target.classList.toggle('on',bgSub); };
+document.getElementById('b-bgadapt').onclick=e=>{ bgAdapt=!bgAdapt; e.target.classList.toggle('on',bgAdapt); };
+document.getElementById('b-flip').onclick=e=>{ flipLR=!flipLR; e.target.classList.toggle('on',flipLR); };
+document.getElementById('b-roi').onclick=e=>{ roiOn=!roiOn; e.target.classList.toggle('on',roiOn); };
+document.getElementById('b-detail').onclick=e=>{ detailOn=!detailOn; e.target.classList.toggle('on',detailOn); };
+document.getElementById('b-body').onclick=e=>{ bodyMode=!bodyMode; e.target.classList.toggle('on',bodyMode); };
+bindRange('s-zc','v-zc', v=>v.toFixed(2), v=>ROI_ZMAX=v);
+
+cv.addEventListener('mousedown',e=>{dragging=true;lastX=e.clientX;lastY=e.clientY;});
+window.addEventListener('mouseup',()=>dragging=false);
+window.addEventListener('mousemove',e=>{ if(!dragging)return;
+  yaw+=(e.clientX-lastX)*0.008; pitch+=(e.clientY-lastY)*0.006;
+  pitch=Math.max(0.05,Math.min(1.45,pitch)); lastX=e.clientX; lastY=e.clientY; });
+cv.addEventListener('wheel',e=>{ e.preventDefault(); scale*=(e.deltaY<0?1.08:0.925);
+  scale=Math.max(90,Math.min(560,scale)); },{passive:false});
+window.addEventListener('keydown',e=>{ if(e.key==='r'||e.key==='R'){yaw=-0.7;pitch=0.62;scale=210;} });
+
+resize();
+(function loop(){ draw(); requestAnimationFrame(loop); })();
+poll(); setInterval(poll, POLL_MS);
+</script>
+</body>
+</html>
