@@ -16,6 +16,7 @@
 import json, os, time, argparse, urllib.request
 import numpy as np
 import joblib
+import roi                # 침대 폭 ROI (학습과 동일하게 추론에도 적용)
 
 HERE  = os.path.dirname(os.path.abspath(__file__))
 ZONES = 16
@@ -33,12 +34,15 @@ def _pad(a):
 
 
 def frame_vec(latest):
-    """latest = {"tof1":{"distances_mm":[..]}, "tof2":{...}} → 32차원 벡터(없으면 None)."""
+    """latest = {"tof1":{"distances_mm":[..]}, "tof2":{...}} → 32차원 벡터(없으면 None).
+    학습과 동일하게 침대 밖 존은 ROI로 -1 처리."""
     t1 = (latest.get("tof1") or {}).get("distances_mm")
     t2 = (latest.get("tof2") or {}).get("distances_mm")
     if not t1 or not t2:
         return None
-    return np.array(_pad(t1) + _pad(t2)).reshape(1, -1)
+    d1 = roi.mask_offbed("tof1", _pad(t1))
+    d2 = roi.mask_offbed("tof2", _pad(t2))
+    return np.array(d1 + d2).reshape(1, -1)
 
 
 def predict(model, latest):

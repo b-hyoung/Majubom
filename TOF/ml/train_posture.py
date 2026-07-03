@@ -22,11 +22,13 @@ from datetime import datetime
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
 import joblib
+import roi                # 침대 폭 ROI (침대 밖 존 마스킹)
 
 HERE  = os.path.dirname(os.path.abspath(__file__))
 DDIR  = os.path.join(HERE, "..", "dataset")
 ZONES = 16
 EXCLUDE = {"lying"}       # 초기 캡처(라벨 모호) 제외. 포함하려면 비우면 됨.
+USE_ROI = True            # 침대 밖 존 -1 처리 (main에서 --no-roi 로 끔)
 
 
 def _ts(s):
@@ -49,6 +51,8 @@ def load_dataset(use_filtered=False):
                 continue
             d = [(-1 if (v is None or v < 0) else v) for v in o["distances_mm"]]
             d = (d + [-1] * ZONES)[:ZONES]
+            if USE_ROI:
+                d = roi.mask_offbed(o["sensor"], d)   # 침대 밖 존 → -1
             frames.setdefault(lbl, {"tof1": [], "tof2": []})
             frames[lbl][o["sensor"]].append((_ts(o["t"]), d))
 
@@ -73,7 +77,11 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--filtered", action="store_true", help="median 필터본으로 학습")
     ap.add_argument("--split", choices=["time", "random"], default="time")
+    ap.add_argument("--no-roi", action="store_true", help="침대 ROI 마스킹 끄기")
     args = ap.parse_args()
+    global USE_ROI
+    USE_ROI = not args.no_roi
+    print(f"[설정] 침대 ROI 마스킹: {'ON' if USE_ROI else 'OFF'}")
 
     Xtr, ytr, Xte, yte, per_class = load_dataset(args.filtered)
     print("클래스별 프레임(짝지은 수):", per_class)
@@ -103,7 +111,7 @@ def main():
     out = os.path.join(HERE, "posture_model.joblib")
     joblib.dump({"model": clf, "labels": labels, "zones": ZONES,
                  "features": "tof1_d0..15 + tof2_d0..15 (mm, -1=무효)",
-                 "filtered": args.filtered}, out)
+                 "filtered": args.filtered, "roi": USE_ROI}, out)
     print(f"\n모델 저장: {out}")
 
 
