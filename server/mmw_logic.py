@@ -150,10 +150,14 @@ def evaluate(payload: dict, store: dict, persist: bool = True) -> dict:
     """mmWave payload 1건을 받아 baseline 갱신 + z-score/alert 계산 후 보강 dict 반환.
 
     예외규칙(csi_logic 과 동일 사상):
-      - reliable=false        → 측정 무시 (baseline 갱신 X, 알람 X)
-      - n_targets != 1        → 0명(아무도 없음) 또는 2명 이상(보행 분리 불가) → 보류
-      - height_drop > 임계     → baseline 무관 즉시 critical (낙상 순간)
-      - age_days<14 / n<MIN   → 학습 중, z는 보여주되 정식 알람 보류
+      - reliable=false          → 측정 무시 (baseline 갱신 X, 알람 X)
+      - patient_locked=false    → 환자 특정 실패(2명+인데 소속도로 못 가림/0명) → 보류
+      - walking=false           → 환자 정지·휴식(누움 등) → gait baseline 미반영 (낙상만 감시)
+      - height_drop > 임계       → baseline 무관 즉시 critical (낙상 순간)
+      - age_days<14 / n<MIN     → 학습 중, z는 보여주되 정식 알람 보류
+
+    환자 특정은 송신부(send_mmw.select_patient)가 '침대 소속도'로 수행하고,
+    presence.patient_locked / quality.walking 로 전달한다. 서버는 그 플래그로 게이트만 건다.
     """
     target_id = payload.get("target_id", "room_01")
     raw = payload.get("raw", {}) or {}
@@ -162,6 +166,11 @@ def evaluate(payload: dict, store: dict, persist: bool = True) -> dict:
 
     reliable = bool(quality.get("reliable", True))
     n_targets = presence.get("n_targets", 1)
+    # 구 payload 호환: patient_locked 없으면 "1명이면 환자"로 간주, walking 없으면 보행으로 간주
+    patient_locked = bool(presence.get("patient_locked", n_targets == 1))
+    walking = bool(quality.get("walking", True))
+    bed_affinity = presence.get("bed_affinity")
+    bed_candidates = presence.get("bed_candidates")
     height_drop = raw.get("height_drop", 0.0)
 
     reasons: list[str] = []
@@ -180,9 +189,16 @@ def evaluate(payload: dict, store: dict, persist: bool = True) -> dict:
     # 2) 절대 임계: 높이 급강하 = 낙상 순간 (baseline 무관)
     abs_critical = isinstance(height_drop, (int, float)) and height_drop > HEIGHT_DROP_FALL
 
-    # 3) 사람이 1명이 아니면 보행 분리 불가 → 측정 보류 (baseline 갱신 안 함)
-    if n_targets != 1:
-        who = "아무도 없음" if n_targets == 0 else f"{n_targets}명 감지(보행 분리 불가)"
+    # 3) 환자 특정 실패 → 측정 보류 (누구의 보행인지 귀속 불가). 낙상 절대임계만 감시.
+    #    (0명, 또는 2명+인데 소속도로 환자를 못 가린 경우)
+    if not patient_locked:
+        if n_targets == 0:
+            who = "아무도 없음"
+        elif bed_candidates is not None and bed_candidates >= 2:
+            who = f"{n_targets}명 중 침대 소속 {bed_candidates}명 — 환자 구분 불가(애매→보류)"
+        else:
+            aff_txt = f", 소속도 {bed_affinity}" if bed_affinity is not None else ""
+            who = f"{n_targets}명 — 환자 특정 실패(침대 소속 없음{aff_txt})"
         reasons.append(f"측정 보류: {who}")
         stats = baseline_stats(store.get(target_id))
         level = "critical" if abs_critical else "normal"
@@ -193,7 +209,24 @@ def evaluate(payload: dict, store: dict, persist: bool = True) -> dict:
                        alert_level=level, alarm=alarm, alarm_urgent=alarm_urgent,
                        reasons=reasons, measuring_held=not abs_critical)
 
-    # 4) 정상 경로: baseline 갱신 후 평가
+    # 4) 환자는 특정됐으나 '보행'이 아님(정지/휴식/누움) → gait baseline 미반영. 낙상만 감시.
+    #    (보행 baseline 은 걷는 값으로만 쌓아야 오염되지 않음. 정지값을 넣으면 baseline 붕괴)
+    if not walking:
+        aff_txt = f" (소속도 {bed_affinity})" if bed_affinity is not None else ""
+        reasons.append(f"측정 보류: 환자 정지/휴식 — 보행 아님, gait baseline 미반영{aff_txt}")
+        stats = baseline_stats(store.get(target_id))
+        level = "normal"
+        if abs_critical:
+            level = "critical"
+            alarm, alarm_urgent = True, True
+            reasons.append(f"높이 급강하(drop={height_drop}m) → 즉시 위험")
+        return _result(payload, raw, quality, presence, stats, None,
+                       alert_level=level, alarm=alarm, alarm_urgent=alarm_urgent,
+                       reasons=reasons, measuring_held=not abs_critical)
+
+    # 5) 정상 경로: 환자 특정 + 보행 → baseline 갱신 후 평가
+    if n_targets >= 2:
+        reasons.append(f"환자 특정: {n_targets}명 중 소속도 {bed_affinity} track 채택")
     update_baseline(store, target_id, raw)
     update_done = True
     stats = baseline_stats(store.get(target_id))

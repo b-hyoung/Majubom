@@ -60,6 +60,20 @@ SERVER_URL = "http://127.0.0.1:5002/mmw"   # 같은 Pi 안의 mmw_server
 LIVE_URL = "http://127.0.0.1:5002/mmw/live" # 실시간 포인트 클라우드
 LIVE_INTERVAL = 0.3      # snapshot POST 주기 (초)
 
+# ── 침대존 & 환자 소속도(bed affinity) ─────────────────────────────────
+# 여러 사람이 있을 때 "환자(메인 타겟)"를 순간위치가 아니라 track 이력으로 특정한다.
+# 환자 = 최근 이력이 침대 footprint 안에 많이 머문 track(= 침대에서 일어나 걷는 사람).
+# 방문자 = 문에서 들어와 침대에 안 머무는 track(소속도 ~0).
+# BED_X/BED_Y 는 'bed' 캡처 실측(고스트 X≈-2.25 꼬리 제거)에서 도출. (X=좌우, Y=거리, m)
+BED_X = (-0.9, 0.4)          # 침대 footprint 좌우 (매트리스 코어로 축소 — 옆 의자/고스트 배제, 실측 튜닝 2026-07-03)
+BED_Y = (1.0, 3.6)           # 침대 footprint 거리(머리~발치)
+AFFINITY_HORIZON = 60.0      # 소속도 산정에 쓰는 이력 길이 (초)
+ALIVE_SEC = 2.0              # 최근 이 시간 내 샘플이 있으면 track '생존'으로 간주
+AFFINITY_MIN = 0.25          # 2명 이상일 때 환자로 특정할 최소 소속도
+WALK_SPEED_MIN = 0.20        # 이 속도(m/s) 이상이어야 '보행'으로 baseline 반영
+WALK_DISP_MIN = 0.30         # 윈도우 내 순이동(m) 최소 — 제자리 미동/누움 배제
+MERGE_DIST = 0.7             # 침대 후보끼리 이 거리(m) 이내면 같은 사람(track 분리)로 병합
+
 
 # ── TLV 파싱 ───────────────────────────────────────────────────────────
 def find_magic(buf):
@@ -242,21 +256,39 @@ def _estimate_stride(speed, t, speed_mean):
 
 
 # ── 보행 지표 계산 (features.py 로직 통합) ─────────────────────────────
-def compute_gait_features(track_history):
-    """
-    track_history: dict[tid] -> deque of (t, x, y, z, vx, vy)
-    가장 오래 추적된 track 을 주 보행자로 보고 지표 계산.
-    반환: (raw dict, quality dict, presence dict)  또는 (None, ..., ..) 데이터 부족 시.
-    """
-    n_targets = len(track_history)
-    if n_targets == 0:
-        return None, {"reliable": False}, {"n_targets": 0}
+def _in_bed(x, y):
+    """(x, y) 가 침대 footprint 안이면 True."""
+    return BED_X[0] <= x <= BED_X[1] and BED_Y[0] <= y <= BED_Y[1]
 
-    # 주 보행자 = 샘플이 가장 많은 track
-    main_tid = max(track_history, key=lambda k: len(track_history[k]))
-    samples = list(track_history[main_tid])
+
+def _cluster_candidates(tids, alive, dist):
+    """침대 후보 track들을 최신 위치 기준 근접(dist 이내) 연결성분으로 묶는다.
+    한 사람이 여러 track으로 쪼개지는(split ghost) 경우를 한 덩어리로 카운트하기 위함.
+    반환: 클러스터(각각 tid 리스트) 리스트."""
+    pos = {t: (alive[t][-1][1], alive[t][-1][2]) for t in tids}  # 최신 (x, y)
+    d2 = dist * dist
+    unvisited = set(tids)
+    clusters = []
+    for t in tids:
+        if t not in unvisited:
+            continue
+        unvisited.discard(t)
+        stack, comp = [t], []
+        while stack:
+            u = stack.pop()
+            comp.append(u)
+            for v in list(unvisited):
+                if (pos[u][0] - pos[v][0]) ** 2 + (pos[u][1] - pos[v][1]) ** 2 <= d2:
+                    unvisited.discard(v)
+                    stack.append(v)
+        clusters.append(comp)
+    return clusters
+
+
+def _gait_from_samples(samples):
+    """샘플 리스트 [(t,x,y,z,vx,vy), ...] → gait raw dict. 10건 미만이면 None."""
     if len(samples) < 10:
-        return None, {"reliable": False}, {"n_targets": n_targets}
+        return None
 
     arr = np.array(samples)  # columns: t,x,y,z,vx,vy
     t, x, y, z, vx, vy = (arr[:, i] for i in range(6))
@@ -288,7 +320,7 @@ def compute_gait_features(track_history):
     # stride_length / stride_cv: 속도 FFT → cadence → 보폭 추정
     stride_length, stride_cv = _estimate_stride(speed, t, speed_mean)
 
-    raw = {
+    return {
         "speed": round(speed_mean, 3),
         "speed_cv": round(speed_cv, 3),
         "sway": round(sway, 3),
@@ -297,26 +329,110 @@ def compute_gait_features(track_history):
         "stride_length": round(stride_length, 3),
         "stride_cv": round(stride_cv, 3),
     }
-    quality = {"reliable": True, "n_samples": len(samples)}
-    presence = {"n_targets": n_targets, "main_tid": int(main_tid)}
+
+
+def select_patient(track_history, now):
+    """롤링 track 이력에서 환자(메인 타겟)를 '침대 소속도'로 특정하고 gait 계산.
+
+    track_history: dict[tid] -> deque of (t, x, y, z, vx, vy)  (이미 시간 프루닝됨)
+    반환: (raw|None, quality, presence)
+
+    선택 규칙:
+      - 생존 track = 최근 ALIVE_SEC 내 샘플이 있는 track
+      - n_targets == 1 : 그 track 을 환자로 (평소엔 환자 혼자) → locked
+      - n_targets >= 2 : 침대 소속(aff>=AFFINITY_MIN) track이 '정확히 1명'일 때만 그 track을 locked.
+                         0명(침대 소속 없음) 또는 2명+(침대 위 복수 → 환자 구분 불가)면 보류(locked=False).
+                         → 애매할 땐 추측하지 않고 보류(의료: 틀린 데이터 > 데이터 없음).
+      - locked 여부와 무관하게 best track 의 raw(=height_drop 포함)는 계산 → 서버가 낙상 감시 가능
+      - walking : 실제 보행(속도·순이동)일 때만 True → 서버가 gait baseline 에 반영
+    """
+    alive = {tid: dq for tid, dq in track_history.items()
+             if dq and (now - dq[-1][0]) <= ALIVE_SEC}
+    n_targets = len(alive)
+    if n_targets == 0:
+        return None, {"reliable": False}, {
+            "n_targets": 0, "main_tid": None, "bed_affinity": None,
+            "patient_locked": False}
+
+    # 각 track 소속도 = 이력 내 (x,y)가 침대 footprint 안이던 비율
+    aff = {}
+    for tid, dq in alive.items():
+        pts = [(s[1], s[2]) for s in dq]
+        aff[tid] = sum(_in_bed(px, py) for px, py in pts) / len(pts) if pts else 0.0
+
+    # 침대 소속 후보 = 소속도 AFFINITY_MIN 이상인 track
+    candidates = [tid for tid in alive if aff[tid] >= AFFINITY_MIN]
+    # 근접 병합: 한 사람이 track 여러 개로 쪼개진(split ghost) 경우 → 같은 사람으로 묶음
+    clusters = _cluster_candidates(candidates, alive, MERGE_DIST)
+    n_bed = len(clusters)   # 침대 위 '사람 수'(병합 후)
+
+    if n_targets == 1:
+        main_tid = next(iter(alive))
+        locked = True
+    elif n_bed == 1:
+        # 침대에 사람 1명(분리 track 포함) → 그 클러스터의 소속도 최고 track을 환자로
+        main_tid = max(clusters[0], key=lambda t: aff[t])
+        locked = True
+    else:
+        # 침대 사람 0명(소속 없음) 또는 2명+(구분 불가) → 보류
+        main_tid = max(aff, key=aff.get)   # 낙상 raw 용 best-guess (반영은 안 함)
+        locked = False
+
+    presence = {"n_targets": n_targets, "main_tid": int(main_tid),
+                "bed_affinity": round(aff[main_tid], 2),
+                "bed_candidates": n_bed, "patient_locked": locked}
+
+    # 낙상 안전을 위해 locked 여부와 무관하게 best track raw 는 계산
+    recent = [s for s in alive[main_tid] if now - s[0] <= WINDOW_SEC]
+    raw = _gait_from_samples(recent)
+    if raw is None:
+        return None, {"reliable": False, "n_samples": len(recent)}, presence
+
+    # 보행 판정: 평균속도 + 윈도우 내 순이동 (제자리 미동/누움을 baseline 에서 배제)
+    arr = np.array(recent)
+    disp = float(np.hypot(arr[-1, 1] - arr[0, 1], arr[-1, 2] - arr[0, 2]))
+    walking = (raw["speed"] >= WALK_SPEED_MIN) and (disp >= WALK_DISP_MIN)
+    quality = {"reliable": True, "walking": walking, "n_samples": len(recent)}
     return raw, quality, presence
 
 
 # ── 메인 루프 ──────────────────────────────────────────────────────────
 def send_config(cli_port, cfg_path, baud=115200):
-    """CLI 포트로 .cfg 한 줄씩 전송."""
+    """CLI 포트로 .cfg 한 줄씩 전송하고, 각 줄에 대한 센서 응답을 확인한다.
+
+    IWR6843 CLI 는 명령 처리 후 'Done'(성공) 또는 'Error'(실패) 를 회신한다.
+    응답을 버리지 않고 파싱해, 거부된 줄(예: 소수점 sensorPosition 미지원)을
+    바로 눈으로 확인할 수 있게 한다.
+    """
     if serial is None:
         raise RuntimeError("pyserial 미설치: pip install pyserial")
+    errors = []  # (line, response) 거부된 명령들
     with serial.Serial(cli_port, baud, timeout=1) as cli:
-        with open(cfg_path, "r") as f:
+        with open(cfg_path, "r", encoding="utf-8") as f:
             for line in f:
                 line = line.strip()
                 if not line or line.startswith("%"):
                     continue
                 cli.write((line + "\n").encode())
                 time.sleep(0.03)
-                cli.readall()  # echo 비우기
-    print(f"[cfg] sent: {cfg_path}")
+                resp = cli.readall().decode(errors="ignore")
+                low = resp.lower()
+                if "error" in low or "not recognized" in low:
+                    errors.append((line, resp.strip()))
+                    print(f"[cfg]  REJECTED: {line}")
+                    # 센서가 회신한 원문(들여쓰기해서)도 같이 보여줌
+                    for r in resp.splitlines():
+                        r = r.strip()
+                        if r and r not in ("mmwDemo:/>",):
+                            print(f"           | {r}")
+                else:
+                    print(f"[cfg]  ok: {line}")
+    if errors:
+        print(f"[cfg] sent: {cfg_path}  —  ⚠ {len(errors)}줄 거부됨 (위 REJECTED 확인)")
+        for line, _ in errors:
+            print(f"        거부: {line}")
+    else:
+        print(f"[cfg] sent: {cfg_path}  —  모든 줄 적용 OK")
 
 
 def run(cli_port, data_port, cfg_path, do_send=True, target_id="room_01"):
@@ -370,7 +486,17 @@ def run(cli_port, data_port, cfg_path, do_send=True, target_id="room_01"):
 
             # 윈도우 경과 → 지표 계산 + 전송
             if time.time() - window_start >= WINDOW_SEC:
-                raw, quality, presence = compute_gait_features(history)
+                now = time.time()
+                # 소속도 이력 유지: 오래된 샘플(> AFFINITY_HORIZON)·죽은 track 정리.
+                # (윈도우마다 clear 하지 않는다 — 이력이 있어야 환자 소속도를 판정)
+                for tid in list(history.keys()):
+                    dq = history[tid]
+                    while dq and now - dq[0][0] > AFFINITY_HORIZON:
+                        dq.popleft()
+                    if not dq:
+                        del history[tid]
+
+                raw, quality, presence = select_patient(history, now)
                 payload = {
                     "target_id": target_id,
                     "timestamp": int(time.time() * 1000),
@@ -380,7 +506,11 @@ def run(cli_port, data_port, cfg_path, do_send=True, target_id="room_01"):
                     "presence": presence,
                 }
                 if raw:
-                    print(f"[{time.strftime('%H:%M:%S')}] raw={raw} presence={presence}")
+                    print(f"[{time.strftime('%H:%M:%S')}] raw={raw} | "
+                          f"tid={presence['main_tid']} aff={presence['bed_affinity']} "
+                          f"cand={presence.get('bed_candidates')} "
+                          f"lock={presence['patient_locked']} walk={quality.get('walking')} "
+                          f"n={presence['n_targets']}")
                 else:
                     print(f"[{time.strftime('%H:%M:%S')}] 데이터 부족/보류 presence={presence}")
 
@@ -391,12 +521,64 @@ def run(cli_port, data_port, cfg_path, do_send=True, target_id="room_01"):
                     except Exception as e:
                         print(f"   -> POST 실패: {e}")
 
-                history.clear()
                 window_start = time.time()
     except KeyboardInterrupt:
         print("\n[run] 종료")
     finally:
         data.close()
+
+
+# ── 존 캡처 (측정 도구) ────────────────────────────────────────────────
+def capture_zone(data_port, seconds, label="zone", margin=0.2):
+    """SECONDS 초 동안 프레임을 읽어 감지된 target들의 (x,y,z)를 모아
+    존(zone) 사각형을 추정해 출력한다. baseline/서버와 무관한 순수 측정 도구.
+
+    사용 예:
+      침대에 누운 채로:  python3 send_mmw.py --cli COM4 --data COM3 \
+                          --cfg AOP_bed_2m7_d15.cfg --capture-zone 30 --capture-label bed
+    로버스트하게 p5~p95 범위(+여유 margin m)를 '권장 존'으로 제시한다.
+    """
+    if serial is None:
+        raise RuntimeError("pyserial 미설치: pip install pyserial")
+    data = serial.Serial(data_port, 921600, timeout=0.1)
+    buf = b""
+    xs, ys, zs = [], [], []
+    frames_seen = 0
+    t0 = time.time()
+    print(f"[capture] '{label}' {seconds:.0f}초 측정 시작 — 지금 해당 위치에서 움직이세요...")
+    try:
+        while time.time() - t0 < seconds:
+            chunk = data.read(4096)
+            if not chunk:
+                continue
+            buf += chunk
+            frames, buf = iter_frames(buf)
+            for hdr, fb in frames:
+                frames_seen += 1
+                for t in extract_targets(hdr, fb):
+                    xs.append(t["posX"])
+                    ys.append(t["posY"])
+                    zs.append(t["posZ"])
+    except KeyboardInterrupt:
+        print("\n[capture] 중단")
+    finally:
+        data.close()
+
+    n = len(xs)
+    print(f"[capture] '{label}' 완료 — 프레임 {frames_seen}, target 포인트 {n}")
+    if n == 0:
+        print("[capture] target 0 — 해당 위치에서 움직였는지 / 존 밖은 아닌지 확인 후 재시도")
+        return
+
+    ax, ay, az = np.array(xs), np.array(ys), np.array(zs)
+    for name, a in (("X(좌우)", ax), ("Y(거리)", ay), ("Z(높이)", az)):
+        print(f"  {name}: min={np.min(a):.2f} p5={np.percentile(a,5):.2f} "
+              f"mean={np.mean(a):.2f} p95={np.percentile(a,95):.2f} max={np.max(a):.2f}")
+    x0, x1 = np.percentile(ax, 5) - margin, np.percentile(ax, 95) + margin
+    y0, y1 = np.percentile(ay, 5) - margin, np.percentile(ay, 95) + margin
+    z0, z1 = np.percentile(az, 5) - margin, np.percentile(az, 95) + margin
+    print(f"[capture] '{label}' 권장 존(p5~p95, 여유 {margin}m): "
+          f"X[{x0:.1f} ~ {x1:.1f}]  Y[{y0:.1f} ~ {y1:.1f}]  Z[{z0:.1f} ~ {z1:.1f}]")
 
 
 if __name__ == "__main__":
@@ -406,5 +588,14 @@ if __name__ == "__main__":
     ap.add_argument("--cfg", default=None, help="전송할 .cfg 경로 (생략 시 cfg 전송 안 함)")
     ap.add_argument("--target", default="room_01", help="target_id")
     ap.add_argument("--no-send", action="store_true", help="POST 없이 콘솔 출력만")
+    ap.add_argument("--capture-zone", type=float, default=0.0, metavar="SEC",
+                    help="측정 모드: SEC초 동안 target x,y,z를 모아 존 사각형 추정 후 종료")
+    ap.add_argument("--capture-label", default="zone", help="캡처 라벨 (bed/door/walk 등)")
     args = ap.parse_args()
-    run(args.cli, args.data, args.cfg, do_send=not args.no_send, target_id=args.target)
+    if args.capture_zone > 0:
+        # 측정 모드: (cfg 있으면 먼저 적용 후) 존만 캡처하고 종료 — 서버 불필요
+        if args.cfg:
+            send_config(args.cli, args.cfg)
+        capture_zone(args.data, args.capture_zone, args.capture_label)
+    else:
+        run(args.cli, args.data, args.cfg, do_send=not args.no_send, target_id=args.target)

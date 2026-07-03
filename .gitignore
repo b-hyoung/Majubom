@@ -50,3 +50,5 @@ server/tof_baseline.json
 server/mmw_baseline.json
 # 서버 런타임 DB — 실행 중 갱신, 배포 환경마다 다름(커밋 X)
 server/majubom.db
+# mmWave 실측 테스트 로그 (실행마다 재생성)
+mmWave/test_*.log
