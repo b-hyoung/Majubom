@@ -27,6 +27,8 @@ PRESENCE_DELTA_MM  = 150    # 베이스라인보다 이만큼(mm) 가까우면 �
 PRESENCE_MIN_ZONES = 4      # 점유 존이 이 개수 이상이면 그 센서는 "감지"
 CONFIRM_FRAMES     = 3      # 상태 전환에 필요한 연속 프레임 (뒤척임 오탐 방지)
 ABS_FALLBACK_MM    = 1500   # 베이스라인 없을 때: 이보다 가까운 유효 존을 점유로 간주
+ROI_MAX_MM         = 2300   # 침대 ROI: 빈 침대 기준거리가 이보다 먼 존은 벽·바닥으로 보고
+                            # 감지에서 제외 (벽쪽 오탐 방지). 침대 near~far가 이 안에 들어오게 설정.
 
 BASELINE_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "tof_baseline.json")
 
@@ -66,16 +68,20 @@ def save_baseline():
 
 
 def occupied_zones(sensor_id, distances):
-    """매트리스 위에 물체가 올라온 존 개수."""
+    """매트리스 위에 물체가 올라온 존 개수 (침대 ROI 밖 존은 제외)."""
     base = baseline.get(sensor_id)
     cnt = 0
     for i, d in enumerate(distances):
         if d is None or d <= 0:
             continue
-        if base and i < len(base) and base[i] and base[i] > 0:
-            if d < base[i] - PRESENCE_DELTA_MM:
+        if base:   # 이 센서는 보정됨 → 침대 ROI 안의 존만 사용
+            b = base[i] if i < len(base) else None
+            # 기준거리가 없거나(무효) 침대 ROI보다 먼 존(=벽·바닥)은 감지에서 제외
+            if not b or b <= 0 or b > ROI_MAX_MM:
+                continue
+            if d < b - PRESENCE_DELTA_MM:
                 cnt += 1
-        elif d < ABS_FALLBACK_MM:   # 베이스라인 미설정 시 절대거리 기준
+        elif d < ABS_FALLBACK_MM:   # 미보정 시: 절대거리 기준 (ROI도 이 안)
             cnt += 1
     return cnt
 
