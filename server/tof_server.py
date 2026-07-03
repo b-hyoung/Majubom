@@ -13,10 +13,21 @@ POST /tof/calibrate    — 빈 침대 베이스라인 저장
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 from datetime import datetime
-import os, json
+import os, json, sys
 import db
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+
+# ── 자세 분류 모델 (옵션) ──────────────────────────────────────────────
+# sklearn/joblib/모델이 없으면 조용히 비활성(posture=None). 서버는 정상 동작.
+_POSTURE = None
+try:
+    sys.path.insert(0, os.path.join(HERE, "..", "TOF", "ml"))
+    from predict_posture import load_model as _load_posture, predict as _predict_posture
+    _POSTURE = _load_posture()
+    print("[posture] 자세 분류 모델 로드됨")
+except Exception as e:
+    print(f"[posture] 모델 미로드({e}) — 자세 표시 비활성")
 
 app = Flask(__name__)
 CORS(app)
@@ -218,7 +229,15 @@ def get_presence():
 
 @app.route("/tof/latest", methods=["GET"])
 def get_latest():
-    return jsonify(latest)
+    resp = dict(latest)                      # 원본 latest 훼손 방지
+    if _POSTURE is not None:
+        try:
+            label, conf = _predict_posture(_POSTURE, latest)
+            resp["posture"] = label
+            resp["posture_conf"] = round(conf, 3) if conf is not None else None
+        except Exception:
+            resp["posture"] = None
+    return jsonify(resp)
 
 
 @app.route("/tof/3d", methods=["GET"])

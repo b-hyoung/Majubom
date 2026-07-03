@@ -284,9 +284,10 @@
       <div class="wait">ESP32 ToF → tof_server(:5001) 수신 시<br>거리/존 표출</div>
     </div>
     <div id="tof-live" style="display:none">
-      <div class="vbig num" id="tof-min" style="font-size:34px;color:var(--tof)">--<small> mm</small></div>
-      <div class="vsub">최근접 거리</div>
-      <div class="chips">
+      <div class="vbig num" id="tof-posture" style="font-size:30px;color:var(--tof)">--</div>
+      <div class="vsub">추정 자세 <span id="tof-posture-conf" style="color:var(--dim)"></span></div>
+      <div class="chips" style="margin-top:8px">
+        <span class="vchip">최근접 <b id="tof-min">--</b></span>
         <span class="vchip">tof1 <b id="tof1-min">--</b></span>
         <span class="vchip">tof2 <b id="tof2-min">--</b></span>
         <span class="vchip">감지존 <b id="tof-zones">--</b></span>
@@ -388,7 +389,7 @@ async function pollTof(){
     const res=await fetch(url('tof','/tof/latest'),{cache:'no-store'});
     const data=await res.json(); topDot('dot-tof-top',true);
     const t1=data.tof1||{}, t2=data.tof2||{};
-    if(t1.distances_mm||t2.distances_mm){lastTof=Date.now();renderTof(t1,t2);}
+    if(t1.distances_mm||t2.distances_mm){lastTof=Date.now();renderTof(t1,t2,data.posture,data.posture_conf);}
     else{tofWaiting();}
   }catch(e){ topDot('dot-tof-top',false); tofWaiting(); }
 }
@@ -462,18 +463,24 @@ function tofWaiting(){
   document.getElementById('tof-wait').style.display='';
   document.getElementById('dot-tof').className='sdot';
 }
-function renderTof(t1,t2){
+function renderTof(t1,t2,posture,conf){
   document.getElementById('tof-wait').style.display='none';
   document.getElementById('tof-live').style.display='';
   document.getElementById('dot-tof').className='sdot on';
   const m1=minValid(t1.distances_mm), m2=minValid(t2.distances_mm);
   const mins=[m1,m2].filter(x=>x!=null);
   const overall=mins.length?Math.min(...mins):null;
-  document.getElementById('tof-min').childNodes[0].nodeValue=(overall!=null?overall:'--');
+  document.getElementById('tof-min').textContent=(overall!=null?overall+'mm':'--');
   document.getElementById('tof1-min').textContent=(m1!=null?m1+'mm':'—');
   document.getElementById('tof2-min').textContent=(m2!=null?m2+'mm':'—');
   const zones=[...(t1.distances_mm||[]),...(t2.distances_mm||[])].filter(d=>typeof d==='number'&&d>0).length;
   document.getElementById('tof-zones').textContent=zones;
+  // 자세 분류(서버 모델) 표시
+  const POSE={empty:'빈 침대(이탈)',supine:'정자세',side_left:'왼쪽으로 누움',
+              side_right:'오른쪽으로 누움',sitting:'앉음/상체세움'};
+  const pe=document.getElementById('tof-posture'), ce=document.getElementById('tof-posture-conf');
+  if(pe) pe.textContent = posture ? (POSE[posture]||posture) : '--';
+  if(ce) ce.textContent = (posture&&conf!=null) ? '· 확신 '+Math.round(conf*100)+'%' : '';
 }
 
 /* ---------- 공통 그리기 ---------- */
