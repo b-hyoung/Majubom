@@ -175,7 +175,7 @@ const BG_MARGIN = 150;   // 최소 편차 임계(mm) — σ가 작아도 이만�
 const BG_K = 2.5;        // 배경 σ의 배수 임계 (Wren 1997 / Stauffer-Grimson 계열)
 const BG_FRAMES = 8;     // 배경 통계에 쓸 프레임 수
 const BG_A_BG = 0.06;    // 배경 존 학습률 (빠르게 따라감)
-const BG_A_FG = 0.003;   // 전경 존 학습률 (아주 느림 → 있는 사람이 배경에 안 먹힘)
+const BG_A_FG = 0.0;     // 전경 존 학습률 0 → 배경 오염 방지(잔상 원인 제거)
 const ROI_PAD_L = 0.10;  // 길이(머리~발) 경계 여유(m) — 끝단은 약간 여유
 const ROI_PAD_W = 0.04;  // 폭(양옆) 경계 여유(m) — 침대 밖 엄격 컷
 const ROI_ZMIN = -0.15;  // 매트리스 아래로 이만큼까지 허용
@@ -231,16 +231,19 @@ function zoneDir(dir){
   return rays;
 }
 // 히트포인트 계산
-function hits(sensor, dist){
+function hits(sensor, rawArr, posArr){
   const rays = zoneDir(sensor.dir);
   const B = (bgSub && bg[sensor.id]) ? bg[sensor.id] : null;
   const out = [];
   for (let z=0; z<GRID*GRID; z++){
-    const d = dist ? dist[z] : -1;
+    // 멤버십(사람 여부)은 원본(median) 값으로 즉각 판정 → 떠난 존 바로 사라짐(잔상 제거)
+    const d = rawArr ? rawArr[z] : -1;
     if (d==null || d<50 || d>MAX_MM){ out[z]=null; continue; }
     // 배경 빼기(통계 모델): 배경에서 벗어난 존(=사람)만 남김
     if (B && !isForeground(B, z, d)){ out[z]=null; continue; }
-    const p = add(sensor.pos, mul(rays[z], d/1000));
+    // 위치는 EMA 보간값으로 부드럽게 (없으면 원본)
+    const dp = (posArr && posArr[z] > 0) ? posArr[z] : d;
+    const p = add(sensor.pos, mul(rays[z], dp/1000));
     // 침대 영역(bed box) 밖이면 제거 — 벽·바닥·노이즈 컷
     if (roiOn){
       const hlB=SEP/2;
@@ -473,8 +476,9 @@ function draw(){
   const S=sensors();
   const allPts=[];   // 사람 형태 모드용 융합 점
   for (const s of S){
-    const dist = easeDisp(s.id);   // EMA 보간된 표시값
-    const hp = hits(s, dist);
+    const raw = data[s.id];        // median 원본 (멤버십 판정용)
+    const pos = easeDisp(s.id);    // EMA 보간 위치
+    const hp = hits(s, raw, pos);
     const [R,G,B]=s.tint;
 
     // 센서 본체
@@ -495,7 +499,7 @@ function draw(){
     } else if (showSurf){
       if (detailOn){
         // 정밀 모드: bicubic 업샘플 곡면 (논문 기반 복원)
-        denseSurface(s, dist, faces);
+        denseSurface(s, raw, faces);
       } else {
         // 기본 모드: 원본 4×4 삼각형(3존 이상 유효 시)
         const tri=(a,b,cc)=>{
