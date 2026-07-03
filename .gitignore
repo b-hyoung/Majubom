@@ -46,3 +46,7 @@ esp32/*.csv
 !esp32/docs/presentation/img/*.png
 # 런타임 생성 — 빈 침대 캘리브레이션 베이스라인(환경별로 다름)
 server/tof_baseline.json
+# 런타임 생성 — mmWave 베이스라인(환경별로 다름)
+server/mmw_baseline.json
+# 서버 런타임 DB — 실행 중 갱신, 배포 환경마다 다름(커밋 X)
+server/majubom.db
