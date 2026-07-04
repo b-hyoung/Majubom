@@ -56,6 +56,18 @@ def hit_y(sensor_id, zone, distance_mm):
     zd = _norm([d[i] + math.tan(ac) * right[i] + math.tan(ar) * up[i] for i in range(3)])
     return pos[1] + zd[1] * (distance_mm / 1000.0)
 
+def hit_point(sensor_id, zone, distance_mm):
+    """존 광선이 닿는 3D 지점 [x,y,z] (m). X=머리(-)↔발(+), Y=좌우, Z=높이. 무효면 None."""
+    if distance_mm is None or distance_mm <= 0:
+        return None
+    r, c = zone // GRID, zone % GRID
+    pos, d, right, up = _sensor(sensor_id)
+    step = math.radians(FOV_DEG / GRID)
+    ac, ar = (c - 1.5) * step, (1.5 - r) * step
+    zd = _norm([d[i] + math.tan(ac) * right[i] + math.tan(ar) * up[i] for i in range(3)])
+    t = distance_mm / 1000.0
+    return [pos[i] + zd[i] * t for i in range(3)]
+
 def on_bed(sensor_id, zone, distance_mm):
     y = hit_y(sensor_id, zone, distance_mm)
     if y is None:
