@@ -169,6 +169,7 @@ def evaluate(payload: dict, store: dict, persist: bool = True) -> dict:
     # 구 payload 호환: patient_locked 없으면 "1명이면 환자"로 간주, walking 없으면 보행으로 간주
     patient_locked = bool(presence.get("patient_locked", n_targets == 1))
     walking = bool(quality.get("walking", True))
+    straightness = quality.get("straightness")
     bed_affinity = presence.get("bed_affinity")
     bed_candidates = presence.get("bed_candidates")
     height_drop = raw.get("height_drop", 0.0)
@@ -212,8 +213,14 @@ def evaluate(payload: dict, store: dict, persist: bool = True) -> dict:
     # 4) 환자는 특정됐으나 '보행'이 아님(정지/휴식/누움) → gait baseline 미반영. 낙상만 감시.
     #    (보행 baseline 은 걷는 값으로만 쌓아야 오염되지 않음. 정지값을 넣으면 baseline 붕괴)
     if not walking:
+        moving = isinstance(raw.get("speed"), (int, float)) and raw["speed"] >= 0.2
+        if moving:
+            st_txt = f" (직진성 {straightness})" if straightness is not None else ""
+            why = f"보행이나 경로 굽음/왕복 — gait 왜곡 배제{st_txt}"
+        else:
+            why = "환자 정지/휴식(보행 아님)"
         aff_txt = f" (소속도 {bed_affinity})" if bed_affinity is not None else ""
-        reasons.append(f"측정 보류: 환자 정지/휴식 — 보행 아님, gait baseline 미반영{aff_txt}")
+        reasons.append(f"측정 보류: {why}, gait baseline 미반영{aff_txt}")
         stats = baseline_stats(store.get(target_id))
         level = "normal"
         if abs_critical:

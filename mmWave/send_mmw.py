@@ -73,6 +73,7 @@ AFFINITY_MIN = 0.25          # 2명 이상일 때 환자로 특정할 최소 소
 WALK_SPEED_MIN = 0.20        # 이 속도(m/s) 이상이어야 '보행'으로 baseline 반영
 WALK_DISP_MIN = 0.30         # 윈도우 내 순이동(m) 최소 — 제자리 미동/누움 배제
 MERGE_DIST = 0.7             # 침대 후보끼리 이 거리(m) 이내면 같은 사람(track 분리)로 병합
+STRAIGHT_MIN = 0.7           # 경로 직진성(순이동/이동거리) 최소 — 회전 많은 굽은 윈도우는 gait 왜곡 → 보행에서 제외
 
 
 # ── TLV 파싱 ───────────────────────────────────────────────────────────
@@ -388,11 +389,19 @@ def select_patient(track_history, now):
     if raw is None:
         return None, {"reliable": False, "n_samples": len(recent)}, presence
 
-    # 보행 판정: 평균속도 + 윈도우 내 순이동 (제자리 미동/누움을 baseline 에서 배제)
+    # 보행 판정: 평균속도 + 윈도우 내 순이동 + 경로 직진성
+    #   - 제자리 미동/누움 배제(속도·순이동)
+    #   - 회전 많은 굽은 경로 배제(직진성) → sway·stride(FFT cadence) 왜곡으로 인한 거짓 위험 방지
     arr = np.array(recent)
-    disp = float(np.hypot(arr[-1, 1] - arr[0, 1], arr[-1, 2] - arr[0, 2]))
-    walking = (raw["speed"] >= WALK_SPEED_MIN) and (disp >= WALK_DISP_MIN)
-    quality = {"reliable": True, "walking": walking, "n_samples": len(recent)}
+    xy = arr[:, 1:3]
+    disp = float(np.hypot(xy[-1, 0] - xy[0, 0], xy[-1, 1] - xy[0, 1]))  # 순이동(직선거리)
+    seg = np.diff(xy, axis=0)
+    path_len = float(np.sum(np.hypot(seg[:, 0], seg[:, 1])))            # 실제 이동거리(경로 길이)
+    straightness = disp / path_len if path_len > 1e-6 else 0.0          # 1=직선, 작을수록 굽음/왕복
+    walking = (raw["speed"] >= WALK_SPEED_MIN) and (disp >= WALK_DISP_MIN) \
+        and (straightness >= STRAIGHT_MIN)
+    quality = {"reliable": True, "walking": walking,
+               "straightness": round(straightness, 2), "n_samples": len(recent)}
     return raw, quality, presence
 
 
@@ -510,6 +519,7 @@ def run(cli_port, data_port, cfg_path, do_send=True, target_id="room_01"):
                           f"tid={presence['main_tid']} aff={presence['bed_affinity']} "
                           f"cand={presence.get('bed_candidates')} "
                           f"lock={presence['patient_locked']} walk={quality.get('walking')} "
+                          f"str={quality.get('straightness')} "
                           f"n={presence['n_targets']}")
                 else:
                     print(f"[{time.strftime('%H:%M:%S')}] 데이터 부족/보류 presence={presence}")
