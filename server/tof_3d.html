@@ -158,6 +158,39 @@ function medianFilter(sid, arr, at){
   }
   return out;
 }
+// ── 스파이크 필터 (hold-last-good + 확인 + gap-fill) — 실시간·튐 억제 ──
+//  정상 변화 즉시 통과 / 1프레임 튐은 직전값 유지 / 지속되면 채택 / 무효는 직전값 메움.
+const SPIKE_TAU = 350;     // 프레임간 변화가 이보다 크면 튐 후보(mm)
+const SPIKE_CONFIRM = 2;   // 큰 변화가 이만큼 지속되면 진짜 변화로 채택
+const GAP_HOLD = 6;        // 무효일 때 직전값 유지 최대 프레임 (그 후 -1)
+let sf = { tof1:null, tof2:null }, sfAt = { tof1:null, tof2:null };
+function spikeFilter(sid, arr, at){
+  if(!arr) return arr;
+  const n = arr.length;
+  if(!sf[sid] || sf[sid].length!==n)
+    sf[sid] = Array.from({length:n}, ()=>({good:null,pend:null,cnt:0,hold:0}));
+  const S = sf[sid];
+  if(at === sfAt[sid]) return S.map(s=> s.good==null? -1 : s.good);  // 같은 프레임 → 유지
+  sfAt[sid] = at;
+  const out = new Array(n);
+  for(let z=0; z<n; z++){
+    const s=S[z], v=arr[z], valid=(v!=null && v>0);
+    if(!valid){                                        // 무효 → gap fill
+      if(s.good!=null && s.hold<GAP_HOLD){ s.hold++; out[z]=s.good; }
+      else { s.good=null; out[z]=-1; }
+      s.pend=null; s.cnt=0; continue;
+    }
+    s.hold=0;
+    if(s.good==null){ s.good=v; out[z]=v; s.pend=null; s.cnt=0; continue; }
+    if(Math.abs(v-s.good) <= SPIKE_TAU){               // 정상 변화 → 즉시 채택
+      s.good=v; out[z]=v; s.pend=null; s.cnt=0;
+    } else if(s.pend!=null && Math.abs(v-s.pend) <= SPIKE_TAU){
+      if(++s.cnt >= SPIKE_CONFIRM){ s.good=v; out[z]=v; s.pend=null; s.cnt=0; }  // 지속 → 채택
+      else out[z]=s.good;                              // 확인중 → 직전값 유지
+    } else { s.pend=v; s.cnt=1; out[z]=s.good; }        // 튐 후보 → 직전값 유지
+  }
+  return out;
+}
 let disp = { tof1:null, tof2:null };   // 화면표시용 보간(EMA) 버퍼
 const EMA_A = 0.16;                    // 보간 계수(작을수록 부드럽지만 느림)
 // 2Hz 데이터를 60fps로 부드럽게: 목표 거리로 존별 EMA 이동 (무효는 스냅)
@@ -481,9 +514,8 @@ function draw(){
   const S=sensors();
   const allPts=[];   // 사람 형태 모드용 융합 점
   for (const s of S){
-    const raw = data[s.id];        // median 원본 (멤버십 판정용)
-    const pos = easeDisp(s.id);    // EMA 보간 위치
-    const hp = hits(s, raw, pos);
+    const d = data[s.id];          // 스파이크필터 값 (EMA 제거 → 즉시 반영)
+    const hp = hits(s, d, d);
     const [R,G,B]=s.tint;
 
     // 센서 본체
@@ -504,7 +536,7 @@ function draw(){
     } else if (showSurf){
       if (detailOn){
         // 정밀 모드: bicubic 업샘플 곡면 (논문 기반 복원)
-        denseSurface(s, raw, faces);
+        denseSurface(s, d, faces);
       } else {
         // 기본 모드: 원본 4×4 삼각형(3존 이상 유효 시)
         const tri=(a,b,cc)=>{
@@ -568,8 +600,8 @@ async function poll(){
     // 데이터가 너무 오래됐으면(마지막 수신 8초 초과) 센서 끊김으로 간주
     const at = lr.tof1 && lr.tof1.received_at ? lr.tof1.received_at : (lr.tof2 && lr.tof2.received_at);
     const stale = at ? (Date.now() - new Date(at).getTime() > 8000) : true;
-    data.tof1 = lr.tof1? medianFilter('tof1', lr.tof1.distances_mm, lr.tof1.received_at) : null;
-    data.tof2 = lr.tof2? medianFilter('tof2', lr.tof2.distances_mm, lr.tof2.received_at) : null;
+    data.tof1 = lr.tof1? spikeFilter('tof1', lr.tof1.distances_mm, lr.tof1.received_at) : null;
+    data.tof2 = lr.tof2? spikeFilter('tof2', lr.tof2.distances_mm, lr.tof2.received_at) : null;
     presence = pr; connected=true; dataStale=stale;
     // 이탈이 LEAVE_HOLD_MS 이상 "지속"될 때만 배경 리셋 (순간 깜빡임엔 사람 안 지움)
     const nowIn = !!(presence && presence.in_bed);
