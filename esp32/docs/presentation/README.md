@@ -31,3 +31,43 @@ cd esp32/docs
 - `mmw_monitor.png` — mmWave 보행 모니터(시뮬) 캡처
 - `tof_demo1.gif` / `tof_demo2.gif` — ToF 데모(침대 Top view / 라이브 대시보드)
 - `method_*.png`, `csi_*.png`, `c_strength_dist.png` — CSI 측정 방식·결과 차트
+
+---
+
+## 📚 전체 자료 인덱스 (PDF·HTML·MD 어떤 파일인지)
+
+> **보는 법** — PDF/HTML: `open <경로>` 또는 로컬서버 `http://localhost:8088/presentation/<파일>`.
+> **공유링크(Cloudflare, 영구)**: `https://ppt-list.pages.dev/majubom/refs/<파일>` (GitHub Pages: `https://b-hyoung.github.io/PPT-List/majubom/refs/<파일>`)
+> 경로는 모두 `esp32/docs/presentation/` 기준 (mmWave 작업만 별도 표기).
+
+### 🔬 리서치·참고자료 (PDF — 공유 가능)
+| 파일 | 내용 | 공유링크(refs/) |
+|---|---|---|
+| **existing_solutions_mmwave.pdf** | **기존방안 + 상용문제 + 상용레이더문제 + mmWave문제 + 센서별 실전버그 + 오늘 결론 (종합)** | `refs/existing_solutions_mmwave.pdf` |
+| bedexit_papers.pdf | 침대이탈 논문 (환각체크 배지) | `refs/bedexit_papers.pdf` |
+| mmwave_hw_matched_papers.pdf | 우리 칩(IWR6843) 일치 선행논문 | `refs/mmwave_hw_matched_papers.pdf` |
+| mmwave_temporal_approach.pdf | 시계열 접근 (PNHM/mPCT 분석) | `refs/mmwave_temporal_approach.pdf` |
+| evidence_onepager.pdf | 치매 낙상 근거 + 시스템 한 장 | `refs/evidence_onepager.pdf` |
+| competitors_preview.html | 상용 4개(사이렌케어·Hikvision·Vayyar·SafelyYou) 조사 | `refs/competitors_preview.html` |
+
+### 🖥 발표 덱
+| 파일 | 내용 | 위치 |
+|---|---|---|
+| index.html | 마주봄 중간발표 (흰색, 10슬라이드, 라이브 대시보드) | 로컬 `8088/presentation/` |
+| 마주봄 다크 덱 (신규) | 문제→차별→데모→실측, 다크·PPT/PDF 대응 | **PPT-List 레포** → `https://ppt-list.pages.dev/majubom/` |
+
+### 🎬 작업용 미리보기·시연 (HTML)
+| 파일 | 내용 | 위치 |
+|---|---|---|
+| shoot_script.html | **시연 영상 촬영 대본** | `https://ppt-list.pages.dev/majubom/shoot-script.html` |
+| shoot_plan.html | 시연 시나리오 + 데모 슬라이드 레이아웃 | 로컬 |
+| demo_layout.html | 단일 데모 슬라이드 목업 (좌영상/우대시보드) | 로컬 |
+| palette_preview.html / font_preview.html | 덱 팔레트·폰트 미리보기 | 로컬 |
+
+### 🛰 mmWave 이탈예측 작업 (`mmWave/exit_seq/`)
+| 파일 | 내용 | 링크 |
+|---|---|---|
+| **HANDOFF.md** | **인수인계 전체** (상태·결과·다음할일·명령·원칙) | `github.com/b-hyoung/Majubom/blob/main/mmWave/exit_seq/HANDOFF.md` |
+| TODO_2026-07-05.md | 내일 할 일 목록 | 로컬 |
+| co_log.py / record_seq.py | ToF라벨+mmWave시퀀스 수집기 | 로컬 |
+| analyze_timeseries.py / analyze_velocity.py | 시간순 LSTM vs 뭉갬 RF 분석 | 로컬 |
