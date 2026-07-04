@@ -492,7 +492,8 @@ function bodySurface(pts, faces){
 
 // 검출된 전경 점들의 X/Y/Z 좌표(cm) 분류를 화면에 표시
 const STATE_MIN_PTS = 3;     // 이보다 적으면 이탈
-const STATE_Y_EDGE  = 0.08;  // |중심 Y|가 이보다 크면 한쪽 쏠림=걸터앉음(m)
+const STATE_X_LIE   = 0.90;  // X범위(길이 퍼짐)가 이보다 크면 누움(온몸)
+const STATE_Y_EDGE  = 0.10;  // |중심 Y|가 이보다 크면 한쪽 쏠림=걸터앉음(m)
 function updateCoordReadout(pts){
   const el=document.getElementById('coord'); if(!el) return;
   const st=document.getElementById('state');
@@ -505,11 +506,12 @@ function updateCoordReadout(pts){
   for(const p of pts){ const x=p[0],y=p[1],z=p[2]; cx+=x;cy+=y;cz+=z;
     if(x<x0)x0=x; if(x>x1)x1=x; if(y<y0)y0=y; if(y>y1)y1=y; if(z<z0)z0=z; if(z>z1)z1=z; }
   const n=pts.length, C=v=>Math.round(v*100);
-  // 상태 판정: 점수 + 중심 Y(좌우 쏠림)
+  // 상태 판정: 점수 → X범위(누움) → 중심 Y(걸터앉음/앉음)
   let state, col;
   if(n < STATE_MIN_PTS){ state='🟡 이탈'; col='var(--warn)'; }
+  else if((x1-x0) > STATE_X_LIE){ state='🟢 누움'; col='var(--ok)'; }
   else if(Math.abs(cy/n) > STATE_Y_EDGE){ state='🟠 걸터앉음'; col='#ff9f43'; }
-  else { state='🟢 재실(누움)'; col='var(--ok)'; }
+  else { state='🔵 앉음'; col='#4aa8ff'; }
   if(st){ st.textContent=state; st.style.color=col; }
   el.innerHTML =
     `<b>좌표 분류(cm)</b> · 점 ${n}<br>`+
