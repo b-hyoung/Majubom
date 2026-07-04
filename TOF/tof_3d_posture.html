@@ -78,8 +78,8 @@
     <input id="s-w" type="range" min="1.2" max="2.4" step="0.01" value="2.12">
   </div>
   <div class="ctl">
-    <label title="이보다 먼 값(바닥·벽·반대편)은 버림 → 사람만 남김">최대 사거리 <b><span id="v-r">2120</span> mm</b></label>
-    <input id="s-r" type="range" min="600" max="3500" step="20" value="2120">
+    <label title="사거리 상한(안전용). 실제 침대 안팎 컷은 3D 위치(ROI)가 담당">최대 사거리 <b><span id="v-r">2600</span> mm</b></label>
+    <input id="s-r" type="range" min="600" max="3500" step="20" value="2600">
   </div>
   <div class="btns">
     <button id="b-surf" class="on">표면</button>
@@ -124,7 +124,7 @@ const FOV_DEG = 45;                    // 4×4 축당 시야각(대각 63° → 
 const BED_WID = 0.95;                  // 매트리스 폭(양옆 사이, Y, m)
 
 // 조절값
-let SENSOR_H1 = 0.30, SENSOR_H2 = 0.72, TILT1 = 90, TILT2 = 65, SEP = 2.12, MAX_MM = 2120;
+let SENSOR_H1 = 0.30, SENSOR_H2 = 0.72, TILT1 = 90, TILT2 = 65, SEP = 2.12, MAX_MM = 2600;
 let showSurf = true, showRay = false;
 
 // 시점
