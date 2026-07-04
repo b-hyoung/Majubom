@@ -54,7 +54,7 @@ TARGET_LIST_TLV = 1010   # 3D People Tracking target list (confirmed from parseT
 TARGET_STRUCT = '<I27f'  # tid(uint32) + 27 floats (pos/vel/acc/ec/g/conf) = 112 bytes
 TARGET_SIZE = struct.calcsize(TARGET_STRUCT)  # 112
 
-WINDOW_SEC = 10.0        # 보행 지표 계산 윈도우
+WINDOW_SEC = 6.0         # 보행 지표 계산 윈도우 (좁은 방: 한 직진 패스가 한 윈도우에 맞게 10→6 축소)
 FREEZE_SPEED_THRESH = 0.15
 SERVER_URL = "http://127.0.0.1:5002/mmw"   # 같은 Pi 안의 mmw_server
 LIVE_URL = "http://127.0.0.1:5002/mmw/live" # 실시간 포인트 클라우드
@@ -73,7 +73,7 @@ AFFINITY_MIN = 0.25          # 2명 이상일 때 환자로 특정할 최소 소
 WALK_SPEED_MIN = 0.20        # 이 속도(m/s) 이상이어야 '보행'으로 baseline 반영
 WALK_DISP_MIN = 0.30         # 윈도우 내 순이동(m) 최소 — 제자리 미동/누움 배제
 MERGE_DIST = 0.7             # 침대 후보끼리 이 거리(m) 이내면 같은 사람(track 분리)로 병합
-STRAIGHT_MIN = 0.7           # 경로 직진성(순이동/이동거리) 최소 — 회전 많은 굽은 윈도우는 gait 왜곡 → 보행에서 제외
+STRAIGHT_MIN = 0.5           # 경로 직진성(순이동/이동거리) 최소 — 회전 많은 굽은 윈도우는 gait 왜곡 → 보행에서 제외 (좁은 방 실측 튜닝: 0.7→0.5)
 
 
 # ── TLV 파싱 ───────────────────────────────────────────────────────────
