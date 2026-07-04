@@ -103,6 +103,14 @@
     <label>몸 최대 높이 <b><span id="v-zc">0.60</span> m</b></label>
     <input id="s-zc" type="range" min="0.2" max="1.2" step="0.02" value="0.60">
   </div>
+  <div class="ctl">
+    <label title="+Y쪽 옆경계. 이보다 밖은 컷(옆 통행). 좁히면 그쪽 통행 제거">옆경계 +Y <b><span id="v-yhi">0.68</span> m</b></label>
+    <input id="s-yhi" type="range" min="0.40" max="1.20" step="0.02" value="0.68">
+  </div>
+  <div class="ctl">
+    <label title="−Y쪽 옆경계. 이보다 밖은 컷(옆 통행). 좁히면 그쪽 통행 제거">옆경계 −Y <b><span id="v-ylo">0.68</span> m</b></label>
+    <input id="s-ylo" type="range" min="0.40" max="1.20" step="0.02" value="0.68">
+  </div>
 </div>
 
 <div class="hud" id="coord" style="top:96px; right:16px; text-align:right; font-size:11px; line-height:1.55; color:var(--dim); font-family:'JetBrains Mono',monospace;"></div>
@@ -179,6 +187,8 @@ const BG_A_FG = 0.0;     // 전경(사람) 존은 배경 학습 제외(selective
 const ROI_PAD_L = 0.10;  // 길이(머리~발) 경계 여유(m) — 끝단은 약간 여유
 const ROI_PAD_W = 0.04;  // 폭(양옆) 경계 여유(m) — 침대 밖 엄격 컷
 const ROI_ZMIN = -0.15;  // 매트리스 아래로 이만큼까지 허용
+// 좌우 옆경계(m) — 이 밖(옆 통행 등)은 컷. 침대 반폭 0.475 + 여유. 통행 쪽을 좁히면 됨.
+let ROI_YHI = 0.675, ROI_YLO = 0.675;
 
 const cv = document.getElementById('c'), ctx = cv.getContext('2d');
 let W=0,H=0,DPR=1;
@@ -244,11 +254,12 @@ function hits(sensor, rawArr, posArr){
     // 위치는 EMA 보간값으로 부드럽게 (없으면 원본)
     const dp = (posArr && posArr[z] > 0) ? posArr[z] : d;
     const p = add(sensor.pos, mul(rays[z], dp/1000));
-    // 침대 영역(bed box) 밖이면 제거 — 벽·바닥·노이즈 컷
+    // 침대 영역(bed box) 밖이면 제거 — 벽·바닥·옆 통행·노이즈 컷
     if (roiOn){
       const hlB=SEP/2;
-      // 길이(머리~발)·높이 범위만 컷 — 폭(양옆) 컷은 제거(가장자리 누운 사람 보존)
+      // 길이(머리~발)·높이 + 좌우 옆경계(옆 통행 컷, 가장자리 사람은 여유로 보존)
       if (p[0] < -hlB-ROI_PAD_L || p[0] > hlB+ROI_PAD_L ||
+          p[1] >  ROI_YHI       || p[1] < -ROI_YLO      ||
           p[2] < ROI_ZMIN       || p[2] > ROI_ZMAX){ out[z]=null; continue; }
     }
     out[z] = p;
@@ -382,7 +393,7 @@ function denseSurface(sensor, dist, faces){
         const ar=((GRID-1)/2-rr)*step;
         const zd=norm(add(add(dir, mul(right,Math.tan(ac))), mul(up,Math.tan(ar))));
         const p=add(sensor.pos, mul(zd, depth/1000));
-        if(!(roiOn && (p[0]<-hlB-ROI_PAD_L||p[0]>hlB+ROI_PAD_L||p[2]<ROI_ZMIN||p[2]>ROI_ZMAX)))
+        if(!(roiOn && (p[0]<-hlB-ROI_PAD_L||p[0]>hlB+ROI_PAD_L||p[1]>ROI_YHI||p[1]<-ROI_YLO||p[2]<ROI_ZMIN||p[2]>ROI_ZMAX)))
           node={p, z:p[2]};
       }
       grid[i][j]=node;
@@ -568,7 +579,7 @@ async function poll(){
       else if(Date.now()-leaveT >= LEAVE_HOLD_MS){ resetBgNow(lr); leaveT=Date.now()+3.6e6; }
     }
     if(bgCap) accumulateBg(lr);                         // 배경 통계 수집중이면 프레임 누적
-    else if(bgAdapt && (bg.tof1||bg.tof2)) updateBgModel(lr);  // 적응형 배경 갱신
+    else if(bgAdapt && !nowIn && (bg.tof1||bg.tof2)) updateBgModel(lr);  // 사람 없을 때(이탈)만 배경 갱신
   }catch(e){ connected=false; data.tof1=null; data.tof2=null; presence=null; }
   updateHUD();
 }
@@ -626,6 +637,8 @@ document.getElementById('b-roi').onclick=e=>{ roiOn=!roiOn; e.target.classList.t
 document.getElementById('b-detail').onclick=e=>{ detailOn=!detailOn; e.target.classList.toggle('on',detailOn); };
 document.getElementById('b-body').onclick=e=>{ bodyMode=!bodyMode; e.target.classList.toggle('on',bodyMode); };
 bindRange('s-zc','v-zc', v=>v.toFixed(2), v=>ROI_ZMAX=v);
+bindRange('s-yhi','v-yhi', v=>v.toFixed(2), v=>ROI_YHI=v);
+bindRange('s-ylo','v-ylo', v=>v.toFixed(2), v=>ROI_YLO=v);
 
 cv.addEventListener('mousedown',e=>{dragging=true;lastX=e.clientX;lastY=e.clientY;});
 window.addEventListener('mouseup',()=>dragging=false);
