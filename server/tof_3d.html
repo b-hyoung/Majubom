@@ -208,6 +208,8 @@ function easeDisp(sid){
   return cur;
 }
 let bg = { tof1:null, tof2:null }, bgSub=false, flipLR=false, roiOn=true, ROI_ZMAX=0.60, detailOn=true, bodyMode=true;
+let fgHold = { tof1:null, tof2:null };   // 전경 유지 래치(존별 카운터)
+const FG_HOLD = 6;                        // 배경과 달라진 존을 이 프레임 수만큼 계속 그림
 let bgCap = null;        // 배경 수집중 버퍼 {tof1:[frame..], tof2:[..], lastAt:{}}
 let bgAdapt = true;      // 적응형 배경(자동 갱신) on/off
 let leaveT = 0;          // 이탈 시작 시각(ms) — 지속 확인용
@@ -277,13 +279,19 @@ function zoneDir(dir){
 function hits(sensor, rawArr, posArr){
   const rays = zoneDir(sensor.dir);
   const B = (bgSub && bg[sensor.id]) ? bg[sensor.id] : null;
+  if(!fgHold[sensor.id]) fgHold[sensor.id] = new Array(GRID*GRID).fill(0);
+  const FGH = fgHold[sensor.id];
   const out = [];
   for (let z=0; z<GRID*GRID; z++){
     // 멤버십(사람 여부)은 원본(median) 값으로 즉각 판정 → 떠난 존 바로 사라짐(잔상 제거)
     const d = rawArr ? rawArr[z] : -1;
     if (d==null || d<50 || d>MAX_MM){ out[z]=null; continue; }
-    // 배경 빼기(통계 모델): 배경에서 벗어난 존(=사람)만 남김
-    if (B && !isForeground(B, z, d)){ out[z]=null; continue; }
+    // 배경 빼기 + 유지 래치: 한 번 배경과 달라진 존은 FG_HOLD 프레임 계속 그림(깜빡임 방지)
+    if (B){
+      const fg = isForeground(B, z, d);
+      if(fg) FGH[z] = FG_HOLD; else if(FGH[z] > 0) FGH[z]--;
+      if(!fg && FGH[z] <= 0){ out[z]=null; continue; }
+    }
     // 위치는 EMA 보간값으로 부드럽게 (없으면 원본)
     const dp = (posArr && posArr[z] > 0) ? posArr[z] : d;
     const p = add(sensor.pos, mul(rays[z], dp/1000));
