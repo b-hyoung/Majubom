@@ -1,42 +1,47 @@
+// ============================================================
+//  VL53L5CX 단일 센서 펌웨어 (ESP32 1개 + ToF 1개)
+//  두 보드에 이 파일을 올리되, 아래 SENSOR_NAME 만 다르게:
+//    - 왼쪽 레일 보드  → "tof1"
+//    - 오른쪽 레일 보드 → "tof2"
+//  서버(tof_server.py)는 이 sensor 이름으로 두 센서를 구분/독립 처리함.
+// ============================================================
 #include <Wire.h>
 #include <vl53l5cx_class.h>
 #include <WiFi.h>
 #include <HTTPClient.h>
 #include <ArduinoJson.h>
 
-// ─── 사용자 설정 ─────────────────────────────────────
-const char* WIFI_SSID  = "2411 ServerRoom";
-const char* WIFI_PASS  = "D@lstn!0722";
-const char* SERVER_URL = "http://192.168.6.10:5001/tof";
-// ─────────────────────────────────────────────────────
+// ─── 사용자 설정 (보드마다 여기만 수정) ─────────────────
+const char* SENSOR_NAME = "tof2";   // ← 다른 보드에는 "tof1"
+const char* WIFI_SSID   = "2411 ServerRoom";
+const char* WIFI_PASS   = "D@lstn!0722";
+const char* SERVER_URL  = "http://192.168.6.10:5001/tof";  // 라즈베리파이 서버
+// ─────────────────────────────────────────────────────────
 
 #define SDA_PIN      8
 #define SCL_PIN      9
-#define LPN1_PIN     4
-#define LPN2_PIN     5
-#define SENSOR1_ADDR 0x52
-#define SENSOR2_ADDR 0x54
-#define ZONE_COUNT   16    // 4x4 (8x8은 이 배선의 I2C 버스 한계로 wedge되어 4x4 운용)
-#define GRID_SIDE    4     // 4x4 한 변
-#define INTERVAL_MS  500
+#define LPN_PIN      4
+#define SENSOR_ADDR  0x52   // 버스 독점 → 기본 주소 그대로 사용 (주소 변경 불필요)
+#define ZONE_COUNT   16     // 4x4
+#define GRID_SIDE    4
+#define INTERVAL_MS  100    // 전송 주기 100ms (10Hz)
 
 // initSlow를 위한 서브클래스 (protected p_dev 접근)
 class VL53L5CX_Ex : public VL53L5CX {
 public:
   VL53L5CX_Ex(TwoWire *i2c, int lpn_pin) : VL53L5CX(i2c, lpn_pin) {}
 
-  // LPN 토글 + 충분한 대기 후 초기화 (addr != 0x52 면 주소 변경)
+  // LPN 토글 + 충분한 대기 후 초기화 (버스 stuck 상태 복구)
   int initSlow(uint8_t addr) {
     vl53l5cx_off();
     delay(200);
     vl53l5cx_on();
     delay(1000);
-    // Reinit I2C after sensor power-on (recovers from any stuck bus state)
     p_dev->platform.dev_i2c->begin(SDA_PIN, SCL_PIN);
     p_dev->platform.dev_i2c->setClock(400000);
     delay(50);
 
-    // Full I2C scan to find sensor at any address
+    // I2C 스캔으로 현재 주소 자동 감지
     TwoWire *wi = p_dev->platform.dev_i2c;
     uint8_t curAddr = 0;
     Serial.print("  scan:");
@@ -44,17 +49,16 @@ public:
       wi->beginTransmission(a);
       if (wi->endTransmission() == 0) {
         Serial.printf(" 0x%02X(8b=0x%02X)", a, a << 1);
-        if (curAddr == 0) curAddr = (a << 1); // convert 7-bit → 8-bit
+        if (curAddr == 0) curAddr = (a << 1);
       }
     }
     Serial.println();
     if (curAddr == 0) { Serial.println("  ERR: sensor not on bus"); return -1; }
     Serial.printf("  using 8bit=0x%02X\n", curAddr);
 
-    // Align p_dev address so WrByte talks to the right device
     p_dev->platform.address = curAddr;
 
-    // Only send set_i2c_address if not already at target
+    // 단일 센서라 보통 0x52 그대로 → 주소 변경 불필요. 혹시 다르면 맞춤.
     if (curAddr != addr) {
       uint8_t s = vl53l5cx_set_i2c_address(addr);
       Serial.printf("  set_addr(0x%02X) -> %d\n", addr, s);
@@ -72,15 +76,14 @@ public:
   }
 };
 
-VL53L5CX_Ex sensor1(&Wire, LPN1_PIN);
-VL53L5CX_Ex sensor2(&Wire, LPN2_PIN);
+VL53L5CX_Ex sensor(&Wire, LPN_PIN);
 unsigned long lastSendMs = 0;
 
-// ─────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────
 
 void wifiBegin() {
   if (strlen(WIFI_PASS) > 0) WiFi.begin(WIFI_SSID, WIFI_PASS);
-  else                         WiFi.begin(WIFI_SSID);
+  else                       WiFi.begin(WIFI_SSID);
 }
 
 void ensureWiFi() {
@@ -100,8 +103,8 @@ void ensureWiFi() {
   Serial.printf("\n[WiFi] 재연결: %s\n", WiFi.localIP().toString().c_str());
 }
 
-void printGrid(const char* name, VL53L5CX_ResultsData &r) {
-  Serial.printf("\n=== %s (4x4 mm) ===\n", name);
+void printGrid(VL53L5CX_ResultsData &r) {
+  Serial.printf("\n=== %s (4x4 mm) ===\n", SENSOR_NAME);
   for (int row = 0; row < GRID_SIDE; row++) {
     for (int col = 0; col < GRID_SIDE; col++) {
       int z = row * GRID_SIDE + col;
@@ -111,15 +114,15 @@ void printGrid(const char* name, VL53L5CX_ResultsData &r) {
         if (st == 5) d = r.distance_mm[VL53L5CX_NB_TARGET_PER_ZONE * z];
       }
       if (d < 0) Serial.printf(" %5s", "----");
-      else        Serial.printf(" %5d", d);
+      else       Serial.printf(" %5d", d);
     }
     Serial.println();
   }
 }
 
-void postSensor(const char* sensorName, VL53L5CX_ResultsData &r) {
-  JsonDocument doc;   // v7 동적 문서 (8x8=64존 수용)
-  doc["sensor"]     = sensorName;
+void postSensor(VL53L5CX_ResultsData &r) {
+  JsonDocument doc;
+  doc["sensor"]     = SENSOR_NAME;   // "tof1" 또는 "tof2"
   doc["resolution"] = "4x4";
 
   JsonArray dist = doc["distances_mm"].to<JsonArray>();
@@ -130,7 +133,7 @@ void postSensor(const char* sensorName, VL53L5CX_ResultsData &r) {
     int t = (int)r.nb_target_detected[z];
     if (t > 0) {
       uint8_t st = r.target_status[VL53L5CX_NB_TARGET_PER_ZONE * z];
-      if (st == 5) d = (int)r.distance_mm[VL53L5CX_NB_TARGET_PER_ZONE * z];
+      if (st == 5) d = (int)r.distance_mm[VL53L5CX_NB_TARGET_PER_ZONE * z];  // 센서단 필터
     }
     dist.add(d);
     tgts.add(t);
@@ -143,54 +146,32 @@ void postSensor(const char* sensorName, VL53L5CX_ResultsData &r) {
   http.begin(SERVER_URL);
   http.addHeader("Content-Type", "application/json");
   int code = http.POST(body);
-  Serial.printf("[%s] POST → HTTP %d\n", sensorName, code);
+  Serial.printf("[%s] POST → HTTP %d\n", SENSOR_NAME, code);
   http.end();
 }
 
 void setup() {
   Serial.begin(115200);
   delay(500);
-  Serial.println("\n=== VL53L5CX Dual Sensor Boot ===");
+  Serial.printf("\n=== VL53L5CX Single Sensor Boot (%s) ===\n", SENSOR_NAME);
 
   Wire.begin(SDA_PIN, SCL_PIN);
   Wire.setClock(400000);
 
-  // begin() → 각 LPN 핀을 OUTPUT + LOW (두 센서 모두 꺼짐)
-  sensor1.begin();
-  sensor2.begin();
+  sensor.begin();   // LPN 핀 OUTPUT + LOW (센서 꺼짐)
   delay(100);
 
-  // ── 초기화 순서 ───────────────────────────────────────
-  // 두 센서 모두 기본 주소 0x52 사용.
-  // 버스 충돌 방지: 센서2 먼저 0x54로 변경 → 센서1은 0x52 유지
-
-  // [Step 1] 센서2: LPN2 HIGH → 0x52 부팅 → 0x54 변경 → 펌웨어 로드
-  Serial.println("[tof2] 초기화 중... (수 초 소요)");
-  if (sensor2.initSlow(SENSOR2_ADDR) != 0) {
-    Serial.println("ERR: tof2 initSlow() 실패");
+  Serial.printf("[%s] 초기화 중... (수 초 소요)\n", SENSOR_NAME);
+  if (sensor.initSlow(SENSOR_ADDR) != 0) {
+    Serial.printf("ERR: %s initSlow() 실패\n", SENSOR_NAME);
     while (true) delay(1000);
   }
-  Serial.printf("[tof2] 0x%02X OK\n", SENSOR2_ADDR);
+  Serial.printf("[%s] 0x%02X OK\n", SENSOR_NAME, SENSOR_ADDR);
 
-  // [Step 2] 센서1: LPN1 HIGH → 0x52 부팅 → 주소 유지 → 펌웨어 로드
-  //          (버스: tof1@0x52, tof2@0x54 - 충돌 없음)
-  Serial.println("[tof1] 초기화 중... (수 초 소요)");
-  if (sensor1.initSlow(SENSOR1_ADDR) != 0) {
-    Serial.println("ERR: tof1 initSlow() 실패");
-    while (true) delay(1000);
-  }
-  Serial.printf("[tof1] 0x%02X OK\n", SENSOR1_ADDR);
-
-  // [Step 3] 해상도·주기 설정 및 Ranging 시작
-  sensor1.vl53l5cx_set_resolution(VL53L5CX_RESOLUTION_4X4);
-  sensor1.vl53l5cx_set_ranging_frequency_hz(2);
-  sensor1.vl53l5cx_start_ranging();
-  Serial.println("[tof1] ranging 시작");
-
-  sensor2.vl53l5cx_set_resolution(VL53L5CX_RESOLUTION_4X4);
-  sensor2.vl53l5cx_set_ranging_frequency_hz(2);
-  sensor2.vl53l5cx_start_ranging();
-  Serial.println("[tof2] ranging 시작");
+  sensor.vl53l5cx_set_resolution(VL53L5CX_RESOLUTION_4X4);
+  sensor.vl53l5cx_set_ranging_frequency_hz(15);   // 4x4 최대 60Hz → 15Hz
+  sensor.vl53l5cx_start_ranging();
+  Serial.printf("[%s] ranging 시작\n", SENSOR_NAME);
 
   Serial.printf("[WiFi] 연결 중: %s\n", WIFI_SSID);
   wifiBegin();
@@ -210,31 +191,20 @@ void loop() {
     return;
   }
 
-  VL53L5CX_ResultsData r1, r2;
-  uint8_t ready1 = 0, ready2 = 0;
-  bool got1 = false, got2 = false;
-
-  sensor1.vl53l5cx_check_data_ready(&ready1);
-  if (ready1) got1 = (sensor1.vl53l5cx_get_ranging_data(&r1) == 0);
-
-  sensor2.vl53l5cx_check_data_ready(&ready2);
-  if (ready2) got2 = (sensor2.vl53l5cx_get_ranging_data(&r2) == 0);
-
-  if (!got1 && !got2) return;
+  VL53L5CX_ResultsData r;
+  uint8_t ready = 0;
+  sensor.vl53l5cx_check_data_ready(&ready);
+  if (!ready) return;
+  if (sensor.vl53l5cx_get_ranging_data(&r) != 0) return;
 
   if (WiFi.status() != WL_CONNECTED) {
     ensureWiFi();
     return;
   }
 
-  if (got1) {
-    printGrid("tof1", r1);
-    postSensor("tof1", r1);
-  }
-  if (got2) {
-    printGrid("tof2", r2);
-    postSensor("tof2", r2);
-  }
-
+  // 시리얼 그리드 출력은 1초에 한 번만 (10Hz 전송 병목 방지)
+  static unsigned long lastPrintMs = 0;
+  if (millis() - lastPrintMs > 1000) { printGrid(r); lastPrintMs = millis(); }
+  postSensor(r);
   lastSendMs = millis();
 }

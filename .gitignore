@@ -52,3 +52,7 @@ server/mmw_baseline.json
 server/majubom.db
 # mmWave 실측 테스트 로그 (실행마다 재생성)
 mmWave/test_*.log
+# 개인 발표/데모 자료 — 커밋 안 함
+발표자료/
+# 단일센서 펌웨어 백업 템플릿 (TOF/src/main.ino 와 중복)
+TOF/single_sensor/
