@@ -114,6 +114,8 @@ def compute_features(points, z_offset=0.0):
         "n": n,
         "z_max": round(z_max, 3),
         "z_min": round(z_min, 3),
+        "z_p90": round(float(np.percentile(zs, 90)), 3),  # 상위 10% 높이 (참고용)
+        "n_hi": int(sum(1 for z in zs if z > 0.5)),  # 0.5m 위 점 수 (서기=몸통/머리 다수)
         "z_spread": round(z_max - z_min, 3),   # 세로 퍼짐 (서기=큼, 눕기=작음)
         "z_cent": round(sum(zs) / n, 3),
         "x_spread": round(max(xs) - min(xs), 3),
@@ -121,21 +123,30 @@ def compute_features(points, z_offset=0.0):
     }
 
 
-# 기본 임계 = "추정치". 첫 실행 때 값 보고 같이 조정한다. (바닥기준 높이 m)
+# 임계 = 3m/15° 마운트 실측(2026-07-05, 혼자). z_spread 는 노이즈 범벅이라 폐기.
+#   서기: z_max 2.0+ 지만 높은 점이 '소수' → z_max + n_hi(0.5m 위 점 수)로 유령점 배제
+#   눕기: z_cent(중심높이) 로 분리.  실측 z_cent: 눕 -1.35 / 앉 -0.75 / 서 -0.6
 DEFAULT_TH = {
-    "stand_zmax": 1.20, "stand_spread": 0.80,
-    "lie_zmax": 0.75,  "lie_spread": 0.45,
+    "stand_zmax": 1.20,  # z_max 가 이 값 이상 &
+    "stand_nhi": 3,      # 0.5m 위 점이 이 개수 이상이면 서기 (유령점 1개 배제)
+    "lie_zcent": -1.05,  # z_cent 가 이 값 이하이면 눕기 (눕 -1.35 / 앉 -0.75 사이)
 }
+
+# 서기 상체 점이 15° 각도에선 드문드문 잡힘 → 조건이 한 번 잡히면 이 시간(초)만큼
+# '서기'를 유지(latch)해 깜빡임 제거. 그동안 명백히 누우면(z_cent↓) 즉시 해제.
+STAND_HOLD = 1.5
 
 
 def classify(feat, th):
     if feat is None:
         return "no-target"
-    if feat["z_max"] >= th["stand_zmax"] and feat["z_spread"] >= th["stand_spread"]:
-        return "stand(섬)"
-    if feat["z_max"] <= th["lie_zmax"] and feat["z_spread"] <= th["lie_spread"]:
+    # 눕기 먼저: 점 무게중심(z_cent)이 낮으면 몸통 대부분이 바닥 → 위쪽 점 몇 개는
+    # 침대 옆 사람이 흘린 오염이니 무시하고 눕기로 확정.
+    if feat["z_cent"] <= th["lie_zcent"]:
         return "lie(눕음)"
-    return "sit(앉음)"
+    if feat["z_max"] >= th["stand_zmax"] and feat["n_hi"] >= th["stand_nhi"]:
+        return "stand(섬)"                   # 높은 점이 실제로 여럿 → 서기
+    return "sit(앉음)"                        # 그 사이 → 앉기
 
 
 # ── 침대 ROI ────────────────────────────────────────────────────────────
@@ -143,10 +154,20 @@ def load_roi(path):
     if not os.path.exists(path):
         return None
     try:
-        with open(path) as f:
+        with open(path, encoding="utf-8") as f:
             return json.load(f)
     except Exception:
         return None
+
+
+def crop_to_roi(points, roi, margin):
+    """점군을 침대 ROI(x,y) + margin 안으로만 남긴다 — 방 안 다른 사람 배제.
+    ROI 없으면 그대로. z(높이)는 그대로 두고 평면 위치만 자른다."""
+    if not roi:
+        return points
+    xmin, xmax = roi["x_min"] - margin, roi["x_max"] + margin
+    ymin, ymax = roi["y_min"] - margin, roi["y_max"] + margin
+    return [p for p in points if xmin <= p[0] <= xmax and ymin <= p[1] <= ymax]
 
 
 def locate(cx, cy, roi, margin):
@@ -198,7 +219,7 @@ def calibrate(data, args):
         "z_offset": z_offset, "calib_z_cent_raw": round(z_cent_raw, 3),
         "calib_points": len(xs), "ts": int(time.time() * 1000),
     }
-    with open(args.roi, "w") as f:
+    with open(args.roi, "w", encoding="utf-8") as f:
         json.dump(roi, f, ensure_ascii=False, indent=2)
     w, l = x_max - x_min, y_max - y_min
     print(f"[calib] 침대 ROI 저장 → {args.roi}")
@@ -245,6 +266,7 @@ def run(args):
     buf = b""
     window = deque()
     last_print = 0.0
+    stand_until = 0.0   # 이 시각 전까지는 '서기' latch 유지
     frames_seen = 0
     pc_frames = 0
     pc_checked = False
@@ -280,9 +302,22 @@ def run(args):
 
             if now - last_print >= 0.5:
                 last_print = now
-                allpts = [p for _, ps in window for p in ps]
+                allpts_raw = [p for _, ps in window for p in ps]
+                # 침대 ROI 크롭: 방 안 다른 사람 점 배제 후 자세 판정
+                allpts = crop_to_roi(allpts_raw, roi, args.crop_margin) if roi else allpts_raw
+                n_drop = len(allpts_raw) - len(allpts)
                 feat = compute_features(allpts, z_offset=z_offset)
+                # 크롭 후 점이 너무 적으면 침대 비었거나 모서리 잡음 → 판정 안 함
+                empty_bed = False
+                if feat and feat["n"] < args.min_pts:
+                    feat = None
+                    empty_bed = roi is not None
                 label_pred = classify(feat, th)
+                # 서기 latch: 조건 잡히면 갱신, 이후 STAND_HOLD 동안 드문 신호 채움
+                if label_pred == "stand(섬)":
+                    stand_until = now + STAND_HOLD
+                elif now < stand_until and feat and feat["z_cent"] > th["lie_zcent"]:
+                    label_pred = "stand(섬)"   # 최근 서기 조건 → 상체점 드문 순간 유지
                 label = args.label or label_pred
                 src = "manual" if args.label else "rule"
 
@@ -293,12 +328,14 @@ def run(args):
                     zone, side = locate(cx, cy, roi, args.edge_margin)
                     loc = f" | pos=({cx:+.2f},{cy:+.2f}) {zone} {side}"
 
+                crop_str = f" crop-{n_drop}" if roi else ""
                 if feat:
                     print(f"[{time.strftime('%H:%M:%S')}] label={label:<10} posture={label_pred:<10} "
-                          f"N={feat['n']:<4} z_max={feat['z_max']:<6} z_spread={feat['z_spread']:<6} "
+                          f"N={feat['n']:<4}{crop_str:<9} z_max={feat['z_max']:<6} n_hi={feat['n_hi']:<4} "
                           f"z_cent={feat['z_cent']:<6} pc={'1020' if pc_frames else 'trk'}{loc}")
                 else:
-                    print(f"[{time.strftime('%H:%M:%S')}] (타겟 없음)")
+                    msg = "(침대 비어있음)" if empty_bed else "(타겟 없음)"
+                    print(f"[{time.strftime('%H:%M:%S')}] {msg}")
 
                 if logf and feat:
                     rec = {"ts": int(now * 1000), "label": label, "label_source": src,
@@ -329,14 +366,15 @@ if __name__ == "__main__":
     ap.add_argument("--roi", default="bed_roi.json", help="침대 ROI 파일 (저장/로드)")
     ap.add_argument("--bed-surface", type=float, default=0.5, dest="bed_surface", help="누운 몸 중심의 바닥기준 높이(m) — z_offset 자동추정용")
     ap.add_argument("--edge-margin", type=float, default=0.25, dest="edge_margin", help="가장자리(전조) 밴드 폭(m)")
+    ap.add_argument("--crop-margin", type=float, default=0.3, dest="crop_margin", help="침대 ROI 밖 여유(m) — 이 밖 점은 자세판정에서 제외")
+    ap.add_argument("--min-pts", type=int, default=10, dest="min_pts", help="크롭 후 점이 이보다 적으면 침대 비었음으로 판정")
     ap.add_argument("--label", default=None, help="이 세션 자세 라벨 (lie/sit/stand/edge/exit…). 생략 시 규칙 예측을 약라벨로")
     ap.add_argument("--window", type=float, default=1.0, help="점군 누적 창(초) — 정지자세 안정화 (기본 1.0)")
     ap.add_argument("--z-offset", type=float, default=0.0, dest="z_offset", help="센서 높이 보정(m). ROI에 저장된 값이 있으면 자동 사용")
     ap.add_argument("--log", default="posture_dataset.jsonl", help="데이터셋 파일 (append)")
     ap.add_argument("--no-log", action="store_true", help="로그 안 쌓고 판정만")
     ap.add_argument("--no-raw", action="store_true", help="원시 점군 없이 특징만 로그(가벼움)")
-    ap.add_argument("--stand-zmax", type=float, dest="stand_zmax")
-    ap.add_argument("--stand-spread", type=float, dest="stand_spread")
-    ap.add_argument("--lie-zmax", type=float, dest="lie_zmax")
-    ap.add_argument("--lie-spread", type=float, dest="lie_spread")
+    ap.add_argument("--stand-zmax", type=float, dest="stand_zmax", help="z_max 가 이 값 이상 & n_hi 조건이면 서기")
+    ap.add_argument("--stand-nhi", type=int, dest="stand_nhi", help="0.5m 위 점 수 임계 (서기)")
+    ap.add_argument("--lie-zcent", type=float, dest="lie_zcent", help="z_cent 이 이 값 이하이면 눕기")
     run(ap.parse_args())

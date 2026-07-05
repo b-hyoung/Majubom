@@ -50,8 +50,10 @@ server/tof_baseline.json
 server/mmw_baseline.json
 # 서버 런타임 DB — 실행 중 갱신, 배포 환경마다 다름(커밋 X)
 server/majubom.db
-# mmWave 실측 테스트 로그 (실행마다 재생성)
-mmWave/test_*.log
+# mmWave 실측 테스트/캘리브 로그 (실행마다 재생성)
+mmWave/*.log
+# mmWave 침대 ROI 캘리브레이션 (방마다 다름, 런타임)
+mmWave/bed_roi.json
 # 개인 발표/데모 자료 — 커밋 안 함
 발표자료/
 # 단일센서 펌웨어 백업 템플릿 (TOF/src/main.ino 와 중복)
