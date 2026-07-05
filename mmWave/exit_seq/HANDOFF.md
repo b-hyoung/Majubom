@@ -50,6 +50,13 @@
  "seq": [ [[x,y,z,doppler]×64] ×30 ] }
 ```
 
+> 📦 **569 시퀀스 실제 데이터 = `seq_dataset.jsonl.gz` (1.9MB, repo에 포함).**
+> mmWave 하드웨어 없어도 이 데이터로 분석·재현 가능. 쓰기 전 압축 풀기:
+> ```bash
+> gunzip -k seq_dataset.jsonl.gz      # → seq_dataset.jsonl 생성
+> python3 analyze_timeseries.py        # 시간순 LSTM vs 뭉갬 RF (F1 42 vs 13 재현)
+> ```
+
 ---
 
 ## 4. 오늘의 실험 결과 (정직하게)
