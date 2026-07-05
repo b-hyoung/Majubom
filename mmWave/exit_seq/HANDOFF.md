@@ -139,7 +139,7 @@ nohup python3 co_log.py > /tmp/colog.out 2>&1 &
 **논문 (우리 칩/전이)**
 - PNHM (Sensors 2023, PMC10708869) — **IWR6843ISK(우리 계열)**, 30프레임 PointNet++, 서→앉 87%. ✅검증
 - Sensor-Stack Limits (arXiv 2606.23534) — **IWR6843AOP(우리 칩)** in-bed 한계: 4자세 0.674, 좌/우·prone 어려움, "희소 CFAR 점군이 벽" ✅검증
-- mPCT-LSTM (2025) — 희소점 경량 PCT+LSTM. ⚠️**원문 못 봄(403)**, IWR1443이라 **우리 칩 아님**. 방법만 참고
+- mPCT-LSTM (DSP 164, 2025, 105263) — 희소점 경량 PCT+LSTM. ✅**실물 검증**: IWR1443·77GHz(우리 칩 아님), 걷기·제스처 HAR(침대 아님), 97.26%. **공간→LSTM 구조는 우리와 동일·SOTA 확인** → Plan B 참고용. 상세: [mPCT-LSTM_검증_전략.md](./mPCT-LSTM_검증_전략.md)
 
 **상용/근거**
 - Vayyar: **누움→앉음→가장자리→이탈 단계** + 도플러(속도) 사용 → 우리 방향 검증
