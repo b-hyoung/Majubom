@@ -60,3 +60,4 @@ mmWave/bed_roi.json
 TOF/single_sensor/
 # 런타임 생성 — feature 로깅 DB (스냅샷은 CSV로 export해서 커밋)
 TOF/ml/*.db
+site/*.bak

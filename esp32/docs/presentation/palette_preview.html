@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>마주봄 타이틀 · 팔레트 미리보기 (다크 네이비)</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:"Pretendard","Apple SD Gothic Neo","Segoe UI",system-ui,sans-serif;
+    background:#0a0b0e;color:#e8e8ea;letter-spacing:-.01em;-webkit-font-smoothing:antialiased;padding:40px 26px 70px}
+  .head{max-width:1180px;margin:0 auto 8px}
+  .head .ey{font-size:12.5px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#8a8f9c}
+  .head h1{font-size:30px;font-weight:800;margin-top:8px}
+  .head p{color:#9aa0ad;margin-top:10px;font-size:15px;max-width:64ch;line-height:1.6}
+
+  .grid{max-width:1180px;margin:26px auto 0;display:grid;grid-template-columns:1fr 1fr;gap:26px}
+  @media(max-width:820px){.grid{grid-template-columns:1fr}}
+  .opt{border-radius:16px;overflow:hidden;border:1px solid #22252c;background:#101216}
+  .opt .lbl{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;background:#15171d;border-bottom:1px solid #22252c}
+  .opt .nm{font-size:16px;font-weight:800}
+  .opt .nm small{display:block;font-size:12px;color:#8a8f9c;font-weight:500;margin-top:2px}
+  .sw{display:flex;gap:6px}
+  .sw i{width:22px;height:22px;border-radius:6px;display:block;border:1px solid rgba(255,255,255,.12)}
+
+  /* ===== 타이틀 슬라이드 샘플 (팔레트 변수만 바뀜) ===== */
+  .slide{aspect-ratio:16/9;padding:34px 40px;display:flex;flex-direction:column;justify-content:center;
+    background:radial-gradient(900px 500px at 8% -20%,var(--glow),transparent 60%),var(--bg);color:var(--fg);position:relative}
+  .kick{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--faint);font-weight:700}
+  .h1{font-size:34px;font-weight:800;line-height:1.08;letter-spacing:-.03em;margin:10px 0}
+  .h1 .dot{color:var(--acc)}
+  .h1 .t{color:var(--acc)}
+  .sub{font-size:13px;color:var(--muted);line-height:1.55;max-width:50ch;margin-top:2px}
+  .sub b{color:var(--fg)}
+  .pills{display:flex;gap:7px;margin-top:16px;flex-wrap:wrap}
+  .pill{font-size:11.5px;font-weight:700;padding:5px 11px;border-radius:16px;border:1px solid var(--pline);color:var(--muted);background:transparent}
+  .pill.csi{color:var(--csi);border-color:color-mix(in srgb,var(--csi) 45%,transparent)}
+  .pill.tof{color:var(--tof);border-color:color-mix(in srgb,var(--tof) 45%,transparent)}
+  .pill.mm{color:var(--mm);border-color:color-mix(in srgb,var(--mm) 45%,transparent)}
+  .team{font-size:11px;color:var(--faint);margin-top:18px;letter-spacing:.02em}
+</style>
+</head>
+<body>
+<div class="head">
+  <div class="ey">MAJUBOM · TITLE PALETTE</div>
+  <h1>타이틀 슬라이드 팔레트 — 더 어두운 네이비 4안</h1>
+  <p>첫 슬라이드 기준. 딥네이비(B)보다 더 어둡게, 강조색만 다르게 4개. 배경 어둠·강조색 취향 골라주면 그걸로 덱 전체 리스킨할게요. (사이트 안 건드림)</p>
+</div>
+
+<div class="grid" id="grid"></div>
+
+<script>
+const palettes = [
+  { name:"1 · 미드나잇 네이비 + 코랄", desc:"딥네이비보다 한 단계 어둡게 · 웜 코랄 강조",
+    v:{bg:"#080c15",glow:"rgba(239,122,92,.10)",fg:"#eef1f7",muted:"#a2adc2",faint:"#6b7896",
+       acc:"#ef7a5c",csi:"#e6b45a",tof:"#4fb3a3",mm:"#ef8098",pline:"#26324a"} },
+  { name:"2 · 잉크 네이비 + 앰버", desc:"거의 검정 네이비 · 따뜻한 앰버 강조 (신뢰)",
+    v:{bg:"#06090f",glow:"rgba(230,168,74,.09)",fg:"#eef0f5",muted:"#9aa4ba",faint:"#66728d",
+       acc:"#e6a84a",csi:"#e6a84a",tof:"#4fa89a",mm:"#dd8593",pline:"#212c40"} },
+  { name:"3 · 미드나잇 슬레이트 + 틸", desc:"짙은 슬레이트블루 · 차분한 틸 강조",
+    v:{bg:"#070b12",glow:"rgba(79,179,163,.09)",fg:"#eaeef4",muted:"#98a4b8",faint:"#647089",
+       acc:"#54b7a6",csi:"#dcae55",tof:"#54b7a6",mm:"#dd8496",pline:"#202b3e"} },
+  { name:"4 · 니어블랙 네이비 + 코랄골드", desc:"가장 어둡게(거의 흑) · 따뜻한 코랄골드",
+    v:{bg:"#04060b",glow:"rgba(240,149,94,.08)",fg:"#ecEEF3".replace('ecEEF3','eceef3'),muted:"#94a0b5",faint:"#5e6a84",
+       acc:"#f0955e",csi:"#e6b45a",tof:"#4faa9c",mm:"#e88494",pline:"#1c2637"} },
+];
+
+const sample = (v) => `
+  <div class="slide" style="--bg:${v.bg};--glow:${v.glow};--fg:${v.fg};--muted:${v.muted};--faint:${v.faint};--acc:${v.acc};--csi:${v.csi};--tof:${v.tof};--mm:${v.mm};--pline:${v.pline}">
+    <div class="kick">MAJUBOM · 글로벌 피우다 프로젝트 2026</div>
+    <div class="h1">마주봄<span class="dot">.</span><br><span class="t">치매환자를 위한 비접촉<br>낙상 예방 모니터링</span></div>
+    <div class="sub">몸에 아무것도 붙이지 않는다. 침대 옆 <b>세 센서</b>가 어르신이 <b>일어서려는 순간</b>을 읽고, <b>넘어지기 전에</b> 간호사를 부른다.</div>
+    <div class="pills">
+      <span class="pill mm">mmWave · 자세·이탈</span>
+      <span class="pill tof">ToF · 침상 위치</span>
+      <span class="pill csi">CSI · 개인 위험도</span>
+      <span class="pill">서버 · z-score</span>
+    </div>
+    <div class="team">팀 마주봄 · 2026 · CSI 박형석 · ToF 조우진 · mmWave 유현기</div>
+  </div>`;
+
+document.getElementById('grid').innerHTML = palettes.map(p => `
+  <div class="opt">
+    <div class="lbl">
+      <div class="nm">${p.name}<small>${p.desc}</small></div>
+      <div class="sw">
+        <i style="background:${p.v.bg}"></i><i style="background:${p.v.acc}"></i>
+        <i style="background:${p.v.csi}"></i><i style="background:${p.v.tof}"></i><i style="background:${p.v.mm}"></i>
+      </div>
+    </div>
+    ${sample(p.v)}
+  </div>`).join('');
+</script>
+</body>
+</html>

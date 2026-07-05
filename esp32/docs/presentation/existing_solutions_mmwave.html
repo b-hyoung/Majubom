@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>이탈 예측 — 기존 해결방안 · mmWave 사용처와 문제 · 오늘의 결론</title>
+<style>
+  :root{
+    --bg:#070b12; --card:#111826; --card2:#0c1220; --line:#212c40; --line2:#2b3852;
+    --fg:#eef0f5; --muted:#9aa4ba; --faint:#66728d;
+    --acc:#e6a84a; --tof:#4fa89a; --mm:#dd8593; --ok:#6cbf8f; --danger:#ef7a5c;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:"Pretendard","Apple SD Gothic Neo",system-ui,sans-serif;background:var(--bg);color:var(--fg);
+    -webkit-print-color-adjust:exact;print-color-adjust:exact;line-height:1.55;font-size:13.5px}
+  @page{size:A4;margin:11mm}
+  .wrap{max-width:920px;margin:0 auto;padding:26px 26px}
+  .ey{font-family:ui-monospace,monospace;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--acc)}
+  h1{font-size:24px;font-weight:800;margin-top:8px;letter-spacing:-.02em}
+  .intro{color:var(--muted);margin-top:8px;font-size:13px}
+  h2{font-size:16px;font-weight:800;margin:24px 0 8px;padding-bottom:5px;border-bottom:1px solid var(--line);
+    display:flex;gap:8px;align-items:center;break-after:avoid}
+  h2 .t{font-size:11px;color:var(--acc);border:1px solid color-mix(in srgb,var(--acc) 40%,transparent);padding:2px 8px;border-radius:10px}
+  table{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:6px}
+  th,td{border:1px solid var(--line);padding:7px 10px;text-align:left;vertical-align:top}
+  th{background:rgba(255,255,255,.03);color:var(--muted);font-family:ui-monospace,monospace;font-size:11px}
+  td:first-child{font-weight:700;width:130px}
+  .lim{color:var(--danger)} .good{color:var(--ok)}
+  .us td{background:color-mix(in srgb,var(--ok) 9%,transparent)} .us td b{color:var(--ok)}
+  ul{margin:6px 0 0 18px} li{margin:5px 0}
+  li b{color:var(--fg)}
+  .box{background:color-mix(in srgb,var(--acc) 8%,transparent);border:1px solid color-mix(in srgb,var(--acc) 25%,transparent);
+    border-radius:10px;padding:11px 15px;margin-top:10px;font-size:13px;break-inside:avoid}
+  .box b{color:var(--acc)}
+  .warn{background:color-mix(in srgb,var(--danger) 8%,transparent);border:1px solid color-mix(in srgb,var(--danger) 26%,transparent);
+    border-radius:10px;padding:11px 15px;margin-top:10px;font-size:13px;color:#f3c9c9;break-inside:avoid}
+  .warn b{color:var(--danger)}
+  .foot{margin-top:18px;font-size:11px;color:var(--faint);font-family:ui-monospace,monospace;border-top:1px solid var(--line);padding-top:8px}
+  .src{font-size:11px;color:var(--faint)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="ey">MAJUBOM · 이탈 예측 리서치 정리</div>
+  <h1>기존 해결방안 · mmWave 사용처와 문제 · 오늘의 결론</h1>
+  <p class="intro">침대 이탈 감지/예측을 다들 어떻게 풀었나, mmWave는 어디에 쓰이고 무슨 문제가 있나, 그래서 우리가 오늘 확인한 것. (⚠️ 상당수 검색 스니펫 기준 — 원문 대조는 별도 표기)</p>
+
+  <!-- A -->
+  <h2><span class="t">A</span> 기존 해결방안 — 어떻게 했나 & 한계</h2>
+  <table>
+    <tr><th>방법</th><th>어떻게 (방식)</th><th>한계 (단점)</th></tr>
+    <tr><td>카메라·깊이</td><td>영상/3D CNN — 몸통 회전·구르기 등 pre-exit 동작 감지 (~87.7%)</td><td class="lim">프라이버시 침해 · 각도·이불에 취약 · 야간/사각</td></tr>
+    <tr><td>웨어러블(IMU)</td><td>착용 가속도계로 충격/움직임</td><td class="lim">착용 거부·분실·충전 (치매환자 빼버림) · 단독 ~68%</td></tr>
+    <tr><td>압력매트·로드셀</td><td>침대다리 하중 4개 → 무게중심(CoG)이 영역 벗어나면 이탈 · 매트 압력 1D CNN(~93.5%)</td><td class="lim">설치 부담 · 자세 거침 · 오탐 많음 · 사후 위주</td></tr>
+    <tr><td>진동센서</td><td>침대 진동으로 앉음 등 자세</td><td class="lim">거칠고 행동 제한적</td></tr>
+    <tr><td>레이더(mmWave/4D)</td><td>점군 + 도플러(속도) → 누움→앉음→가장자리→이탈 <b>단계</b> 감지 (Vayyar) · 낙상 97~99%</td><td class="lim">세밀 자세 약함(희소점) · 상용 독점·구독료</td></tr>
+    <tr class="us"><td><b>마주봄</b></td><td><b>ToF(위치) + mmWave(속도·동역학) 융합, 저가 비접촉</b></td><td><b>데이터 축적 단계 (아래 C)</b></td></tr>
+  </table>
+  <div class="box"><b>공통 빈자리</b> — 다들 "저가 + 비접촉 + 프라이버시 보존 + 오탐 낮음"을 동시에 못 채움. 카메라=프라이버시, 웨어러블=착용, 매트=설치, 레이더=독점. → 우리 자리 = <b>저가 비접촉 융합</b>.</div>
+
+  <!-- 상용 -->
+  <h2><span class="t">A+</span> 상용/배포 사례 (이탈 전조까지)</h2>
+  <ul>
+    <li><b>Vayyar Care</b> — 4D mmWave, <b>누움→앉음→가장자리→이탈 단계별 경보</b> + 도플러(속도). 영국 Essex 316대. 앉는 순간 즉시 알림.</li>
+    <li><b>사이렌케어(국내)</b> — <b>Vayyar 레이더</b>+소형카메라. 인천YWCA요양원. 낙상·침대이탈·호흡·심박.</li>
+    <li><b>Hikvision</b> — mmWave 레이더, <b>"이탈 전조현상만 집중, 뒤척임 제거"</b>. 화장실 overstay 알람.</li>
+    <li><b>VSTAlert(VirtuSense)</b> — 이탈 <b>30~65초 전</b> 의도 예측 (ML). <span class="src">(스니펫 미검증)</span></li>
+    <li><b>SafelyYou</b> — AI 카메라, 낙상 40%↓·ER 80%↓. 근데 카메라 사각(화장실 X).</li>
+  </ul>
+  <div class="warn">⚠️ <b>오탐 현실</b> — 좋은 시스템도 nuisance(헛알람) ~31%, PPV 68% 수준. <b>"뒤척임 vs 진짜 이탈" 구분 = 승부처이자 평가 지표.</b> "우리가 최초" 금지 — 이미 상용화됨. 우리 = <b>저가·융합·오탐 감소 실증.</b></div>
+
+  <!-- A2 -->
+  <h2><span class="t">A2</span> 상용화된 것들의 문제 (제품 자체의 한계)</h2>
+  <table>
+    <tr><th style="width:150px">문제</th><th>내용 (어느 제품)</th></tr>
+    <tr><td class="lim">오탐·알람 피로</td><td><b>가장 큰 문제.</b> 좋은 시스템도 nuisance ~31%, 표준 침대알람 정확도 15% → 간호사가 <b>무시하거나 꺼버림</b>(alarm fatigue). <span class="src">(bed-exit alarm effectiveness)</span></td></tr>
+    <tr><td class="lim">비용·구독료</td><td>Vayyar·Hikvision = <b>독점장비 + 월 구독</b>. 저예산 시설 접근 어려움. Vayyar 69베드에 <b>138센서(2/베드)</b> → 방마다 비용↑.</td></tr>
+    <tr><td class="lim">카메라 프라이버시</td><td>SafelyYou·사이렌케어(카메라 옵션)는 <b>촬영</b>. <b>화장실 등 못 감</b>(SafelyYou 명시 — 낙상 위험 큰 곳). 거주자·가족 거부감.</td></tr>
+    <tr><td class="lim">설치·거리 제약</td><td>사이렌케어 <b>1m 이내</b>, Hikvision <b>벽 2m 중앙·무장애물</b>. 방마다 센서 필요 → 확장 비용.</td></tr>
+    <tr><td class="lim">가림(occlusion) 미탐</td><td>다인·이불·가구로 가리면 놓침. 레이더 낙상 논문: <b>"인원↑ → 가림 → 미탐(FN)↑".</b></td></tr>
+    <tr><td class="lim">개인화 부담</td><td>임계 튜닝 <b>수작업</b>. 민감하면 오탐, 느슨하면 미탐 — 스태프가 환자별 조정해야.</td></tr>
+    <tr><td class="lim">감지 vs 예측(늦음)</td><td>다수가 <b>사후 감지</b>. 이미 서 있은 뒤 알림 = 대응시간 부족. 예측형도 리드타임 제한.</td></tr>
+    <tr><td class="lim">블랙박스·벤더 락인</td><td>독점 알고리즘 → <b>검증·커스텀 불가</b>, 시스템 통합·종속 문제.</td></tr>
+    <tr><td class="lim">효과 근거 논쟁</td><td>침대알람 <b>단독으론 낙상을 못 줄인다</b>는 연구 다수(스태프 대응이 있어야 효과). 기술만으론 부족.</td></tr>
+  </table>
+  <div class="box"><b>우리 포지션</b> — 이 문제들 중 <b>비용(저가 오픈HW)·프라이버시(무카메라)·블랙박스(오픈)·오탐(융합으로 뒤척임 구분)</b> 을 겨냥. "상용을 이긴다"가 아니라 <b>"상용이 못 채운 자리(저가·무카메라·융합·검증가능)"</b> 를 실증.</div>
+
+  <!-- A3 -->
+  <h2><span class="t">A3</span> 상용 mmWave(레이더) 제품의 문제 — 콕 집어</h2>
+  <p style="font-size:12.5px;color:var(--muted)">Vayyar · Hikvision · 사이렌케어 등 <b>레이더 기반 상용</b>이 실제로 안고 있는 것. (우리가 겪은 물리 한계와 동일 — 그들도 엔지니어링으로 우회할 뿐)</p>
+  <table style="margin-top:6px">
+    <tr><th style="width:160px;color:var(--mm)">상용 레이더 문제</th><th>내용</th></tr>
+    <tr><td class="lim">가림·다인 미탐</td><td>다인·이불·가구로 가리면 놓침. 레이더 낙상 연구 <b>"인원↑ → 가림 → 미탐(FN)↑"</b>. 다인 병실에 취약.</td></tr>
+    <tr><td class="lim">설치 위치·각도 민감</td><td>Hikvision <b>벽 2m 중앙·전방 무장애물</b>, 사이렌케어 <b>1m 이내</b>. 각도·위치 틀어지면 오작동. 방마다 세팅 필요.</td></tr>
+    <tr><td class="lim">방마다 센서 = 커버리지 비용</td><td>레이더 FoV 한정 → Vayyar <b>69베드에 138센서(2/베드)</b>. 넓은 병동일수록 센서 수·비용 급증.</td></tr>
+    <tr><td class="lim">뒤척임 오탐 (실재)</td><td>레이더도 <b>뒤척임을 이탈로 착각</b> → Hikvision이 <b>"뒤척임·가벼운 움직임 제거"</b>에 애씀(=이 오탐이 상용에도 실재한다는 방증). 세밀 자세는 물리상 약함.</td></tr>
+    <tr><td class="lim">단일 레이더 한계</td><td>대부분 <b>레이더 단독</b> → 위치 정밀도 약함. 사이렌케어는 <b>카메라를 덧붙여</b> 보완(→ 프라이버시 문제 다시).</td></tr>
+    <tr><td class="lim">정지자·미세움직임 의존</td><td>도플러 기반 → <b>완전 정지면 약함</b>(호흡 미세움직임으로 겨우 유지). 아주 조용한 취침 시 신뢰↓.</td></tr>
+    <tr><td class="lim">환경 반사 노이즈</td><td>금속·가구 반사, 다중경로 → 오검출·유령 표적.</td></tr>
+    <tr><td class="lim">거리-해상도 트레이드오프</td><td>멀수록 점·해상도↓ → 넓은 커버리지 vs 정밀도 상충.</td></tr>
+  </table>
+  <div class="box"><b>핵심</b> — 상용 레이더도 우리와 <b>같은 물리 한계</b>(가림·뒤척임 오탐·정지자·설치민감)를 가짐. 다만 <b>비싼 하드웨어·독점 튜닝</b>으로 우회. → 우리 = <b>같은 한계를 저가·ToF융합으로</b> 다루는 게 요점(뒤척임 오탐은 ToF 위치, 가림·침대밖은 상보로).</div>
+
+  <!-- B -->
+  <h2><span class="t">B</span> mmWave — 어디에 쓰이나 & 어떤 문제</h2>
+  <p style="font-size:13px"><b class="good">쓰이는 곳</b> : 낙상 감지(97~99%) · 자세 분류 · 침대 이탈/재실 · 생체(호흡·미세움직임) · 보행 분석. 비접촉·야간·이불 투과.</p>
+  <table style="margin-top:8px">
+    <tr><th>문제</th><th>내용 (근거)</th></tr>
+    <tr><td>희소 점군</td><td>프레임당 점 적음(우리 ~76, 근데 자세엔 부족). 먼 거리일수록 급감.</td></tr>
+    <tr><td>세밀 자세 어려움</td><td><b>Sensor-Stack Limits(IWR6843AOP, 우리 칩)</b>: 4자세 0.674 · 좌/우 눕기 35~42% 혼동 · 엎드림(prone) 배포불가. ✅검증</td></tr>
+    <tr><td>근본 원인</td><td>"분류기가 아니라 <b>센서 표현(CFAR 희소점)이 벽</b>. 다음은 <b>raw range-FFT</b> 필요." (같은 논문 결론)</td></tr>
+    <tr><td>장착 민감</td><td>우리 대각선 2m 장착 → 좌표축 기울어 "높이"가 왜곡. 재장착(1자)로 개선됨.</td></tr>
+    <tr><td>속도 노이즈</td><td>점 doppler는 방사방향·희소라 지저분. <b>track velZ(칼만, TLV 1010)</b>를 써야 깨끗.</td></tr>
+  </table>
+
+  <!-- B2 -->
+  <h2><span class="t">B2</span> 실전 문제·버그 (센서별 — 실제 겪은 것)</h2>
+  <p style="font-size:12.5px;color:var(--muted)">일반 한계 말고, 돌리면서 실제로 터진 문제들. (팀 깃로그 + 우리 실측)</p>
+  <table style="margin-top:6px">
+    <tr><th style="width:150px;color:var(--mm)">mmWave 문제</th><th>내용 / 원인</th></tr>
+    <tr><td class="lim">뒤척임을 이탈로 오탐</td><td>움직임은 보이나 <b>"뒤척임 vs 나가려는 것"</b> 구분 못 함 → 헛알람. <b>핵심 미해결</b>(상용 Hikvision도 이걸로 고생).</td></tr>
+    <tr><td class="lim">USB 연결 불안정</td><td>DATA 자주 멈춤·드롭(<code>Device not configured</code>). <b>cfg 재전송</b>으로 복구. 이전 프로세스 안 죽이면 <b>"multiple access"</b> 포트 충돌.</td></tr>
+    <tr><td class="lim">정지한 사람 놓침</td><td>cfg 동적 클러터 제거 → <b>가만히 자는 사람은 점 급감</b>(호흡 미세움직임만). 자는 사람 미탐 위험.</td></tr>
+    <tr><td class="lim">좌표축 기울어짐</td><td>대각선 2m 장착 → z가 진짜 높이 아님(누운 몸 z=-0.12). <b>1자(수직) 재장착</b>으로 개선.</td></tr>
+    <tr><td class="lim">empty인데 사람 있음</td><td>이탈 후 침대 비면 ToF=empty인데 mmWave는 걷는 사람 계속 봄(41점) → 라벨 혼동. <span class="good">(단, 이건 융합엔 장점 — ToF 사각 커버)</span></td></tr>
+    <tr><td class="lim">다인·사물 혼동</td><td>여러 명·가구 반사 → <b>유령 track</b>. nan/inf 쓰레기 슬롯 필터 + <b>침대 소속 게이트</b>로 환자 특정 필요.</td></tr>
+    <tr><td class="lim">거리 멀면 급감</td><td>점 수 1/r⁴로 감소 → 먼 거리 자세 붕괴.</td></tr>
+    <tr><td class="lim">회전/왕복 보행 왜곡</td><td>돌거나 왔다갔다 하면 gait 지표 왜곡 → <b>직진성 게이트</b>로 배제.</td></tr>
+  </table>
+  <table style="margin-top:10px">
+    <tr><th style="width:150px;color:var(--tof)">ToF 문제</th><th>내용 / 원인 (팀이 고친 것)</th></tr>
+    <tr><td class="lim">재실 판정 깜빡임</td><td>존 값 튀어 재실 on/off 깜빡 → <b>래치·hold·CONFIRM_EXIT 24프레임(~2.4초)</b>으로 억제(그래서 이탈 확정 2.4초 지연).</td></tr>
+    <tr><td class="lim">누운 사람 놓침</td><td>수평 배치서 재실 임계 4면 <b>누운 사람 미감지</b> → 2로 낮춤.</td></tr>
+    <tr><td class="lim">이불이 몸 가림</td><td>ToF는 <b>표면(이불)만</b> 봄 → 이불 언덕 vs 사람 애매.</td></tr>
+    <tr><td class="lim">옆 통행 오탐</td><td>침대 옆 지나가는 사람 감지 → <b>좌우 옆경계 컷.</b></td></tr>
+    <tr><td class="lim">침대 밖 사각</td><td>가장자리 넘어가면 놓침(좁은 FoV). 사거리 컷오프 조정(몸통 존 잘림 방지). → <b>mmWave가 커버.</b></td></tr>
+    <tr><td class="lim">잔상(stale)</td><td>hold 값 커서 사람 없는데 계속 그림 → hold 대폭↓.</td></tr>
+    <tr><td class="lim">속도·동역학 없음</td><td>도플러 없어 <b>"뒤척임 속도 vs 이탈 속도" 구분 불가</b> → mmWave가 보완.</td></tr>
+    <tr><td class="lim">posture=정지자세만</td><td>ToF posture엔 <b>"이탈(exit)" 없음</b> → <code>in_bed</code>로 잡아야. (우리가 헷갈렸던 부분)</td></tr>
+  </table>
+  <div class="box"><b>핵심 상호보완</b> — mmWave 오탐(뒤척임)·정지자 놓침 ↔ ToF 침대밖 사각·속도없음. <b>ToF(위치)+mmWave(속도)로 서로의 버그를 덮는 게 융합의 실전 이유.</b></div>
+
+  <!-- C -->
+  <h2><span class="t">C</span> 오늘 우리가 확인한 것 (실측)</h2>
+  <ul>
+    <li><b>정적 자세 = 높이가 답, 속도 무의미</b> — sitting vs 뒤척임 높이만 80.3% = 높이+속도 80.3%. doppler 속도는 중요특징 밖.</li>
+    <li><b>왜 안 됐나(진단, 데이터로 확인)</b> — ① 뭉갬(시간순 안 씀) ② 정적 자세 라벨(시간 신호 없음).</li>
+    <li><b>제대로 하니 됨</b> — 전이 이벤트 라벨(이탈임박 vs 뒤척임) + 시간순 LSTM + 누수방지 시간분할 → <b>LSTM F1 42 vs RF(뭉갬) F1 13</b>. 시간순이 이탈 3~5배 잘 잡음.</li>
+    <li><b>단, 성능 약함</b> — 이탈 36%만 잡음. 1명·이탈이벤트 17개·proxy 라벨 → 낙관적. <b>데이터 대량 필요</b>(여러명·100+ 이벤트).</li>
+  </ul>
+  <div class="box"><b>결론 — 방향</b> : 이탈 <b>예측</b>은 <b>높이+속도+위치 → 단계 → 시간순(LSTM)</b>. 라벨은 <b>ToF in_bed 이탈 이벤트</b> 기준. 평가는 <b>F1/오탐(nuisance), ToF-단독 대비</b> (accuracy는 불균형이라 함정). mmWave 역할 = ToF가 못 보는 <b>동역학·침대 밖</b> + 교차검증 오탐↓.</div>
+
+  <div class="foot">팀 마주봄 · 2026-07-04 · 다음: co_log에 in_bed·track속도 추가 → 여러 사람 대량수집 → LSTM 재학습(F1 42→70+). 상세는 mmWave/exit_seq/HANDOFF.md</div>
+</div>
+</body>
+</html>

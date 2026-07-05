@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>마주봄 · 시연 시나리오 & 레이아웃</title>
+<style>
+  :root{
+    --bg:#070b12; --bg2:#0b1120; --card:#111826; --card2:#0c1220; --line:#212c40; --line2:#2b3852;
+    --fg:#eef0f5; --muted:#9aa4ba; --faint:#66728d;
+    --acc:#e6a84a; --csi:#e6b45a; --tof:#4fa89a; --mm:#dd8593; --ok:#6cbf8f; --danger:#ef7a5c;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:"Pretendard","Apple SD Gothic Neo","Segoe UI",system-ui,sans-serif;
+    background:radial-gradient(1100px 600px at 10% -10%,rgba(230,168,74,.07),transparent 60%),var(--bg);
+    color:var(--fg);letter-spacing:-.01em;-webkit-font-smoothing:antialiased;padding:44px 30px 80px;line-height:1.6}
+  .wrap{max-width:1120px;margin:0 auto}
+  .ey{font-size:12.5px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--acc)}
+  h1{font-size:34px;font-weight:800;margin-top:10px;letter-spacing:-.02em}
+  .intro{color:var(--muted);margin-top:12px;font-size:16px;max-width:70ch}
+  h2{font-size:21px;font-weight:800;margin:40px 0 4px;display:flex;align-items:center;gap:10px}
+  h2 .tag{font-size:12px;font-weight:700;color:var(--acc);border:1px solid color-mix(in srgb,var(--acc) 40%,transparent);padding:3px 10px;border-radius:14px}
+  .sub{color:var(--muted);font-size:14.5px;margin-bottom:16px}
+
+  /* 데모 슬라이드 목업 (레이아웃 ① 좌우분할) */
+  .mock{background:linear-gradient(160deg,var(--bg2),var(--bg));border:1px solid var(--line);border-radius:14px;
+    padding:20px 22px;margin-bottom:16px}
+  .mkick{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);font-weight:700}
+  .mkick b{color:var(--acc)}
+  .mh{font-size:20px;font-weight:800;margin:5px 0 12px}
+  .split{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .slot{aspect-ratio:16/10;border:1.5px dashed var(--line2);border-radius:12px;background:var(--card2);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px;text-align:center;padding:14px;position:relative}
+  .slot .lab{position:absolute;top:10px;left:12px;font-size:11px;font-family:ui-monospace,monospace;color:var(--acc);
+    border:1px solid color-mix(in srgb,var(--acc) 35%,transparent);padding:3px 9px;border-radius:12px}
+  .slot .play{width:46px;height:46px;border-radius:50%;border:2px solid var(--acc);color:var(--acc);display:grid;place-items:center;font-size:17px}
+  .slot .d{font-size:12.5px;color:var(--muted);line-height:1.45;max-width:26ch}
+  .slot .d b{color:var(--fg)}
+  .slot.dash{border-color:color-mix(in srgb,var(--acc) 30%,transparent)}
+  .mfoot{display:flex;align-items:center;gap:10px;margin-top:12px;flex-wrap:wrap}
+  .chip{font-size:12px;font-weight:700;padding:5px 11px;border-radius:14px;border:1px solid}
+  .chip.csi{color:var(--csi);border-color:color-mix(in srgb,var(--csi) 40%,transparent)}
+  .chip.tof{color:var(--tof);border-color:color-mix(in srgb,var(--tof) 40%,transparent)}
+  .chip.mm{color:var(--mm);border-color:color-mix(in srgb,var(--mm) 40%,transparent)}
+  .cap{font-size:13px;color:var(--faint)}
+
+  /* 촬영 순서 */
+  .cards{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+  .c{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px}
+  .c .code{font-family:ui-monospace,monospace;font-size:12px;color:var(--acc);font-weight:700}
+  .c h3{font-size:16px;margin:6px 0 6px}
+  .c p{font-size:13.5px;color:var(--muted);line-height:1.5}
+  .c .why{font-size:12px;color:var(--faint);margin-top:8px;padding-top:8px;border-top:1px solid var(--line)}
+
+  .beat{display:flex;gap:16px;padding:14px 0;border-bottom:1px dashed var(--line)}
+  .beat:last-child{border-bottom:none}
+  .beat .n{flex:none;width:64px;font-weight:800;color:var(--acc)}
+  .beat .film{flex:1.1;font-size:14.5px}.beat .film b{color:var(--fg)}
+  .beat .arr{flex:none;color:var(--faint);align-self:center}
+  .beat .dash{flex:1.3;font-size:14px;color:var(--muted)}
+  .beat .dash b{color:var(--fg)}
+
+  .box{background:color-mix(in srgb,var(--acc) 8%,transparent);border:1px solid color-mix(in srgb,var(--acc) 25%,transparent);
+    border-radius:12px;padding:14px 18px;margin-top:16px;font-size:14.5px}
+  .box b{color:var(--acc)}
+  .warn{background:color-mix(in srgb,var(--danger) 8%,transparent);border:1px solid color-mix(in srgb,var(--danger) 26%,transparent);
+    border-radius:12px;padding:14px 18px;margin-top:14px;font-size:14.5px;color:#f3c9c9}
+  .warn b{color:var(--danger)}
+  ol.ck{margin:8px 0 0 20px;font-size:14.5px;color:var(--muted)} ol.ck li{margin:6px 0}
+  ol.ck b{color:var(--fg)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="ey">MAJUBOM · DEMO SHOOT PLAN</div>
+  <h1>시연 시나리오 & 슬라이드 레이아웃</h1>
+  <p class="intro">레이아웃 ①(좌우 분할) 확정 — <b style="color:var(--fg)">왼쪽 사람 영상 · 오른쪽 대시보드</b>를 나란히 둬서 "일어나는 순간 → 알림 뜸"을 동시에 보여준다. 아래는 3개 데모 슬라이드 목업 + baseline 포함 촬영 순서.</p>
+
+  <!-- 레이아웃 -->
+  <h2><span class="tag">A</span> 데모 슬라이드 레이아웃 (좌우 분할)</h2>
+  <div class="sub">영상 2개를 나란히 → PIP 합성 불필요. 각 슬라이드 하단에 그 장면 센서칩 + 캡션.</div>
+
+  <div class="mock">
+    <div class="mkick">07 · <b>시연 ①</b> — 베이스라인</div>
+    <div class="mh">정상 취침 — 센서가 평상시 보는 것</div>
+    <div class="split">
+      <div class="slot"><span class="lab">▶ 사람</span><div class="play">▶</div><div class="d"><b>누운 어르신</b> (정적)</div></div>
+      <div class="slot dash"><span class="lab">▶ 대시보드</span><div class="play">▶</div><div class="d"><b>CSI HR·호흡 그래프</b> 기준선 · ToF 재실</div></div>
+    </div>
+    <div class="mfoot"><span class="chip csi">CSI ♥ HR·호흡</span><span class="chip tof">ToF ● 재실</span><span class="cap">→ 개인 baseline 확보</span></div>
+  </div>
+
+  <div class="mock">
+    <div class="mkick">07 · <b>시연 ②</b> — 이탈 감지 → 알림</div>
+    <div class="mh">뒤척임은 넘기고, 진짜 전조에서 알린다</div>
+    <div class="split">
+      <div class="slot"><span class="lab">▶ 사람</span><div class="play">▶</div><div class="d">일어나 <b>가장자리 → 내려옴</b></div></div>
+      <div class="slot dash"><span class="lab">▶ 대시보드</span><div class="play">▶</div><div class="d"><b>ToF 가장자리 + mmWave 앉음</b> 교차 → 알림</div></div>
+    </div>
+    <div class="mfoot"><span class="chip tof">ToF ● 위치</span><span class="chip mm">mmWave ● 자세</span><span class="cap">→ 교차검증 이탈 전조</span></div>
+  </div>
+
+  <div class="mock">
+    <div class="mkick">07 · <b>시연 ③</b> — 보행 위험도</div>
+    <div class="mh">걸음이 달라지면, 위험도가 오른다</div>
+    <div class="split">
+      <div class="slot"><span class="lab">▶ 사람</span><div class="play">▶</div><div class="d"><b>정상 → 불안정</b> 보행 (느리게·발 끌며)</div></div>
+      <div class="slot dash"><span class="lab">▶ 대시보드</span><div class="play">▶</div><div class="d">보행지표 <b>vs baseline</b> — 속도↓·stride_cv↑ = 위험</div></div>
+    </div>
+    <div class="mfoot"><span class="chip mm">mmWave ~ 보행</span><span class="cap">→ baseline 대비 편차 = 위험도 상승</span></div>
+  </div>
+
+  <!-- 촬영 순서 -->
+  <h2><span class="tag">B</span> 촬영 순서 — baseline 먼저</h2>
+  <div class="sub">"달라짐"을 보여주려면 비교 기준(baseline)이 먼저 있어야 한다. 데모 전에 아래 3개를 확보.</div>
+  <div class="cards">
+    <div class="c"><div class="code">B1 · CSI</div><h3>누운 생체 baseline</h3><p>5분 안정 누움 → HR·호흡 개인 기준선 학습</p><div class="why">시연 ①의 기준</div></div>
+    <div class="c"><div class="code">B2 · mmWave</div><h3>정상 보행 baseline</h3><p>평소 걸음 5~10회 → 속도·stride_cv 기준</p><div class="why">시연 ③의 "달라짐" 비교 기준</div></div>
+    <div class="c"><div class="code">B3 · ToF</div><h3>빈 침대 캘리브</h3><p>사람 없는 침대 → 재실/이탈 임계</p><div class="why">시연 ②의 이탈 판정 기준</div></div>
+  </div>
+
+  <div class="box" style="margin-top:22px"><b>데모 본 촬영</b> — 한 스토리로 이어서 (대시보드 화면녹화 동시)</div>
+  <div style="margin-top:6px">
+    <div class="beat"><div class="n">Beat 1</div><div class="film"><b>누워 안정</b> (~10초)</div><div class="arr">→</div><div class="dash">대시보드에 <b>CSI HR·호흡 baseline</b> 표출</div></div>
+    <div class="beat"><div class="n">Beat 2</div><div class="film"><b>상체 일으켜 가장자리 → 내려옴</b> (~10초)</div><div class="arr">→</div><div class="dash"><b>ToF(가장자리) + mmWave(앉음) 교차</b> → "이탈 전조" 알림</div></div>
+    <div class="beat"><div class="n">Beat 3</div><div class="film"><b>걷기: 정상 → 불안정</b> (~15초)</div><div class="arr">→</div><div class="dash">mmWave 보행지표 실시간 · <b>baseline 대비 속도↓·stride_cv↑ = 위험</b></div></div>
+  </div>
+
+  <div class="warn">⚠️ <b>CSI 주의</b> — 심박·호흡은 <b>누워 가만히 있을 때만</b> 나온다(움직이면 깨짐). 걷는 구간엔 CSI 없음 → CSI 자리는 <b>Beat 1(베이스라인)</b> 뿐.</div>
+
+  <!-- 동기화 & 체크리스트 -->
+  <h2><span class="tag">C</span> 동기화 & 찍기 전 체크</h2>
+  <div class="box"><b>동기화</b> — 대시보드는 QuickTime 화면녹화, 사람은 카메라 → 편집에서 좌우로. 센서 로그에 타임스탬프가 있어 시각 맞추기 쉬움.</div>
+  <ol class="ck">
+    <li><b>USB 안정화</b> — 오늘 계속 끊김. 케이블 교체·맥 직결부터 (라이브 데모 전제)</li>
+    <li><b>각 센서 단독 확인</b> — CSI(박형석)·ToF(조우진)·mmWave(유현기) 각자 그 장면에서 값 나오는지</li>
+    <li><b>baseline(B1·B2·B3) 먼저</b> 확보 → 그다음 데모 본 촬영</li>
+    <li><b>대시보드가 이 3종을 실시간 표출</b>하는지 확인 (생체 + 이탈 + 보행 비교)</li>
+  </ol>
+</div>
+</body>
+</html>

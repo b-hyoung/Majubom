@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>요양시설 낙상 시스템 — 상용화 현황 (마주봄 조사)</title>
+<style>
+  :root{
+    --bg:#0a0e1a; --bg2:#0f152a; --card:#121a30; --card2:#0e1526; --line:#243049;
+    --fg:#eef1fb; --muted:#9aa6c4; --faint:#6b779a;
+    --cyan:#38e1c8; --blue:#5b8cff; --vio:#a78bfa; --pink:#fb7185; --green:#34d399; --amber:#fbbf24; --danger:#f87171;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:"Pretendard","Apple SD Gothic Neo","Segoe UI",system-ui,sans-serif;
+    background:
+      radial-gradient(1100px 640px at 12% -8%,rgba(91,140,255,.16),transparent 60%),
+      radial-gradient(900px 620px at 100% 0%,rgba(56,225,200,.10),transparent 55%),
+      var(--bg);
+    color:var(--fg);letter-spacing:-.01em;-webkit-font-smoothing:antialiased;line-height:1.6;
+    min-height:100vh;
+  }
+  .mono{font-family:"JetBrains Mono",ui-monospace,Menlo,monospace}
+  a{color:var(--cyan);text-decoration:none;border-bottom:1px solid transparent;transition:.15s}
+  a:hover{border-bottom-color:var(--cyan)}
+  .wrap{max-width:1120px;margin:0 auto;padding:52px 30px 80px}
+
+  /* 헤더 */
+  .eyebrow{display:inline-flex;align-items:center;gap:9px;font-size:12.5px;font-weight:600;color:var(--cyan);
+    letter-spacing:.18em;text-transform:uppercase;margin-bottom:16px}
+  .eyebrow .dot{width:8px;height:8px;border-radius:50%;background:var(--cyan);box-shadow:0 0 12px var(--cyan)}
+  h1{font-size:clamp(30px,4.6vw,50px);font-weight:800;line-height:1.08;letter-spacing:-.03em}
+  h1 .g{background:linear-gradient(90deg,var(--blue),var(--cyan));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+  .sub{margin-top:16px;font-size:16.5px;color:var(--muted);max-width:60em}
+  .sub b{color:var(--fg)}
+
+  /* 요약 배너 */
+  .keybar{margin:26px 0 10px;background:linear-gradient(90deg,rgba(52,211,153,.12),rgba(52,211,153,.03));
+    border:1px solid rgba(52,211,153,.3);border-left:4px solid var(--green);border-radius:14px;padding:15px 20px;font-size:15.5px}
+  .keybar b{color:var(--green)}
+
+  /* 카드 그리드 */
+  .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:22px;margin-top:24px}
+  @media(max-width:820px){.grid{grid-template-columns:1fr}}
+  .card{background:linear-gradient(180deg,var(--card),var(--card2));border:1px solid var(--line);border-radius:20px;
+    padding:24px 24px 22px;position:relative;overflow:hidden}
+  .card::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;background:var(--ac)}
+  .card.c1{--ac:var(--cyan)} .card.c2{--ac:var(--vio)} .card.c3{--ac:var(--blue)} .card.c4{--ac:var(--pink)}
+  .chd{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:16px}
+  .cname{font-size:22px;font-weight:800;letter-spacing:-.02em}
+  .cname small{display:block;font-size:12.5px;font-weight:600;color:var(--faint);margin-top:3px;letter-spacing:0}
+  .badge{flex:none;font-family:"JetBrains Mono",monospace;font-size:11px;font-weight:700;padding:5px 11px;border-radius:20px;
+    background:color-mix(in srgb,var(--ac) 16%,transparent);color:var(--ac);border:1px solid color-mix(in srgb,var(--ac) 35%,transparent);white-space:nowrap}
+  dl{display:grid;grid-template-columns:82px 1fr;gap:9px 14px;font-size:14px}
+  dt{font-weight:700;color:var(--faint);font-size:12px;padding-top:2px}
+  dd{color:var(--fg);line-height:1.5}
+  dd .hi{color:var(--ac);font-weight:700}
+  dd .num{font-family:"JetBrains Mono",monospace;color:var(--green);font-weight:700}
+  dd .cam{color:var(--danger);font-weight:700}
+  .src{margin-top:14px;padding-top:12px;border-top:1px solid var(--line);font-size:12px;color:var(--faint);display:flex;flex-wrap:wrap;gap:6px 14px}
+
+  /* 시사점 */
+  .take{margin-top:30px;background:linear-gradient(180deg,var(--card),var(--card2));border:1px solid var(--line);
+    border-left:4px solid var(--green);border-radius:18px;padding:24px 26px}
+  .take h2{font-size:20px;font-weight:800;color:var(--green);margin-bottom:14px;display:flex;align-items:center;gap:9px}
+  .take .row{display:flex;gap:14px;padding:11px 0;border-bottom:1px dashed var(--line);font-size:15px}
+  .take .row:last-child{border-bottom:none}
+  .take .k{flex:none;width:150px;font-weight:800;color:var(--fg)}
+  .take .v{color:var(--muted)} .take .v b{color:var(--green)}
+  .warn{margin-top:16px;background:rgba(248,113,113,.09);border:1px solid rgba(248,113,113,.28);border-radius:12px;
+    padding:13px 17px;font-size:14.5px;color:#fecaca}
+  .warn b{color:var(--danger)}
+
+  footer{margin-top:34px;border-top:1px solid var(--line);padding-top:16px;font-family:"JetBrains Mono",monospace;
+    font-size:12px;color:var(--faint);display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span class="dot"></span> MAJUBOM · MARKET RESEARCH</div>
+  <h1>요양시설 낙상 시스템 — <span class="g">이미 상용화된 것들</span></h1>
+  <p class="sub">"우리와 뭐가 다른가"를 정직하게 잡기 위한 현황 조사. <b>비접촉 레이더 낙상·이탈 감지는 이미 시장에 있고 효과도 실증됐다.</b> 그래서 우리 포지셔닝은 "최초"가 아니라 <b>"검증된 접근 + 우리만의 융합·무카메라·저비용"</b> 이어야 한다.</p>
+
+  <div class="keybar">🔑 <b>핵심</b> — 국내 <b>사이렌케어가 이스라엘 Vayyar 60GHz mmWave 레이더</b>를 쓴다. 즉 <b>우리 IWR6843과 같은 급 센서</b>가 이미 <b>인천YWCA요양원</b>에 설치돼 운용 중이다.</div>
+
+  <div class="grid">
+
+    <!-- 사이렌케어 -->
+    <div class="card c1">
+      <div class="chd">
+        <div class="cname">사이렌케어 <small>빅헤브솔루션 · 국내</small></div>
+        <span class="badge">레이더+카메라</span>
+      </div>
+      <dl>
+        <dt>방식</dt><dd><span class="hi">Vayyar 60GHz mmWave 레이더</span> + 소형카메라(옵션)</dd>
+        <dt>설치</dt><dd>침대 기준 <span class="hi">1m 이내</span> 설치 필요</dd>
+        <dt>배포</dt><dd><span class="hi">인천YWCA요양원</span> · 병동 낙상 · 반도체 안전 · <span class="hi">일본 수출</span></dd>
+        <dt>감지</dt><dd>낙상 · 기상 · <span class="hi">침대이탈</span> · 재실/부재 · 사람수 · 활동지수 · 심박수 · 호흡수 · 수면패턴</dd>
+        <dt>가격</dt><dd class="mono">레이더 월 30,000원 + 카메라 월 10,000원</dd>
+        <dt>프라이버시</dt><dd>레이더는 무카메라 강조 — 단 <span class="cam">소형카메라 옵션 포함</span></dd>
+      </dl>
+      <div class="src">🔗 <a href="https://bighavesolution.com/sirencare/index.html">BigHaveSolution</a> <a href="https://medieus.com/product/hbeauty/machine_step1.asp?p_num=241&lang=ko">메디우스</a> <a href="http://www.carekim.com/news_view.jsp?ncd=188">월간장기요양</a></div>
+    </div>
+
+    <!-- 하이크비전 -->
+    <div class="card c2">
+      <div class="chd">
+        <div class="cname">Hikvision <small>하이크비전 · 글로벌</small></div>
+        <span class="badge">레이더</span>
+      </div>
+      <dl>
+        <dt>방식</dt><dd><span class="hi">mmWave 낙상감지 레이더</span> (DS-TDSB00, 4m) · 도플러</dd>
+        <dt>설치</dt><dd><span class="hi">벽 2m 높이</span> · 감지영역 수평중앙 · 전방 무장애물</dd>
+        <dt>배포</dt><dd>침실·복도·<span class="hi">화장실(고위험)</span> · 루마니아 <span class="hi">Smart Hospital Bacău</span> — 화장실 낙상레이더+열화상+널스콜 연동</dd>
+        <dt>감지</dt><dd>낙상 · 자세변화 · 호흡·심박 · <span class="hi">화장실 장시간 체류(overstay) 알람</span> · <span class="hi">"이탈 전조현상만 집중 측정"</span></dd>
+        <dt>프라이버시</dt><dd>비접촉·비영상, 사생활 존중 강조</dd>
+      </dl>
+      <div class="src">🔗 <a href="https://www.hikvision.com/en/newsroom/blog/protecting-elderly-and-vulnerable-people-in-care-facilities-with-intelligent-radar-powered-fall-detection-technology/">Hikvision Blog</a> <a href="https://www.hikvision.com/en/solutions/solutions-by-function/radar-sensor-based-care/">Radar Care 솔루션</a></div>
+    </div>
+
+    <!-- Vayyar -->
+    <div class="card c3">
+      <div class="chd">
+        <div class="cname">Vayyar Care <small>이스라엘 · 해외</small></div>
+        <span class="badge">4D 레이더</span>
+      </div>
+      <dl>
+        <dt>방식</dt><dd><span class="hi">4D 이미징 mmWave 레이더</span> · 무웨어러블 · RF만</dd>
+        <dt>설치</dt><dd><span class="hi">벽·천장</span>에 설치 (은밀 모니터)</dd>
+        <dt>배포</dt><dd>영국 <span class="hi">Essex County Council — 316+ 센서</span>(요양원·주거·개인가정, UK 최대) · Colchester <span class="hi">Foxburrow Grange 69베드에 138개</span></dd>
+        <dt>결과</dt><dd><span class="num">낙상 후 대응속도↑ · 입원 감소</span> · 낙상 데이터 인사이트("낙상=아침·침실" → 고위험 시간 인력증원)</dd>
+        <dt>맥락</dt><dd>요양원 입원의 <span class="num">약 40%가 낙상</span> 관련</dd>
+      </dl>
+      <div class="src">🔗 <a href="https://vayyar.com/blog/elderly-care/fall-detection-technology-helps-essex-county-council-eliminate-hospital-admissions-and-long-lies/">Vayyar · Essex 사례</a> <a href="https://tls.global/Vayyar">Vayyar Care</a></div>
+    </div>
+
+    <!-- SafelyYou -->
+    <div class="card c4">
+      <div class="chd">
+        <div class="cname">SafelyYou <small>미국 · 해외</small></div>
+        <span class="badge">AI 카메라</span>
+      </div>
+      <dl>
+        <dt>방식</dt><dd><span class="cam">벽걸이 카메라 + 컴퓨터비전</span> · 펜던트 없음 · 연속 라이브스트림 없음</dd>
+        <dt>설치</dt><dd>거주자 방 <span class="hi">벽걸이</span> · 낙상 시 짧은 이벤트 영상만 저장</dd>
+        <dt>배포</dt><dd>북미 메모리케어·SNF · Cadence <span class="hi">노스캐롤라이나 7개 커뮤니티 150베드</span> 파일럿</dd>
+        <dt>결과</dt><dd><span class="num">낙상 40%↓ · 낙상 ER 80%↓</span> (6개 캘리포니아 시설 관찰연구, EMT 35→16% / ED 25→8%)</dd>
+        <dt>프라이버시</dt><dd><span class="cam">카메라 기반 — 화장실 등 못 감</span> (사각지대)</dd>
+      </dl>
+      <div class="src">🔗 <a href="https://www.safely-you.com/">SafelyYou</a> <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8277400/">관찰연구(PMC)</a></div>
+    </div>
+
+  </div>
+
+  <!-- 시사점 -->
+  <div class="take">
+    <h2>⚑ 마주봄에 주는 시사점 — 정직한 포지셔닝</h2>
+    <div class="row"><div class="k">✅ 효용성 근거</div><div class="v">비접촉 레이더 이탈·낙상감지는 <b>시장이 이미 효과 실증</b> (Vayyar 입원↓, SafelyYou 낙상 40%↓/ER 80%↓). → "우리 방향은 검증된 접근"</div></div>
+    <div class="row"><div class="k">차별점 ①</div><div class="v"><b>완전 무카메라</b> — 사이렌케어(카메라 옵션)·SafelyYou(카메라)와 달리 우리는 전파·거리만</div></div>
+    <div class="row"><div class="k">차별점 ②</div><div class="v"><b>다중센서 융합</b> — 상용은 대개 레이더 단독. 우리는 CSI(생체)+ToF+mmWave 3종</div></div>
+    <div class="row"><div class="k">차별점 ③</div><div class="v"><b>개인 위험도 가중</b> — 이벤트 감지에 그치지 않고 CSI 생체 baseline으로 그날 위험도 맞춤</div></div>
+    <div class="row"><div class="k">차별점 ④</div><div class="v"><b>저비용·오픈HW</b> — ESP32 + 범용 IWR6843 (상용 독점장비/구독료 대비)</div></div>
+    <div class="warn">⚠️ <b>주의</b> — 하이크비전이 이미 <b>"이탈 전조현상만 집중 측정"</b>, 사이렌케어가 <b>Vayyar 레이더 + 침대이탈 + 호흡/심박</b> 을 함. 그래서 <b>"최초·유일" 주장은 금지.</b> "검증된 접근 위에 융합·무카메라·저비용을 더한다"로 가야 안 깨진다.</div>
+  </div>
+
+  <footer>
+    <span>팀 마주봄 · 2026 · 요양시설 낙상 시스템 상용화 현황 조사</span>
+    <span>※ 카드 하단 링크 = 원문 출처</span>
+  </footer>
+
+</div>
+</body>
+</html>

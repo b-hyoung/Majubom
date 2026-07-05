@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>mmWave 침대이탈 + ToF 융합 — 논문 근거 (환각체크 완료)</title>
+<style>
+  :root{
+    --bg:#070b12; --card:#111826; --card2:#0c1220; --line:#212c40; --line2:#2b3852;
+    --fg:#eef0f5; --muted:#9aa4ba; --faint:#66728d;
+    --acc:#e6a84a; --tof:#4fa89a; --mm:#dd8593; --ok:#6cbf8f; --danger:#ef7a5c;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:"Pretendard","Apple SD Gothic Neo",system-ui,sans-serif;background:var(--bg);color:var(--fg);
+    -webkit-print-color-adjust:exact;print-color-adjust:exact;line-height:1.55;font-size:14px}
+  @page{size:A4;margin:12mm}
+  .wrap{max-width:900px;margin:0 auto;padding:28px 26px}
+  .ey{font-family:ui-monospace,monospace;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--acc)}
+  h1{font-size:25px;font-weight:800;margin-top:8px;letter-spacing:-.02em}
+  .intro{color:var(--muted);margin-top:8px;font-size:13px}
+  h2{font-size:16px;font-weight:800;margin:22px 0 8px;padding-bottom:5px;border-bottom:1px solid var(--line);display:flex;gap:8px;align-items:center}
+  h2 .t{font-size:11px;color:var(--acc);border:1px solid color-mix(in srgb,var(--acc) 40%,transparent);padding:2px 8px;border-radius:10px}
+
+  .p{background:linear-gradient(180deg,var(--card),var(--card2));border:1px solid var(--line);border-radius:10px;
+    padding:12px 15px;margin-bottom:10px;break-inside:avoid}
+  .ph{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+  .pt{font-size:14.5px;font-weight:800;line-height:1.3}
+  .pv{font-size:11.5px;color:var(--faint);margin-top:2px}
+  .badge{flex:none;font-size:10.5px;font-weight:800;padding:3px 9px;border-radius:12px;white-space:nowrap}
+  .badge.ok{background:color-mix(in srgb,var(--ok) 15%,transparent);color:var(--ok);border:1px solid color-mix(in srgb,var(--ok) 35%,transparent)}
+  .badge.no{background:color-mix(in srgb,var(--danger) 13%,transparent);color:var(--danger);border:1px solid color-mix(in srgb,var(--danger) 32%,transparent)}
+  .pd{font-size:12.5px;color:var(--muted);margin-top:7px}
+  .pd b{color:var(--fg)}
+  .note{font-size:11.5px;color:var(--acc);margin-top:6px}
+  .note.warn{color:var(--danger)}
+  .lnk{font-size:11px;color:var(--tof);margin-top:5px;word-break:break-all}
+
+  .legend{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 14px;margin-top:14px;font-size:12px;color:var(--muted)}
+  .legend b{color:var(--fg)}
+  .foot{margin-top:16px;font-size:11px;color:var(--faint);font-family:ui-monospace,monospace}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="ey">MAJUBOM · BED-EXIT LITERATURE · FACT-CHECKED</div>
+  <h1>mmWave 침대이탈 + ToF 융합 — 논문 근거</h1>
+  <p class="intro">"ToF=위치 강함 / mmWave=보강"으로 침대이탈을 교차검증하는 접근의 학술·상용 근거. <b style="color:var(--fg)">각 항목 원문 대조(환각체크) 완료</b> — 실존/도메인 주의를 배지로 표시.</p>
+
+  <h2><span class="t">A</span> ToF·깊이 + 레이더 융합 (위치+보강)</h2>
+
+  <div class="p">
+    <div class="ph"><div><div class="pt">ToF/Radar early feature-based fusion for human detection and tracking</div><div class="pv">Zoghlami 외 · IEEE ICIT 2021 · #9453703</div></div><span class="badge ok">✅ 실존 확인</span></div>
+    <div class="pd"><b>ToF 카메라 + 레이더</b>를 <b>특징단계(early) 융합</b>해 사람 검출·추적. "ToF 위치 + 레이더 보강" 구조의 직접 방법 근거.</div>
+    <div class="note warn">⚠️ 도메인 = 인간-로봇 협업(Industry 4.0), 침대·요양 아님 → <b>융합 방법만</b> 참고</div>
+    <div class="lnk">mediatum.ub.tum.de/doc/1591703</div>
+  </div>
+
+  <div class="p">
+    <div class="ph"><div><div class="pt">eNightLog — 야간 침대이탈·배회 감지</div><div class="pv">Cheung 외 · Sensors 2021</div></div><span class="badge ok">✅ 실존 확인</span></div>
+    <div class="pd"><b>3D ToF + UWB</b> 융합, 야간 침대이탈·배회. 단일침대 <b>정확도 99.0% / 정밀 99.2%</b>, 이중침대 98.8%. <b>압력매트·IR펜스(85.9%)를 크게 능가.</b></div>
+    <div class="note">△ ToF가 <b>Kinect(고가 깊이카메라)</b> — 우리 VL53L5CX(저가 거리격자)와 하드웨어 다름</div>
+    <div class="lnk">pmc.ncbi.nlm.nih.gov/articles/PMC7864330</div>
+  </div>
+
+  <div class="p">
+    <div class="ph"><div><div class="pt">In-Bed 자세추정 서베이 (모달리티 비교)</div><div class="pv">arXiv 2402.00700 · 2024</div></div><span class="badge no">△ 개별 미검증</span></div>
+    <div class="pd">깊이·레이더·압력·RGB 등 <b>모달리티별 in-bed 자세추정</b> 리뷰. 융합 설계 시 참고 지도.</div>
+    <div class="note warn">※ 검색 목록 기반 — 원문 개별 대조는 아직 안 함</div>
+  </div>
+
+  <h2><span class="t">B</span> mmWave 침대이탈·재실 (우리 칩 포함)</h2>
+
+  <div class="p">
+    <div class="ph"><div><div class="pt">Sensor-Stack Limits — 우리 칩 in-bed 융합의 한계</div><div class="pv">arXiv 2606.23534 · 2026</div></div><span class="badge ok">✅ 실존 확인</span></div>
+    <div class="pd"><b>IWR6843AOP(우리 칩!)</b> 레이더 + 써멀 융합 in-bed 자세. 융합 <b>0.871</b> balanced acc. "된다"보다 <b>뭐가 어려운지</b>를 정직히 규명.</div>
+    <div class="note">✅ 우리 정확한 센서 · 한계 레퍼런스로 최적</div>
+    <div class="lnk">arxiv.org/abs/2606.23534</div>
+  </div>
+
+  <div class="p">
+    <div class="ph"><div><div class="pt">A Practical Case of Monitoring Older Adults Using mmWave Radar and UWB</div><div class="pv">García-Gutiérrez 외 · Sensors 2026 (26:681) · Univ Alcalá</div></div><span class="badge ok">✅ 실존 확인</span></div>
+    <div class="pd"><b>mmWave + UWB</b>로 침실 재실 · <b>야간 화장실(nocturia)</b> · 이동성 지표. 스페인 요양원 <b>86일 실배포</b>.</div>
+    <div class="note">△ UWB 사용(우리 아님) · 야간 화장실 근거로는 유용</div>
+    <div class="lnk">pmc.ncbi.nlm.nih.gov/articles/PMC12845560</div>
+  </div>
+
+  <div class="p">
+    <div class="ph"><div><div class="pt">희소 점군 향상 모델 (24GHz FMCW 낙상)</div><div class="pv">PMC10820484</div></div><span class="badge no">△ 개별 미검증</span></div>
+    <div class="pd">희소 mmWave 점군을 <b>보강</b>해 낙상 감지. 우리 희소점 문제와 직결.</div>
+    <div class="note warn">※ 검색 목록 기반 — 원문 개별 대조는 아직 안 함</div>
+  </div>
+
+  <h2><span class="t">C</span> 실제 상용·병원 배포</h2>
+
+  <div class="p">
+    <div class="ph"><div><div class="pt">프라이부르크 대학병원 — 레이더 단계별·환자별 알림</div><div class="pv">Medscape 2026 (보도)</div></div><span class="badge no">⚠️ 원문 미검증(페이월)</span></div>
+    <div class="pd">레이더로 <b>앉음/침대이탈/방나감</b> 단계 감지, <b>환자별 알림 커스텀</b>(고위험=앉으면, 치매=방나가면). <b>우리 "개인 위험도 단계 알림"과 거의 동일.</b></div>
+    <div class="note warn">⚠️ 원문 페이월(402)로 직접 확인 못 함 — 인용 시 "보도 기준"으로</div>
+  </div>
+
+  <div class="p">
+    <div class="ph"><div><div class="pt">사이렌케어(Vayyar) · Hikvision · Vayyar Care</div><div class="pv">국내/해외 상용</div></div><span class="badge ok">✅ 앞서 확인</span></div>
+    <div class="pd">비접촉 레이더 침대이탈·낙상 상용. 사이렌케어=<b>Vayyar 레이더</b>(인천YWCA요양원), Hikvision=<b>"이탈 전조 집중"</b>, Vayyar=영국 316대·입원↓.</div>
+  </div>
+
+  <div class="legend">
+    <b>배지</b> — ✅ 실존 확인(원문 대조) · △ 검색목록 기반 개별 미검증 · ⚠️ 원문 접근 불가(미검증). &nbsp;
+    <b>결론</b> — ToF+레이더 침대이탈 융합은 학술·상용 모두 존재. <b>우리 몫 = 신규성 아니라 저비용 스택 실증 + 오탐 감소.</b>
+  </div>
+  <div class="foot">팀 마주봄 · 2026-07-04 · 환각체크: 5편 원문대조 실존확인 · 3편 미검증(표시됨)</div>
+</div>
+</body>
+</html>

@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>마주봄 · 단일 데모 슬라이드 레이아웃</title>
+<style>
+  :root{
+    --bg:#070b12; --bg2:#0b1120; --card:#111826; --card2:#0c1220; --line:#212c40; --line2:#2b3852;
+    --fg:#eef0f5; --muted:#9aa4ba; --faint:#66728d;
+    --acc:#e6a84a; --csi:#e6b45a; --tof:#4fa89a; --mm:#dd8593; --ok:#6cbf8f; --danger:#ef7a5c;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:"Pretendard","Apple SD Gothic Neo",system-ui,sans-serif;
+    background:#0a0b0e;color:#e8e8ea;-webkit-font-smoothing:antialiased;padding:40px 26px 60px;letter-spacing:-.01em}
+  .cap{max-width:1120px;margin:0 auto 18px}
+  .cap .ey{font-size:12.5px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#8a8f9c}
+  .cap h1{font-size:26px;font-weight:800;margin-top:8px}
+  .cap p{color:#9aa0ad;margin-top:8px;font-size:15px;max-width:70ch;line-height:1.6}
+
+  /* 실제 슬라이드 프레임 (16:9) */
+  .slide{max-width:1120px;margin:0 auto;aspect-ratio:16/9;border-radius:16px;overflow:hidden;
+    border:1px solid #23252c;background:linear-gradient(160deg,var(--bg2),var(--bg));color:var(--fg);
+    padding:30px 36px;display:flex;flex-direction:column}
+  .kick{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);font-weight:700}
+  .kick b{color:var(--acc)}
+  h2{font-size:28px;font-weight:800;letter-spacing:-.02em;margin:6px 0 14px}
+  h2 .ac{color:var(--acc)}
+
+  .split{flex:1;display:grid;grid-template-columns:1fr 1fr;gap:18px;min-height:0}
+  .slot{border:1.5px dashed var(--line2);border-radius:14px;background:var(--card2);position:relative;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:11px;text-align:center;padding:16px}
+  .slot .lab{position:absolute;top:12px;left:14px;font-size:11.5px;font-family:ui-monospace,monospace;color:var(--acc);
+    border:1px solid color-mix(in srgb,var(--acc) 35%,transparent);padding:3px 10px;border-radius:12px}
+  .slot.dash{border-style:solid;border-color:color-mix(in srgb,var(--acc) 28%,transparent)}
+  .slot .play{width:56px;height:56px;border-radius:50%;border:2px solid var(--acc);color:var(--acc);display:grid;place-items:center;font-size:20px}
+  .slot .d{font-size:14px;color:var(--muted);line-height:1.5;max-width:30ch}
+  .slot .d b{color:var(--fg)}
+  .slot .live{position:absolute;top:12px;right:14px;font-size:11px;color:var(--danger);font-weight:700;display:flex;align-items:center;gap:5px}
+  .slot .live i{width:7px;height:7px;border-radius:50%;background:var(--danger);display:block}
+
+  /* 하단 챕터바 */
+  .chap{display:flex;gap:12px;margin-top:16px}
+  .st{flex:1;border:1px solid var(--line);border-radius:11px;padding:11px 14px;background:var(--card2);position:relative}
+  .st+.st::before{content:"—";position:absolute;left:-13px;top:50%;transform:translateY(-50%);color:var(--faint)}
+  .st .n{font-size:13.5px;font-weight:800}
+  .st .s{font-size:11.5px;color:var(--muted);margin-top:3px}
+  .st.on{border-color:var(--acc);background:color-mix(in srgb,var(--acc) 12%,transparent)}
+  .st.on .n{color:var(--acc)}
+  .st .sens{display:inline-block;font-size:10.5px;font-weight:700;margin-top:5px;padding:2px 8px;border-radius:10px;border:1px solid}
+  .st .sens.csi{color:var(--csi);border-color:color-mix(in srgb,var(--csi) 40%,transparent)}
+  .st .sens.tof{color:var(--tof);border-color:color-mix(in srgb,var(--tof) 40%,transparent)}
+  .st .sens.mm{color:var(--mm);border-color:color-mix(in srgb,var(--mm) 40%,transparent)}
+  .note{max-width:1120px;margin:18px auto 0;font-size:14px;color:#9aa0ad;line-height:1.6}
+  .note b{color:#e8e8ea}
+</style>
+</head>
+<body>
+  <div class="cap">
+    <div class="ey">MAJUBOM · SINGLE DEMO SLIDE</div>
+    <h1>단일 데모 슬라이드 — 좌 영상 / 우 대시보드 / 하단 챕터바</h1>
+    <p>연속 영상 하나(누움→일어남→걷기)가 흐르고, 오른쪽 대시보드가 실시간 반응. 하단 챕터바가 지금 단계를 하이라이트(지금 ①베이스라인).</p>
+  </div>
+
+  <div class="slide">
+    <div class="kick">07 · <b>실시간 시연</b> — 한 번에</div>
+    <h2>누워서 → 일어나서 → 걸어서, <span class="ac">한 영상</span>으로</h2>
+    <div class="split">
+      <div class="slot">
+        <span class="lab">▶ 연속 영상</span>
+        <div class="play">▶</div>
+        <div class="d"><b>사람 한 테이크</b><br>누움 → 상체 일으켜 가장자리 → 내려와 걷기(정상→불안정)</div>
+      </div>
+      <div class="slot dash">
+        <span class="lab">▶ 대시보드</span>
+        <span class="live"><i></i>LIVE</span>
+        <div class="play">▶</div>
+        <div class="d"><b>실시간 반응</b><br>CSI 생체 · ToF+mmWave 이탈 알림 · 보행지표 vs baseline</div>
+      </div>
+    </div>
+    <div class="chap">
+      <div class="st on"><div class="n">① 베이스라인</div><div class="s">누워 안정 · 개인 기준선</div><span class="sens csi">CSI ♥ HR·호흡</span></div>
+      <div class="st"><div class="n">② 이탈 전조</div><div class="s">가장자리+앉음 교차 → 알림</div><span class="sens tof">ToF</span> <span class="sens mm">mmWave</span></div>
+      <div class="st"><div class="n">③ 보행 위험</div><div class="s">baseline 대비 편차</div><span class="sens mm">mmWave ~ 보행</span></div>
+    </div>
+  </div>
+
+  <div class="note">
+    <b>동작 방식</b> — 영상이 ①→②→③으로 흐르면 하단 챕터바 하이라이트가 따라 이동(스크립트로 자동, 또는 발표자가 클릭). 오른쪽 대시보드 화면녹화가 같은 타임라인으로 반응. <b>CSI는 ①구간만</b>(걸으면 신호 깨짐) — 챕터바에도 CSI는 ①에만 표시.
+  </div>
+</body>
+</html>

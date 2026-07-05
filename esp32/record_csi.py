@@ -7,7 +7,7 @@ CSI 측정 기록기 (csi_recv_router용)
 """
 import sys, serial, time
 
-PORT = "/dev/cu.usbmodem5B5E0761861"
+PORT = sys.argv[3] if len(sys.argv) > 3 else "/dev/cu.usbmodem5B8E0653191"
 BAUD = 921600
 out = sys.argv[1] if len(sys.argv) > 1 else "csi_rest.csv"
 dur = int(sys.argv[2]) if len(sys.argv) > 2 else 90

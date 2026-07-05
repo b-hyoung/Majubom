@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>마주봄 · 시연 영상 촬영 대본</title>
+<style>
+  :root{
+    --bg:#070b12; --bg2:#0b1120; --card:#111826; --card2:#0c1220; --line:#212c40; --line2:#2b3852;
+    --fg:#eef0f5; --muted:#9aa4ba; --faint:#66728d;
+    --acc:#e6a84a; --csi:#e6b45a; --tof:#4fa89a; --mm:#dd8593; --ok:#6cbf8f; --danger:#ef7a5c;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:"Pretendard","Apple SD Gothic Neo",system-ui,sans-serif;
+    background:radial-gradient(1100px 600px at 10% -10%,rgba(230,168,74,.06),transparent 60%),var(--bg);
+    color:var(--fg);letter-spacing:-.01em;-webkit-font-smoothing:antialiased;padding:44px 30px 80px;line-height:1.6}
+  .wrap{max-width:1080px;margin:0 auto}
+  .ey{font-size:12.5px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--acc)}
+  h1{font-size:33px;font-weight:800;margin-top:10px}
+  .intro{color:var(--muted);margin-top:10px;font-size:15.5px;max-width:72ch}
+  .meta{display:flex;gap:20px;margin-top:16px;flex-wrap:wrap;font-size:13.5px;color:var(--faint)}
+  .meta b{color:var(--fg)}
+
+  h2{font-size:20px;font-weight:800;margin:38px 0 4px;display:flex;align-items:center;gap:10px}
+  h2 .tag{font-size:12px;font-weight:700;color:var(--acc);border:1px solid color-mix(in srgb,var(--acc) 40%,transparent);padding:3px 10px;border-radius:14px}
+  .sub{color:var(--muted);font-size:14px;margin-bottom:14px}
+
+  .cards{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  .c{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:15px 17px}
+  .c .r{font-family:ui-monospace,monospace;font-size:11.5px;color:var(--acc);font-weight:700}
+  .c h3{font-size:15.5px;margin:5px 0 5px}
+  .c p{font-size:13px;color:var(--muted);line-height:1.5}
+  .c.role .r{color:var(--csi)} .c.role:nth-child(2) .r{color:var(--tof)} .c.role:nth-child(3) .r{color:var(--mm)}
+
+  /* Beat 타임라인 */
+  .beat{display:grid;grid-template-columns:70px 1.15fr 1.3fr 96px;gap:16px;padding:15px 0;border-bottom:1px dashed var(--line);align-items:start}
+  .beat:last-child{border-bottom:none}
+  .beat .tm{font-family:ui-monospace,monospace;font-size:13px;font-weight:800;color:var(--acc)}
+  .beat .h{font-size:11px;color:var(--faint);text-transform:uppercase;letter-spacing:.1em;font-weight:700;margin-bottom:8px}
+  .beat .act{font-size:14.5px} .beat .act b{color:var(--fg)}
+  .beat .dash{font-size:13.5px;color:var(--muted)} .beat .dash b{color:var(--fg)}
+  .beat .ch{font-size:11.5px;font-weight:800;padding:5px 9px;border-radius:10px;text-align:center;align-self:start}
+  .ch.c1{color:var(--csi);border:1px solid color-mix(in srgb,var(--csi) 40%,transparent)}
+  .ch.c2{color:var(--tof);border:1px solid color-mix(in srgb,var(--tof) 40%,transparent)}
+  .ch.c3{color:var(--mm);border:1px solid color-mix(in srgb,var(--mm) 40%,transparent)}
+  .ch.c0{color:var(--faint);border:1px solid var(--line)}
+  .beathd{display:grid;grid-template-columns:70px 1.15fr 1.3fr 96px;gap:16px;font-size:11px;color:var(--faint);
+    text-transform:uppercase;letter-spacing:.1em;font-weight:700;padding-bottom:8px;border-bottom:1px solid var(--line)}
+
+  .box{background:color-mix(in srgb,var(--acc) 8%,transparent);border:1px solid color-mix(in srgb,var(--acc) 25%,transparent);
+    border-radius:12px;padding:14px 18px;margin-top:14px;font-size:14px}
+  .box b{color:var(--acc)}
+  .warn{background:color-mix(in srgb,var(--danger) 8%,transparent);border:1px solid color-mix(in srgb,var(--danger) 26%,transparent);
+    border-radius:12px;padding:14px 18px;margin-top:14px;font-size:14px;color:#f3c9c9}
+  .warn b{color:var(--danger)}
+  ul{margin:8px 0 0 20px;font-size:14px;color:var(--muted)} li{margin:6px 0} li b{color:var(--fg)}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="ey">MAJUBOM · DEMO SHOOTING SCRIPT</div>
+  <h1>시연 영상 촬영 대본</h1>
+  <p class="intro">단일 연속 영상 한 테이크 — <b style="color:var(--fg)">누움 → 일어남 → 걷기</b>. 왼쪽엔 이 영상, 오른쪽엔 대시보드 화면녹화. 아래 순서대로 찍는다.</p>
+  <div class="meta"><span>🎬 본 영상 <b>~40초</b></span><span>👥 배우 1 · 카메라 1 · 대시보드 1</span><span>📍 침대 + 3센서 설치 방</span></div>
+
+  <!-- 역할 -->
+  <h2><span class="tag">0</span> 역할 & 장비</h2>
+  <div class="cards">
+    <div class="c role"><div class="r">배우</div><h3>어르신 역</h3><p>누움→일어남→걷기 연기. 걷기는 정상→불안정 2단계.</p></div>
+    <div class="c role"><div class="r">카메라</div><h3>사람 촬영</h3><p>삼각대 고정 와이드 — 침대+옆 보행경로(2~3m) 한 프레임에.</p></div>
+    <div class="c role"><div class="r">대시보드</div><h3>화면녹화</h3><p>QuickTime로 대시보드 실시간 녹화. "액션"과 동시 시작.</p></div>
+  </div>
+  <div class="box" style="margin-top:14px"><b>센서 담당</b> — CSI 박형석 · ToF 조우진 · mmWave 유현기. 각자 본 촬영 전 자기 센서가 값 내는지 단독 확인.</div>
+
+  <!-- 사전 -->
+  <h2><span class="tag">1</span> 사전 준비 — baseline 먼저</h2>
+  <div class="sub">"달라짐"의 비교 기준. 본 촬영 전에 확보하고 대시보드에 로드.</div>
+  <div class="cards">
+    <div class="c"><div class="r">B1 · CSI</div><h3>누운 생체 5분</h3><p>안정 누움 → HR·호흡 개인 기준선</p></div>
+    <div class="c"><div class="r">B2 · mmWave</div><h3>정상 보행 5~10회</h3><p>평소 걸음 → 속도·stride_cv 기준</p></div>
+    <div class="c"><div class="r">B3 · ToF</div><h3>빈 침대 캘리브</h3><p>재실/이탈 임계</p></div>
+  </div>
+
+  <!-- 본 촬영 -->
+  <h2><span class="tag">2</span> 본 촬영 — Beat별 (한 테이크)</h2>
+  <div class="sub">"액션" = 대시보드 화면녹화 시작 + 카메라 롤 + <b>손뼉 1번(싱크 마커)</b>. 그다음 배우 진행.</div>
+  <div class="beathd"><div>시간</div><div>배우 동작</div><div>대시보드(우측)</div><div>챕터</div></div>
+
+  <div class="beat">
+    <div class="tm">0–10s</div>
+    <div><div class="h">Beat 1 · 베이스라인</div><div class="act">침대에 <b>누워 가만히</b>. 숨만 쉬며 안정.</div></div>
+    <div><div class="h">반응</div><div class="dash"><b>CSI HR·호흡 그래프</b> 안정선 · ToF 재실 ●</div></div>
+    <div class="ch c1">① CSI</div>
+  </div>
+
+  <div class="beat">
+    <div class="tm">10–22s</div>
+    <div><div class="h">Beat 2 · 이탈 전조</div><div class="act">천천히 뒤척 → <b>상체 일으켜</b> 침대 가장자리로 → <b>다리 내림</b>.</div></div>
+    <div><div class="h">반응</div><div class="dash">ToF <b>가장자리 쏠림</b> + mmWave <b>앉음</b> 교차 → <span style="color:var(--danger);font-weight:700">"이탈 전조" 알림</span></div></div>
+    <div class="ch c2">② ToF·mmWave</div>
+  </div>
+
+  <div class="beat">
+    <div class="tm">22–40s</div>
+    <div><div class="h">Beat 3 · 보행 위험</div><div class="act">침대에서 <b>내려와 걷기</b>. 처음 <b>정상 걸음</b> → 이어서 <b>불안정</b>(느리게·발 끌며·비틀).</div></div>
+    <div><div class="h">반응</div><div class="dash">mmWave 보행지표 실시간 · baseline 대비 <b>속도↓ · stride_cv↑</b> → <span style="color:var(--danger);font-weight:700">"위험"</span></div></div>
+    <div class="ch c3">③ mmWave</div>
+  </div>
+
+  <div class="beat">
+    <div class="tm">끝</div>
+    <div><div class="h">컷</div><div class="act">멈춤. 손뼉 or "컷".</div></div>
+    <div><div class="dash">화면녹화 정지</div></div>
+    <div class="ch c0">—</div>
+  </div>
+
+  <div class="warn">⚠️ <b>CSI는 Beat 1만</b> — 걷기 시작(Beat 2~3)하면 CSI 신호 깨짐. Beat 1에서 확실히 안정선 잡고 넘어갈 것.</div>
+
+  <!-- 촬영/편집 팁 -->
+  <h2><span class="tag">3</span> 카메라 · 동기화 · 편집</h2>
+  <div class="two">
+    <div>
+      <ul>
+        <li><b>카메라</b> — 삼각대 고정, 와이드. 배우 동선(침대→걷기)이 프레임 안 벗어나게 리허설.</li>
+        <li><b>화면녹화</b> — QuickTime "새로운 화면 기록", 대시보드 창. "액션"과 동시 시작.</li>
+        <li><b>싱크</b> — 시작 때 <b>손뼉 1번</b> → 영상·화면녹화 소리로 정렬. 센서 로그 타임스탬프도 참고.</li>
+      </ul>
+    </div>
+    <div>
+      <ul>
+        <li><b>편집</b> — 좌(카메라)/우(대시보드) 나란히, 손뼉 지점 맞춰 정렬. ~40초로 트림.</li>
+        <li><b>챕터</b> — 덱 슬라이드 하단 챕터바가 ①②③ 표시 대신함(영상 자막 최소).</li>
+        <li><b>여러 테이크</b> — NG 대비 3~4회. 제일 깔끔한 것 채택.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="warn"><b>필수 선결</b> — 촬영 전 <b>USB 안정 확인</b>(5분 연속 데이터 흐르는지) · 리허설에서 <b>불안정 보행이 지표에 실제로 잡히는지</b>(안 잡히면 임계 조정).</div>
+</div>
+</body>
+</html>

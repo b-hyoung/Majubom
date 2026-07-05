@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>마주봄 · mmWave 선행연구 — 우리 하드웨어(IWR6843) 기준 정리</title>
+<style>
+  :root{
+    --bg:#f8fafc; --card:#ffffff; --line:#e2e8f0; --text:#1e293b; --dim:#475569; --faint:#94a3b8;
+    --csi:#d97706; --tof:#0891b2; --mm:#e11d48; --mmbg:#fff1f3;
+    --vio:#7c3aed; --viobg:#f5f3ff; --ok:#16a34a; --okbg:#f0fdf4; --warn:#ea580c; --danger:#dc2626;
+    --gray:#64748b; --graybg:#f1f5f9; --amber:#d97706; --amberbg:#fffbeb;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Noto Sans KR','AppleSDGothicNeo',system-ui,sans-serif;background:var(--bg);color:var(--text);
+    -webkit-print-color-adjust:exact;print-color-adjust:exact;line-height:1.6}
+  .mono{font-family:'JetBrains Mono',ui-monospace,Menlo,monospace}
+  a{color:var(--vio);text-decoration:none;border-bottom:1px dotted var(--faint)}
+  a:hover{border-bottom-style:solid}
+
+  .wrap{max-width:1000px;margin:0 auto;padding:34px 30px 60px}
+
+  /* 헤더 */
+  .head{border-bottom:3px solid var(--text);padding-bottom:16px;margin-bottom:26px}
+  .kicker{font-family:'JetBrains Mono',monospace;font-size:13px;letter-spacing:2.5px;text-transform:uppercase;color:var(--faint)}
+  h1{font-size:32px;font-weight:800;letter-spacing:-.6px;line-height:1.15;margin-top:6px}
+  .head .sub{font-size:16px;color:var(--dim);margin-top:9px}
+  .head .sub b{color:var(--text)}
+
+  /* 섹션 구분 */
+  .sec{font-size:19px;font-weight:800;margin:30px 0 14px;display:flex;align-items:center;gap:9px}
+  .sec .pill{font-size:13px;font-weight:700;padding:4px 12px;border-radius:20px}
+  .sec.match .pill{background:var(--okbg);color:var(--ok);border:1px solid #bbf7d0}
+  .sec.nomatch .pill{background:var(--mmbg);color:var(--mm);border:1px solid #fecdd3}
+  .sec.todo .pill{background:var(--amberbg);color:var(--amber);border:1px solid #fde68a}
+  .sec .note{font-size:14px;font-weight:500;color:var(--faint)}
+
+  /* 논문 카드 */
+  .paper{background:#fff;border:1px solid var(--line);border-radius:14px;padding:20px 22px;margin-bottom:16px;
+    box-shadow:0 1px 3px rgba(0,0,0,.04)}
+  .paper.anchor{border-left:6px solid var(--ok)}
+  .paper.ref{border-left:6px solid var(--mm)}
+  .paper.cand{border-left:6px solid var(--amber);padding:15px 20px}
+
+  .phd{display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+  .badge{font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:800;color:#fff;border-radius:8px;
+    padding:4px 11px;flex:none;white-space:nowrap}
+  .anchor .badge{background:var(--ok)} .ref .badge{background:var(--mm)} .cand .badge{background:var(--amber)}
+  .ptitle{font-size:18px;font-weight:800;line-height:1.3;flex:1;min-width:220px}
+  .ptitle .ven{display:block;font-size:13px;font-weight:600;color:var(--dim);margin-top:3px}
+  .acc{flex:none;font-family:'JetBrains Mono',monospace;font-size:17px;font-weight:800;
+    padding:5px 15px;border-radius:22px;background:var(--okbg);color:var(--ok);white-space:nowrap;align-self:flex-start}
+  .ref .acc{background:var(--mmbg);color:var(--mm)}
+  .cand .acc{background:var(--amberbg);color:var(--amber);font-size:14px}
+
+  /* 스펙 표 */
+  .spec{display:grid;grid-template-columns:104px 1fr;gap:7px 14px;font-size:15px}
+  .spec dt{font-weight:700;color:var(--gray);font-size:13.5px;padding-top:1px}
+  .spec dd{color:var(--text)}
+  .spec dd .mono{font-size:13.5px;background:var(--graybg);padding:1px 6px;border-radius:5px}
+  .hwtag{display:inline-block;font-size:12.5px;font-weight:700;padding:1px 9px;border-radius:12px;margin-left:6px}
+  .hwtag.y{background:var(--okbg);color:var(--ok)}
+  .hwtag.n{background:var(--mmbg);color:var(--mm)}
+
+  /* 우리에게 주는 의미 */
+  .ours{margin-top:14px;padding:12px 15px;border-radius:10px;font-size:15px;line-height:1.65}
+  .anchor .ours{background:var(--okbg);border:1px solid #bbf7d0}
+  .ref .ours{background:var(--mmbg);border:1px solid #fecdd3}
+  .ours .lab{font-size:12px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;margin-bottom:4px}
+  .anchor .ours .lab{color:var(--ok)} .ref .ours .lab{color:var(--mm)}
+  .ours b{font-weight:800}
+  .ours .good{color:var(--ok);font-weight:800}
+  .ours .bad{color:var(--danger);font-weight:800}
+
+  /* 후보 컴팩트 */
+  .cand .ctxt{font-size:14px;color:var(--dim);line-height:1.6}
+  .cand .ctxt b{color:var(--text)}
+
+  /* 요약 박스 */
+  .summary{margin-top:30px;background:var(--viobg);border:1px solid #ddd6fe;border-left:6px solid var(--vio);
+    border-radius:14px;padding:20px 24px}
+  .summary .ttl{font-size:17px;font-weight:800;color:var(--vio);margin-bottom:12px}
+  .flow{font-family:'JetBrains Mono',monospace;font-size:14px;line-height:2;color:var(--text)}
+  .flow .x{color:var(--danger);font-weight:700} .flow .o{color:var(--ok);font-weight:700}
+  .flow .a{color:var(--amber);font-weight:700}
+
+  .foot{margin-top:34px;border-top:1px solid var(--line);padding-top:14px;
+    font-family:'JetBrains Mono',monospace;font-size:12.5px;color:var(--faint);
+    display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
+
+  @media print{
+    body{background:#fff} .wrap{max-width:none;padding:14mm}
+    .paper{break-inside:avoid} @page{size:A4;margin:12mm}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="head">
+    <div class="kicker">MAJUBOM · MMWAVE · HARDWARE-MATCHED LITERATURE</div>
+    <h1>mmWave 선행연구 — 우리 하드웨어(IWR6843) 기준 정리</h1>
+    <div class="sub">기준: <b>우리 센서 = TI IWR6843AOP (3TX / 4RX 단일칩 · 60GHz · 희소 점군)</b>.
+      "하드웨어가 같은가"로 먼저 거른다 — 안테나 수가 다르면 방법을 그대로 못 쓴다.</div>
+  </div>
+
+  <!-- ✅ 하드웨어 일치 -->
+  <div class="sec match"><span class="pill">✅ 하드웨어 일치</span> 우리 칩(IWR6843)으로 직접 검증된 연구 — <span class="note">이걸 기준(앵커)으로 삼는다</span></div>
+
+  <!-- 앵커 1 -->
+  <div class="paper anchor">
+    <div class="phd">
+      <span class="badge">★ 앵커</span>
+      <div class="ptitle">단일칩 mmWave 활동 인식 (원격의료)
+        <span class="ven"><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10781319/">Intelligent Millimeter-Wave System for Human Activity Monitoring for Telemedicine · <i>Sensors</i> (PMC10781319)</a></span>
+      </div>
+      <span class="acc">99.5%</span>
+    </div>
+    <dl class="spec">
+      <dt>하드웨어</dt><dd><b>IWR6843ISK-ODS</b> · <span class="mono">3TX / 4RX 단일칩</span> · 60–64GHz · ~30fps <span class="hwtag y">우리 칩과 동일 계열</span></dd>
+      <dt>분류 클래스</dt><dd>서기 · 걷기 · 앉기 · <b>눕기</b> · <b>낙상</b> (5종) — 우리가 원하는 클래스 그대로</dd>
+      <dt>방법</dt><dd>raw 점군 → <b>PointNet</b> → 5클래스 · <span class="mono">전처리·이미지화·DenseNet 없음</span> · <b>프레임 단위</b>(시간모델 없음)</dd>
+      <dt>데이터셋</dt><dd>성인 <b>89명</b>(남57/여32) · 1인 5회×30초 · <b>눕기 = 침대에서 30초 + 중간중간 뒤척임(rolling)</b></dd>
+      <dt>한계</dt><dd>젊은 건강인 위주 · 모의환경 · 다인 시 개인 귀속 어려움</dd>
+    </dl>
+    <div class="ours">
+      <div class="lab">우리에게 주는 의미</div>
+      우리 4RX <b>희소 점군으로도</b> ①의 무거운 실루엣+DenseNet <span class="bad">없이</span>
+      <span class="good">PointNet만으로 눕/앉/서/낙상 99.5%</span>가 된다는 걸 <b>우리 칩으로 직접</b> 보였다.
+      게다가 <b>침대 위 뒤척임(rolling)</b>까지 포함 → 우리 시나리오와 직결.
+      → <b>"기준 논문"을 ①(하드웨어 불일치) 대신 이걸로 삼는 게 맞다.</b>
+      단, 여전히 <span class="bad">프레임 단위 정지 분류</span>라 "전이 시퀀스(뒤척임→앉음→이탈)"는 우리가 시간축으로 더 얹어야 한다.
+    </div>
+  </div>
+
+  <!-- 앵커 2 -->
+  <div class="paper anchor">
+    <div class="phd">
+      <span class="badge">★ 침대</span>
+      <div class="ptitle">침대 위 신체 자세 — 센서 한계 규명
+        <span class="ven"><a href="https://arxiv.org/abs/2606.23534">Sensor-Stack Limits on Contactless In-Bed Body Position: 20-Subject Multimodal Radar + Thermal LOSO · <i>arXiv</i> 2606.23534 (2026)</a></span>
+      </div>
+      <span class="acc">한계연구</span>
+    </div>
+    <dl class="spec">
+      <dt>하드웨어</dt><dd><b>IWR6843AOP (ES2.0)</b> · 침대 머리맡 거치 · ~10Hz · 온칩 CFAR · 프레임당 희소 점군 <span class="hwtag y">우리 정확히 그 변형</span></dd>
+      <dt>대상</dt><dd><b>침대 위 신체 자세</b> · 피험자 <b>20명</b> · LOSO(피험자 제외) 검증 · 레이더 + 써멀 멀티모달</dd>
+      <dt>성격</dt><dd>제목부터 <b>"Sensor-Stack Limits"</b> — "된다"가 아니라 <b>우리 센서로 침대 자세가 어디까지 되고 안 되나</b>를 정직하게 규명</dd>
+      <dt>핵심</dt><dd>희소 점군이라 <b>비슷한 자세(누운 변형들) 구분이 근본적으로 어렵다</b> (정확 수치는 PDF 본문 추가 확인 필요)</dd>
+    </dl>
+    <div class="ours">
+      <div class="lab">우리에게 주는 의미</div>
+      우리 <b>정확한 센서(AOP)로 "침대 위"</b>를 다룬 거의 유일한 논문.
+      "잘 된다"보다 <b>"뭐가 어렵나"</b>를 알려줘서 헛물을 막아준다 —
+      우리 시나리오에서 <b>누움 vs 걸터앉음</b> 구분이 어려울 수 있다는 앞선 우려와 정확히 맞물린다.
+    </div>
+  </div>
+
+  <!-- ❌ 하드웨어 불일치 -->
+  <div class="sec nomatch"><span class="pill">❌ 하드웨어 다름</span> 개념만 참고 (그대로는 못 씀)</div>
+
+  <div class="paper ref">
+    <div class="phd">
+      <span class="badge">① 기존</span>
+      <div class="ptitle">눕·앉·서 다인 자세 분류
+        <span class="ven"><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11598318/">Abdullah et al., <i>Sensors</i> 2024.11 (PMC11598318)</a></span>
+      </div>
+      <span class="acc">96%</span>
+    </div>
+    <dl class="spec">
+      <dt>하드웨어</dt><dd><b>MMWCAS-RF-EVM</b> · <span class="mono">12TX / 16RX 캐스케이드</span> · 77GHz · 3.3GHz BW · 20fps <span class="hwtag n">우리(3T/4R)와 불일치</span></dd>
+      <dt>분류</dt><dd>서기 · 의자앉기 · 바닥앉기 · 눕기 (<b>정지</b> 자세 · 2인 조합 10종)</dd>
+      <dt>방법</dt><dd>점군 <b>1초(20프레임) 누적</b> → DBSCAN → <span class="mono">(x,z) 실루엣 이미지</span> → <b>DenseNet</b></dd>
+      <dt>정확도</dt><dd>비겹침 <b>96%</b> · 겹침 0/33/66% → 99.3 / 95.3 / 91.1% · 피험자 5명 · 900장</dd>
+    </dl>
+    <div class="ours">
+      <div class="lab">취할 것 / 버릴 것</div>
+      <span class="good">취함:</span> "높이(z)→자세" 개념 + <b>"1초(20프레임) 누적으로 희소점 보완"</b> 아이디어. &nbsp;
+      <span class="bad">버림:</span> 12T/16R 촘촘점군 전제 · DenseNet 이미지분류 · <b>"정지 스냅샷" 틀</b>(우리는 움직이는 전이가 목표).
+    </div>
+  </div>
+
+  <!-- 🔍 확인 예정 후보 -->
+  <div class="sec todo"><span class="pill">🔍 확인 예정</span> 전이·시간축 보강 후보 (원문/하드웨어 추가 확인 필요)</div>
+
+  <div class="paper cand">
+    <div class="phd"><span class="badge">A</span>
+      <div class="ptitle">3D 점군 시공간 정보 기반 인체 움직임 인식
+        <span class="ven"><a href="https://www.mdpi.com/1424-8220/23/23/9430">Human Movement Recognition Based on 3D Point Cloud Spatiotemporal Information · <i>Sensors</i> 23(23):9430</a></span></div>
+      <span class="acc">원문 403</span>
+    </div>
+    <div class="ctxt"><b>IWR6843ISK + DCA1000</b>(우리 칩 계열)로 점군의 <b>시공간(spatiotemporal)</b> 정보 사용 →
+      우리가 필요한 <b>"전이/시간축"에 가장 근접</b>할 수 있는 후보. (MDPI가 접근 차단, 원문 재확인 필요)</div>
+  </div>
+
+  <div class="paper cand">
+    <div class="phd"><span class="badge">B</span>
+      <div class="ptitle">1D 점군 + 도플러 기반 노인 낙상 감지
+        <span class="ven"><a href="https://www.researchgate.net/publication/372528494_Millimeter-Wave_Radar-Based_Elderly_Fall_Detection_Fed_by_One-Dimensional_Point_Cloud_and_Doppler">Millimeter-Wave Radar-Based Elderly Fall Detection Fed by 1D Point Cloud and Doppler</a></span></div>
+      <span class="acc">낙상</span>
+    </div>
+    <div class="ctxt"><b>IWR6843AOP</b>(우리 정확 변형)로 낙상 감지 — 야간 모드 ③낙상 트랙 검증용. (원문 확인 필요)</div>
+  </div>
+
+  <div class="paper cand">
+    <div class="phd"><span class="badge">C</span>
+      <div class="ptitle">전이 포함 활동 인식 (시간모델)
+        <span class="ven">mm-ARnet / mPCT-LSTM 계열 · <i>2025</i></span></div>
+      <span class="acc">칩 TBD</span>
+    </div>
+    <div class="ctxt">16활동에 <b>posture transition(자세 전이)</b> 포함 · 4D 점군 <b>다프레임 융합 + TCN+Bi-LSTM</b> 시간모델.
+      우리 "전이 시퀀스"에 방법론적으로 가장 맞지만 <b>하드웨어(칩 종류) 확인 필요</b>.</div>
+  </div>
+
+  <!-- 요약 -->
+  <div class="summary">
+    <div class="ttl">⚑ 하드웨어 기준 재정렬 — 무엇을 기준 삼고 무엇을 버리나</div>
+    <div class="flow">
+①  Sensors 2024.11 (12T/16R 캐스케이드) &nbsp;→&nbsp; <span class="x">✗ 하드웨어 불일치</span> · 개념(높이→자세, 1초누적)만 참고<br>
+★  PMC10781319 (IWR6843 3T/4R) &nbsp;→&nbsp; <span class="o">✓ 새 기준 앵커</span> · 우리 칩·우리 클래스·PointNet·뒤척임 포함<br>
+★  arXiv 2606.23534 (IWR6843AOP, 침대) &nbsp;→&nbsp; <span class="o">✓ 침대 한계</span> · 뭐가 어려운지 알려줌<br>
++  시공간·전이 논문 (A/C) &nbsp;→&nbsp; <span class="a">▲ 다음 확인</span> · "정지 분류 → 전이 시퀀스"로 넘어갈 다리
+    </div>
+  </div>
+
+  <div class="foot">
+    <span>팀 마주봄 · 2026 · mmWave 선행연구 — 하드웨어(IWR6843) 기준 정리</span>
+    <span>※ 제목 클릭 시 원문 · ✅=우리 칩 검증 / ❌=캐스케이드(불일치) / 🔍=미확인</span>
+  </div>
+
+</div>
+</body>
+</html>
