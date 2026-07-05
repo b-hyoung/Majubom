@@ -61,3 +61,6 @@ TOF/single_sensor/
 # 런타임 생성 — feature 로깅 DB (스냅샷은 CSV로 export해서 커밋)
 TOF/ml/*.db
 site/*.bak
+# 증강 재생성물 (augment_seq.py / augment_tof.py 로 언제든 재생성)
+mmWave/exit_seq/seq_dataset_aug.jsonl.gz
+TOF/dataset/aug/
