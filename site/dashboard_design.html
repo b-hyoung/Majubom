@@ -198,57 +198,66 @@
     </div>
     <div class="room-wrap">
       <div class="rv-svg-wrap">
-        <svg id="roomSvg" viewBox="0 0 340 200" width="100%" style="height:auto;max-width:900px" preserveAspectRatio="xMidYMid meet">
+        <svg id="roomSvg" viewBox="0 0 330 206" width="100%" style="height:auto;max-width:900px" preserveAspectRatio="xMidYMid meet">
           <defs>
-            <pattern id="rvgrid" width="27.5" height="27.5" patternUnits="userSpaceOnUse">
-              <path d="M27.5 0L0 0 0 27.5" fill="none" stroke="rgba(255,255,255,.03)" stroke-width=".5"/>
-            </pattern>
             <marker id="arrw" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#a78bfa"/></marker>
           </defs>
-          <rect width="340" height="200" fill="#0a0818"/>
-          <rect width="340" height="200" fill="url(#rvgrid)"/>
-          <!-- 보행 경로: 침대(하단) -> 모니터링(우상단) -->
-          <path d="M130,155 C185,140 225,92 278,60" fill="none" stroke="rgba(167,139,250,.45)" stroke-width="1.5" stroke-dasharray="4 4" marker-end="url(#arrw)"/>
-          <text x="205" y="112" fill="#8b7fc9" font-size="7" font-family="monospace">보행: 침대 → 모니터링</text>
-          <!-- mmWave 천장 스캔콘(좌하단 -> 방 커버) -->
-          <path d="M37,178 L52,118 L252,118 Z" fill="rgba(251,113,133,.07)"/>
-          <!-- ToF 감지존 -->
-          <path d="M45,157 L86,137 L86,177 Z" fill="rgba(34,211,238,.07)"/>
-          <path d="M215,157 L174,137 L174,177 Z" fill="rgba(34,211,238,.07)"/>
+          <!-- 실측 스케일: 방 6.3m(길이) x 3.6m(폭), 46px/m. 센서=좌하단 코너 원점. -->
+          <rect width="330" height="206" fill="#0a0818"/>
+          <rect x="20" y="20" width="290" height="166" fill="#0c0a1c"/>
+          <!-- 1m 격자 -->
+          <g stroke="rgba(255,255,255,.05)" stroke-width=".5">
+            <line x1="66" y1="20" x2="66" y2="186"/><line x1="112" y1="20" x2="112" y2="186"/>
+            <line x1="158" y1="20" x2="158" y2="186"/><line x1="204" y1="20" x2="204" y2="186"/>
+            <line x1="250" y1="20" x2="250" y2="186"/><line x1="296" y1="20" x2="296" y2="186"/>
+            <line x1="20" y1="140" x2="310" y2="140"/><line x1="20" y1="94" x2="310" y2="94"/><line x1="20" y1="48" x2="310" y2="48"/>
+          </g>
+          <!-- mmWave 대각선 커버리지 -->
+          <path d="M20,186 L310,172 L158,34 Z" fill="rgba(251,113,133,.06)"/>
+          <!-- 보행 경로: 침대 -> 모니터링(상단) -->
+          <path d="M170,120 C195,92 205,60 211,48" fill="none" stroke="rgba(167,139,250,.4)" stroke-width="1.2" stroke-dasharray="4 4" marker-end="url(#arrw)"/>
           <g id="rv-tof-ceil"></g>
           <g id="rv-mmwave-scan"></g>
-          <!-- 모니터링 데스크 2개(우상단) -->
-          <rect x="210" y="28" width="52" height="34" rx="3" fill="#141122" stroke="#2a2545" stroke-width=".8"/>
-          <rect x="275" y="28" width="52" height="34" rx="3" fill="#141122" stroke="#2a2545" stroke-width=".8"/>
-          <text x="269" y="20" text-anchor="middle" fill="#4a4568" font-size="7" font-family="monospace">모니터링 · 라운지</text>
-          <!-- 침대(하단, 가로, 머리=좌) -->
-          <rect x="55" y="127" width="160" height="60" rx="14" fill="#1a1730" stroke="#3a3560" stroke-width="1.5"/>
-          <rect x="60" y="132" width="26" height="50" rx="6" fill="#26314a" stroke="#3a5578" stroke-width=".8"/>
-          <rect x="90" y="132" width="120" height="50" rx="4" fill="rgba(96,165,250,.16)" stroke="#3a5578" stroke-width=".6"/>
-          <text x="135" y="160" text-anchor="middle" fill="#6b7ba0" font-size="9" font-family="monospace">침대</text>
-          <text x="73" y="123" text-anchor="middle" fill="#4a5568" font-size="6" font-family="monospace">머리</text>
+          <!-- 상단 벽: 책상2 + 유리파티션 + 모니터링/모니터 -->
+          <rect x="34" y="23" width="69" height="23" rx="2" fill="#141122" stroke="#2a2545" stroke-width=".7"/>
+          <rect x="112" y="23" width="60" height="23" rx="2" fill="#141122" stroke="#2a2545" stroke-width=".7"/>
+          <text x="90" y="38" text-anchor="middle" fill="#4a4568" font-size="6" font-family="monospace">책상</text>
+          <rect x="174" y="20" width="4" height="42" fill="#2a2545"/>
+          <rect x="186" y="23" width="51" height="23" rx="2" fill="#141122" stroke="#2a2545" stroke-width=".7"/>
+          <rect x="250" y="23" width="51" height="23" rx="2" fill="#141122" stroke="#2a2545" stroke-width=".7"/>
+          <text x="211" y="38" text-anchor="middle" fill="#4a4568" font-size="6" font-family="monospace">모니터링</text>
+          <text x="275" y="38" text-anchor="middle" fill="#4a4568" font-size="6" font-family="monospace">모니터</text>
+          <!-- 침대 (2.15x0.9m, 장축=길이방향, 머리=먼쪽=우) -->
+          <rect x="97" y="116" width="99" height="41" rx="5" fill="#1a1730" stroke="#3a3560" stroke-width="1.2"/>
+          <rect x="176" y="120" width="16" height="33" rx="3" fill="#26314a" stroke="#3a5578" stroke-width=".6"/>
+          <rect x="101" y="120" width="70" height="33" rx="3" fill="rgba(96,165,250,.16)" stroke="#3a5578" stroke-width=".5"/>
+          <text x="140" y="140" text-anchor="middle" fill="#6b7ba0" font-size="8" font-family="monospace">침대</text>
+          <text x="184" y="113" text-anchor="middle" fill="#4a5568" font-size="5.5" font-family="monospace">머리</text>
+          <!-- 문 (좌측 벽) -->
+          <rect x="20" y="62" width="5" height="46" fill="#141d2e" stroke="#3a5578" stroke-width=".8"/>
+          <text x="35" y="87" text-anchor="middle" fill="#4a5568" font-size="5.5" font-family="monospace">문</text>
+          <!-- 책상 (우하단, 6.3m 벽 우측) -->
+          <rect x="206" y="135" width="95" height="41" rx="3" fill="#141122" stroke="#2a2545" stroke-width=".7"/>
+          <text x="253" y="159" text-anchor="middle" fill="#4a4568" font-size="6" font-family="monospace">책상</text>
           <g id="rv-trail"></g>
           <g id="rv-tof-ping"></g>
-          <!-- 센서 마커 -->
-          <g>
-            <circle cx="45" cy="157" r="7" fill="#17142a" stroke="#22d3ee" stroke-width="1.4"/><circle cx="45" cy="157" r="2.8" fill="#22d3ee"/>
-            <circle cx="215" cy="157" r="7" fill="#17142a" stroke="#22d3ee" stroke-width="1.4"/><circle cx="215" cy="157" r="2.8" fill="#22d3ee"/>
-            <!-- mmWave 천장 마운트(브래킷 + 아래 화살) 좌하단 -->
-            <rect x="27" y="170" width="20" height="14" rx="3" fill="#17142a" stroke="#fb7185" stroke-width="1.6"/>
-            <circle cx="37" cy="177" r="3" fill="#fb7185"/>
-            <path d="M37,185 l-3.5,5 h7 z" fill="#fb7185"/>
-            <!-- 시작=침대 -->
-            <circle cx="135" cy="157" r="5" fill="#34d399" opacity=".9"/><circle cx="135" cy="157" r="10" fill="none" stroke="#34d399" stroke-width="1" opacity=".5"/>
-          </g>
-          <text x="45" y="175" text-anchor="middle" fill="#22d3ee" font-size="6" font-family="monospace">ToF 머리</text>
-          <text x="215" y="175" text-anchor="middle" fill="#22d3ee" font-size="6" font-family="monospace">ToF 발</text>
-          <text x="37" y="198" text-anchor="middle" fill="#fb7185" font-size="6" font-family="monospace">mmWave 천장 ↓</text>
-          <text x="135" y="144" text-anchor="middle" fill="#34d399" font-size="6" font-family="monospace">시작=침대</text>
           <g id="rv-sensor-rings"></g>
+          <!-- ToF 머리(우)/발(좌) — 침대 양끝 -->
+          <circle cx="188" cy="136" r="4.5" fill="#17142a" stroke="#22d3ee" stroke-width="1.2"/><circle cx="188" cy="136" r="1.8" fill="#22d3ee"/>
+          <circle cx="101" cy="136" r="4.5" fill="#17142a" stroke="#22d3ee" stroke-width="1.2"/><circle cx="101" cy="136" r="1.8" fill="#22d3ee"/>
+          <text x="188" y="150" text-anchor="middle" fill="#22d3ee" font-size="5" font-family="monospace">ToF머리</text>
+          <text x="101" y="150" text-anchor="middle" fill="#22d3ee" font-size="5" font-family="monospace">ToF발</text>
+          <!-- mmWave 센서 (코너, 대각선) -->
+          <rect x="14" y="180" width="16" height="12" rx="2" fill="#17142a" stroke="#fb7185" stroke-width="1.4"/>
+          <circle cx="20" cy="186" r="3" fill="#fb7185"/>
+          <text x="40" y="199" text-anchor="middle" fill="#fb7185" font-size="5.5" font-family="monospace">mmWave(대각↗)</text>
           <!-- mmWave 실시간 위치 포인터 (/mmw/live) -->
-          <g id="mmw-live"><circle id="mmw-pointer" cx="135" cy="157" r="6" fill="#fbbf24" stroke="#0a0818" stroke-width="1.6" style="display:none"><animate attributeName="r" values="6;9;6" dur="1.2s" repeatCount="indefinite"/></circle></g>
+          <g id="mmw-live"><circle id="mmw-pointer" cx="140" cy="136" r="6" fill="#fbbf24" stroke="#0a0818" stroke-width="1.6" style="display:none"><animate attributeName="r" values="6;9;6" dur="1.2s" repeatCount="indefinite"/></circle></g>
           <g id="rv-patient"></g>
-          <rect width="340" height="200" fill="none" stroke="#2a2545" stroke-width="2"/>
+          <!-- 치수 -->
+          <text x="165" y="201" text-anchor="middle" fill="#3a3560" font-size="6" font-family="monospace">6.3 m</text>
+          <text x="11" y="105" text-anchor="middle" fill="#3a3560" font-size="6" font-family="monospace" transform="rotate(-90 11 105)">3.6 m</text>
+          <rect x="20" y="20" width="290" height="166" fill="none" stroke="#2a2545" stroke-width="1.5"/>
         </svg>
         <div id="rv-inactive">⚙ 시뮬레이터 ON 시<br>실시간 병실 뷰 표시</div>
         <div class="rv-legend"><span class="rv-leg-tof">■ ToF</span><span class="rv-leg-mm">■ mmWave</span></div>
@@ -542,8 +551,15 @@ document.getElementById('hostInput').addEventListener('change',()=>{pollCsi();po
 /* 2초마다 실서버 폴링 */
 csiWaiting('연결 확인 중…'); tofWaiting();
 setInterval(()=>{ if(!simMode){pollCsi();pollTof();} },2000);
-/* ---------- mmWave 실시간 위치 (/mmw/live → 평면도 포인터) ---------- */
-const MMW_ORIGIN={x:37,y:178}, MMW_SCALE=32;  // SVG(37,178)=센서, px/m (튜닝)
+/* ---------- mmWave 실시간 위치 (/mmw/live → 실측 평면도) ---------- */
+// 2026-07-05 캘리브레이션: 방 6.3x3.6m, 센서=코너 원점, 대각선 시야.
+// 트랙(tx,ty)→방(rx,ry): 6.3m벽 방향=코너1 실측(2.20,4.92) 정규화. 46px/m.
+const ROOM_D=3.6, PAD=20, MPP=46;
+const MMW_RX=[0.408,0.913], MMW_RY=[-0.913,0.408];
+function trackToSvg(tx,ty){
+  const rx=MMW_RX[0]*tx+MMW_RX[1]*ty, ry=MMW_RY[0]*tx+MMW_RY[1]*ty;
+  return [PAD+rx*MPP, (PAD+ROOM_D*MPP)-ry*MPP];
+}
 async function pollMmwPos(){
   try{
     const r=await fetch(url('mmw','/mmw/live'),{cache:'no-store'});
@@ -553,9 +569,8 @@ async function pollMmwPos(){
     if(!p)return;
     if(t){
       const px=(t.posX!=null?t.posX:(t.x!=null?t.x:0)), py=(t.posY!=null?t.posY:(t.y!=null?t.y:0));
-      // 축 정합: 센서 y(거리)=평면도 가로(→모니터링), 센서 x(좌우)=평면도 세로
-      let X=MMW_ORIGIN.x + py*MMW_SCALE, Y=MMW_ORIGIN.y - px*MMW_SCALE;
-      X=Math.max(8,Math.min(332,X)); Y=Math.max(8,Math.min(192,Y));
+      let [X,Y]=trackToSvg(px,py);
+      X=Math.max(22,Math.min(308,X)); Y=Math.max(22,Math.min(184,Y));
       p.setAttribute('cx',X); p.setAttribute('cy',Y); p.style.display='';
     } else { p.style.display='none'; }
   }catch(e){ }
