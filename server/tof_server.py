@@ -29,6 +29,21 @@ try:
 except Exception as e:
     print(f"[posture] 모델 미로드({e}) — 자세 표시 비활성")
 
+# ── LSTM-AE 이상탐지 (옵션) ────────────────────────────────────────────
+# torch / lstm_ae.pt 없으면 조용히 비활성(anomaly=None). 서버는 정상 동작.
+_ANOM = None
+_frame_feature = None
+try:
+    from tof_anomaly import Detector as _AnomDetector, frame_feature as _frame_feature
+    _ANOM = _AnomDetector()
+    print(f"[anomaly] LSTM-AE 이상탐지 로드됨 (seq={_ANOM.seq}, thr={_ANOM.thr:.4f})")
+except Exception as e:
+    print(f"[anomaly] 미로드({e}) — 이상탐지 비활성")
+
+# 최신 이상탐지 결과 (대시보드가 /tof/anomaly 로 폴링)
+anomaly_latest = {"status": "init", "err": None, "threshold": None,
+                  "ratio": None, "filled": 0, "seq": None, "at": None}
+
 app = Flask(__name__)
 CORS(app)
 
@@ -183,6 +198,18 @@ def receive_tof():
     # 재실(있다/없다) 판정 업데이트
     update_presence(sensor_id, distances, now)
 
+    # LSTM-AE 이상탐지: 이번 프레임 특징을 버퍼에 넣고 재구성오차 점수 갱신
+    if _ANOM is not None and _frame_feature is not None:
+        try:
+            feat = _frame_feature(latest, baseline, presence)
+            _ANOM.push(feat)
+            r = _ANOM.score()
+            if r:
+                r["at"] = now
+                anomaly_latest.update(r)
+        except Exception as e:
+            print(f"[anomaly] 계산 실패: {e}")
+
     # raw SQLite 저장 (AI 학습용 원천 데이터 누적) — distances/targets 는 존별 컬럼
     try:
         db.insert_tof(sensor_id, now, resolution, distances, targets,
@@ -226,6 +253,12 @@ def get_presence():
         "baseline_set": {"tof1": baseline["tof1"] is not None,
                          "tof2": baseline["tof2"] is not None},
     })
+
+
+@app.route("/tof/anomaly", methods=["GET"])
+def get_anomaly():
+    """LSTM-AE 실시간 이상탐지 결과. 재구성오차 > 임계면 status=anomaly."""
+    return jsonify(anomaly_latest)
 
 
 @app.route("/tof/latest", methods=["GET"])

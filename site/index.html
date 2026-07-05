@@ -41,6 +41,23 @@
   .tile .glow{position:absolute;width:200px;height:200px;border-radius:50%;filter:blur(60px);opacity:.5;top:-60px;right:-60px;pointer-events:none}
   .t-csi{grid-column:span 2} .t-z{grid-column:span 2}
   .t-tof{grid-column:span 1} .t-mm{grid-column:span 1} .t-flow{grid-column:span 2}
+  /* ToF 자세 3D 뷰어 — 오른쪽 큰 패널(iframe) */
+  .t-3d{grid-column:3 / 5;grid-row:span 4;display:flex;flex-direction:column;padding:0;overflow:hidden}
+  .t-3d .lab3d{padding:14px 18px 10px;font-size:12px;letter-spacing:1px;color:var(--muted);display:flex;align-items:center;gap:8px}
+  .t-3d iframe{flex:1;width:100%;border:0;background:#0a0e16;min-height:440px}
+  @media(max-width:1100px){.t-3d{grid-column:1 / -1;grid-row:auto}.t-3d iframe{height:460px}}
+  /* 레이아웃 토글: 센서배치(평면도) 최소화 / 3D 키우기 */
+  .t-room.min{grid-row:auto}
+  .t-room.min .room-wrap{display:none}
+  .t-room.min .glow{display:none}
+  .t-3d.big{grid-column:1 / -1;grid-row:span 6}
+  .t-3d.big iframe{min-height:640px}
+  .layout-btn{cursor:pointer;font-size:11px;padding:3px 9px;border-radius:20px;border:1px solid var(--line);background:transparent;color:var(--muted)}
+  .layout-btn:hover{color:var(--text);border-color:var(--muted)}
+  /* mmWave 포인트클라우드 뷰어 (iframe) */
+  .t-mmw{grid-column:span 2;grid-row:span 3;display:flex;flex-direction:column;padding:0;overflow:hidden}
+  .t-mmw iframe{flex:1;width:100%;border:0;background:#0a0818;min-height:340px}
+  @media(max-width:1100px){.t-mmw{grid-column:1 / -1;grid-row:auto}.t-mmw iframe{height:380px}}
   .t-gate{grid-column:span 4}
 
   .lab{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);font-family:'JetBrains Mono',monospace;display:flex;align-items:center;gap:8px}
@@ -179,6 +196,7 @@
         <span class="rvbadge rvb-mm">● mmWave</span>
         <span class="rvbadge rvb-csi">● CSI ×2</span>
       </span>
+      <button class="layout-btn" style="margin-left:8px" title="센서 배치 접기/펼치기" onclick="toggleRoomMin(this)">➖ 최소화</button>
     </div>
     <div class="room-wrap">
       <div class="rv-svg-wrap">
@@ -252,6 +270,25 @@
     </div>
   </div>
 
+  <!-- ToF 자세 3D 뷰어 (오른쪽 크게, iframe으로 tof_server:5001/tof/3d 임베드) -->
+  <div class="tile t-3d">
+    <div class="lab3d">🧍 ToF 자세 3D
+      <span style="color:var(--muted);font-size:10px;font-family:'JetBrains Mono';margin-left:2px">실시간 재구성 · tof_server:5001</span>
+      <button class="layout-btn" style="margin-left:auto" title="3D 뷰어 크게/작게" onclick="toggle3dBig(this)">⤢ 키우기</button>
+      <button class="chip" style="cursor:pointer;color:var(--tof)" title="새 탭에서 크게 보기" onclick="window.open(url('tof','/tof/3d'),'_blank')">⛶ 새 탭</button>
+    </div>
+    <iframe id="view3d" title="ToF 자세 3D 뷰어" loading="lazy"></iframe>
+  </div>
+
+  <!-- mmWave 포인트클라우드 (mmw_server:5002/mmw/viz 임베드) -->
+  <div class="tile t-mmw">
+    <div class="lab3d">📡 mmWave 포인트클라우드
+      <span style="color:var(--muted);font-size:10px;font-family:'JetBrains Mono';margin-left:2px">실시간 · mmw_server:5002</span>
+      <button class="chip" style="margin-left:auto;cursor:pointer;color:#a78bfa" title="새 탭에서 크게 보기" onclick="window.open(url('mmw','/mmw/viz'),'_blank')">⛶ 새 탭</button>
+    </div>
+    <iframe id="viewmmw" title="mmWave 포인트클라우드" loading="lazy"></iframe>
+  </div>
+
   <!-- CSI -->
   <div class="tile t-csi">
     <div class="glow" style="background:var(--csi);opacity:.18"></div>
@@ -291,6 +328,16 @@
         <span class="vchip">tof1 <b id="tof1-min">--</b></span>
         <span class="vchip">tof2 <b id="tof2-min">--</b></span>
         <span class="vchip">감지존 <b id="tof-zones">--</b></span>
+      </div>
+      <!-- LSTM-AE 이상탐지 (재구성오차 기반, tof_server:5001/tof/anomaly) -->
+      <div id="tof-anom" style="margin-top:10px;display:flex;align-items:center;gap:8px">
+        <span id="anom-dot" style="width:8px;height:8px;border-radius:50%;background:#6b6494;flex:none"></span>
+        <span style="font-size:11px;color:var(--dim);flex:none">LSTM 이상탐지</span>
+        <b id="anom-status" style="font-size:11px;flex:none">--</b>
+        <div style="flex:1;height:6px;background:#ffffff14;border-radius:4px;overflow:hidden">
+          <i id="anom-bar" style="display:block;height:100%;width:0%;background:var(--tof);transition:width .3s,background .3s"></i>
+        </div>
+        <span id="anom-ratio" style="font-family:'JetBrains Mono';font-size:10px;color:var(--dim);flex:none">--</span>
       </div>
     </div>
   </div>
@@ -363,11 +410,18 @@
 const RISK={normal:'#34d399',caution:'#fbbf24',warning:'#fb923c',critical:'#f43f5e'};
 const KO={normal:'정상',caution:'주의',warning:'경고',critical:'위험'};
 const GREY='#3a3550';
-const PORTS={csi:5003, tof:5001};
+const PORTS={csi:5003, tof:5001, mmw:5002};
 let rxTotal=0, lastCsi=0, lastTof=0, hist=[];
 
 function host(){const v=document.getElementById('hostInput').value.trim();return v || (location.hostname||'localhost');}
 function url(kind,path){return 'http://'+host()+':'+PORTS[kind]+path;}
+/* 오른쪽 3D 뷰어 iframe 주소를 현재 호스트에 맞춰 설정 */
+function set3dSrc(){const f=document.getElementById('view3d');if(f){const u=url('tof','/tof/3d');if(f.src!==u)f.src=u;}}
+/* mmWave 포인트클라우드 iframe 주소 설정 */
+function setMmwSrc(){const f=document.getElementById('viewmmw');if(f){const u=url('mmw','/mmw/viz');if(f.src!==u)f.src=u;}}
+/* 레이아웃 토글: 센서배치(평면도) 최소화 / 3D 뷰어 키우기 */
+function toggleRoomMin(btn){const t=document.querySelector('.t-room');const m=t.classList.toggle('min');btn.textContent=m?'➕ 펼치기':'➖ 최소화';}
+function toggle3dBig(btn){const t=document.querySelector('.t-3d');const b=t.classList.toggle('big');btn.textContent=b?'⤡ 줄이기':'⤢ 키우기';}
 function topDot(id,ok){const d=document.getElementById(id);d.className='cdot '+(ok?'on':'off');}
 
 /* ---------- 폴링 (실서버 전용) ---------- */
@@ -392,6 +446,27 @@ async function pollTof(){
     if(t1.distances_mm||t2.distances_mm){lastTof=Date.now();renderTof(t1,t2,data.posture,data.posture_conf);}
     else{tofWaiting();}
   }catch(e){ topDot('dot-tof-top',false); tofWaiting(); }
+  pollAnom();
+}
+async function pollAnom(){
+  const dot=document.getElementById('anom-dot'), st=document.getElementById('anom-status');
+  const bar=document.getElementById('anom-bar'), rt=document.getElementById('anom-ratio');
+  if(!dot) return;
+  try{
+    const r=await fetch(url('tof','/tof/anomaly'),{cache:'no-store'});
+    const a=await r.json();
+    if(a.status==='init'||a.err==null){
+      dot.style.background='#6b6494'; st.textContent='버퍼 채우는 중';
+      st.style.color='var(--dim)'; bar.style.width='0%'; rt.textContent=(a.filled!=null&&a.seq)?a.filled+'/'+a.seq:'--';
+      return;
+    }
+    const ratio=a.ratio||0;
+    const col=a.status==='anomaly'?'#ff5b6e':(a.status==='warn'?'#f6b73c':'#3fd6a4');
+    const label=a.status==='anomaly'?'이상 감지':(a.status==='warn'?'경계':'정상');
+    dot.style.background=col; st.textContent=label; st.style.color=col;
+    bar.style.width=Math.min(ratio*100,100)+'%'; bar.style.background=col;
+    rt.textContent=Math.round(ratio*100)+'%';
+  }catch(e){ dot.style.background='#6b6494'; st.textContent='--'; st.style.color='var(--dim)'; bar.style.width='0%'; rt.textContent='--'; }
 }
 function syncBedOptions(beds){const sel=document.getElementById('bedSel');const have=new Set([...sel.options].map(o=>o.value));
   beds.forEach(b=>{if(!have.has(b)){const o=document.createElement('option');o.value=b;o.textContent=b;sel.appendChild(o);}});}
@@ -516,12 +591,12 @@ setInterval(()=>{
 },1000);
 
 document.getElementById('bedSel').addEventListener('change',pollCsi);
-document.getElementById('hostInput').addEventListener('change',()=>{pollCsi();pollTof();});
+document.getElementById('hostInput').addEventListener('change',()=>{pollCsi();pollTof();set3dSrc();setMmwSrc();});
 
 /* 2초마다 실서버 폴링 */
 csiWaiting('CSI 서버 연결 확인 중…'); tofWaiting();
 setInterval(()=>{ if(!simMode){pollCsi();pollTof();} },2000);
-pollCsi(); pollTof();
+pollCsi(); pollTof(); set3dSrc(); setMmwSrc();
 
 /* =====================================================================
    시뮬레이터 — 발표용 데모 데이터 (규칙적 순환, 실제 감지값 기반)
