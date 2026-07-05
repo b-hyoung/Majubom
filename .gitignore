@@ -56,3 +56,5 @@ mmWave/test_*.log
 발표자료/
 # 단일센서 펌웨어 백업 템플릿 (TOF/src/main.ino 와 중복)
 TOF/single_sensor/
+# 런타임 생성 — feature 로깅 DB (스냅샷은 CSV로 export해서 커밋)
+TOF/ml/*.db
