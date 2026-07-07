@@ -52,9 +52,9 @@ CORS(app)
 # 빈 침대 베이스라인 대비, 그보다 PRESENCE_DELTA_MM 이상 "가까운" 존 =
 # 매트리스 위에 몸/이불이 올라온 것 → 그런 존이 일정 개수 이상이면 사람 있음.
 PRESENCE_DELTA_MM  = 150    # 베이스라인보다 이만큼(mm) 가까우면 점유 존
-PRESENCE_MIN_ZONES = 2      # 들어올 때: 점유 존이 이 개수 이상이면 그 센서는 "감지"
-                            # (수평 배치라 유효존이 적어 2로 낮춤. 빈 침대는 0이라 오탐 낮음)
-STAY_MIN_ZONES     = 1      # 이미 재실 중엔 이 개수 이상이면 유지 (빈 침대 0존은 이탈)
+PRESENCE_MIN_ZONES = 8      # 들어올 때: 점유 존이 이 개수 이상이면 그 센서는 "감지"
+                            # (8x8 전환: 존 개수가 4x4 대비 4배라 2→8로 비례 조정 — 실측 미검증치)
+STAY_MIN_ZONES     = 4      # 이미 재실 중엔 이 개수 이상이면 유지 (8x8: 1→4로 비례 조정 — 실측 미검증치)
 CONFIRM_ENTER      = 3      # 이탈→재실 확정에 필요한 연속 프레임 (빠르게 진입)
 CONFIRM_EXIT       = 24     # 재실→이탈 확정에 필요한 연속 프레임 (약 2.4초, 깜빡임 억제)
 CONFIRM_FRAMES     = 3      # (하위호환) 사용 안 함
@@ -369,4 +369,5 @@ def index():
 if __name__ == "__main__":
     db.init_db()
     print("VL53L5CX ToF 서버 시작 → http://0.0.0.0:5001")
-    app.run(host="0.0.0.0", port=5001, debug=True)
+    # threaded=True: tof1·tof2가 동시에 POST해도 서로 안 막고 병렬 처리(싱글스레드면 8x8 동시 전송 시 실효 속도 반토막)
+    app.run(host="0.0.0.0", port=5001, debug=True, threaded=True)

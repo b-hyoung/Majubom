@@ -5,7 +5,7 @@
 # 무효값(-1)은 "측정 실패"라 그대로 둠(스파이크 제거 대상 아님).
 import json, os, sys, glob, statistics
 
-ZONES = 16
+ZONES = 64
 HERE  = os.path.dirname(os.path.abspath(__file__))
 DDIR  = os.path.join(HERE, "dataset")
 

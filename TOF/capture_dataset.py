@@ -9,7 +9,7 @@ import urllib.request, json, time, os, sys
 RPI    = "http://192.168.6.10:5001/tof/latest"
 LABEL  = sys.argv[1] if len(sys.argv) > 1 else "lying"
 TARGET = int(sys.argv[2]) if len(sys.argv) > 2 else 4000
-ZONES  = 16
+ZONES  = 64
 
 HERE    = os.path.dirname(os.path.abspath(__file__))
 OUT_DIR = os.path.join(HERE, "dataset")

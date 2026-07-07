@@ -26,7 +26,7 @@ import roi                # 침대 폭 ROI (침대 밖 존 마스킹)
 
 HERE  = os.path.dirname(os.path.abspath(__file__))
 DDIR  = os.path.join(HERE, "..", "dataset")
-ZONES = 16
+ZONES = 64
 EXCLUDE = {"lying"}       # 초기 캡처(라벨 모호) 제외. 포함하려면 비우면 됨.
 USE_ROI = True            # 침대 밖 존 -1 처리 (main에서 --no-roi 로 끔)
 

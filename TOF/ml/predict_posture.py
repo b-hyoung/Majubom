@@ -19,7 +19,7 @@ import joblib
 import roi                # 침대 폭 ROI (학습과 동일하게 추론에도 적용)
 
 HERE  = os.path.dirname(os.path.abspath(__file__))
-ZONES = 16
+ZONES = 64
 MODEL_PATH = os.path.join(HERE, "posture_model.joblib")
 
 

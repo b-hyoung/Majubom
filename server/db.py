@@ -13,7 +13,7 @@ from datetime import datetime, timedelta, timezone
 
 DB_PATH      = os.path.join(os.path.dirname(os.path.abspath(__file__)), "majubom.db")
 BASELINE_DAYS = 30   # baseline 집계 기간 (일)
-TOF_ZONES     = 16   # ToF 4x4 존 개수 (distances_mm 를 d0..d15 컬럼으로 펼침)
+TOF_ZONES     = 64   # ToF 8x8 존 개수 (distances_mm 를 d0..d63 컬럼으로 펼침)
 
 
 # ── 연결 ──────────────────────────────────────────────────────────────

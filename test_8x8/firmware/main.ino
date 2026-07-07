@@ -1,9 +1,13 @@
 // ============================================================
-//  VL53L5CX 단일 센서 펌웨어 (ESP32 1개 + ToF 1개)
-//  두 보드에 이 파일을 올리되, 아래 SENSOR_NAME 만 다르게:
-//    - 왼쪽 레일 보드  → "tof1"
-//    - 오른쪽 레일 보드 → "tof2"
-//  서버(tof_server.py)는 이 sensor 이름으로 두 센서를 구분/독립 처리함.
+//  ⚠ 실험용 사본 — TOF/src/main.ino 를 건드리지 않기 위해 복사한 파일
+//  목적: VL53L5CX 8x8(64존) 모드에서 I2C 버스가 wedge 되는지 확인
+//  프로덕션(TOF/src/main.ino)과의 차이점:
+//    - VL53L5CX_RESOLUTION_4X4 → VL53L5CX_RESOLUTION_8X8
+//    - ZONE_COUNT 16 → 64, GRID_SIDE 4 → 8
+//    - resolution 필드 "4x4" → "8x8"
+//    - SERVER_URL → 테스트 전용 서버(포트 5011, DB 없음)로 변경
+//  테스트가 끝나면 이 파일은 지우거나 그대로 test_8x8/ 안에 남겨둬도 됨
+//  (원본 TOF/src/main.ino 는 전혀 수정하지 않았음)
 // ============================================================
 #include <Wire.h>
 #include <vl53l5cx_class.h>
@@ -11,20 +15,22 @@
 #include <HTTPClient.h>
 #include <ArduinoJson.h>
 
-// ─── 사용자 설정 (보드마다 여기만 수정) ─────────────────
-const char* SENSOR_NAME = "tof2";   // ← 다른 보드에는 "tof1"
+// ─── 사용자 설정 (테스트할 보드 쪽만 맞춰서 수정) ─────────
+const char* SENSOR_NAME = "tof2";   // 테스트 중인 보드가 어느 쪽인지만 표시용
 const char* WIFI_SSID   = "2411 ServerRoom";
 const char* WIFI_PASS   = "D@lstn!0722";
-const char* SERVER_URL  = "http://192.168.6.10:5001/tof";  // 라즈베리파이 서버
+// ↓ 테스트 서버(이 저장소를 연 PC, Wi-Fi IP — "2411 ServerRoom"망, Pi와 같은 대역).
+//   PC가 바뀌거나 재연결되면 ipconfig로 재확인 필요.
+const char* SERVER_URL  = "http://192.168.6.20:5011/tof";
 // ─────────────────────────────────────────────────────────
 
 #define SDA_PIN      8
 #define SCL_PIN      9
 #define LPN_PIN      4
 #define SENSOR_ADDR  0x52   // 버스 독점 → 기본 주소 그대로 사용 (주소 변경 불필요)
-#define ZONE_COUNT   64     // 8x8
-#define GRID_SIDE    8
-#define INTERVAL_MS  10     // 전송 주기 스로틀 최소화 — 센서 자체 15Hz(약 67ms)가 실제 상한
+#define ZONE_COUNT   64     // 8x8 테스트용 (프로덕션은 16=4x4)
+#define GRID_SIDE    8      // 8x8 테스트용 (프로덕션은 4)
+#define INTERVAL_MS  100    // 전송 주기 100ms (10Hz) — 프로덕션과 동일
 
 // initSlow를 위한 서브클래스 (protected p_dev 접근)
 class VL53L5CX_Ex : public VL53L5CX {
@@ -104,7 +110,7 @@ void ensureWiFi() {
 }
 
 void printGrid(VL53L5CX_ResultsData &r) {
-  Serial.printf("\n=== %s (8x8 mm) ===\n", SENSOR_NAME);
+  Serial.printf("\n=== %s (8x8 TEST, mm) ===\n", SENSOR_NAME);
   for (int row = 0; row < GRID_SIDE; row++) {
     for (int col = 0; col < GRID_SIDE; col++) {
       int z = row * GRID_SIDE + col;
@@ -122,8 +128,8 @@ void printGrid(VL53L5CX_ResultsData &r) {
 
 void postSensor(VL53L5CX_ResultsData &r) {
   JsonDocument doc;
-  doc["sensor"]     = SENSOR_NAME;   // "tof1" 또는 "tof2"
-  doc["resolution"] = "8x8";
+  doc["sensor"]     = SENSOR_NAME;
+  doc["resolution"] = "8x8";   // ← 테스트: 8x8로 표시
 
   JsonArray dist = doc["distances_mm"].to<JsonArray>();
   JsonArray tgts = doc["targets"].to<JsonArray>();
@@ -145,16 +151,15 @@ void postSensor(VL53L5CX_ResultsData &r) {
   HTTPClient http;
   http.begin(SERVER_URL);
   http.addHeader("Content-Type", "application/json");
-  http.setTimeout(200);   // 기본 5000ms → 200ms: WiFi 순간 끊김이 있어도 다음 프레임 캡처를 오래 막지 않음
   int code = http.POST(body);
-  Serial.printf("[%s] POST → HTTP %d\n", SENSOR_NAME, code);
+  Serial.printf("[%s] POST(8x8 test) → HTTP %d\n", SENSOR_NAME, code);
   http.end();
 }
 
 void setup() {
   Serial.begin(115200);
   delay(500);
-  Serial.printf("\n=== VL53L5CX Single Sensor Boot (%s) ===\n", SENSOR_NAME);
+  Serial.printf("\n=== VL53L5CX 8x8 TEST Boot (%s) ===\n", SENSOR_NAME);
 
   Wire.begin(SDA_PIN, SCL_PIN);
   Wire.setClock(400000);
@@ -169,10 +174,11 @@ void setup() {
   }
   Serial.printf("[%s] 0x%02X OK\n", SENSOR_NAME, SENSOR_ADDR);
 
-  sensor.vl53l5cx_set_resolution(VL53L5CX_RESOLUTION_8X8);
-  sensor.vl53l5cx_set_ranging_frequency_hz(15);   // 8x8 하드웨어 상한 15Hz (더 못 올림)
+  sensor.vl53l5cx_set_resolution(VL53L5CX_RESOLUTION_8X8);   // ← 테스트 핵심: 8x8
+  sensor.vl53l5cx_set_ranging_frequency_hz(15);   // 8x8 최대치 그대로 유지
   sensor.vl53l5cx_start_ranging();
-  Serial.printf("[%s] ranging 시작\n", SENSOR_NAME);
+  Serial.printf("[%s] ranging 시작 (8x8 TEST)\n", SENSOR_NAME);
+  Serial.println("  → 여기서 시리얼 로그가 멈추거나 반복 실패하면 버스 wedge 재발입니다.");
 
   Serial.printf("[WiFi] 연결 중: %s\n", WIFI_SSID);
   wifiBegin();
@@ -181,7 +187,7 @@ void setup() {
     Serial.print(".");
   }
   Serial.printf("\n[WiFi] IP: %s\n", WiFi.localIP().toString().c_str());
-  Serial.println("=== 측정 시작 ===\n");
+  Serial.println("=== 측정 시작 (8x8 TEST) ===\n");
 }
 
 void loop() {
@@ -203,7 +209,7 @@ void loop() {
     return;
   }
 
-  // 시리얼 그리드 출력은 1초에 한 번만 (10Hz 전송 병목 방지)
+  // 시리얼 그리드 출력은 1초에 한 번만 (전송 병목 방지)
   static unsigned long lastPrintMs = 0;
   if (millis() - lastPrintMs > 1000) { printGrid(r); lastPrintMs = millis(); }
   postSensor(r);

@@ -21,7 +21,7 @@ import argparse, glob, json, os, random
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DDIR = os.path.join(HERE, "..", "dataset")
-ZONES = 16
+ZONES = 64
 
 
 def aug_frame(dist, targets, rng, jit, drop):
