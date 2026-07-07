@@ -6,7 +6,7 @@
 #        + dataset/tof_<label>_<timestamp>.csv  (d0..d15,t0..t15 펼침 — DB/판다스용)
 import urllib.request, json, time, os, sys
 
-RPI    = "http://192.168.6.10:5001/tof/latest"
+RPI    = os.environ.get("TOF_SERVER", "http://localhost:5001/tof/latest")
 LABEL  = sys.argv[1] if len(sys.argv) > 1 else "lying"
 TARGET = int(sys.argv[2]) if len(sys.argv) > 2 else 4000
 ZONES  = 64

@@ -70,16 +70,16 @@
     <input id="s-t1" type="range" min="0" max="90" step="1" value="90">
   </div>
   <div class="ctl">
-    <label><span style="color:var(--t2)">발쪽</span> 기울기 <b><span id="v-t2">65</span>°</b></label>
-    <input id="s-t2" type="range" min="0" max="90" step="1" value="65">
+    <label><span style="color:var(--t2)">발쪽</span> 기울기 <b><span id="v-t2">80</span>°</b></label>
+    <input id="s-t2" type="range" min="0" max="90" step="1" value="80">
   </div>
   <div class="ctl">
     <label>센서 간 거리(머리~발) <b><span id="v-w">2.12</span> m</b></label>
     <input id="s-w" type="range" min="1.2" max="2.4" step="0.01" value="2.12">
   </div>
   <div class="ctl">
-    <label title="사거리 상한(안전용). 실제 침대 안팎 컷은 3D 위치(ROI)가 담당">최대 사거리 <b><span id="v-r">2600</span> mm</b></label>
-    <input id="s-r" type="range" min="600" max="3500" step="20" value="2600">
+    <label title="사거리 상한(안전용). 실제 침대 안팎 컷은 3D 위치(ROI)가 담당">최대 사거리 <b><span id="v-r">4000</span> mm</b></label>
+    <input id="s-r" type="range" min="600" max="4000" step="20" value="4000">
   </div>
   <div class="btns">
     <button id="b-surf" class="on">표면</button>
@@ -92,7 +92,7 @@
     <button id="b-bgadapt" class="on" title="배경을 시간에 따라 자동 갱신(유령 제거)">자동갱신</button>
   </div>
   <div class="btns">
-    <button id="b-flip" title="센서 열 방향이 실제와 반대일 때">좌우 반전</button>
+    <button id="b-flip" class="on" title="센서 열 방향이 실제와 반대일 때">좌우 반전</button>
     <button id="b-roi" class="on" title="길이·높이 범위 밖(벽·바닥) 히트 제거">침대 안만</button>
   </div>
   <div class="btns">
@@ -133,7 +133,7 @@ const FOV_DEG = 45;                    // 8×8 축당 시야각(대각 63° → 
 const BED_WID = 0.95;                  // 매트리스 폭(양옆 사이, Y, m)
 
 // 조절값
-let SENSOR_H1 = 0.30, SENSOR_H2 = 0.72, TILT1 = 90, TILT2 = 65, SEP = 2.12, MAX_MM = 2600;
+let SENSOR_H1 = 0.30, SENSOR_H2 = 0.72, TILT1 = 90, TILT2 = 80, SEP = 2.12, MAX_MM = 4000;
 let showSurf = true, showRay = false;
 
 // 시점
@@ -209,7 +209,7 @@ function easeDisp(sid){
   }
   return cur;
 }
-let bg = { tof1:null, tof2:null }, bgSub=false, flipLR=false, roiOn=true, ROI_ZMAX=0.60, detailOn=true, bodyMode=true;
+let bg = { tof1:null, tof2:null }, bgSub=false, flipLR=true, roiOn=true, ROI_ZMAX=0.60, detailOn=true, bodyMode=true;
 let fgHold = { tof1:null, tof2:null };   // 전경 유지 래치(존별 카운터)
 const FG_HOLD = 2;                        // 배경과 달라진 존 유지 프레임(짧게 → 잔상 방지)
 let bgCap = null;        // 배경 수집중 버퍼 {tof1:[frame..], tof2:[..], lastAt:{}}
@@ -271,9 +271,10 @@ function zoneDir(dir){
   const right = norm(cross(dir, ref));
   const up = norm(cross(right, dir));
   const step = (FOV_DEG/GRID)*Math.PI/180;
+  const mid = (GRID-1)/2;   // 그리드 중심 인덱스(GRID=8이면 3.5) — 4x4 시절 1.5 하드코딩 잔재 제거
   const rays = [];
   for (let r=0;r<GRID;r++) for (let c=0;c<GRID;c++){
-    const ac=(flipLR?(1.5-c):(c-1.5))*step, ar=(1.5-r)*step;
+    const ac=(flipLR?(mid-c):(c-mid))*step, ar=(mid-r)*step;
     const d = norm(add(add(dir, mul(right, Math.tan(ac))), mul(up, Math.tan(ar))));
     rays[r*GRID+c]=d;
   }

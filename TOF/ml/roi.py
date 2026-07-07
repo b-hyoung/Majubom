@@ -7,7 +7,7 @@ import math
 
 # ── 센서 배치 (실측) ─────────────────────────────────────
 SENSOR_H1, SENSOR_H2 = 0.30, 0.72    # 머리/발 높이 (m)
-TILT1_DEG, TILT2_DEG = 90, 65        # 안쪽 기울기 (deg)
+TILT1_DEG, TILT2_DEG = 80, 65        # 안쪽 기울기 (deg) — TILT1=tof1(발) 실측 80도로 조정
 SEP      = 2.12                      # 센서 간 거리 (m, X)
 BED_WID  = 0.95                      # 침대 폭 (m, Y)
 FOV_DEG  = 45
@@ -52,7 +52,8 @@ def hit_y(sensor_id, zone, distance_mm):
     r, c = zone // GRID, zone % GRID
     pos, d, right, up = _sensor(sensor_id)
     step = math.radians(FOV_DEG / GRID)
-    ac, ar = (c - 1.5) * step, (1.5 - r) * step
+    mid = (GRID - 1) / 2                          # 그리드 중심 인덱스(GRID=8이면 3.5) — 4x4 시절 1.5 하드코딩 잔재 제거
+    ac, ar = (mid - c) * step, (mid - r) * step   # 좌우반전: 실측상 c 증가 방향과 실제 오른쪽이 반대
     zd = _norm([d[i] + math.tan(ac) * right[i] + math.tan(ar) * up[i] for i in range(3)])
     return pos[1] + zd[1] * (distance_mm / 1000.0)
 
@@ -63,7 +64,8 @@ def hit_point(sensor_id, zone, distance_mm):
     r, c = zone // GRID, zone % GRID
     pos, d, right, up = _sensor(sensor_id)
     step = math.radians(FOV_DEG / GRID)
-    ac, ar = (c - 1.5) * step, (1.5 - r) * step
+    mid = (GRID - 1) / 2                          # 그리드 중심 인덱스(GRID=8이면 3.5) — 4x4 시절 1.5 하드코딩 잔재 제거
+    ac, ar = (mid - c) * step, (mid - r) * step   # 좌우반전: 실측상 c 증가 방향과 실제 오른쪽이 반대
     zd = _norm([d[i] + math.tan(ac) * right[i] + math.tan(ar) * up[i] for i in range(3)])
     t = distance_mm / 1000.0
     return [pos[i] + zd[i] * t for i in range(3)]

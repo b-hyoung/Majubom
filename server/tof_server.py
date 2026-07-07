@@ -292,77 +292,90 @@ def list_beds():
 
 @app.route("/", methods=["GET"])
 def index():
-    t1, t2 = latest["tof1"], latest["tof2"]
-
-    def summary(t):
-        if t["distances_mm"] is None:
-            return "아직 없음"
-        valid = [d for d in t["distances_mm"] if d and d > 0]
-        return f"최솟값 {min(valid)} mm / 평균 {int(sum(valid)/len(valid))} mm" if valid else "유효값 없음"
-
-    log_rows = "".join(
-        f"<tr><td>{e['received_at']}</td><td>{e['sensor']}</td>"
-        f"<td>{e['resolution']}</td>"
-        f"<td>{min((d for d in e['distances_mm'] if d and d > 0), default='—')} mm</td></tr>"
-        for e in reversed(log[-20:])
-    )
-
-    # 침상 재실 뱃지
-    in_bed = presence["in_bed"]
-    badge_color = "#0a7" if in_bed else "#c33"
-    badge_text  = "🛏️ 침상에 있음" if in_bed else "🚪 침상 비어 있음"
-    base_ok = baseline["tof1"] is not None or baseline["tof2"] is not None
-    base_note = ("" if base_ok else
-                 " &nbsp;·&nbsp; ⚠ 베이스라인 미설정 (빈 침대에서 '캘리브레이션' 누르세요)")
-    occ1 = presence["tof1"]["occupied"]
-    occ2 = presence["tof2"]["occupied"]
-
-    return f"""<!doctype html>
-<html><head><meta charset=utf-8><title>VL53L5CX 모니터</title>
-<meta http-equiv="refresh" content="1">
+    return """<!doctype html>
+<html><head><meta charset=utf-8><title>VL53L5CX 모니터 (실시간)</title>
 <style>
-  body{{font-family:monospace;padding:20px;background:#f8f8f8}}
-  h2{{color:#333}}
-  .card{{background:#fff;border-radius:8px;padding:16px;margin:12px 0;box-shadow:0 1px 4px #0002}}
-  .label{{font-size:.75em;color:#999;margin-bottom:6px}}
-  .summary{{font-size:1.2em;font-weight:bold;color:#0a7;margin-bottom:8px}}
-  table.log{{border-collapse:collapse;width:100%;margin-top:8px}}
-  table.log td,table.log th{{border:1px solid #ddd;padding:5px 10px;text-align:left;font-size:12px}}
+  body{font-family:monospace;padding:20px;background:#f8f8f8}
+  h2{color:#333;margin:0 0 4px}
+  .hint{color:#888;font-size:12px;margin-bottom:14px}
+  .card{background:#fff;border-radius:8px;padding:16px;margin:12px 0;box-shadow:0 1px 4px #0002}
+  .label{font-size:.75em;color:#999;margin-bottom:6px}
+  .summary{font-size:1.2em;font-weight:bold;color:#0a7;margin-bottom:8px}
+  .boards{display:flex;gap:16px;flex-wrap:wrap}
+  .board{flex:1;min-width:300px}
+  .grid{display:grid;gap:3px;margin-top:8px}
+  .zone{aspect-ratio:1;display:flex;align-items:center;justify-content:center;
+        font-size:10.5px;border-radius:3px;background:#eee;border:1px solid #ddd}
 </style></head>
 <body>
-<h2>VL53L5CX 침상 모니터 (1초 자동 새로고침)</h2>
+<h2>VL53L5CX 침상 모니터</h2>
+<div class="hint">들어오는 프레임마다 즉시 갱신 (폴링 80ms) — 새로고침 불필요</div>
 
-<div class=card style="text-align:center;background:{badge_color};color:#fff">
-  <div style="font-size:2.2em;font-weight:bold">{badge_text}</div>
-  <div style="font-size:.85em;opacity:.9;margin-top:6px">
-    변경 시각: {presence['since'] or '—'} &nbsp;·&nbsp;
-    점유 존: ToF1 {occ1} / ToF2 {occ2} (각 임계 {PRESENCE_MIN_ZONES}){base_note}
-  </div>
-  <button onclick="fetch('/tof/calibrate',{{method:'POST'}}).then(r=>r.json()).then(j=>alert(j.ok?('베이스라인 저장됨: '+JSON.stringify(j.captured_valid_zones)):('실패: '+j.error)))"
-    style="margin-top:10px;padding:8px 16px;font-size:1em;border:0;border-radius:6px;cursor:pointer;background:#fff;color:#333;font-weight:bold">
+<div class="card" style="text-align:center" id="badge">연결 대기 중…</div>
+
+<div class="boards" id="boards">데이터 대기 중...</div>
+
+<div class="card">
+  <button onclick="fetch('/tof/calibrate',{method:'POST'}).then(r=>r.json()).then(j=>alert(j.ok?('베이스라인 저장됨: '+JSON.stringify(j.captured_valid_zones)):('실패: '+j.error)))"
+    style="padding:8px 16px;font-size:1em;border:0;border-radius:6px;cursor:pointer;background:#333;color:#fff;font-weight:bold">
     빈 침대 캘리브레이션
   </button>
 </div>
 
-<div style="display:flex;gap:16px;flex-wrap:wrap">
-  <div class=card style="flex:1;min-width:280px">
-    <div class=label>ToF 1 — {t1['resolution'] or '—'} | 점유 {occ1}존 | {t1['received_at'] or '수신 없음'}</div>
-    <div class=summary>{summary(t1)}</div>
-    {grid_html(t1['distances_mm'], t1['resolution'] or '4x4')}
-  </div>
-  <div class=card style="flex:1;min-width:280px">
-    <div class=label>ToF 2 — {t2['resolution'] or '—'} | 점유 {occ2}존 | {t2['received_at'] or '수신 없음'}</div>
-    <div class=summary>{summary(t2)}</div>
-    {grid_html(t2['distances_mm'], t2['resolution'] or '4x4')}
-  </div>
-</div>
-<div class=card>
-  <div class=label>ToF 최근 수신 로그 (최대 20건)</div>
-  <table class=log>
-    <tr><th>시각</th><th>센서</th><th>해상도</th><th>최솟값</th></tr>
-    {log_rows if log_rows else '<tr><td colspan=4 style="color:#aaa">아직 없음</td></tr>'}
-  </table>
-</div>
+<script>
+function colorOf(d){
+  if(!d || d<=0) return '#eee';
+  if(d<500) return '#0a72';
+  if(d<1500) return '#f802';
+  return '#8882';
+}
+function textColor(d){
+  if(!d || d<=0) return '#bbb';
+  if(d<500) return '#0a7';
+  if(d<1500) return '#f80';
+  return '#888';
+}
+async function poll(){
+  try{
+    const [latest, presence] = await Promise.all([
+      fetch('/tof/latest').then(r=>r.json()),
+      fetch('/tof/presence').then(r=>r.json())
+    ]);
+    const badge = document.getElementById('badge');
+    const inBed = presence.in_bed;
+    badge.style.background = inBed ? '#0a7' : '#c33';
+    badge.style.color = '#fff';
+    const baseOk = presence.baseline_set && (presence.baseline_set.tof1 || presence.baseline_set.tof2);
+    badge.innerHTML = `<div style="font-size:1.8em;font-weight:bold">${inBed?'🛏️ 침상에 있음':'🚪 침상 비어 있음'}</div>
+      <div style="font-size:.85em;opacity:.9;margin-top:4px">
+        변경 시각: ${presence.since||'—'} · 점유 존: tof1 ${presence.tof1?.occupied??'–'} / tof2 ${presence.tof2?.occupied??'–'}
+        ${baseOk?'':' · ⚠ 베이스라인 미설정'}
+        ${latest.posture? ' · 자세: '+latest.posture+' ('+Math.round((latest.posture_conf||0)*100)+'%)' : ''}
+      </div>`;
+
+    const boards = document.getElementById('boards');
+    const sids = ['tof1','tof2'].filter(sid=>latest[sid] && latest[sid].distances_mm);
+    if(sids.length===0){ boards.innerHTML='<span style="color:#999">아직 수신된 프레임이 없습니다.</span>'; return; }
+    boards.innerHTML = sids.map(sid=>{
+      const f = latest[sid];
+      const n = f.distances_mm.length;
+      const side = Math.round(Math.sqrt(n)) || 4;
+      const valid = f.distances_mm.filter(d=>d>0);
+      const summary = valid.length ? `최솟값 ${Math.min(...valid)} mm / 평균 ${Math.round(valid.reduce((a,b)=>a+b,0)/valid.length)} mm` : '유효값 없음';
+      const cells = f.distances_mm.map(d=>
+        `<div class="zone" style="background:${colorOf(d)};color:${textColor(d)}">${(d&&d>0)?d:'—'}</div>`
+      ).join('');
+      return `<div class="card board">
+        <div class="label">${sid} — ${f.resolution||'—'} | ${f.received_at||'수신 없음'}</div>
+        <div class="summary">${summary}</div>
+        <div class="grid" style="grid-template-columns:repeat(${side},1fr);max-width:${side*40}px">${cells}</div>
+      </div>`;
+    }).join('');
+  }catch(e){ console.error(e); }
+}
+setInterval(poll, 80);
+poll();
+</script>
 </body></html>"""
 
 
