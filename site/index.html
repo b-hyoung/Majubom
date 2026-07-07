@@ -60,6 +60,22 @@
   @media(max-width:1100px){.t-mmw{grid-column:1 / -1;grid-row:auto}.t-mmw iframe{height:380px}}
   .t-gate{grid-column:span 4}
 
+  /* ===== 🎬 촬영 모드 — ToF·mmWave만 크게, 나머지 숨김 ===== */
+  #filmToggle.active{background:linear-gradient(135deg,#f43f5e,#a855f7);color:#fff;border-color:transparent}
+  body.film{background:radial-gradient(1200px 600px at 50% -10%,#191233,#0b0a17 60%)}
+  body.film #simBanner,body.film .statusline,
+  body.film .top .chip,body.film .top .hostlbl,body.film .top .host,
+  body.film .top #simToggle{display:none!important}
+  body.film .top{justify-content:space-between;padding-bottom:6px}
+  body.film .t-room{display:none!important}
+  body.film .bento{grid-template-columns:repeat(2,1fr);max-width:1500px;gap:22px}
+  body.film .t-3d{grid-column:1 / -1;grid-row:span 6}
+  body.film .t-3d iframe{min-height:560px}
+  body.film .t-mmw{grid-column:1 / -1;grid-row:span 4}
+  body.film .t-mmw iframe{min-height:360px}
+  body.film .t-tof,body.film .t-mm{grid-column:span 1;padding:26px}
+  @media(max-width:1100px){body.film .bento{grid-template-columns:1fr}body.film .t-tof,body.film .t-mm{grid-column:1/-1}}
+
   .lab{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);font-family:'JetBrains Mono',monospace;display:flex;align-items:center;gap:8px}
   .sdot{width:7px;height:7px;border-radius:50%;background:var(--muted)}
   .sdot.on{background:var(--ok);box-shadow:0 0 8px var(--ok)}
@@ -158,13 +174,12 @@
 <div class="top">
   <div><div class="logo display">마주봄<span class="dot">.</span></div><div class="sub">다중 센서 통합 모니터 · 실연결 전용</div></div>
   <div class="sp"></div>
-  <div class="chip"><span class="cdot" id="dot-csi-top"></span>CSI:5003</div>
   <div class="chip"><span class="cdot" id="dot-tof-top"></span>ToF:5001</div>
   <button class="chip" id="tof3dBtn" style="cursor:pointer;color:var(--tof)" title="ToF 자세 3D 뷰어 열기" onclick="window.open(url('tof','/tof/3d'),'_blank')">🧍 ToF 3D</button>
   <label class="hostlbl">서버 호스트</label>
   <input class="host" id="hostInput" placeholder="localhost" title="서버 호스트/IP (Pi5 IP 등)">
-  <select id="bedSel"><option value="">— 침대 —</option></select>
   <button class="sim-btn" id="simToggle" onclick="toggleSim()">⚙ 시뮬레이터</button>
+  <button class="sim-btn" id="filmToggle" onclick="toggleFilm()" title="촬영 모드 — ToF·mmWave만 크게">🎬 촬영</button>
 </div>
 
 <div id="simBanner">
@@ -194,7 +209,6 @@
       <span style="margin-left:auto;display:flex;gap:6px">
         <span class="rvbadge rvb-tof">● ToF ×2</span>
         <span class="rvbadge rvb-mm">● mmWave</span>
-        <span class="rvbadge rvb-csi">● CSI ×2</span>
       </span>
       <button class="layout-btn" style="margin-left:8px" title="센서 배치 접기/펼치기" onclick="toggleRoomMin(this)">➖ 최소화</button>
     </div>
@@ -249,7 +263,7 @@
           <rect width="253" height="319" fill="none" stroke="#2a2545" stroke-width="2"/>
         </svg>
         <div id="rv-inactive">⚙ 시뮬레이터 ON 시<br>실시간 병실 뷰 표시</div>
-        <div class="rv-legend"><span class="rv-leg-tof">■ ToF</span><span class="rv-leg-mm">■ mmWave</span><span class="rv-leg-csi">■ CSI Wi-Fi</span></div>
+        <div class="rv-legend"><span class="rv-leg-tof">■ ToF</span><span class="rv-leg-mm">■ mmWave</span></div>
       </div>
       <div class="rv-info">
         <div class="rv-act-row">
@@ -257,14 +271,6 @@
           <span class="rv-act-name" id="rv-actlabel">—</span>
           <span class="rv-act-spd" id="rv-speedlabel">정지</span>
           <span class="rv-act-loc" id="rv-loc">—</span>
-        </div>
-        <div class="lab" style="margin:0">🧠 낙상 위험 종합 판정 <span style="margin-left:auto;color:var(--vio);font-size:10px">현재 CSI 기반</span></div>
-        <div class="radial"><canvas id="radial" width="210" height="210"></canvas>
-          <div class="ctr"><div class="lv" id="g-level">연결 대기</div><div class="sc" id="g-score">total_abs —</div><div class="tg" id="g-bed">침대 —</div></div>
-        </div>
-        <div>
-          <div class="ai-expl" id="ai-text">CSI 서버 연결 대기 중… ESP32 CSI(박형석)가 :5003/csi 로 POST하면 분석 결과가 표출됩니다.</div>
-          <div class="modelbadge">⚙ baseline·z-score·alert = 서버 계산 (규칙) · gpt-4.1-mini 연동 예정</div>
         </div>
       </div>
     </div>
@@ -289,29 +295,6 @@
     <iframe id="viewmmw" title="mmWave 포인트클라우드" loading="lazy"></iframe>
   </div>
 
-  <!-- CSI -->
-  <div class="tile t-csi">
-    <div class="glow" style="background:var(--csi);opacity:.18"></div>
-    <div class="sensorhead"><div class="pin csi">❤️</div><div class="lab" style="letter-spacing:1px">CSI · 심박/호흡 (박형석)</div>
-      <span class="sdot" id="dot-csi"></span><span class="age" id="age-csi">--</span></div>
-    <div id="csi-wait">
-      <div class="num waitbig">연결 대기</div>
-      <div class="wait">ESP32 CSI → csi_server(:5003) 수신 시<br>심박·호흡·신호강도 표출</div>
-    </div>
-    <div id="csi-live" style="display:none">
-      <div class="fusionrow">
-        <div><div class="vbig num" id="csi-hr" style="color:var(--csi)">--<small> bpm</small></div><div class="vsub">심박수 (HR)</div></div>
-        <div class="chips" style="margin-top:0">
-          <span class="vchip">호흡 <b id="csi-resp">--</b> rpm</span>
-          <span class="vchip">신호강도 <b id="csi-str">--</b></span>
-          <span class="vchip">reliable <b id="csi-rel">--</b></span>
-          <span class="vchip">패킷 <b id="csi-samp">--</b></span>
-        </div>
-      </div>
-      <canvas id="sp-hr" style="width:100%;height:38px;display:block;margin-top:14px"></canvas>
-    </div>
-  </div>
-
   <!-- ToF (tof_server :5001 /tof/latest) -->
   <div class="tile t-tof">
     <div class="sensorhead"><div class="pin tof">🛏️</div><div class="lab" style="letter-spacing:1px">ToF · 이탈 (조우진)</div>
@@ -329,10 +312,10 @@
         <span class="vchip">tof2 <b id="tof2-min">--</b></span>
         <span class="vchip">감지존 <b id="tof-zones">--</b></span>
       </div>
-      <!-- LSTM-AE 이상탐지 (재구성오차 기반, tof_server:5001/tof/anomaly) -->
+      <!-- 낙상위험(자세·가장자리 기반, tof_server:5001/tof/anomaly) -->
       <div id="tof-anom" style="margin-top:10px;display:flex;align-items:center;gap:8px">
         <span id="anom-dot" style="width:8px;height:8px;border-radius:50%;background:#6b6494;flex:none"></span>
-        <span style="font-size:11px;color:var(--dim);flex:none">LSTM 이상탐지</span>
+        <span style="font-size:11px;color:var(--dim);flex:none">낙상위험</span>
         <b id="anom-status" style="font-size:11px;flex:none">--</b>
         <div style="flex:1;height:6px;background:#ffffff14;border-radius:4px;overflow:hidden">
           <i id="anom-bar" style="display:block;height:100%;width:0%;background:var(--tof);transition:width .3s,background .3s"></i>
@@ -364,45 +347,6 @@
     </div>
   </div>
 
-  <!-- z-score -->
-  <div class="tile t-z">
-    <div class="lab" style="margin-bottom:14px">CSI 평소 대비 변화 (z-score) · |hr|+|resp|+|strength|</div>
-    <div class="fusionrow">
-      <div class="donut"><canvas id="donut" width="96" height="96"></canvas><div class="dc" id="donut-c">—</div></div>
-      <div class="barset">
-        <div class="barrow"><div class="bh"><span style="color:var(--csi)">z_hr</span><span id="z-hr">—</span></div><div class="trk"><div class="mid"></div><i id="z-hr-bar" style="background:var(--csi);left:50%;width:0%"></i></div></div>
-        <div class="barrow"><div class="bh"><span style="color:var(--tof)">z_resp</span><span id="z-resp">—</span></div><div class="trk"><div class="mid"></div><i id="z-resp-bar" style="background:var(--tof);left:50%;width:0%"></i></div></div>
-        <div class="barrow" style="margin-bottom:0"><div class="bh"><span style="color:var(--vio)">z_strength</span><span id="z-str">—</span></div><div class="trk"><div class="mid"></div><i id="z-str-bar" style="background:var(--vio);left:50%;width:0%"></i></div></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- flow -->
-  <div class="tile t-flow">
-    <div class="lab" style="margin-bottom:6px">CSI 판정 흐름 (서버)</div>
-    <div class="flowline">
-      <div class="fn" id="fn-rx"><div class="fnl">수신</div><div class="fnv" id="fnv-rx">대기</div></div>
-      <span class="fsep">→</span>
-      <div class="fn" id="fn-rel"><div class="fnl">reliable</div><div class="fnv" id="fnv-rel">—</div></div>
-      <span class="fsep">→</span>
-      <div class="fn" id="fn-gate"><div class="fnl">presence gate</div><div class="fnv" id="fnv-gate">—</div></div>
-      <span class="fsep">→</span>
-      <div class="fn" id="fn-base"><div class="fnl">baseline</div><div class="fnv" id="fnv-base">—</div></div>
-      <span class="fsep">→</span>
-      <div class="fn" id="fn-alert"><div class="fnl">alert</div><div class="fnv" id="fnv-alert">—</div></div>
-    </div>
-  </div>
-
-  <!-- 상태 상세 -->
-  <div class="tile t-gate">
-    <div class="lab" style="margin-bottom:12px">CSI 상태 상세</div>
-    <div class="gaterow">
-      <div class="gcard"><div class="gh">presence gate</div><div class="gv" id="gv-gate">—</div><div class="gd">보호자 동석(2명) 시 신호 혼입 → 측정 보류</div></div>
-      <div class="gcard"><div class="gh">baseline 학습</div><div class="gv" id="gv-base">—</div><div class="gd">30일 누적 시 안정 · 14일 미만 정식 알람 보류</div></div>
-      <div class="gcard"><div class="gh">측정 신뢰</div><div class="gv" id="gv-rel">—</div><div class="gd">autocorr_strength≥0.30 → reliable=true</div></div>
-      <div class="gcard" style="flex:2;min-width:260px"><div class="gh">판정 근거</div><div class="gd" id="gd-reason" style="margin-top:8px">—</div></div>
-    </div>
-  </div>
 </div>
 
 <script>
@@ -414,7 +358,8 @@
 const RISK={normal:'#34d399',caution:'#fbbf24',warning:'#fb923c',critical:'#f43f5e'};
 const KO={normal:'정상',caution:'주의',warning:'경고',critical:'위험'};
 const GREY='#3a3550';
-const PORTS={csi:5003, tof:5001, mmw:5002};
+/* mmWave도 :5001(대시보드=ToF서버)을 통해 프록시 → same-origin이라 브라우저가 안 막음 */
+const PORTS={csi:5003, tof:5001, mmw:5001};
 let rxTotal=0, lastCsi=0, lastTof=0, hist=[];
 
 function host(){const v=document.getElementById('hostInput').value.trim();return v || (location.hostname||'localhost');}
@@ -426,10 +371,12 @@ function setMmwSrc(){const f=document.getElementById('viewmmw');if(f){const u=ur
 /* 레이아웃 토글: 센서배치(평면도) 최소화 / 3D 뷰어 키우기 */
 function toggleRoomMin(btn){const t=document.querySelector('.t-room');const m=t.classList.toggle('min');btn.textContent=m?'➕ 펼치기':'➖ 최소화';}
 function toggle3dBig(btn){const t=document.querySelector('.t-3d');const b=t.classList.toggle('big');btn.textContent=b?'⤡ 줄이기':'⤢ 키우기';}
-function topDot(id,ok){const d=document.getElementById(id);d.className='cdot '+(ok?'on':'off');}
+function topDot(id,ok){const d=document.getElementById(id);if(!d)return;d.className='cdot '+(ok?'on':'off');}
 
 /* ---------- 폴링 (실서버 전용) ---------- */
-async function pollCsi(){
+/* CSI 제거됨 — pollCsi/csiWaiting/renderCsi 는 요소 없으면 no-op (sim 호환용 유지) */
+async function pollCsi(){ return; }
+async function _pollCsi_removed(){
   try{
     const res=await fetch(url('csi','/csi/latest'),{cache:'no-store'});
     const data=await res.json(); topDot('dot-csi-top',true);
@@ -447,7 +394,7 @@ async function pollTof(){
     const res=await fetch(url('tof','/tof/latest'),{cache:'no-store'});
     const data=await res.json(); topDot('dot-tof-top',true);
     const t1=data.tof1||{}, t2=data.tof2||{};
-    if(t1.distances_mm||t2.distances_mm){lastTof=Date.now();renderTof(t1,t2,data.posture,data.posture_conf);}
+    if(t1.distances_mm||t2.distances_mm){lastTof=Date.now();renderTof(t1,t2,data.posture_ko||data.posture,data.posture_conf,data.posture_color);}
     else{tofWaiting();}
   }catch(e){ topDot('dot-tof-top',false); tofWaiting(); }
   pollAnom();
@@ -466,8 +413,9 @@ async function pollAnom(){
     }
     const ratio=a.ratio||0;
     const col=a.status==='anomaly'?'#ff5b6e':(a.status==='warn'?'#f6b73c':'#3fd6a4');
-    const label=a.status==='anomaly'?'이상 감지':(a.status==='warn'?'경계':'정상');
+    const label=a.status==='anomaly'?'낙상 위험':(a.status==='warn'?'경계':'정상');
     dot.style.background=col; st.textContent=label; st.style.color=col;
+    st.title=a.reason||''; document.getElementById('tof-anom').title=a.reason||'';
     bar.style.width=Math.min(ratio*100,100)+'%'; bar.style.background=col;
     rt.textContent=Math.round(ratio*100)+'%';
   }catch(e){ dot.style.background='#6b6494'; st.textContent='--'; st.style.color='var(--dim)'; bar.style.width='0%'; rt.textContent='--'; }
@@ -475,8 +423,9 @@ async function pollAnom(){
 function syncBedOptions(beds){const sel=document.getElementById('bedSel');const have=new Set([...sel.options].map(o=>o.value));
   beds.forEach(b=>{if(!have.has(b)){const o=document.createElement('option');o.value=b;o.textContent=b;sel.appendChild(o);}});}
 
-/* ---------- CSI 대기/렌더 ---------- */
+/* ---------- CSI 대기/렌더 (CSI 제거됨 — 요소 없으면 no-op) ---------- */
 function csiWaiting(msg){
+  if(!document.getElementById('csi-wait')) return;
   document.getElementById('csi-live').style.display='none';
   document.getElementById('csi-wait').style.display='';
   document.getElementById('dot-csi').className='sdot';
@@ -496,8 +445,9 @@ function csiWaiting(msg){
   document.getElementById('gv-rel').textContent='—';document.getElementById('gv-rel').style.color='';
   document.getElementById('gd-reason').innerHTML='—';
 }
-function setTxt(id,t){document.getElementById(id).textContent=t;}
+function setTxt(id,t){const e=document.getElementById(id);if(e)e.textContent=t;}
 function renderCsi(r){
+  if(!document.getElementById('csi-live')) return;
   document.getElementById('csi-wait').style.display='none';
   document.getElementById('csi-live').style.display='';
   const raw=r.raw||{}, z=r.zscore, b=r.baseline, q=r.quality||{}, p=r.presence||{};
@@ -542,7 +492,7 @@ function tofWaiting(){
   document.getElementById('tof-wait').style.display='';
   document.getElementById('dot-tof').className='sdot';
 }
-function renderTof(t1,t2,posture,conf){
+function renderTof(t1,t2,poseKo,conf,color){
   document.getElementById('tof-wait').style.display='none';
   document.getElementById('tof-live').style.display='';
   document.getElementById('dot-tof').className='sdot on';
@@ -554,12 +504,10 @@ function renderTof(t1,t2,posture,conf){
   document.getElementById('tof2-min').textContent=(m2!=null?m2+'mm':'—');
   const zones=[...(t1.distances_mm||[]),...(t2.distances_mm||[])].filter(d=>typeof d==='number'&&d>0).length;
   document.getElementById('tof-zones').textContent=zones;
-  // 자세 분류(서버 모델) 표시
-  const POSE={empty:'빈 침대(이탈)',supine:'정자세',side_left:'왼쪽으로 누움',
-              side_right:'오른쪽으로 누움',sitting:'앉음/상체세움'};
+  // 자세 표시 = 서버 ML 라벨의 한글(posture_ko). 3D 뷰어와 동일 소스.
   const pe=document.getElementById('tof-posture'), ce=document.getElementById('tof-posture-conf');
-  if(pe) pe.textContent = posture ? (POSE[posture]||posture) : '--';
-  if(ce) ce.textContent = (posture&&conf!=null) ? '· 확신 '+Math.round(conf*100)+'%' : '';
+  if(pe){ pe.textContent = poseKo || '--'; if(color) pe.style.color=color; }
+  if(ce) ce.textContent = (poseKo&&conf!=null) ? '· 확신 '+Math.round(conf*100)+'%' : '';
 }
 
 /* ---------- 공통 그리기 ---------- */
@@ -570,12 +518,12 @@ function setZ(valId,barId,v,color){const e=document.getElementById(valId),bar=do
   if(v>=0){bar.style.left='50%';bar.style.width=mag+'%';}else{bar.style.left=(50-mag)+'%';bar.style.width=mag+'%';}
   bar.style.background=color;}
 function fnode(boxId,valId,txt,cls){document.getElementById(valId).textContent=txt;document.getElementById(boxId).className='fn '+(cls||'');}
-function radial(total,color){const c=document.getElementById('radial'),x=c.getContext('2d');x.clearRect(0,0,210,210);
+function radial(total,color){const c=document.getElementById('radial');if(!c)return;const x=c.getContext('2d');x.clearRect(0,0,210,210);
   const cx=105,cy=105,r=80;x.lineWidth=16;x.lineCap='round';
   x.beginPath();x.arc(cx,cy,r,.7*Math.PI,2.3*Math.PI);x.strokeStyle='rgba(255,255,255,.06)';x.stroke();
   const frac=total==null?0:Math.max(Math.min(total/8,1),0.02);
   x.beginPath();x.arc(cx,cy,r,.7*Math.PI,.7*Math.PI+1.6*Math.PI*frac);x.strokeStyle=color;x.stroke();}
-function donut(total,color){const c=document.getElementById('donut'),x=c.getContext('2d');x.clearRect(0,0,96,96);
+function donut(total,color){const c=document.getElementById('donut');if(!c)return;const x=c.getContext('2d');x.clearRect(0,0,96,96);
   x.lineWidth=11;x.beginPath();x.arc(48,48,38,0,2*Math.PI);x.strokeStyle='rgba(255,255,255,.06)';x.stroke();
   const frac=total==null?0:Math.max(Math.min(total/8,1),0.02);x.lineCap='round';
   x.beginPath();x.arc(48,48,38,-Math.PI/2,-Math.PI/2+2*Math.PI*frac);x.strokeStyle=color;x.stroke();}
@@ -585,22 +533,22 @@ function spark(){const c=document.getElementById('sp-hr');if(!c)return;const w=c
   hist.forEach((v,i)=>{const px=i/(hist.length-1)*w,py=35-((v-mn)/rg)*30-3;i?x.lineTo(px,py):x.moveTo(px,py);});
   x.strokeStyle='#fbbf24';x.lineWidth=2;x.stroke();}
 
-/* 수신 경과 시간 */
+/* 수신 경과 시간 (ToF) */
 setInterval(()=>{
-  const ac=lastCsi?Date.now()-lastCsi:0, at=lastTof?Date.now()-lastTof:0;
-  document.getElementById('age-csi').textContent=lastCsi?(ac<60000?(ac/1000|0)+'s 전':(ac/60000|0)+'m 전'):'--';
-  document.getElementById('age-tof').textContent=lastTof?(at<60000?(at/1000|0)+'s 전':(at/60000|0)+'m 전'):'--';
-  if(lastCsi&&ac>=120000)document.getElementById('dot-csi').className='sdot';
-  if(lastTof&&at>=120000)document.getElementById('dot-tof').className='sdot';
+  const at=lastTof?Date.now()-lastTof:0;
+  const ae=document.getElementById('age-tof');
+  if(ae) ae.textContent=lastTof?(at<60000?(at/1000|0)+'s 전':(at/60000|0)+'m 전'):'--';
+  if(lastTof&&at>=120000){const dt=document.getElementById('dot-tof');if(dt)dt.className='sdot';}
 },1000);
 
-document.getElementById('bedSel').addEventListener('change',pollCsi);
-document.getElementById('hostInput').addEventListener('change',()=>{pollCsi();pollTof();set3dSrc();setMmwSrc();});
+document.getElementById('hostInput').addEventListener('change',()=>{pollTof();pollMmwGait();set3dSrc();setMmwSrc();});
 
-/* 2초마다 실서버 폴링 */
-csiWaiting('CSI 서버 연결 확인 중…'); tofWaiting();
-setInterval(()=>{ if(!simMode){pollCsi();pollTof();pollMmwGait();} },2000);
-pollCsi(); pollTof(); if(!simMode) pollMmwGait(); set3dSrc(); setMmwSrc();
+/* 2초마다 실서버 폴링 (ToF + mmWave) */
+/* simMode는 여기서 먼저 쓰이므로 선언도 여기(사용 전)에 둔다 — 아래에 두면 TDZ ReferenceError로 init 전체가 멈춤 */
+let simMode=false, simTimer=null, simStart=0;
+tofWaiting();
+setInterval(()=>{ if(!simMode){pollTof();pollMmwGait();} },2000);
+pollTof(); if(!simMode) pollMmwGait(); set3dSrc(); setMmwSrc();
 
 /* ---------- mmWave 보행지표 (/mmw/latest → 카드) ---------- */
 async function pollMmwGait(){
@@ -641,7 +589,7 @@ function renderMmwGait(o){
      95-115s ⚠️ 낙상 위험  → alert: critical
      115-145s 🚨 낙상 감지 → alert: critical
 ===================================================================== */
-let simMode=false, simTimer=null, simStart=0;
+/* simMode 선언은 위(폴링 init 직전)로 이동함 — TDZ 방지 */
 
 const SIM_PHASES=[
   { name:'정상 수면', en:'Normal Sleep', icon:'😴', dur:30,
@@ -931,6 +879,11 @@ function rvLoop(){
 }
 function rvStop(){if(rvRaf){cancelAnimationFrame(rvRaf);rvRaf=null;}rvTrail=[];['rv-sensor-rings','rv-tof-ceil','rv-csi-waves','rv-mmwave-scan','rv-trail','rv-tof-ping','rv-csi-blob','rv-patient'].forEach(id=>{const e=document.getElementById(id);if(e)e.innerHTML='';});}
 
+function toggleFilm(){
+  const on=document.body.classList.toggle('film');
+  const b=document.getElementById('filmToggle');
+  if(b){ b.textContent=on?'✕ 촬영 종료':'🎬 촬영'; b.classList.toggle('active',on); }
+}
 function toggleSim(){
   simMode=!simMode;
   const btn=document.getElementById('simToggle');
@@ -940,8 +893,6 @@ function toggleSim(){
     banner.style.display='';
     buildSimPills();
     simStart=Date.now();
-    syncBedOptions(['A-1']);
-    document.getElementById('bedSel').value='A-1';
     if(simTimer)clearInterval(simTimer);
     simTimer=setInterval(simTick,200);
     simTick();

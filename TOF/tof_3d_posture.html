@@ -257,11 +257,13 @@ function sensors(){
   const t1 = TILT1*Math.PI/180, t2 = TILT2*Math.PI/180;
   const hl = SEP/2;   // 센서는 각 끝(±SEP/2)에 위치
   return [
-    // 펌웨어에서 tof1/tof2가 머리↔발 반대로 설정됨 → 머리 슬롯은 tof2, 발 슬롯은 tof1 데이터 사용
-    // (위치·높이·기울기 기하는 그대로, 어느 센서 데이터를 어느 물리위치에 그릴지만 스왑)
-    { id:'tof2', key:'tof2(머리)', tint:[74,168,255],
+    // 실측 데이터로 검증된 배치: tof1 = 머리센서, tof2 = 발센서
+    //   근거) 걸터앉기 캡처: 머리쪽 앉음→tof1 min 364mm(가까움)/tof2 987 · 발쪽 앉음→tof2 min 456mm/tof1 899
+    //   ⇒ 머리 슬롯(pos -hl)=tof1, 발 슬롯(pos +hl)=tof2 로 그려야 사람이 실제 위치에 나옴
+    //   ※ 인수인계 문서의 "tof1=발,tof2=머리"는 반대로 틀림 — 이 데이터가 정답 (server/tof_3d.html 과 동기화)
+    { id:'tof1', key:'tof1(머리)', tint:[255,122,89],
       pos:[-hl, 0, SENSOR_H1], dir:norm([ Math.sin(t1), 0, -Math.cos(t1)]) },
-    { id:'tof1', key:'tof1(발)', tint:[255,122,89],
+    { id:'tof2', key:'tof2(발)', tint:[74,168,255],
       pos:[ hl, 0, SENSOR_H2], dir:norm([-Math.sin(t2), 0, -Math.cos(t2)]) },
   ];
 }

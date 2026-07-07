@@ -27,6 +27,16 @@
     background:rgba(19,26,41,.92); border:1px solid var(--line); border-radius:12px;
     padding:12px 14px; width:236px; backdrop-filter:blur(4px); }
   #panel h2 { margin:0 0 8px; font-size:12px; color:var(--dim); letter-spacing:1px; font-weight:700; }
+  /* 센서 설정 패널: 기본 숨김, ⚙ 버튼으로 펼치기 */
+  #panel.hidden { display:none; }
+  #panelClose { float:right; margin:-2px -4px 0 0; background:none; border:0; color:var(--dim);
+    font-size:16px; line-height:1; cursor:pointer; padding:0 2px; }
+  #panelClose:hover { color:var(--tx); }
+  #panelToggle { position:fixed; left:16px; bottom:14px; z-index:7; pointer-events:auto;
+    background:rgba(19,26,41,.92); border:1px solid var(--line); border-radius:10px; color:var(--tx);
+    padding:7px 11px; font-size:12px; cursor:pointer; backdrop-filter:blur(4px); }
+  #panelToggle:hover { background:#243254; }
+  #panelToggle.hidden { display:none; }
   .ctl { margin:9px 0; }
   .ctl label { display:flex; justify-content:space-between; font-size:11.5px; color:var(--dim); margin-bottom:3px; }
   .ctl label b { color:var(--tx); font-weight:600; }
@@ -55,8 +65,9 @@
   <div class="meta" id="meta"></div>
 </div>
 
-<div id="panel">
-  <h2>센서 배치 (실물과 맞추기)</h2>
+<button id="panelToggle" title="센서 설정 펼치기">⚙ 센서 설정</button>
+<div id="panel" class="hidden">
+  <h2>센서 배치 (실물과 맞추기)<button id="panelClose" title="닫기">×</button></h2>
   <div class="ctl">
     <label><span style="color:var(--t1)">머리쪽</span> 높이 <b><span id="v-h1">0.30</span> m</b></label>
     <input id="s-h1" type="range" min="0.1" max="2.2" step="0.02" value="0.30">
@@ -93,6 +104,7 @@
   </div>
   <div class="btns">
     <button id="b-flip" class="on" title="센서 열 방향이 실제와 반대일 때">좌우 반전</button>
+    <button id="b-hf" title="머리쪽/발쪽이 반대로 보일 때 누르세요">머리/발 반전</button>
     <button id="b-roi" class="on" title="길이·높이 범위 밖(벽·바닥) 히트 제거">침대 안만</button>
   </div>
   <div class="btns">
@@ -210,6 +222,7 @@ function easeDisp(sid){
   return cur;
 }
 let bg = { tof1:null, tof2:null }, bgSub=false, flipLR=true, roiOn=true, ROI_ZMAX=0.60, detailOn=true, bodyMode=true;
+let hfSwap=false;   // 머리/발 반전: 어느 센서 데이터를 머리/발 슬롯에 그릴지 스왑
 let fgHold = { tof1:null, tof2:null };   // 전경 유지 래치(존별 카운터)
 const FG_HOLD = 2;                        // 배경과 달라진 존 유지 프레임(짧게 → 잔상 방지)
 let bgCap = null;        // 배경 수집중 버퍼 {tof1:[frame..], tof2:[..], lastAt:{}}
@@ -257,11 +270,13 @@ function sensors(){
   const t1 = TILT1*Math.PI/180, t2 = TILT2*Math.PI/180;
   const hl = SEP/2;   // 센서는 각 끝(±SEP/2)에 위치
   return [
-    // 펌웨어에서 tof1/tof2가 머리↔발 반대로 설정됨 → 머리 슬롯은 tof2, 발 슬롯은 tof1 데이터 사용
-    // (위치·높이·기울기 기하는 그대로, 어느 센서 데이터를 어느 물리위치에 그릴지만 스왑)
-    { id:'tof2', key:'tof2(머리)', tint:[74,168,255],
+    // 실측 데이터로 검증된 배치: tof1 = 머리센서, tof2 = 발센서
+    //   근거) 걸터앉기 캡처: 머리쪽 앉음→tof1 min 364mm(가까움)/tof2 987 · 발쪽 앉음→tof2 min 456mm/tof1 899
+    //   ⇒ 머리 슬롯(pos -hl)=tof1, 발 슬롯(pos +hl)=tof2 로 그려야 사람이 실제 위치에 나옴
+    //   ※ 인수인계 문서(0707_TOF_진행상황_인수인계.md)의 "tof1=발,tof2=머리"는 반대로 틀림 — 이 데이터가 정답
+    { id: hfSwap?'tof2':'tof1', key:'머리슬롯', tint:[255,122,89],
       pos:[-hl, 0, SENSOR_H1], dir:norm([ Math.sin(t1), 0, -Math.cos(t1)]) },
-    { id:'tof1', key:'tof1(발)', tint:[255,122,89],
+    { id: hfSwap?'tof1':'tof2', key:'발슬롯', tint:[74,168,255],
       pos:[ hl, 0, SENSOR_H2], dir:norm([-Math.sin(t2), 0, -Math.cos(t2)]) },
   ];
 }
@@ -497,12 +512,24 @@ function bodySurface(pts, faces){
 const STATE_MIN_PTS = 3;     // 이보다 적으면 이탈
 const STATE_X_LIE   = 0.90;  // X범위(길이 퍼짐)가 이보다 크면 누움(온몸)
 const STATE_Y_EDGE  = 0.10;  // |중심 Y|가 이보다 크면 한쪽 쏠림=걸터앉음(m)
+
+// 서버 ML 자세(posture_ko)를 #state 에 우선 표시 — 아래 텍스트 카드와 '똑같이'.
+// (로컬 기하 휴리스틱보다 정확. poll()에서 /tof/latest 로 갱신)
+let serverPose = null;   // {ko, color, risk}
+function serverStateText(){
+  if(!serverPose) return null;
+  const danger = serverPose.risk && serverPose.risk.status==='anomaly';
+  return { txt: serverPose.ko + (danger ? '  ⚠ 낙상위험' : ''),
+           col: danger ? '#f43f5e' : (serverPose.color || '#4aa8ff') };
+}
 function updateCoordReadout(pts){
   const el=document.getElementById('coord'); if(!el) return;
   const st=document.getElementById('state');
   if(!pts.length){
     el.innerHTML='<b>좌표(cm)</b>  전경 없음';
-    if(st){ st.textContent='🟡 이탈'; st.style.color='var(--warn)'; }
+    const sv=serverStateText();
+    if(st){ if(sv){ st.textContent=sv.txt; st.style.color=sv.col; }
+            else { st.textContent='🟡 이탈'; st.style.color='var(--warn)'; } }
     return;
   }
   let cx=0,cy=0,cz=0,x0=1e9,x1=-1e9,y0=1e9,y1=-1e9,z0=1e9,z1=-1e9;
@@ -515,7 +542,9 @@ function updateCoordReadout(pts){
   else if((x1-x0) > STATE_X_LIE){ state='🟢 누움'; col='var(--ok)'; }
   else if(Math.abs(cy/n) > STATE_Y_EDGE){ state='🟠 걸터앉음'; col='#ff9f43'; }
   else { state='🔵 앉음'; col='#4aa8ff'; }
-  if(st){ st.textContent=state; st.style.color=col; }
+  const sv=serverStateText();   // 서버 ML 라벨이 있으면 그걸로(카드와 동일), 없으면 로컬 휴리스틱
+  if(st){ if(sv){ st.textContent=sv.txt; st.style.color=sv.col; }
+          else { st.textContent=state; st.style.color=col; } }
   el.innerHTML =
     `<b>좌표 분류(cm)</b> · 점 ${n}<br>`+
     `X 머리↔발 : <b>${C(cx/n)}</b> <span>[${C(x0)}~${C(x1)}]</span><br>`+
@@ -630,6 +659,7 @@ async function poll(){
     const stale = at ? (Date.now() - new Date(at).getTime() > 8000) : true;
     data.tof1 = lr.tof1? spikeFilter('tof1', lr.tof1.distances_mm, lr.tof1.received_at) : null;
     data.tof2 = lr.tof2? spikeFilter('tof2', lr.tof2.distances_mm, lr.tof2.received_at) : null;
+    serverPose = lr.posture_ko ? {ko:lr.posture_ko, color:lr.posture_color||'#4aa8ff', risk:lr.risk||null} : null;
     presence = pr; connected=true; dataStale=stale;
     // 이탈이 LEAVE_HOLD_MS 이상 "지속"될 때만 배경 리셋 (순간 깜빡임엔 사람 안 지움)
     const nowIn = !!(presence && presence.in_bed);
@@ -640,7 +670,7 @@ async function poll(){
     }
     if(bgCap) accumulateBg(lr);                         // 배경 통계 수집중이면 프레임 누적
     else if(bgAdapt && !nowIn && (bg.tof1||bg.tof2)) updateBgModel(lr);  // 사람 없을 때(이탈)만 배경 갱신
-  }catch(e){ connected=false; data.tof1=null; data.tof2=null; presence=null; }
+  }catch(e){ connected=false; data.tof1=null; data.tof2=null; presence=null; serverPose=null; }
   updateHUD();
   dirty=true;   // 새 데이터 → 다시 그림
 }
@@ -694,12 +724,20 @@ document.getElementById('b-bgcap').onclick=e=>{
 document.getElementById('b-bgsub').onclick=e=>{ bgSub=!bgSub; e.target.classList.toggle('on',bgSub); };
 document.getElementById('b-bgadapt').onclick=e=>{ bgAdapt=!bgAdapt; e.target.classList.toggle('on',bgAdapt); };
 document.getElementById('b-flip').onclick=e=>{ flipLR=!flipLR; e.target.classList.toggle('on',flipLR); };
+document.getElementById('b-hf').onclick=e=>{ hfSwap=!hfSwap; e.target.classList.toggle('on',hfSwap); dirty=true; };
 document.getElementById('b-roi').onclick=e=>{ roiOn=!roiOn; e.target.classList.toggle('on',roiOn); };
 document.getElementById('b-detail').onclick=e=>{ detailOn=!detailOn; e.target.classList.toggle('on',detailOn); };
 document.getElementById('b-body').onclick=e=>{ bodyMode=!bodyMode; e.target.classList.toggle('on',bodyMode); };
 bindRange('s-zc','v-zc', v=>v.toFixed(2), v=>ROI_ZMAX=v);
 bindRange('s-yhi','v-yhi', v=>v.toFixed(2), v=>ROI_YHI=v);
 bindRange('s-ylo','v-ylo', v=>v.toFixed(2), v=>ROI_YLO=v);
+
+// 센서 설정 패널: 기본 숨김 → ⚙ 버튼으로 펼치고, ×로 접음 (임베드 화면 깔끔하게)
+const _panel=document.getElementById('panel'), _ptog=document.getElementById('panelToggle');
+function setPanel(open){ _panel.classList.toggle('hidden',!open); _ptog.classList.toggle('hidden',open); }
+_ptog.onclick=()=>setPanel(true);
+document.getElementById('panelClose').onclick=()=>setPanel(false);
+setPanel(false);   // 시작 시 숨김
 
 cv.addEventListener('mousedown',e=>{dragging=true;lastX=e.clientX;lastY=e.clientY;});
 window.addEventListener('mouseup',()=>dragging=false);

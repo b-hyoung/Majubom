@@ -24,9 +24,8 @@ import time
 HERE = os.path.dirname(os.path.abspath(__file__))
 POSIX = os.name == "posix"
 
-# (표시이름, 스크립트, 포트)
+# (표시이름, 스크립트, 포트) — CSI 제거됨. ToF(5001)가 대시보드도 서빙.
 SERVERS = [
-    ("CSI", "csi_server.py", 5003),
     ("ToF", "tof_server.py", 5001),
     ("mmWave", "mmw_server.py", 5002),
 ]
@@ -80,8 +79,8 @@ for name, script, port in SERVERS:
     procs.append((name, script, p))
     print(f"  > {name:6} -> :{port}   ({script}, pid {p.pid})")
 print("=" * 52)
-print("  Dashboard : http://localhost:5003/dashboard")
-print("  LAN       : http://<this-PC-IP>:5003/dashboard")
+print("  Dashboard : http://localhost:5001/dashboard")
+print("  LAN       : http://<this-PC-IP>:5001/dashboard")
 print("  Stop      : Ctrl+C")
 print("=" * 52)
 

@@ -125,7 +125,12 @@ def health():
 def dashboard():
     try:
         with open(SITE_PATH, "r", encoding="utf-8") as f:
-            return Response(f.read(), mimetype="text/html")
+            resp = Response(f.read(), mimetype="text/html")
+        # 브라우저 캐시 방지 — 업데이트 후 항상 최신 대시보드 (옛 버전 캐시로 안 뜨는 것 방지)
+        resp.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+        resp.headers["Pragma"] = "no-cache"
+        resp.headers["Expires"] = "0"
+        return resp
     except FileNotFoundError:
         return Response("site/index.html not found", status=404)
 

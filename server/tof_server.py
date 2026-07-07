@@ -10,7 +10,7 @@ POST /tof/calibrate    — 빈 침대 베이스라인 저장
 ※ CSI 는 csi_server.py(:5003) 전담 (여기서 분리).
 """
 
-from flask import Flask, request, jsonify, send_from_directory
+from flask import Flask, request, jsonify, send_from_directory, Response
 from flask_cors import CORS
 from datetime import datetime
 import os, json, sys
@@ -28,6 +28,14 @@ try:
     print("[posture] 자세 분류 모델 로드됨")
 except Exception as e:
     print(f"[posture] 모델 미로드({e}) — 자세 표시 비활성")
+
+# roi 지오메트리(침대 폭·존별 3D 좌표) — 위 predict_posture import가 TOF/ml 를 path에 넣어줌.
+# 낙상위험(침대 가장자리에 쏠려 누움) 계산에 존별 좌우 Y 좌표가 필요.
+try:
+    import roi as _roi
+except Exception as e:
+    _roi = None
+    print(f"[risk] roi 로드 실패({e}) — 가장자리 낙상위험 비활성")
 
 # ── LSTM-AE 이상탐지 (옵션) ────────────────────────────────────────────
 # torch / lstm_ae.pt 없으면 조용히 비활성(anomaly=None). 서버는 정상 동작.
@@ -61,6 +69,10 @@ CONFIRM_FRAMES     = 3      # (하위호환) 사용 안 함
 ABS_FALLBACK_MM    = 1500   # 베이스라인 없을 때: 이보다 가까운 유효 존을 점유로 간주
 ROI_MAX_MM         = 2300   # 침대 ROI: 빈 침대 기준거리가 이보다 먼 존은 벽·바닥으로 보고
                             # 감지에서 제외 (벽쪽 오탐 방지). 침대 near~far가 이 안에 들어오게 설정.
+
+# 센서 물리 위치가 코드 가정과 반대(tof1↔tof2 뒤바뀜)면 True → 들어오는 데이터를 맞바꿈
+# (주의: True로 하면 baseline·모델도 그 배치로 맞춰져 있어야 함. 3D 화면 방향만 문제면 뷰어 토글 사용)
+SWAP_TOF = False
 
 BASELINE_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "tof_baseline.json")
 
@@ -177,6 +189,11 @@ def receive_tof():
     distances  = data.get("distances_mm")  # list[int]
     targets    = data.get("targets")       # list[int], optional
 
+    # 센서 물리 위치가 바뀌어 tof1↔tof2가 뒤바뀐 경우: 들어오는 순간 맞바꿔
+    # 이후 파이프라인(모델·재실·DB·3D)이 전부 일관된 배치로 처리되게 함.
+    if SWAP_TOF and sensor_id in ("tof1", "tof2"):
+        sensor_id = "tof2" if sensor_id == "tof1" else "tof1"
+
     if sensor_id not in ("tof1", "tof2"):
         return jsonify({"error": "sensor must be tof1 or tof2"}), 400
     if not isinstance(distances, list) or len(distances) == 0:
@@ -257,8 +274,109 @@ def get_presence():
 
 @app.route("/tof/anomaly", methods=["GET"])
 def get_anomaly():
-    """LSTM-AE 실시간 이상탐지 결과. 재구성오차 > 임계면 status=anomaly."""
-    return jsonify(anomaly_latest)
+    """낙상위험 판정 (자세 기반). 예전 LSTM-AE는 빈침대 baseline에 묶여 사람만 있으면
+    무조건 이상으로 떠서(오탐), '낙상위험 자세(가장자리에 쏠려 누움)'만 위험으로 바꿈.
+    대시보드 카드가 기대하는 필드(status/err/ratio)에 맞춰 반환."""
+    return jsonify({
+        "status": risk_latest["status"],                       # anomaly(위험) / normal(정상)
+        "err":    0.0 if risk_latest["posture"] else None,     # None이면 카드가 '대기'로 표시
+        "ratio":  risk_latest["ratio"],                        # |Y|/침대반폭 (가장자리 근접도)
+        "reason": risk_latest["reason"],
+        "y":      risk_latest["y"],
+        "posture": risk_latest["posture"],
+        "at":     risk_latest["at"],
+        "lstm":   anomaly_latest,                              # 참고용(예전 LSTM 값) — UI 미사용
+    })
+
+
+# ── 자세 표시(한글/색) · 뒤척임(temporal) · 낙상위험(가장자리) ──────────────
+import time as _time
+from collections import deque
+
+# RF 원시 라벨 → (한글, 색). side_left/right 는 표시상 "옆으로 누움"으로 통일.
+POSTURE_KO = {
+    "empty":      ("이탈",        "#9aa0b4"),
+    "supine":     ("누움",        "#22c55e"),
+    "side_left":  ("옆으로 누움",  "#38bdf8"),
+    "side_right": ("옆으로 누움",  "#38bdf8"),
+    "tossing":    ("뒤척임",      "#fb923c"),
+    "edge_sit":   ("걸터앉음",     "#f59e0b"),
+    "sitting":    ("앉음",        "#4aa8ff"),
+}
+
+# 뒤척임: 좌우(side_left↔side_right)를 창(window) 안에서 여러 번 번갈으면 "뒤척임".
+# 한쪽으로 누워 가만히 있으면 스위치가 안 쌓여(그리고 오래된 건 만료) → 그대로 옆으로 누움.
+TOSS_WINDOW_SEC   = 6.0     # 이 시간(초) 안의 좌우 전환만 셈
+TOSS_MIN_SWITCHES = 2       # 창 안에서 좌우 전환이 이 횟수 이상이면 뒤척임
+_side_hist = deque()        # [(t, 'L'|'R'), ...] — 좌우가 '바뀔 때'만 기록
+
+def _temporal_label(raw):
+    now = _time.time()
+    if raw in ("side_left", "side_right"):
+        side = "L" if raw == "side_left" else "R"
+        if not _side_hist or _side_hist[-1][1] != side:   # 바뀔 때만 push
+            _side_hist.append((now, side))
+    while _side_hist and now - _side_hist[0][0] > TOSS_WINDOW_SEC:
+        _side_hist.popleft()
+    switches = sum(1 for i in range(1, len(_side_hist))
+                   if _side_hist[i][1] != _side_hist[i - 1][1])
+    if switches >= TOSS_MIN_SWITCHES and raw in ("side_left", "side_right", "supine"):
+        return "tossing"
+    return raw
+
+# 낙상위험: "침대 가장자리에 쏠려 누움". 점유존들의 좌우중심 Y(m)가 한쪽으로 크게 치우침.
+BED_HALF_W    = 0.475   # 침대 폭 0.95m 의 절반 (roi.BED_WID/2)
+EDGE_Y_M      = 0.25    # |좌우중심 Y| 가 이보다 크면 가장자리 쏠림 → 위험 (실측 튜닝 필요)
+RISK_MIN_PTS  = 6       # 판단에 필요한 최소 점유 존
+RISK_CONFIRM  = 2       # 연속 이 횟수 이상이어야 상태 전환(깜빡임 억제)
+_risk_pending = {"anomaly": 0, "normal": 0}
+risk_latest   = {"status": "normal", "reason": None, "y": None,
+                 "ratio": 0.0, "posture": None, "at": None}
+
+def _body_mean_y():
+    """점유존(몸/이불이 올라온 존)들이 닿는 지점의 좌우 Y(m) 평균과 점 개수."""
+    if _roi is None:
+        return None, 0
+    ys = []
+    for sid in ("tof1", "tof2"):
+        d = (latest.get(sid) or {}).get("distances_mm")
+        base = baseline.get(sid)
+        if not d:
+            continue
+        for z, dist in enumerate(d):
+            if dist is None or dist <= 0:
+                continue
+            b = base[z] if (base and z < len(base)) else None
+            if not b or b <= 0 or b > ROI_MAX_MM:      # 침대 ROI 밖(벽·바닥) 제외
+                continue
+            if dist < b - PRESENCE_DELTA_MM:           # baseline 대비 가까움 = 몸
+                y = _roi.hit_y(sid, z, dist)
+                if y is not None and abs(y) <= 0.9:
+                    ys.append(y)
+    if not ys:
+        return None, 0
+    return sum(ys) / len(ys), len(ys)
+
+def _fall_risk(disp, now_iso):
+    """낙상위험 자세만 위험 판정. 지금은 '가장자리에 쏠려 누움'만 감지."""
+    lying = disp in ("supine", "side_left", "side_right", "tossing")
+    ymean, npts = _body_mean_y()
+    danger = bool(lying and npts >= RISK_MIN_PTS
+                  and ymean is not None and abs(ymean) > EDGE_Y_M)
+    want = "anomaly" if danger else "normal"
+    _risk_pending[want] += 1
+    _risk_pending["normal" if danger else "anomaly"] = 0
+    if _risk_pending[want] >= RISK_CONFIRM:
+        risk_latest["status"] = want
+    ratio = min(abs(ymean) / BED_HALF_W, 1.5) if ymean is not None else 0.0
+    reason = None
+    if risk_latest["status"] == "anomaly":
+        side = "왼쪽" if (ymean or 0) < 0 else "오른쪽"
+        reason = f"침대 {side} 가장자리에 쏠려 누움 — 낙상 위험"
+    risk_latest.update({"reason": reason,
+                        "y": round(ymean, 3) if ymean is not None else None,
+                        "ratio": round(ratio, 3), "posture": disp, "at": now_iso})
+    return risk_latest
 
 
 @app.route("/tof/latest", methods=["GET"])
@@ -267,8 +385,21 @@ def get_latest():
     if _POSTURE is not None:
         try:
             label, conf = _predict_posture(_POSTURE, latest)
-            resp["posture"] = label
-            resp["posture_conf"] = round(conf, 3) if conf is not None else None
+            # 빈침대 게이트: 점유존(baseline 대비 가까운 존)이 하나도 없으면 RF 무시하고 empty 확정.
+            # RF가 발쪽 걸터앉기↔빈침대를 헷갈려 빈침대를 edge_sit 등으로 오탐하는 것 방지.
+            # (사람이 있으면 occ>0 → RF 자세 그대로 사용, 걸터앉기 감지도 유지)
+            occ = (presence["tof1"]["occupied"] or 0) + (presence["tof2"]["occupied"] or 0)
+            if occ == 0:
+                label, conf = "empty", 1.0
+            disp = _temporal_label(label) if label else label   # 좌우 번갈음 → 뒤척임
+            ko, color = POSTURE_KO.get(disp, (disp or "--", "#9aa0b4"))
+            now_iso = latest["tof1"].get("received_at") or latest["tof2"].get("received_at")
+            resp["posture"]       = disp                         # empty/supine/side_*/tossing/edge_sit/sitting
+            resp["posture_raw"]   = label                        # 뒤척임 판정 전 원시 라벨
+            resp["posture_ko"]    = ko                           # 한글 표시 (3D·카드 공통)
+            resp["posture_color"] = color
+            resp["posture_conf"]  = round(conf, 3) if conf is not None else None
+            resp["risk"]          = _fall_risk(disp, now_iso) if disp else dict(risk_latest)
         except Exception:
             resp["posture"] = None
     return jsonify(resp)
@@ -278,6 +409,43 @@ def get_latest():
 def tof_3d():
     """ToF 자세 3D 뷰어 (같은 출처에서 /tof/latest·/tof/presence 를 읽음)."""
     return send_from_directory(HERE, "tof_3d.html")
+
+
+# ── 대시보드 서빙 (CSI 제거 → tof_server가 대시보드 호스팅) ──────────────
+_SITE = os.path.join(HERE, "..", "site", "index.html")
+
+
+@app.route("/dashboard", methods=["GET"])
+def dashboard():
+    try:
+        with open(_SITE, "r", encoding="utf-8") as f:
+            resp = Response(f.read(), mimetype="text/html")
+        resp.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+        resp.headers["Pragma"] = "no-cache"
+        resp.headers["Expires"] = "0"
+        return resp
+    except FileNotFoundError:
+        return Response("site/index.html not found", status=404)
+
+
+# ── mmWave(:5002) 프록시 ──────────────────────────────────────────────
+# 대시보드가 :5001(여기)에서 서빙되므로, mmWave 점군 iframe·값도 :5001을 통해
+# same-origin으로 받게 중계 → 브라우저의 타 포트(:5002) iframe/fetch 차단 회피.
+import urllib.request
+
+
+@app.route("/mmw/<path:p>", methods=["GET"])
+def proxy_mmw(p):
+    q = ("?" + request.query_string.decode()) if request.query_string else ""
+    try:
+        with urllib.request.urlopen("http://127.0.0.1:5002/mmw/" + p + q, timeout=6) as r:
+            body = r.read()
+            ctype = r.headers.get("Content-Type", "application/octet-stream")
+        resp = Response(body, mimetype=ctype)
+        resp.headers["Cache-Control"] = "no-store"
+        return resp
+    except Exception as e:
+        return Response(f"mmw proxy error({p}): {e}", status=502)
 
 
 @app.route("/tof/log", methods=["GET"])

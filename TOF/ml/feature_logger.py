@@ -30,6 +30,8 @@ ap.add_argument("--server", default="http://192.168.6.10:5001")
 ap.add_argument("--db", default=os.path.join(HERE, "tof_features.db"))
 ap.add_argument("--thr", type=int, default=200)         # baseline 대비 전경 임계(mm)
 ap.add_argument("--base-frames", type=int, default=10)
+ap.add_argument("--baseline", default=None,
+                help="빈침대 baseline JSON({sid:[존별mm]}) 경로 지정 시 캡처 생략 — 침대에 사람 있어도 시작 가능")
 a = ap.parse_args()
 LATEST = a.server.rstrip("/") + "/tof/latest"
 PRESENCE = a.server.rstrip("/") + "/tof/presence"
@@ -61,24 +63,30 @@ db.commit()
 print(f"[db] {a.db}", flush=True)
 
 # ── baseline (빈 침대) ──
-print(f"[baseline] 빈 침대 {a.base_frames}프레임 캡처중… (침대 비워주세요)", flush=True)
-acc = {"tof1": defaultdict(list), "tof2": defaultdict(list)}
-seen = {"tof1": set(), "tof2": set()}
-while len(seen["tof1"]) < a.base_frames or len(seen["tof2"]) < a.base_frames:
-    o = get(LATEST)
-    for sid in ("tof1", "tof2"):
-        s = o.get(sid) or {}
-        at, d = s.get("received_at"), s.get("distances_mm")
-        if not at or at in seen[sid] or not d:
-            continue
-        seen[sid].add(at)
-        for z, v in enumerate(d):
-            if v and v > 0:
-                acc[sid][z].append(v)
-    time.sleep(0.05)
-base = {sid: {z: sum(vs) / len(vs) for z, vs in acc[sid].items() if vs}
-        for sid in ("tof1", "tof2")}
-print("[baseline] 완료. 로깅 시작 (Ctrl+C 종료).\n", flush=True)
+if a.baseline:
+    _bj = json.load(open(a.baseline, encoding="utf-8"))
+    base = {sid: {z: v for z, v in enumerate(_bj.get(sid) or []) if v and v > 0}
+            for sid in ("tof1", "tof2")}
+    print(f"[baseline] 파일 사용: {a.baseline} (사람 있어도 시작). 로깅 시작.\n", flush=True)
+else:
+    print(f"[baseline] 빈 침대 {a.base_frames}프레임 캡처중… (침대 비워주세요)", flush=True)
+    acc = {"tof1": defaultdict(list), "tof2": defaultdict(list)}
+    seen = {"tof1": set(), "tof2": set()}
+    while len(seen["tof1"]) < a.base_frames or len(seen["tof2"]) < a.base_frames:
+        o = get(LATEST)
+        for sid in ("tof1", "tof2"):
+            s = o.get(sid) or {}
+            at, d = s.get("received_at"), s.get("distances_mm")
+            if not at or at in seen[sid] or not d:
+                continue
+            seen[sid].add(at)
+            for z, v in enumerate(d):
+                if v and v > 0:
+                    acc[sid][z].append(v)
+        time.sleep(0.05)
+    base = {sid: {z: sum(vs) / len(vs) for z, vs in acc[sid].items() if vs}
+            for sid in ("tof1", "tof2")}
+    print("[baseline] 완료. 로깅 시작 (Ctrl+C 종료).\n", flush=True)
 
 
 def features(o):
