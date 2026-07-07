@@ -342,12 +342,16 @@
     </div>
     <div id="mm-live" style="display:none">
       <div class="vbig num" id="mm-speed" style="font-size:30px;color:var(--blue)">--<small> m/s</small></div>
-      <div class="vsub">보행 속도</div>
+      <div class="vsub">보행 속도 · <b id="mm-status">--</b></div>
       <div class="chips" style="margin-top:10px">
-        <span class="vchip">보폭변동 CV <b id="mm-cv">--</b></span>
-        <span class="vchip">케이던스 <b id="mm-cad">--</b> spm</span>
-        <span class="vchip">자세 <b id="mm-pose">--</b></span>
+        <span class="vchip">속도변동 CV <b id="mm-cv">--</b></span>
+        <span class="vchip">흔들림 sway <b id="mm-sway">--</b></span>
+        <span class="vchip">보폭 <b id="mm-stride">--</b> m</span>
+        <span class="vchip">보폭변동 CV <b id="mm-stridecv">--</b></span>
+        <span class="vchip">프리징 <b id="mm-freeze">--</b></span>
+        <span class="vchip">낙상위험 z <b id="mm-ztot">--</b></span>
       </div>
+      <div class="vsub" style="margin-top:6px">판정 <b id="mm-level" style="color:var(--dim)">--</b></div>
     </div>
   </div>
 
@@ -550,7 +554,7 @@ document.getElementById('hostInput').addEventListener('change',()=>{pollCsi();po
 
 /* 2초마다 실서버 폴링 */
 csiWaiting('연결 확인 중…'); tofWaiting();
-setInterval(()=>{ if(!simMode){pollCsi();pollTof();} },2000);
+setInterval(()=>{ if(!simMode){pollCsi();pollTof();pollMmwGait();} },2000);
 /* ---------- mmWave 실시간 위치 (/mmw/live → 실측 평면도) ---------- */
 // 2026-07-05 캘리브레이션: 방 6.3x3.6m, 센서=코너 원점, 대각선 시야.
 // 트랙(tx,ty)→방(rx,ry): 6.3m벽 방향=코너1 실측(2.20,4.92) 정규화. 46px/m.
@@ -577,7 +581,37 @@ async function pollMmwPos(){
 }
 setInterval(pollMmwPos, 500); pollMmwPos();
 
-pollCsi(); pollTof(); set3dSrc(); setMmwSrc();
+/* ---------- mmWave 보행지표 (/mmw/latest → 카드) ---------- */
+async function pollMmwGait(){
+  try{
+    const r=await fetch(url('mmw','/mmw/latest'),{cache:'no-store'});
+    const d=await r.json();
+    // 대상 선택: raw 있으면 그대로, 아니면 room_01 또는 첫 유효 대상
+    const o=(d&&d.raw)?d:(d?(d.room_01||Object.values(d).find(v=>v&&v.raw)):null);
+    if(!o||!o.raw){ mmWaveWaiting(); return; }
+    renderMmwGait(o);
+  }catch(e){ mmWaveWaiting(); }
+}
+function renderMmwGait(o){
+  document.getElementById('mm-wait').style.display='none';
+  document.getElementById('mm-live').style.display='';
+  document.getElementById('dot-mm').className='sdot on';
+  const raw=o.raw||{}, q=o.quality||{}, z=o.zscore||{};
+  const f=(v)=>(typeof v==='number'?v.toFixed(2):'--');
+  document.getElementById('mm-speed').childNodes[0].nodeValue=f(raw.speed);
+  document.getElementById('mm-cv').textContent=f(raw.speed_cv);
+  document.getElementById('mm-sway').textContent=f(raw.sway);
+  document.getElementById('mm-stride').textContent=f(raw.stride_length);
+  document.getElementById('mm-stridecv').textContent=f(raw.stride_cv);
+  document.getElementById('mm-freeze').textContent=f(raw.freeze_ratio);
+  document.getElementById('mm-ztot').textContent=(z.total_abs!=null?z.total_abs:'--');
+  document.getElementById('mm-status').textContent=(q.walking===false?'정지/휴식':'보행 중');
+  const lvl=o.alert_level, le=document.getElementById('mm-level');
+  le.textContent=o.measuring_held?'측정 보류':(o.alert_level_ko||(lvl?KO[lvl]:'정상'));
+  le.style.color=(lvl&&RISK[lvl])?RISK[lvl]:'var(--ok)';
+}
+
+pollCsi(); pollTof(); if(!simMode) pollMmwGait(); set3dSrc(); setMmwSrc();
 
 /* =====================================================================
    시뮬레이터 — 발표용 데모 데이터 (규칙적 순환, 실제 감지값 기반)
@@ -717,12 +751,13 @@ function buildSimPills(){
 /* mmWave 시뮬레이션 데이터
    SIM_PHASES의 인덱스와 같은 순서로 mmWave 값 정의 */
 const MM_PHASES=[
-  {speed:0,   cv:0.10, cad:0,  pose:'수면 중'},     // 0: 정상수면
-  {speed:0.02,cv:0.22, cad:0,  pose:'와상 뒤척임'},  // 1: 뒤척임
-  {speed:0.12,cv:0.18, cad:52, pose:'기립'},         // 2: 침상이탈
-  {speed:0.86,cv:0.28, cad:82, pose:'보행'},         // 3: 이동
-  {speed:0.55,cv:0.44, cad:64, pose:'불안정 보행'},  // 4: 낙상위험
-  {speed:0,   cv:0.55, cad:0,  pose:'수평 (낙상)'},  // 5: 낙상
+  //           속도  속도CV  sway  보폭  보폭CV  프리징  z(위험)  자세
+  {speed:0,   cv:0.10, sway:0.00, stride:0,    scv:0,    frz:1.00, z:0.5, pose:'수면 중'},     // 0: 정상수면
+  {speed:0.02,cv:0.22, sway:0.01, stride:0,    scv:0,    frz:0.90, z:1.2, pose:'와상 뒤척임'},  // 1: 뒤척임
+  {speed:0.12,cv:0.18, sway:0.03, stride:0.15, scv:0.30, frz:0.60, z:2.5, pose:'기립'},         // 2: 침상이탈
+  {speed:0.86,cv:0.11, sway:0.02, stride:0.62, scv:0.14, frz:0.05, z:1.8, pose:'보행'},         // 3: 이동(정상)
+  {speed:0.55,cv:0.38, sway:0.09, stride:0.33, scv:0.52, frz:0.34, z:7.2, pose:'불안정 보행'},  // 4: 낙상위험
+  {speed:0,   cv:0.55, sway:0.15, stride:0,    scv:0,    frz:0.98, z:10.5,pose:'수평 (낙상)'},  // 5: 낙상
 ];
 function renderMMWaveSim(elapsed){
   const{i,prog,blend,ph,next}=simGetState(elapsed);
@@ -730,14 +765,25 @@ function renderMMWaveSim(elapsed){
   const m=MM_PHASES[i],nm=MM_PHASES[(i+1)%MM_PHASES.length];
   const spd=Math.max(0,wobble(lerp(m.speed,nm.speed,blend),t,.06,.8));
   const cv=Math.max(0,wobble(lerp(m.cv,nm.cv,blend),t,.015,.7));
-  const cad=Math.max(0,Math.round(wobble(lerp(m.cad,nm.cad,blend),t,3,.5)));
+  const sway=Math.max(0,wobble(lerp(m.sway,nm.sway,blend),t,.008,.6));
+  const stride=Math.max(0,wobble(lerp(m.stride,nm.stride,blend),t,.02,.5));
+  const scv=Math.max(0,wobble(lerp(m.scv,nm.scv,blend),t,.02,.6));
+  const frz=Math.min(1,Math.max(0,wobble(lerp(m.frz,nm.frz,blend),t,.03,.5)));
+  const ztot=Math.max(0,wobble(lerp(m.z,nm.z,blend),t,.15,.4));
   document.getElementById('mm-wait').style.display='none';
   document.getElementById('mm-live').style.display='';
   document.getElementById('dot-mm').className='sdot on';
   document.getElementById('mm-speed').childNodes[0].nodeValue=spd.toFixed(2);
   document.getElementById('mm-cv').textContent=cv.toFixed(2);
-  document.getElementById('mm-cad').textContent=cad||'—';
-  document.getElementById('mm-pose').textContent=blend>.5?nm.pose:m.pose;
+  document.getElementById('mm-sway').textContent=sway.toFixed(2);
+  document.getElementById('mm-stride').textContent=stride.toFixed(2);
+  document.getElementById('mm-stridecv').textContent=scv.toFixed(2);
+  document.getElementById('mm-freeze').textContent=frz.toFixed(2);
+  document.getElementById('mm-ztot').textContent=ztot.toFixed(1);
+  document.getElementById('mm-status').textContent=(blend>.5?nm.pose:m.pose);
+  const lvl=ztot>=9?'critical':ztot>=6?'warning':ztot>=3?'caution':'normal';
+  const le=document.getElementById('mm-level');
+  le.textContent=KO[lvl]; le.style.color=RISK[lvl];
 }
 function mmWaveWaiting(){
   document.getElementById('mm-wait').style.display='';
