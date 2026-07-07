@@ -1,0 +1,10 @@
+{
+  "x_min": -1.687,
+  "x_max": 1.739,
+  "y_min": 0.096,
+  "y_max": 2.988,
+  "z_offset": 0.32,
+  "calib_z_cent_raw": 0.18,
+  "calib_points": 150,
+  "ts": 1782993698964
+}
