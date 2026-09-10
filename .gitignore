@@ -64,3 +64,6 @@ site/*.bak
 # 증강 재생성물 (augment_seq.py / augment_tof.py 로 언제든 재생성)
 mmWave/exit_seq/seq_dataset_aug.jsonl.gz
 TOF/dataset/aug/
+# 4x4 로컬 백업 원본 — 압축본(majubom.db.4x4bak.gz)만 커밋, 원본은 커밋 X
+server/majubom.db.4x4bak
+server/tof_baseline.4x4bak.json
