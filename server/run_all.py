@@ -1,8 +1,10 @@
 """
-서버 일괄 실행 — CSI(5003) + ToF(5001) + mmWave(5002)를 한 번에 띄움
+서버 일괄 실행 — ToF(5001) + mmWave(5002)를 한 번에 띄움
 ====================================================================
 각 서버는 자기 센서만 담당하고, raw 데이터를 SQLite(majubom.db)의
-센서별 테이블(csi_readings / tof_readings / mmw_readings)에 누적 저장.
+센서별 테이블(tof_readings / mmw_readings)에 누적 저장.
+(2026-09-10: WiFi CSI 기능 자체를 완전히 제거 — csi_server.py/csi_logic.py 및
+csi_readings 테이블도 함께 삭제됨.)
 
 사용:
   python run_all.py            # server/ 폴더에서 실행
@@ -12,8 +14,8 @@
   pip install -r ../requirements.txt   # flask, flask-cors
 
 대시보드(같은 네트워크의 다른 PC/노트북에서도 접속 가능):
-  http://<이 PC의 IP>:5003/dashboard   예) http://192.168.1.57:5003/dashboard
-  로컬에서는 http://localhost:5003/dashboard
+  http://<이 PC의 IP>:5001/dashboard   예) http://192.168.1.57:5001/dashboard
+  로컬에서는 http://localhost:5001/dashboard
 """
 import os
 import sys

@@ -4,19 +4,13 @@ mmWave 보행 분석 로직 — baseline 누적 / z-score / alert_level 계산 (
 mmWave 파트(송신부)는 보행 지표(gait features) + quality + presence 만 보냄.
 baseline(평소 μ·σ) · z-score(평소 대비 변화) · alert_level(단계) 은 **서버가** 계산한다.
 
-csi_logic.py 와 동일한 인터페이스(load_baseline / save_baseline / evaluate)를 따른다.
+tof_logic.py와 동일한 인터페이스(load_baseline / save_baseline / evaluate)를 따른다.
 → 통합 단계에서 두 센서 결과를 같은 방식으로 합칠 수 있다.
 
 baseline은 "과거 측정의 집계"이므로 JSON 파일(server/mmw_baseline.json)을
 대상(target_id, 기본 'room_01')별 누적 통계로 사용한다.
 
 이 모듈은 Flask 비의존(순수 함수) → 단독 테스트 가능.
-
-CSI 와의 대응 관계
-  raw.hr_bpm/resp_rpm/autocorr_strength  →  raw.speed/speed_cv/sway/freeze_ratio
-  절대임계 HR>140 (즉시 critical)        →  height_drop > 임계 (낙상 순간, 즉시 critical)
-  quality.reliable=false (무시)          →  track 신뢰 불가(짧음/포인트 적음) → 무시
-  presence.gate_active=false (보류)      →  n_targets != 1 (여러 사람/없음) → 보류
 """
 from __future__ import annotations
 
@@ -61,7 +55,7 @@ LEVELS = ("normal", "caution", "warning", "critical")
 LEVEL_KO = {"normal": "정상", "caution": "주의", "warning": "경고", "critical": "위험"}
 
 
-# ── 영속 저장 (csi_logic 과 동일 방식) ─────────────────────────────────
+# ── 영속 저장 (tof_logic.py와 동일 방식) ─────────────────────────────────
 def load_baseline(path: str = BASELINE_PATH) -> dict:
     try:
         with open(path, "r", encoding="utf-8") as f:
@@ -145,11 +139,11 @@ def classify_alert(total_abs: float) -> str:
     return "normal"
 
 
-# ── 메인: 측정 1건 평가 (csi_logic.evaluate 와 동일 시그니처) ───────────
+# ── 메인: 측정 1건 평가 (tof_logic.evaluate 와 동일 시그니처) ───────────
 def evaluate(payload: dict, store: dict, persist: bool = True) -> dict:
     """mmWave payload 1건을 받아 baseline 갱신 + z-score/alert 계산 후 보강 dict 반환.
 
-    예외규칙(csi_logic 과 동일 사상):
+    예외규칙(tof_logic.py와 동일 사상):
       - reliable=false          → 측정 무시 (baseline 갱신 X, 알람 X)
       - patient_locked=false    → 환자 특정 실패(2명+인데 소속도로 못 가림/0명) → 보류
       - walking=false           → 환자 정지·휴식(누움 등) → gait baseline 미반영 (낙상만 감시)

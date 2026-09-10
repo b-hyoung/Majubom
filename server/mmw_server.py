@@ -5,7 +5,7 @@ mmWave 파트(유현기/박형석) → 서버. 송신부(send_mmw.py)가 30초�
 
 mmWave가 보내는 것 : raw(speed/speed_cv/sway/freeze_ratio/height_drop) + quality + presence
 서버가 계산하는 것 : baseline(평소 μ·σ) · z-score · alert_level(4단계)  ← mmw_logic.py
-구조 출처         : csi_server.py / csi_logic.py 와 동일 패턴
+구조 출처         : tof_server.py / tof_logic.py 와 동일 패턴
 
 엔드포인트
   POST /mmw           송신부 → 보행 지표 수신 (분석·저장)

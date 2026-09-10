@@ -7,7 +7,6 @@ GET  /tof/latest       — 센서별 최신 프레임 (in-memory)
 GET  /tof/log          — 최근 수신 로그 (in-memory)
 GET  /tof/presence     — 침상 재실 판정
 POST /tof/calibrate    — 빈 침대 베이스라인 저장
-※ CSI 는 csi_server.py(:5003) 전담 (여기서 분리).
 """
 
 from flask import Flask, request, jsonify, send_from_directory, Response
