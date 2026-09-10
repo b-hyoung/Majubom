@@ -66,4 +66,13 @@ mmWave/exit_seq/seq_dataset_aug.jsonl.gz
 TOF/dataset/aug/
 # 4x4 로컬 백업 원본 — 압축본(majubom.db.4x4bak.gz)만 커밋, 원본은 커밋 X
 server/majubom.db.4x4bak
+server/majubom_4x4bak.db
 server/tof_baseline.4x4bak.json
+.env
+docs/*
+# 런타임 생성 — 행동 baseline(환경별로 다름, tof_baseline.json/mmw_baseline.json과 동일 정책)
+server/behavior_fsm_baseline.json
+server/tof_behavior_baseline.json
+# 대용량 저정확도 실험 모델(2026-09-10, in_bed 예측 RandomForest) — 로컬 보관, 커밋 X
+TOF/ml/in_bed_model_tof1.joblib
+TOF/ml/in_bed_model_tof2.joblib

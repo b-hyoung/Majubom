@@ -1,0 +1,286 @@
+{
+  "source_db": "server/majubom.db.4x4bak.gz (decompressed 145MB, 866,594 tof_readings)",
+  "quality_report": {
+    "total_rows": 866593,
+    "time_range": [
+      "2026-07-03T16:54:11.784",
+      "2026-07-07T14:11:00.980"
+    ],
+    "by_sensor": {
+      "tof2": {
+        "n_frames": 440534,
+        "avg_valid_zones_of_16": 11.5,
+        "avg_occupied_zones": 0.92,
+        "in_bed_ratio": 0.5354,
+        "resolution_counts": {
+          "4x4": 440534
+        }
+      },
+      "tof1": {
+        "n_frames": 426059,
+        "avg_valid_zones_of_16": 5.56,
+        "avg_occupied_zones": 1.17,
+        "in_bed_ratio": 0.5371,
+        "resolution_counts": {
+          "4x4": 423140,
+          "8x8": 2919
+        }
+      }
+    }
+  },
+  "empty_bed_baseline": {
+    "tof2": {
+      "d0": {
+        "n": 123465,
+        "mean_mm": 2974.8,
+        "std_mm": 90.7
+      },
+      "d1": {
+        "n": 164745,
+        "mean_mm": 3244.3,
+        "std_mm": 143.2
+      },
+      "d2": {
+        "n": 6464,
+        "mean_mm": 2879.6,
+        "std_mm": 792.3
+      },
+      "d3": {
+        "n": 196230,
+        "mean_mm": 3232.5,
+        "std_mm": 319.9
+      },
+      "d4": {
+        "n": 99887,
+        "mean_mm": 2066.0,
+        "std_mm": 126.9
+      },
+      "d5": {
+        "n": 136010,
+        "mean_mm": 2006.3,
+        "std_mm": 144.7
+      },
+      "d6": {
+        "n": 190531,
+        "mean_mm": 2149.4,
+        "std_mm": 128.0
+      },
+      "d7": {
+        "n": 180786,
+        "mean_mm": 3427.1,
+        "std_mm": 405.5
+      },
+      "d8": {
+        "n": 132143,
+        "mean_mm": 1425.4,
+        "std_mm": 81.8
+      },
+      "d9": {
+        "n": 130704,
+        "mean_mm": 1508.6,
+        "std_mm": 142.0
+      },
+      "d10": {
+        "n": 120628,
+        "mean_mm": 1457.2,
+        "std_mm": 93.4
+      },
+      "d11": {
+        "n": 74824,
+        "mean_mm": 1341.0,
+        "std_mm": 121.5
+      },
+      "d12": {
+        "n": 185386,
+        "mean_mm": 1049.1,
+        "std_mm": 25.4
+      },
+      "d13": {
+        "n": 190410,
+        "mean_mm": 1060.5,
+        "std_mm": 25.1
+      },
+      "d14": {
+        "n": 191995,
+        "mean_mm": 1057.7,
+        "std_mm": 29.4
+      },
+      "d15": {
+        "n": 200103,
+        "mean_mm": 1029.2,
+        "std_mm": 27.2
+      }
+    },
+    "tof1": {
+      "d0": {
+        "n": 2405,
+        "mean_mm": 1658.3,
+        "std_mm": 1086.3
+      },
+      "d1": {
+        "n": 417,
+        "mean_mm": 863.9,
+        "std_mm": 864.6
+      },
+      "d2": {
+        "n": 3140,
+        "mean_mm": 2836.1,
+        "std_mm": 877.3
+      },
+      "d3": {
+        "n": 3776,
+        "mean_mm": 2690.8,
+        "std_mm": 753.4
+      },
+      "d4": {
+        "n": 5662,
+        "mean_mm": 1435.5,
+        "std_mm": 545.9
+      },
+      "d5": {
+        "n": 1426,
+        "mean_mm": 1096.9,
+        "std_mm": 623.2
+      },
+      "d6": {
+        "n": 2061,
+        "mean_mm": 1497.6,
+        "std_mm": 1106.1
+      },
+      "d7": {
+        "n": 1017,
+        "mean_mm": 1239.2,
+        "std_mm": 1186.4
+      },
+      "d8": {
+        "n": 8147,
+        "mean_mm": 1679.7,
+        "std_mm": 731.2
+      },
+      "d9": {
+        "n": 18512,
+        "mean_mm": 1835.0,
+        "std_mm": 425.6
+      },
+      "d10": {
+        "n": 176776,
+        "mean_mm": 1965.7,
+        "std_mm": 154.0
+      },
+      "d11": {
+        "n": 60126,
+        "mean_mm": 1917.2,
+        "std_mm": 261.1
+      },
+      "d12": {
+        "n": 115912,
+        "mean_mm": 1065.4,
+        "std_mm": 117.2
+      },
+      "d13": {
+        "n": 147311,
+        "mean_mm": 1130.2,
+        "std_mm": 109.3
+      },
+      "d14": {
+        "n": 159225,
+        "mean_mm": 1090.3,
+        "std_mm": 111.3
+      },
+      "d15": {
+        "n": 142203,
+        "mean_mm": 1022.5,
+        "std_mm": 97.7
+      }
+    }
+  },
+  "in_bed_model": {
+    "tof1": {
+      "success": true,
+      "sensor": "tof1",
+      "n_train": 340847,
+      "n_test": 85212,
+      "accuracy": 0.3975,
+      "precision": 0.843,
+      "recall": 0.0528,
+      "f1": 0.0995,
+      "confusion_matrix": [
+        [
+          31036,
+          528
+        ],
+        [
+          50813,
+          2835
+        ]
+      ],
+      "feature_importance_top5": [
+        [
+          "d14",
+          0.2391
+        ],
+        [
+          "d10",
+          0.2066
+        ],
+        [
+          "d13",
+          0.1441
+        ],
+        [
+          "d9",
+          0.1047
+        ],
+        [
+          "d15",
+          0.0887
+        ]
+      ],
+      "model_path": "TOF\\ml\\in_bed_model_tof1.joblib"
+    },
+    "tof2": {
+      "success": true,
+      "sensor": "tof2",
+      "n_train": 352427,
+      "n_test": 88107,
+      "accuracy": 0.436,
+      "precision": 0.8242,
+      "recall": 0.1939,
+      "f1": 0.3139,
+      "confusion_matrix": [
+        [
+          27052,
+          2425
+        ],
+        [
+          47263,
+          11367
+        ]
+      ],
+      "feature_importance_top5": [
+        [
+          "d13",
+          0.2456
+        ],
+        [
+          "d14",
+          0.1726
+        ],
+        [
+          "d6",
+          0.1208
+        ],
+        [
+          "d15",
+          0.1203
+        ],
+        [
+          "d5",
+          0.108
+        ]
+      ],
+      "model_path": "TOF\\ml\\in_bed_model_tof2.joblib"
+    }
+  },
+  "caveat": "in_bed 라벨은 사람이 확인한 정답이 아니라 서버 임계값 규칙(PRESENCE_DELTA_MM=150mm, PRESENCE_MIN_ZONES=4)이 실시간 계산해 저장한 값 — 정확도는 '모델이 그 규칙을 원시값만으로 재현하는 능력'을 뜻하며 새로운 임상적 정답을 만든 것이 아님."
+}

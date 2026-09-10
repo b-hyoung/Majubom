@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8">
+<title>ToF 베드 캘리브레이션 3D 미리보기</title>
+<style>
+  body{margin:0;background:#0d0b1a;color:#eee9fb;font-family:sans-serif;overflow:hidden}
+  #info{position:fixed;top:12px;left:12px;font-size:13px;line-height:1.6;background:#151030cc;
+    padding:12px 16px;border-radius:10px;border:1px solid #332a5c;max-width:360px}
+  #info b{color:#fff}
+  .inlier{color:#22c55e} .outlier{color:#f59e0b}
+  canvas{display:block;cursor:grab}
+  #hint{position:fixed;bottom:12px;left:12px;font-size:12px;color:#786ba8}
+</style></head>
+<body>
+<div id="info">
+  <div><b>ToF 베드 캘리브레이션 미리보기</b> (STEP 3 — 사람이 눈으로 확인하는 단계)</div>
+  <div style="margin-top:8px">추정 침대 폭: <b>78.3cm</b> ·
+  추정 길이: <b>91.2cm</b></div>
+  <div>현재 roi.py 설정 폭: 95.0cm — 크게 다르면 재스캔하거나 STEP 4에서 실측값 입력</div>
+  <div style="margin-top:8px"><span class="inlier">●</span> 매트리스로 추정된 점(inlier) &nbsp;
+  <span class="outlier">●</span> 제외된 점(침대 밖으로 추정)</div>
+  <div style="margin-top:6px;color:#a99dd6">자동 추정치입니다 — 실제 침대 실측값과 대조해 확인해주세요 (inlier 30/34점, mad=5.6cm). 표본 30점으로 추정 — 상대적으로 안정적입니다.</div>
+</div>
+<div id="hint">마우스 드래그: 회전 · 휠: 확대/축소</div>
+<canvas id="c"></canvas>
+<script>
+const POINTS = [{"sensor": "tof1", "zone": 44, "x": 0.8161511026574915, "y": 0.09610494075047103, "z": -0.32547652262928956, "dist_mm": 1980, "inlier": false}, {"sensor": "tof1", "zone": 45, "x": 0.7909564131026632, "y": 0.2862870513077893, "z": -0.317077046281592, "dist_mm": 1972, "inlier": false}, {"sensor": "tof1", "zone": 57, "x": -0.21445784405659096, "y": -0.22954689679474535, "z": -0.18204427669507112, "dist_mm": 1000, "inlier": true}, {"sensor": "tof1", "zone": 58, "x": -0.1858451573662513, "y": -0.1405354645898864, "z": -0.19835639284800077, "dist_mm": 1016, "inlier": true}, {"sensor": "tof1", "zone": 59, "x": -0.17656766304239158, "y": -0.04703739337250854, "z": -0.20364549997229048, "dist_mm": 1018, "inlier": true}, {"sensor": "tof1", "zone": 60, "x": -0.1809067216718494, "y": 0.046806364917830204, "z": -0.2011717990883401, "dist_mm": 1013, "inlier": true}, {"sensor": "tof1", "zone": 61, "x": -0.2056340957329602, "y": 0.13735405151354055, "z": -0.18707470285242594, "dist_mm": 993, "inlier": true}, {"sensor": "tof1", "zone": 62, "x": -0.2423607352027235, "y": 0.22197184920051874, "z": -0.16613681556413373, "dist_mm": 967, "inlier": true}, {"sensor": "tof1", "zone": 63, "x": -0.30752562330449973, "y": 0.2918031899416009, "z": -0.12898625940305408, "dist_mm": 914, "inlier": true}, {"sensor": "tof2", "zone": 2, "x": -2.0877367942851897, "y": 0.44152480607373756, "z": 0.4273006328589917, "dist_mm": 3192, "inlier": false}, {"sensor": "tof2", "zone": 3, "x": -2.1487120493818543, "y": 0.14905955895846024, "z": 0.4216307119779137, "dist_mm": 3226, "inlier": false}, {"sensor": "tof2", "zone": 33, "x": -0.4398424810032957, "y": 0.4242479028666761, "z": -0.07119545568153118, "dist_mm": 1748, "inlier": true}, {"sensor": "tof2", "zone": 34, "x": -0.5104970689698416, "y": 0.2630707658134624, "z": -0.10846709562387213, "dist_mm": 1795, "inlier": true}, {"sensor": "tof2", "zone": 35, "x": -0.5195484711803438, "y": 0.08762757743101104, "z": -0.11324188256796797, "dist_mm": 1788, "inlier": true}, {"sensor": "tof2", "zone": 36, "x": -0.45417565973328244, "y": -0.08400093272749046, "z": -0.07875648026929372, "dist_mm": 1714, "inlier": true}, {"sensor": "tof2", "zone": 40, "x": -0.04054904123958991, "y": 0.4667783383670793, "z": -0.006712316297093901, "dist_mm": 1399, "inlier": true}, {"sensor": "tof2", "zone": 43, "x": -0.151914557332391, "y": 0.07057403224807317, "z": -0.0802489685704586, "dist_mm": 1454, "inlier": true}, {"sensor": "tof2", "zone": 44, "x": -0.14274601528929876, "y": -0.07004011591057056, "z": -0.07419481543821993, "dist_mm": 1443, "inlier": true}, {"sensor": "tof2", "zone": 45, "x": -0.11902350098058756, "y": -0.20731131301598538, "z": -0.05853041278492532, "dist_mm": 1428, "inlier": true}, {"sensor": "tof2", "zone": 48, "x": 0.18856388350023034, "y": 0.3895381747196211, "z": 0.01274961626316129, "dist_mm": 1188, "inlier": true}, {"sensor": "tof2", "zone": 49, "x": 0.1538387365802525, "y": 0.2835683815088155, "z": -0.015433027328796256, "dist_mm": 1201, "inlier": true}, {"sensor": "tof2", "zone": 50, "x": 0.1369791040861974, "y": 0.17105085496306768, "z": -0.02911616637400427, "dist_mm": 1201, "inlier": true}, {"sensor": "tof2", "zone": 51, "x": 0.12542747044406866, "y": 0.057358675810401785, "z": -0.038491377214471156, "dist_mm": 1205, "inlier": true}, {"sensor": "tof2", "zone": 52, "x": 0.12310073385596265, "y": -0.0575014774929173, "z": -0.04037973748969381, "dist_mm": 1208, "inlier": true}, {"sensor": "tof2", "zone": 53, "x": 0.1369791040861974, "y": -0.17105085496306768, "z": -0.02911616637400427, "dist_mm": 1201, "inlier": true}, {"sensor": "tof2", "zone": 54, "x": 0.17421038863048832, "y": -0.2771934054049537, "z": 0.0011004378984124097, "dist_mm": 1174, "inlier": true}, {"sensor": "tof2", "zone": 56, "x": 0.3876006446279522, "y": 0.31862098857955984, "z": 0.05489566793484313, "dist_mm": 998, "inlier": true}, {"sensor": "tof2", "zone": 57, "x": 0.3604195773207203, "y": 0.23207191265948754, "z": 0.028009494603829732, "dist_mm": 1011, "inlier": true}, {"sensor": "tof2", "zone": 58, "x": 0.3439112683285209, "y": 0.14067378689755358, "z": 0.011680288250401905, "dist_mm": 1017, "inlier": true}, {"sensor": "tof2", "zone": 59, "x": 0.3299210015441044, "y": 0.04749945028186521, "z": -0.002158194744445785, "dist_mm": 1028, "inlier": true}, {"sensor": "tof2", "zone": 60, "x": 0.33063119512236894, "y": -0.04745324459092954, "z": -0.001455706228157383, "dist_mm": 1027, "inlier": true}, {"sensor": "tof2", "zone": 61, "x": 0.3425030309014383, "y": -0.140950431512888, "z": 0.010287329131916878, "dist_mm": 1019, "inlier": true}, {"sensor": "tof2", "zone": 62, "x": 0.3534998896582151, "y": -0.23436738162743498, "z": 0.021164880307131706, "dist_mm": 1021, "inlier": true}, {"sensor": "tof2", "zone": 63, "x": 0.39231687257144354, "y": -0.31638617202639663, "z": 0.05956072838018989, "dist_mm": 991, "inlier": true}];
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+function resize(){ canvas.width = innerWidth; canvas.height = innerHeight; }
+resize(); addEventListener('resize', resize);
+
+let rotY = 0.6, rotX = -0.4, zoom = 220, dragging = false, lastX = 0, lastY = 0;
+canvas.addEventListener('mousedown', e => { dragging = true; lastX = e.clientX; lastY = e.clientY; });
+addEventListener('mouseup', () => dragging = false);
+addEventListener('mousemove', e => {
+  if (!dragging) return;
+  rotY += (e.clientX - lastX) * 0.01;
+  rotX += (e.clientY - lastY) * 0.01;
+  lastX = e.clientX; lastY = e.clientY;
+});
+canvas.addEventListener('wheel', e => { zoom *= (e.deltaY > 0 ? 0.9 : 1.1); e.preventDefault(); }, {passive:false});
+
+function project(x, y, z) {
+  // 미터 단위 좌표를 회전시켜 간단한 원근 투영
+  let cy = Math.cos(rotY), sy = Math.sin(rotY);
+  let x1 = x * cy - y * sy, y1 = x * sy + y * cy;
+  let cx = Math.cos(rotX), sx = Math.sin(rotX);
+  let y2 = y1 * cx - z * sx, z2 = y1 * sx + z * cx;
+  const scale = zoom / (3 + z2);
+  return [canvas.width/2 + x1 * scale, canvas.height/2 - y2 * scale, z2];
+}
+
+function draw() {
+  ctx.fillStyle = '#0d0b1a';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  const projected = POINTS.map(p => {
+    const [sx, sy, depth] = project(p.x, p.y, p.z);
+    return {sx, sy, depth, inlier: p.inlier};
+  }).sort((a, b) => b.depth - a.depth);
+  for (const p of projected) {
+    ctx.beginPath();
+    ctx.fillStyle = p.inlier ? '#22c55e' : '#f59e0b';
+    ctx.globalAlpha = 0.85;
+    ctx.arc(p.sx, p.sy, 5, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+  requestAnimationFrame(draw);
+}
+draw();
+</script>
+</body></html>
