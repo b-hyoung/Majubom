@@ -29,6 +29,11 @@ from flask_cors import CORS
 import mmw_logic as L
 import db
 
+try:
+    import data_integrity as _data_integrity
+except Exception:
+    _data_integrity = None
+
 PORT = 5002
 
 app = Flask(__name__)
@@ -74,8 +79,9 @@ def receive_mmw():
 
     # raw + 계산값 SQLite 저장 (AI 학습용 원천 데이터 누적)
     z = result.get("zscore") or {}
+    raw_id = None
     try:
-        db.insert_mmw(
+        raw_id = db.insert_mmw(
             result["target_id"],
             result.get("received_at") or datetime.now().isoformat(),
             raw, data.get("quality") or {}, data.get("presence") or {},
@@ -84,6 +90,27 @@ def receive_mmw():
         )
     except Exception as e:
         print(f"[DB] MMW insert failed: {e}")
+
+    # 12번 탭 STEP 6-9: raw/clean 일관성 진단 — samples_count는 실제 포인트클라우드
+    # 개수가 아니라 이 엔드포인트에서 확인 가능한 근사치(quality.samples_count)라는
+    # 한계를 그대로 이어받는다.
+    if _data_integrity is not None:
+        try:
+            quality = data.get("quality") or {}
+            diag = _data_integrity.check_mmw_consistency(
+                int(quality.get("samples_count") or 0), bool(quality.get("walking")))
+            if diag.get("consistent") is False:
+                now_iso = result.get("received_at") or datetime.now().isoformat()
+                db.insert_clean_data(
+                    patient_id="bed_01", sensor_type="mmwave", timestamp=now_iso,
+                    cleaned_value={"diagnosis": diag}, preprocessing_method="mmw_walking_sample_check",
+                    confidence=None, removed_outlier=False, raw_table="mmw_readings", raw_id=raw_id,
+                )
+                db.insert_sensor_event("bed_01", "data_integrity_flag", ts=now_iso, level="caution",
+                                        title="mmWave 일관성 불일치", note=diag.get("note"),
+                                        source_table="mmw_readings", source_id=raw_id)
+        except Exception as e:
+            print(f"[data_integrity] mmWave 진단 실패: {e}")
 
     # 콘솔 로그 (ASCII만)
     lvl = result.get("alert_level") or "ignored"

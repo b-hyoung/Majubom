@@ -16,6 +16,18 @@ from datetime import datetime
 import os, json, sys
 import db
 
+# 12번 탭(시스템 확장) STEP 6-9 raw/clean 일관성 진단 — 옵션(없어도 서버는 정상 동작)
+try:
+    import data_integrity as _data_integrity
+except Exception:
+    _data_integrity = None
+
+# 라벨별 기대 유효존 범위(초기값 — 아직 실측 기반으로 다듬어지지 않았음을 명시)
+TOF_VALID_ZONE_EXPECTED = {
+    "empty": (0, 6), "supine": (18, 64), "side_left": (16, 64), "side_right": (16, 64),
+    "sitting": (10, 64), "edge_sit": (8, 50),
+}
+
 HERE = os.path.dirname(os.path.abspath(__file__))
 
 # ── 자세 분류 모델 (옵션) ──────────────────────────────────────────────
@@ -228,12 +240,32 @@ def receive_tof():
             print(f"[anomaly] 계산 실패: {e}")
 
     # raw SQLite 저장 (AI 학습용 원천 데이터 누적) — distances/targets 는 존별 컬럼
+    label, _conf = None, None
+    raw_id = None
     try:
-        db.insert_tof(sensor_id, now, resolution, distances, targets,
-                      occupied=presence[sensor_id]["occupied"],
-                      in_bed=presence["in_bed"])
+        raw_id = db.insert_tof(sensor_id, now, resolution, distances, targets,
+                                occupied=presence[sensor_id]["occupied"],
+                                in_bed=presence["in_bed"])
     except Exception as e:
         print(f"[DB] ToF insert failed: {e}")
+
+    # 12번 탭 STEP 6-9: raw/clean 일관성 진단(라벨이 있을 때만 — 지금은 실시간 라벨이
+    # latest.posture에 들어있을 수 있어 그걸 사용, 없으면 None으로 판단 보류)
+    if _data_integrity is not None:
+        try:
+            label = (latest.get(sensor_id) or {}).get("posture") or None
+            diag = _data_integrity.check_tof_consistency(distances, label, TOF_VALID_ZONE_EXPECTED)
+            if diag.get("consistent") is False:
+                db.insert_clean_data(
+                    patient_id="bed_01", sensor_type="tof", timestamp=now,
+                    cleaned_value={"diagnosis": diag}, preprocessing_method="tof_valid_zone_check",
+                    confidence=None, removed_outlier=False, raw_table="tof_readings", raw_id=raw_id,
+                )
+                db.insert_sensor_event("bed_01", "data_integrity_flag", ts=now, level="caution",
+                                        title=f"ToF({sensor_id}) 일관성 불일치", note=diag.get("note"),
+                                        source_table="tof_readings", source_id=raw_id)
+        except Exception as e:
+            print(f"[data_integrity] ToF 진단 실패: {e}")
 
     valid = [d for d in distances if d and d > 0]
     min_d = min(valid) if valid else -1
@@ -456,6 +488,71 @@ def get_log():
 @app.route("/beds", methods=["GET"])
 def list_beds():
     return jsonify(db.list_beds())
+
+
+# ── 12번 탭(시스템 확장) STEP 1-9: 환자 프로필 조회 ────────────────────
+@app.route("/patients/<bed_id>", methods=["GET"])
+def get_patient_route(bed_id):
+    p = db.get_patient(bed_id)
+    if p is None:
+        return jsonify({"error": "환자를 찾을 수 없습니다"}), 404
+    return jsonify(p)
+
+
+@app.route("/patients/<bed_id>/medications", methods=["GET"])
+def get_medications_route(bed_id):
+    return jsonify(db.list_medications(bed_id))
+
+
+@app.route("/patients/<bed_id>/risk_factors", methods=["GET"])
+def get_risk_factors_route(bed_id):
+    return jsonify(db.list_risk_factors(bed_id))
+
+
+# ── 12번 탭 STEP 13-17: 논문 Vector DB 검색 ────────────────────────────
+@app.route("/kb/search", methods=["GET"])
+def kb_search_route():
+    import paper_kb
+    q = request.args.get("q", "")
+    top_k = int(request.args.get("top_k", 5))
+    return jsonify(paper_kb.search(q, top_k=top_k))
+
+
+# ── 12번 탭 STEP 18-20: AI Agent 조사 ──────────────────────────────────
+@app.route("/agent/investigate", methods=["GET"])
+def agent_investigate_route():
+    import ai_agent
+    bed_id = request.args.get("bed_id", "bed_01")
+    max_rounds = int(request.args.get("max_rounds", 2))
+    top_k = int(request.args.get("top_k", 5))
+    return jsonify(ai_agent.investigate(bed_id, max_rounds=max_rounds, top_k=top_k))
+
+
+# ── 12번 탭 STEP 21-23: 통합분석 + 종합 리포트 ─────────────────────────
+@app.route("/agent/analyze", methods=["GET"])
+def agent_analyze_route():
+    import integrated_analysis
+    bed_id = request.args.get("bed_id", "bed_01")
+    max_rounds = int(request.args.get("max_rounds", 2))
+    top_k = int(request.args.get("top_k", 5))
+    return jsonify(integrated_analysis.generate_integrated_report(bed_id, max_rounds=max_rounds, top_k=top_k))
+
+
+# ── 12번 탭 STEP 26: 근거 추적(analysis_id → 논문 원문 역조회) ─────────
+@app.route("/agent/evidence", methods=["GET"])
+def agent_evidence_route():
+    import paper_kb
+    analysis_id = request.args.get("analysis_id", type=int)
+    if analysis_id is None:
+        return jsonify({"success": False, "error_type": "bad_request", "message": "analysis_id가 필요합니다"}), 400
+    row = db.get_analysis_by_id(analysis_id)
+    if row is None:
+        return jsonify({"success": False, "error_type": "not_found", "message": "해당 analysis_id를 찾을 수 없습니다"}), 404
+    try:
+        evidence_ids = json.loads(row.get("evidence_ids_json") or "[]")
+    except json.JSONDecodeError:
+        evidence_ids = []
+    return jsonify({"success": True, "analysis_id": analysis_id, "evidence": paper_kb.resolve_chunks(evidence_ids)})
 
 
 @app.route("/", methods=["GET"])

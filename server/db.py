@@ -78,6 +78,80 @@ def init_db():
             );
         """)
 
+        # ── 12번 탭(시스템 확장) STEP 1-9: baseline 이력·클린데이터·AI 분석 저장소 ──
+        # 2026-09-10 복구 메모: 이 세 테이블 + activity_log 확장 컬럼은 실제로 majubom.db
+        # 파일에는 이미 존재한다(git reset/clean은 .py 코드만 지웠지 DB 파일 자체는 안 건드림) —
+        # CREATE TABLE IF NOT EXISTS라 기존 데이터를 훼손하지 않고 코드만 복원한다.
+        conn.executescript("""
+            CREATE TABLE IF NOT EXISTS baseline_history (
+                id                 INTEGER PRIMARY KEY AUTOINCREMENT,
+                bed_id             TEXT NOT NULL,
+                source             TEXT NOT NULL,        -- tof_behavior / mmwave_gait / behavior_fsm_exit
+                snapshot_json      TEXT,                 -- 그 시점 baseline 전체 스냅샷
+                n                  INTEGER,
+                calculation_method TEXT,
+                model_version      TEXT,
+                created_at         TEXT DEFAULT (datetime('now'))
+            );
+            CREATE INDEX IF NOT EXISTS idx_baseline_history_bed
+                ON baseline_history(bed_id, source, created_at);
+
+            CREATE TABLE IF NOT EXISTS sensor_clean_data (
+                id                    INTEGER PRIMARY KEY AUTOINCREMENT,
+                patient_id            TEXT NOT NULL,
+                sensor_type           TEXT NOT NULL,      -- tof / mmwave
+                timestamp             TEXT NOT NULL,
+                cleaned_value         TEXT,                -- JSON(정제된 값)
+                preprocessing_method  TEXT,
+                confidence            REAL,
+                removed_outlier       INTEGER,             -- 0/1
+                raw_table             TEXT,                -- tof_readings / mmw_readings
+                raw_id                INTEGER,
+                created_at            TEXT DEFAULT (datetime('now'))
+            );
+            CREATE INDEX IF NOT EXISTS idx_sensor_clean_patient
+                ON sensor_clean_data(patient_id, sensor_type, timestamp);
+
+            CREATE TABLE IF NOT EXISTS ai_analysis (
+                id                      INTEGER PRIMARY KEY AUTOINCREMENT,
+                patient_id              TEXT NOT NULL,
+                created_at              TEXT DEFAULT (datetime('now')),
+                analysis_type           TEXT,
+                risk_score              REAL,
+                summary                 TEXT,
+                detected_patterns_json  TEXT,
+                predicted_risks_json    TEXT,
+                evidence_ids_json       TEXT,
+                model_version           TEXT,
+                prompt_version          TEXT,
+                confidence              REAL,
+                report_json             TEXT
+            );
+            CREATE INDEX IF NOT EXISTS idx_ai_analysis_patient
+                ON ai_analysis(patient_id, analysis_type, created_at);
+        """)
+
+        # activity_log에 confidence/source_table/source_id 컬럼 추가 — CREATE TABLE IF NOT
+        # EXISTS는 이미 있는 테이블에 컬럼을 못 더하므로 PRAGMA로 확인 후 없는 것만 ALTER.
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS activity_log (
+                id           INTEGER PRIMARY KEY AUTOINCREMENT,
+                bed_id       TEXT NOT NULL,
+                ts           TEXT NOT NULL,
+                event_type   TEXT,
+                level        TEXT,
+                title        TEXT,
+                note         TEXT,
+                payload_json TEXT,
+                created_at   TEXT DEFAULT (datetime('now'))
+            )
+        """)
+        existing_cols = {row["name"] for row in conn.execute("PRAGMA table_info(activity_log)")}
+        for col, decl in (("confidence", "REAL"), ("source_table", "TEXT"), ("source_id", "INTEGER")):
+            if col not in existing_cols:
+                conn.execute(f"ALTER TABLE activity_log ADD COLUMN {col} {decl}")
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_activity_log_bed ON activity_log(bed_id, ts)")
+
         # ToF/mmWave raw 테이블 — 배열(distances/targets)은 존별 컬럼으로 펼침(JSON 미사용)
         _d_cols = ",\n                ".join(f"d{i} INTEGER" for i in range(TOF_ZONES))
         _t_cols = ",\n                ".join(f"t{i} INTEGER" for i in range(TOF_ZONES))
@@ -342,10 +416,11 @@ def insert_tof(sensor, timestamp, resolution, distances, targets,
     ]
     placeholders = ",".join(["?"] * len(cols))
     with get_conn() as conn:
-        conn.execute(
+        cur = conn.execute(
             f"INSERT INTO tof_readings ({','.join(cols)}) VALUES ({placeholders})",
             vals,
         )
+        return cur.lastrowid
 
 
 def insert_mmw(target_id, timestamp, raw, quality, presence,
@@ -355,7 +430,7 @@ def insert_mmw(target_id, timestamp, raw, quality, presence,
     quality = quality or {}
     presence = presence or {}
     with get_conn() as conn:
-        conn.execute("""
+        cur = conn.execute("""
             INSERT INTO mmw_readings
                 (timestamp, target_id,
                  speed, speed_cv, sway, freeze_ratio, height_drop,
@@ -375,6 +450,7 @@ def insert_mmw(target_id, timestamp, raw, quality, presence,
             int(bool(presence.get("gate_active", True))),
             total_abs, alert_level,
         ))
+        return cur.lastrowid
 
 
 # ── 조회 ──────────────────────────────────────────────────────────────
@@ -409,3 +485,213 @@ def get_csi_log(bed_id: str | None = None, limit: int = 20) -> list[dict]:
                 LIMIT ?
             """, (limit,)).fetchall()
         return [dict(r) for r in rows]
+
+
+# ── 12번 탭(시스템 확장) STEP 1-9: 환자 프로필·위험인자·투약 조회 ──────────
+def get_patient(bed_id: str) -> dict | None:
+    with get_conn() as conn:
+        row = conn.execute("SELECT * FROM patients WHERE bed_id = ?", (bed_id,)).fetchone()
+        return dict(row) if row else None
+
+
+def list_medications(bed_id: str, active_only: bool = True) -> list[dict]:
+    with get_conn() as conn:
+        q = "SELECT * FROM medications WHERE bed_id = ?"
+        params = [bed_id]
+        if active_only:
+            q += " AND active = 1"
+        rows = conn.execute(q + " ORDER BY id", params).fetchall()
+        return [dict(r) for r in rows]
+
+
+def list_risk_factors(bed_id: str, active_only: bool = True) -> list[dict]:
+    with get_conn() as conn:
+        q = "SELECT * FROM risk_factors WHERE bed_id = ?"
+        params = [bed_id]
+        if active_only:
+            q += " AND active = 1"
+        rows = conn.execute(q + " ORDER BY id", params).fetchall()
+        return [dict(r) for r in rows]
+
+
+# ── STEP 6-9: baseline 이력 ────────────────────────────────────────────
+def record_baseline_snapshot(bed_id: str, source: str, snapshot: dict,
+                              calculation_method: str = "ewma_zscore",
+                              model_version: str = "v1") -> int:
+    import json as _json
+    with get_conn() as conn:
+        cur = conn.execute("""
+            INSERT INTO baseline_history (bed_id, source, snapshot_json, n, calculation_method, model_version)
+            VALUES (?,?,?,?,?,?)
+        """, (bed_id, source, _json.dumps(snapshot, ensure_ascii=False, default=str),
+              (snapshot or {}).get("n"), calculation_method, model_version))
+        return cur.lastrowid
+
+
+def get_baseline_history(bed_id: str, source: str | None = None, limit: int = 50) -> list[dict]:
+    with get_conn() as conn:
+        q = "SELECT * FROM baseline_history WHERE bed_id = ?"
+        params: list = [bed_id]
+        if source:
+            q += " AND source = ?"
+            params.append(source)
+        q += " ORDER BY created_at DESC LIMIT ?"
+        params.append(limit)
+        rows = conn.execute(q, params).fetchall()
+        return [dict(r) for r in rows]
+
+
+# ── STEP 6-9: 정제 데이터(sensor_clean_data) ───────────────────────────
+def insert_clean_data(patient_id: str, sensor_type: str, timestamp: str, cleaned_value: dict,
+                       preprocessing_method: str, confidence: float | None = None,
+                       removed_outlier: bool = False, raw_table: str | None = None,
+                       raw_id: int | None = None) -> int:
+    import json as _json
+    with get_conn() as conn:
+        cur = conn.execute("""
+            INSERT INTO sensor_clean_data
+                (patient_id, sensor_type, timestamp, cleaned_value, preprocessing_method,
+                 confidence, removed_outlier, raw_table, raw_id)
+            VALUES (?,?,?,?,?,?,?,?,?)
+        """, (patient_id, sensor_type, timestamp,
+              _json.dumps(cleaned_value, ensure_ascii=False, default=str),
+              preprocessing_method, confidence, int(bool(removed_outlier)), raw_table, raw_id))
+        return cur.lastrowid
+
+
+def get_clean_data(patient_id: str, sensor_type: str | None = None, limit: int = 100) -> list[dict]:
+    with get_conn() as conn:
+        q = "SELECT * FROM sensor_clean_data WHERE patient_id = ?"
+        params: list = [patient_id]
+        if sensor_type:
+            q += " AND sensor_type = ?"
+            params.append(sensor_type)
+        q += " ORDER BY timestamp DESC LIMIT ?"
+        params.append(limit)
+        rows = conn.execute(q, params).fetchall()
+        return [dict(r) for r in rows]
+
+
+def get_clean_data_stats(patient_id: str, sensor_type: str | None = None, hours: int = 24) -> dict:
+    """센서별 이상치(outlier) 비율 — 최근 hours시간 flagged 비율 요약."""
+    cutoff = (datetime.now(timezone.utc) - timedelta(hours=hours)).isoformat()
+    with get_conn() as conn:
+        q = "SELECT sensor_type, COUNT(*) n, SUM(removed_outlier) n_outlier FROM sensor_clean_data WHERE patient_id = ? AND timestamp >= ?"
+        params: list = [patient_id, cutoff]
+        if sensor_type:
+            q += " AND sensor_type = ?"
+            params.append(sensor_type)
+        q += " GROUP BY sensor_type"
+        rows = conn.execute(q, params).fetchall()
+        return {r["sensor_type"]: {"n": r["n"], "n_outlier": r["n_outlier"] or 0,
+                                    "outlier_rate": round((r["n_outlier"] or 0) / r["n"], 4) if r["n"] else None}
+                for r in rows}
+
+
+# ── STEP 10-12: 이벤트 로그(activity_log) ──────────────────────────────
+def insert_sensor_event(bed_id: str, event_type: str, ts: str | None = None, level: str | None = None,
+                         title: str | None = None, note: str | None = None,
+                         confidence: float | None = None, source_table: str | None = None,
+                         source_id: int | None = None, payload: dict | None = None) -> int:
+    import json as _json
+    ts = ts or datetime.now(timezone.utc).isoformat()
+    with get_conn() as conn:
+        cur = conn.execute("""
+            INSERT INTO activity_log (bed_id, ts, event_type, level, title, note, payload_json,
+                                       confidence, source_table, source_id)
+            VALUES (?,?,?,?,?,?,?,?,?,?)
+        """, (bed_id, ts, event_type, level, title, note,
+              _json.dumps(payload, ensure_ascii=False, default=str) if payload is not None else None,
+              confidence, source_table, source_id))
+        return cur.lastrowid
+
+
+def get_activity_log(bed_id: str, event_type: str | None = None, limit: int = 50) -> list[dict]:
+    with get_conn() as conn:
+        q = "SELECT * FROM activity_log WHERE bed_id = ?"
+        params: list = [bed_id]
+        if event_type:
+            q += " AND event_type = ?"
+            params.append(event_type)
+        q += " ORDER BY ts DESC LIMIT ?"
+        params.append(limit)
+        rows = conn.execute(q, params).fetchall()
+        return [dict(r) for r in rows]
+
+
+# ── STEP 21-23: AI 종합분석 저장/조회(ai_analysis) ─────────────────────
+def insert_ai_analysis(patient_id: str, analysis_type: str, risk_score: float | None,
+                        summary: str, detected_patterns: list | None, predicted_risks: list | None,
+                        evidence_ids: list | None, model_version: str, prompt_version: str,
+                        confidence: float | None, report: dict) -> int:
+    import json as _json
+    with get_conn() as conn:
+        cur = conn.execute("""
+            INSERT INTO ai_analysis
+                (patient_id, analysis_type, risk_score, summary, detected_patterns_json,
+                 predicted_risks_json, evidence_ids_json, model_version, prompt_version,
+                 confidence, report_json)
+            VALUES (?,?,?,?,?,?,?,?,?,?,?)
+        """, (patient_id, analysis_type, risk_score, summary,
+              _json.dumps(detected_patterns or [], ensure_ascii=False, default=str),
+              _json.dumps(predicted_risks or [], ensure_ascii=False, default=str),
+              _json.dumps(evidence_ids or [], ensure_ascii=False, default=str),
+              model_version, prompt_version, confidence,
+              _json.dumps(report, ensure_ascii=False, default=str)))
+        return cur.lastrowid
+
+
+def get_latest_ai_analysis(patient_id: str, analysis_type: str | None = None) -> dict | None:
+    with get_conn() as conn:
+        q = "SELECT * FROM ai_analysis WHERE patient_id = ?"
+        params: list = [patient_id]
+        if analysis_type:
+            q += " AND analysis_type = ?"
+            params.append(analysis_type)
+        q += " ORDER BY created_at DESC LIMIT 1"
+        row = conn.execute(q, params).fetchone()
+        return dict(row) if row else None
+
+
+def get_analysis_by_id(analysis_id: int) -> dict | None:
+    with get_conn() as conn:
+        row = conn.execute("SELECT * FROM ai_analysis WHERE id = ?", (analysis_id,)).fetchone()
+        return dict(row) if row else None
+
+
+def list_ai_analysis(patient_id: str, analysis_type: str | None = None, limit: int = 1000) -> list[dict]:
+    with get_conn() as conn:
+        q = "SELECT * FROM ai_analysis WHERE patient_id = ?"
+        params: list = [patient_id]
+        if analysis_type:
+            q += " AND analysis_type = ?"
+            params.append(analysis_type)
+        q += " ORDER BY created_at DESC LIMIT ?"
+        params.append(limit)
+        rows = conn.execute(q, params).fetchall()
+        return [dict(r) for r in rows]
+
+
+# ── STEP 6-9: 환자 최근 활동 시계열 요약(대시보드/AI Agent 공용) ────────
+_WINDOW_HOURS = {"1h": 1, "24h": 24, "7d": 24 * 7, "30d": 24 * 30}
+
+
+def get_patient_timeseries_summary(patient_id: str, window: str = "24h") -> dict:
+    """환자의 최근 window 기간 활동 요약 — activity_log 이벤트 레벨 분포 + 개수.
+    실서버가 안 떠있거나 이벤트가 없으면 빈 요약을 정직하게 반환(추측으로 채우지 않음)."""
+    hours = _WINDOW_HOURS.get(window, 24)
+    cutoff = (datetime.now(timezone.utc) - timedelta(hours=hours)).isoformat()
+    with get_conn() as conn:
+        rows = conn.execute("""
+            SELECT event_type, level, COUNT(*) n FROM activity_log
+            WHERE bed_id = ? AND ts >= ?
+            GROUP BY event_type, level
+        """, (patient_id, cutoff)).fetchall()
+    if not rows:
+        return {"window": window, "n_events": 0, "by_event_type": {}, "note": "해당 기간 이벤트 없음"}
+    by_type: dict[str, dict] = {}
+    total = 0
+    for r in rows:
+        by_type.setdefault(r["event_type"] or "unknown", {})[r["level"] or "unknown"] = r["n"]
+        total += r["n"]
+    return {"window": window, "n_events": total, "by_event_type": by_type}
