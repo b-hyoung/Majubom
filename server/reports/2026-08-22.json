@@ -1,0 +1,83 @@
+{
+  "report_date": "2026-08-22",
+  "generated_at": "2026-09-03T02:01:32.542335+00:00",
+  "structured_facts": {
+    "환자_프로필": {
+      "height_cm": 170.0,
+      "weight_kg": 62.0,
+      "base_step_length_m": 0.527
+    },
+    "관측_기간_요약": {
+      "기준일": "2026-08-22",
+      "이_시점까지_총_침상이탈_건수": 60,
+      "이_시점까지_낙상의심_융합경보_건수": 1,
+      "낙상의심_상세": [
+        {
+          "시각": "2026-08-22T20:27:46.889308+00:00",
+          "근거": [
+            "낙상 의심: 이탈 직전 자세=edge_sit → 이탈 후 12.0초간 mmWave 보행 미검출",
+            "융합 점수 0.17 (ToF 0.10×0.4 + mmWave 0.22×0.6)"
+          ]
+        }
+      ]
+    },
+    "주간_리포트_판정": "개선",
+    "주간_리포트_권장조치": "이번 주 지표가 전반적으로 개선되었습니다. 현재 관리 방식을 유지하세요.",
+    "주간_리포트_세부근거": [
+      "침상 이탈 비율 ▼42% (이전 평균 0.012 → 이번주 0.007) — 개선",
+      "걸터앉음 체류 비율 ▼32% (이전 평균 0.004 → 이번주 0.003) — 개선",
+      "멈칫거림 비율 ▲23% (이전 평균 0.078 → 이번주 0.096) — 악화",
+      "보행 속도 변동성 ▼13% (이전 평균 0.128 → 이번주 0.112) — 개선",
+      "보행 속도 ▲12% (이전 평균 0.892 → 이번주 0.997) — 개선"
+    ],
+    "주간_리포트_세부근거_구조화": [
+      {
+        "metric": "edge_sit_ratio",
+        "metric_ko": "걸터앉음 체류 비율",
+        "prior_avg": 0.004,
+        "recent": 0.003,
+        "pct_change": -31.6,
+        "worsened": false
+      },
+      {
+        "metric": "out_of_bed_ratio",
+        "metric_ko": "침상 이탈 비율",
+        "prior_avg": 0.012,
+        "recent": 0.007,
+        "pct_change": -41.8,
+        "worsened": false
+      },
+      {
+        "metric": "speed",
+        "metric_ko": "보행 속도",
+        "prior_avg": 0.892,
+        "recent": 0.997,
+        "pct_change": 11.8,
+        "worsened": false
+      },
+      {
+        "metric": "speed_cv",
+        "metric_ko": "보행 속도 변동성",
+        "prior_avg": 0.128,
+        "recent": 0.112,
+        "pct_change": -13.0,
+        "worsened": false
+      },
+      {
+        "metric": "freeze_ratio",
+        "metric_ko": "멈칫거림 비율",
+        "prior_avg": 0.078,
+        "recent": 0.096,
+        "pct_change": 22.9,
+        "worsened": true
+      }
+    ],
+    "n_weeks_available": 3,
+    "데이터_출처_주의사항": "전부 합성 데이터 — 실제 환자 데이터 아님. ToF raw는 실측 재사용+노이즈, mmWave 보행은 문헌 파라미터 기반 합성(실측 보행 시계열 없음)."
+  },
+  "ai_narrative": null,
+  "ai_error": {
+    "error_type": "missing_key",
+    "message": ".env 또는 환경변수에 OPENAI_API_KEY가 설정되어 있지 않습니다. 코드 문제가 아니라 키 미설정입니다 — .env에 실제 키 값을 채운 뒤 재시도하세요."
+  }
+}

@@ -1,0 +1,110 @@
+{
+  "report_date": "2026-08-29",
+  "generated_at": "2026-09-03T02:01:32.542335+00:00",
+  "structured_facts": {
+    "환자_프로필": {
+      "height_cm": 170.0,
+      "weight_kg": 62.0,
+      "base_step_length_m": 0.527
+    },
+    "관측_기간_요약": {
+      "기준일": "2026-08-29",
+      "이_시점까지_총_침상이탈_건수": 76,
+      "이_시점까지_낙상의심_융합경보_건수": 1,
+      "낙상의심_상세": [
+        {
+          "시각": "2026-08-22T20:27:46.889308+00:00",
+          "근거": [
+            "낙상 의심: 이탈 직전 자세=edge_sit → 이탈 후 12.0초간 mmWave 보행 미검출",
+            "융합 점수 0.17 (ToF 0.10×0.4 + mmWave 0.22×0.6)"
+          ]
+        }
+      ]
+    },
+    "주간_리포트_판정": "악화",
+    "주간_리포트_권장조치": "좌우 흔들림이(가) 지난 평균 대비 134% 악화되었습니다. 낙상 위험 요인 재평가 및 담당의 확인을 권장합니다.",
+    "주간_리포트_세부근거": [
+      "좌우 흔들림 ▲134% (이전 평균 0.037 → 이번주 0.086) — 악화",
+      "멈칫거림 비율 ▲74% (이전 평균 0.084 → 이번주 0.147) — 악화",
+      "보행 속도 변동성 ▲72% (이전 평균 0.123 → 이번주 0.211) — 악화",
+      "보폭 변동성 ▲62% (이전 평균 0.082 → 이번주 0.133) — 악화",
+      "보행 속도 ▼42% (이전 평균 0.927 → 이번주 0.539) — 악화",
+      "걸터앉음 체류 비율 ▲35% (이전 평균 0.003 → 이번주 0.005) — 악화",
+      "보폭 ▼12% (이전 평균 0.532 → 이번주 0.466) — 악화",
+      "침상 이탈 비율 ▼11% (이전 평균 0.011 → 이번주 0.009) — 개선"
+    ],
+    "주간_리포트_세부근거_구조화": [
+      {
+        "metric": "edge_sit_ratio",
+        "metric_ko": "걸터앉음 체류 비율",
+        "prior_avg": 0.003,
+        "recent": 0.005,
+        "pct_change": 35.3,
+        "worsened": true
+      },
+      {
+        "metric": "out_of_bed_ratio",
+        "metric_ko": "침상 이탈 비율",
+        "prior_avg": 0.011,
+        "recent": 0.009,
+        "pct_change": -11.4,
+        "worsened": false
+      },
+      {
+        "metric": "speed",
+        "metric_ko": "보행 속도",
+        "prior_avg": 0.927,
+        "recent": 0.539,
+        "pct_change": -41.8,
+        "worsened": true
+      },
+      {
+        "metric": "speed_cv",
+        "metric_ko": "보행 속도 변동성",
+        "prior_avg": 0.123,
+        "recent": 0.211,
+        "pct_change": 72.4,
+        "worsened": true
+      },
+      {
+        "metric": "sway",
+        "metric_ko": "좌우 흔들림",
+        "prior_avg": 0.037,
+        "recent": 0.086,
+        "pct_change": 133.6,
+        "worsened": true
+      },
+      {
+        "metric": "freeze_ratio",
+        "metric_ko": "멈칫거림 비율",
+        "prior_avg": 0.084,
+        "recent": 0.147,
+        "pct_change": 74.5,
+        "worsened": true
+      },
+      {
+        "metric": "stride_length",
+        "metric_ko": "보폭",
+        "prior_avg": 0.532,
+        "recent": 0.466,
+        "pct_change": -12.5,
+        "worsened": true
+      },
+      {
+        "metric": "stride_cv",
+        "metric_ko": "보폭 변동성",
+        "prior_avg": 0.082,
+        "recent": 0.133,
+        "pct_change": 61.9,
+        "worsened": true
+      }
+    ],
+    "n_weeks_available": 4,
+    "데이터_출처_주의사항": "전부 합성 데이터 — 실제 환자 데이터 아님. ToF raw는 실측 재사용+노이즈, mmWave 보행은 문헌 파라미터 기반 합성(실측 보행 시계열 없음)."
+  },
+  "ai_narrative": null,
+  "ai_error": {
+    "error_type": "missing_key",
+    "message": ".env 또는 환경변수에 OPENAI_API_KEY가 설정되어 있지 않습니다. 코드 문제가 아니라 키 미설정입니다 — .env에 실제 키 값을 채운 뒤 재시도하세요."
+  }
+}

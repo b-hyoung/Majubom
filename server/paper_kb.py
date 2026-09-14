@@ -33,6 +33,7 @@ from datetime import datetime, timezone
 
 import lancedb
 import requests
+from rank_bm25 import BM25Okapi
 
 import ai_report  # get_api_key() 재사용 — 키 로딩 로직을 중복 구현하지 않는다
 
@@ -357,6 +358,69 @@ def search(query: str, top_k: int = 5) -> dict:
             for r in rows
         ],
     }
+
+
+def search_hybrid(query: str, top_k: int = 5, k_rrf: int = 60) -> dict:
+    """벡터 검색(cosine) + BM25(키워드) 결과를 Reciprocal Rank Fusion(RRF)으로 결합한
+    하이브리드 검색. 2026-09 문헌조사 근거: Sawarkar, Mangal & Solanki (2024), "Blended
+    RAG: Improving RAG Accuracy with Semantic Search and Hybrid Query-Based Retrievers",
+    arXiv:2404.07220 — dense+sparse 하이브리드가 데이터셋에 따라 순수 dense 단독 대비
+    NDCG@10을 유의미하게 개선한다고 보고(그들의 Elasticsearch+ELSER 파이프라인 실험이며
+    우리 자료가 아니므로 "그러니 낫다"가 아니라 "그래서 우리 데이터로 직접 비교할 가치가
+    있다"). 정답셋(Recall@5) 기반 정량 비교는 아직 미실시 — 이 함수는 search()를 대체하지
+    않고 별도 옵션으로 추가했다(ai_agent.py는 여전히 search()를 사용).
+
+    RRF 자체는 Cormack, Clarke & Buettcher (2009)의 표준 랭킹 결합 공식(1/(k+rank) 합산)이며
+    학습이 필요 없다 — 우리에게 없는 '융합 학습용 라벨 데이터'가 필요 없다는 뜻."""
+    db_conn = _connect()
+    if not _table_exists(db_conn, PAPERS_TABLE):
+        return {"success": False, "error_type": "no_index",
+                "message": "paper_kb.build_index()를 먼저 실행해야 합니다."}
+    tbl = db_conn.open_table(PAPERS_TABLE)
+    all_rows = [r for r in tbl.to_arrow().to_pylist()]
+    n_candidates = len(all_rows)
+    if n_candidates == 0:
+        return {"success": False, "error_type": "no_embeddings",
+                "message": "인덱스에 임베딩된 chunk가 없습니다(OPENAI_API_KEY 미설정 상태로 build_index()가 "
+                           "실행됐을 가능성) — 키를 설정한 뒤 build_index()를 다시 실행하세요."}
+
+    q_result = embed_texts([query])
+    if not q_result["success"]:
+        return q_result
+    q_vec = q_result["embeddings"][0]
+
+    # 1) 벡터 랭킹 — 전체 후보를 코사인 유사도로 정렬(순위만 쓰므로 전체가 필요)
+    vec_rows = tbl.search(q_vec).metric("cosine").limit(n_candidates).to_list()
+    vec_rank = {r["chunk_id"]: i for i, r in enumerate(vec_rows)}
+
+    # 2) BM25 랭킹 — 저장된 원문으로 즉석 색인(613개 규모라 매 호출 재구축해도 가벼움)
+    by_id = {r["chunk_id"]: r for r in all_rows}
+    corpus_ids = [r["chunk_id"] for r in all_rows]
+    bm25 = BM25Okapi([r["original_text"].lower().split() for r in all_rows])
+    bm25_scores = bm25.get_scores(query.lower().split())
+    bm25_order = sorted(range(len(corpus_ids)), key=lambda i: -bm25_scores[i])
+    bm25_rank = {corpus_ids[i]: rank for rank, i in enumerate(bm25_order)}
+
+    # 3) RRF 결합 — score = sum(1/(k_rrf + rank+1))
+    fused = sorted(
+        corpus_ids,
+        key=lambda cid: -(
+            (1.0 / (k_rrf + vec_rank[cid] + 1) if cid in vec_rank else 0.0)
+            + (1.0 / (k_rrf + bm25_rank[cid] + 1) if cid in bm25_rank else 0.0)
+        ),
+    )
+
+    results = []
+    for cid in fused[:top_k]:
+        r = by_id[cid]
+        rrf = ((1.0 / (k_rrf + vec_rank[cid] + 1) if cid in vec_rank else 0.0)
+               + (1.0 / (k_rrf + bm25_rank[cid] + 1) if cid in bm25_rank else 0.0))
+        results.append({"score": round(rrf, 5), "chunk_id": cid, "paper_id": r["paper_id"],
+                         "title": r["title"], "section": r["section"], "original_text": r["original_text"],
+                         "source_url": r["source_url"], "doi": r["doi"],
+                         "vector_rank": vec_rank.get(cid), "bm25_rank": bm25_rank.get(cid)})
+    return {"success": True, "query": query, "n_candidates": n_candidates,
+            "method": "hybrid_rrf_v1", "results": results}
 
 
 # ── 2026-09 1차 확장(14→26편) — 기술논문 5편은 paper-15~19.html + docs/papers, 치매 임상 7편 경량 ──
@@ -1111,6 +1175,160 @@ add_lightweight_paper(
 )
 
 
+# ── 2026-09 4차 확장 — 하드웨어·AI 알고리즘 최신 문헌 재검토(9편, latest-01~09) ──
+# 치매 임상 논문(p2, dementia-01~45)은 사용자 지침대로 이번 재검토 대상에서 제외했다.
+# 아래 9편은 3개 연구 에이전트가 검색·원문 확인한 결과이며, docs/ai_plan.html의
+# "🆕 최신 논문 반영(2026-09)" 모드에 논문별 전체 비교·코드 변경 내역이 있다.
+add_lightweight_paper(
+    paper_id="latest-01",
+    title="Benchmarking Time-Series Artificial Intelligence Architectures for Wearable Sensor-Based Fall Prediction: A Synthetic Data Simulation Framework",
+    title_ko="웨어러블 센서 낙상예측을 위한 시계열 AI 아키텍처 벤치마크",
+    authors="Sykes, Maghsoudimehrabani, Al-Shanoon",
+    year="2026", doi="10.3390/s26113326",
+    source_url="https://pmc.ncbi.nlm.nih.gov/articles/PMC13259050/",
+    abstract_ko="웨어러블 센서 기반 낙상예측을 위한 8가지 시계열 AI 아키텍처(로지스틱회귀·RF·XGBoost·LSTM·GRU·TCN·"
+                "CNN-LSTM·Transformer)를 합성 데이터(1,000시퀀스, 정상 70%/실족-불안정 20%/낙상전조 10%)로 "
+                "벤치마크했다. 분류지표(정확도·F1·AUROC)에서는 고전적 방법(로지스틱회귀·XGBoost·RF)이 딥러닝 "
+                "계열보다 우세했고 LSTM이 가장 낮았다. 그러나 실제 경보 임계값(확률 0.70, 3표본 지속) 운용 "
+                "기준에서는 GRU가 낙상전조 이벤트의 73.9%를 실제로 경보했고(오경보 28.7%, 중앙값 리드타임 "
+                "11.8초), LSTM과 Transformer는 경보를 전혀 발생시키지 못했다(0%).",
+    key_facts="GRU 경보재현 73.9%(리드타임 11.8초) vs LSTM/Transformer 0% — 소수클래스·이벤트임박예측 과제에서 "
+              "GRU가 LSTM보다 실제 경보 트리거에 강건함을 시사. 마주봄 mmWave/exit_seq/analyze_v2.py의 자체 "
+              "GRU 재실험(정확도 73.2±2.6% vs LSTM 71.1±5.5%) 동기가 된 논문",
+)
+add_lightweight_paper(
+    paper_id="latest-02",
+    title="An Empirical Survey of Data Augmentation for Time Series Classification with Neural Networks",
+    title_ko="시계열 분류를 위한 데이터 증강 기법 실증 서베이",
+    authors="Iwana, Uchida",
+    year="2021", doi="10.1371/journal.pone.0254841",
+    source_url="https://doi.org/10.1371/journal.pone.0254841",
+    abstract_ko="시계열 분류를 위한 12가지 데이터 증강 기법(지터링·회전·스케일링·크기왜곡·순열·window slicing·"
+                "time warping·window warping·SPAWNER·wDBA·RGW·DGW)을 UCR 128개 데이터셋 × 6종 신경망으로 "
+                "실증 비교했다. window warping과 window slicing이 평균 순위가 가장 높았고, 패턴혼합 계열 중에서는 "
+                "DGW가 가장 큰 향상을 보였다(연산비용은 더 큼). 증강으로 인한 정확도 향상은 학습표본 수가 "
+                "적을수록 더 크게 나타났다.",
+    key_facts="12개 증강기법 실증비교, window-warp/slice 평균순위 최상위, 작은 데이터셋일수록 증강 효과가 큼 — "
+              "마주봄 mmWave/exit_seq/analyze_v2.py에 window-slice/warp를 추가로 구현해 기존 지터+타임워프 "
+              "증강과 비교(LSTM 기준 F1 44.9±14.1→46.8±11.1, recall 41%→44%)",
+)
+add_lightweight_paper(
+    paper_id="latest-03",
+    title="Accurate predictions on small data with a tabular foundation model (TabPFN)",
+    title_ko="소규모 표형데이터용 탭형 파운데이션 모델(TabPFN)",
+    authors="Hollmann 외 6명",
+    year="2025", doi="10.1038/s41586-024-08328-6",
+    source_url="https://pmc.ncbi.nlm.nih.gov/articles/PMC11711098/",
+    abstract_ko="수백만 개의 합성 데이터셋으로 사전학습해 베이즈추론을 근사하는 트랜스포머(TabPFN)를 제시한다. "
+                "별도의 데이터셋별 경사하강 학습이나 하이퍼파라미터 튜닝 없이, 학습+평가 데이터 전체를 한 번의 "
+                "순전파 입력으로 받아 분류한다. 29개 분류 데이터셋(전부 1만행·500특징·10클래스 이하) 기준으로 "
+                "CatBoost 등 그래디언트부스팅 기본값을 크게 앞섰다. 다만 반박 벤치마크(Bansal & Gangwani 2025, "
+                "arXiv:2512.00888)는 수천 행 규모 데이터셋에서 RF가 TabPFN을 근소하게 이기고 추론은 40배 이상 "
+                "빠르다고 보고했다.",
+    key_facts="소규모(≤1만행) 표형데이터 전용 파운데이션 모델, scikit-learn API 드롭인 가능. 마주봄 데이터"
+              "(2,320행·128특징·6클래스)로 직접 실측 시도했으나(TOF/ml/compare_rf_tabpfn.py) 온라인 라이선스 "
+              "로그인 게이트로 이 환경에서 실행 불가 — RF는 97.9% 재현 확인, TabPFN 비교는 미완",
+)
+add_lightweight_paper(
+    paper_id="latest-04",
+    title="Sleep Position Classification using Transfer Learning for Bed-based Pressure Sensors",
+    title_ko="저해상도 침상 압력센서 자세분류 — 전이학습(교차피험자 평가)",
+    authors="Papillon 외 6명",
+    year="2025", doi="",
+    source_url="https://arxiv.org/abs/2505.08111",
+    abstract_ko="저해상도 침상 압력센서 그리드(약 144 sensel, 마주봄 ToF 128차원과 비슷한 규모)로 4개 수면자세"
+                "(앙와위·복와위·좌우측와위)를 분류했다. 교차피험자 5-fold 교차검증(폴드당 학습 약 90명·평가 약 "
+                "22명, 동일인 중복 없음)에서 ImageNet 사전학습 ViTMAE를 미세조정한 모델이 정확도 77.0%(F1 "
+                "73.1)로 가장 우수했고, Random Forest는 32.2%(F1 25.2, 4지선다 chance=25%)로 거의 무작위 "
+                "수준까지 떨어졌다.",
+    key_facts="교차피험자 평가에서 RF 정확도 32.2%(거의 chance 수준) vs 사전학습 ViTMAE 77.0% — 저해상도 "
+              "침상센서에서 RF의 단일세션 고정확도가 다른 피험자에게 일반화되지 않을 수 있음을 시사하는 외부 "
+              "근거(마주봄 ToF RF 97.9%도 같은 우려 대상 — 1명·1세션 결과라는 기존 내부 경고를 뒷받침)",
+)
+add_lightweight_paper(
+    paper_id="latest-05",
+    title="An Unsupervised Data-Driven Anomaly Detection Approach for Adverse Health Conditions in People Living With Dementia: Cohort Study",
+    title_ko="치매환자 이상탐지 — 개인화 통계기법(Contextual Matrix Profile), 실제 임상사건 검증",
+    authors="Bijlani, Nilforooshan, Kouchaki",
+    year="2022", doi="",
+    source_url="https://pmc.ncbi.nlm.nih.gov/articles/PMC9531007/",
+    abstract_ko="치매환자 15명(9,363 환자-일)의 가정 내 주변감지 센서(PIR·도어·전력·조도·수면매트) 기록에서, "
+                "환자 1명씩 개인화한 다차원 Contextual Matrix Profile(거리기반 통계기법, 딥러닝 아님)로 이상을 "
+                "탐지했다. 실제 요로감염 31건·입원 10건이라는 임상 정답에 대해 평균 재현율 84.3%(15명 전원 "
+                "33% 이상 재현), 624일 여정당 경보 32.1건(5.1%일)을 기록했다. LODA·COPOD·ABOD 등 다른 비지도 "
+                "이상탐지 기법과도 비교했다.",
+    key_facts="환자 1명씩 개인화, 딥러닝 아닌 통계적 거리기반(Matrix Profile), 실제 UTI·입원 정답 대비 재현율 "
+              "84.3% — 마주봄 TOF/ml/lstm_anomaly.py(정답 라벨 없이 99백분위 임계값만 사용, 랜덤 85/15 분할로 "
+              "누수 의심)의 유력한 대안 후보로 제안. 후속연구(2024)는 대조학습·그래프신경망으로 발전했으나 "
+              "65~102명 규모 코호트가 필요해, 1인 데이터인 마주봄 현 단계에는 이 논문 쪽 개인화 통계기법이 더 "
+              "적합 — 아직 코드로 옮기지 않음(미구현)",
+)
+add_lightweight_paper(
+    paper_id="latest-06",
+    title="Intelligent fall risk prediction and real-time warning system for elderly care based on multimodal deep learning and wearable sensor fusion",
+    title_ko="웨어러블 다중센서 낙상위험 예측 — early fusion이 late fusion보다 우수",
+    authors="Li, Liu, Wu, Zhu, Liu",
+    year="2026", doi="10.1038/s41598-026-56750-9",
+    source_url="https://pmc.ncbi.nlm.nih.gov/articles/PMC13527089/",
+    abstract_ko="지역사회 노인 120명(6개월)의 가속도계·자이로·족저압력·PPG 웨어러블 데이터를 원시 텐서 단계에서 "
+                "결합하는 early fusion(8-head attention 기반 CNN-LSTM)과, 개별 모달리티 판정을 나중에 합치는 "
+                "late fusion을 같은 데이터·같은 파이프라인에서 직접 비교했다. Early fusion+attention이 정확도 "
+                "94.2%·F1 90.6%·AUC 0.967로, late fusion(정확도 89.7%·F1 84.9%·AUC 0.937)보다 우수했다 — "
+                "활동 종류에 따라 모달리티 중요도가 달라 late fusion은 이를 반영하지 못한다는 설명이다. 다만 "
+                "평가셋의 낙상 이벤트는 6건뿐이라 이 우위가 안정적인지는 저자들도 유보적이다.",
+    key_facts="같은 데이터로 early vs late fusion 직접비교(early 우세, F1 90.6 vs 84.9) — 웨어러블 4종 센서 "
+              "실험이라 마주봄의 ToF+mmWave 레이더 조합과는 하드웨어가 전혀 다르고, 학습에 58,762개 라벨된 "
+              "윈도우가 필요해 마주봄의 융합 라벨 데이터 부족 상황에는 그대로 적용 불가. server/"
+              "integrated_analysis.py의 max() 결합을 대체할, 학습 없이 쓸 수 있는 검증된 대안은 이 논문을 "
+              "포함한 2026-09 재검토에서 찾지 못함 — max() 유지",
+)
+add_lightweight_paper(
+    paper_id="latest-07",
+    title="Retrieval-Augmented Generation for Large Language Models: A Survey",
+    title_ko="검색증강생성(RAG) 기술 서베이",
+    authors="Gao 외 9명",
+    year="2023", doi="",
+    source_url="https://arxiv.org/abs/2312.10997",
+    abstract_ko="검색증강생성(RAG)을 Naive RAG·Advanced RAG·Modular RAG 3단계로 정리한 서베이. Advanced RAG "
+                "단계에서는 검색 전 질의 최적화와 검색 후 재랭킹이 표준 구성요소로 다뤄지며, dense 임베딩과 "
+                "BM25 같은 sparse 검색을 결합하는 하이브리드 검색과 reciprocal rank fusion 결합이 이미 기본 "
+                "기법 수준으로 취급된다.",
+    key_facts="하이브리드(dense+sparse) 검색과 재랭킹을 RAG의 표준 구성요소로 정리 — 마주봄이 이미 계획하던 "
+              "'벡터 vs BM25 vs 결합 비교'가 특이한 실험이 아니라 이 분야의 표준 다음 단계임을 뒷받침",
+)
+add_lightweight_paper(
+    paper_id="latest-08",
+    title="Blended RAG: Improving RAG Accuracy with Semantic Search and Hybrid Query-Based Retrievers",
+    title_ko="Blended RAG — dense+sparse 하이브리드 검색으로 NDCG@10 개선",
+    authors="Sawarkar, Mangal, Solanki",
+    year="2024", doi="",
+    source_url="https://arxiv.org/abs/2404.07220",
+    abstract_ko="Elasticsearch의 dense kNN 벡터검색과 ELSER 희소 인코더를 필드 단위 하이브리드 질의로 결합했다. "
+                "Natural Questions에서 NDCG@10 0.67(단일 dense 대비 +5.8%p), TREC-COVID에서 NDCG@10 "
+                "0.87(+8.2%p)을 보고했다. 단, SQuAD에서는 dense 단독(94.89%)이 sparse 단독(90.7%)보다 나아, "
+                "하이브리드의 이득은 데이터셋마다 다르다고 명시했다.",
+    key_facts="하이브리드 검색이 데이터셋에 따라 NDCG@10을 5.8~8.2%p 개선(항상 이기는 것은 아님, 데이터셋 "
+              "의존적). 마주봄은 이 발견에 착안해 server/paper_kb.py에 벡터(LanceDB cosine)+BM25(rank_bm25)를 "
+              "Reciprocal Rank Fusion(RRF, k=60)으로 결합하는 search_hybrid() 함수를 2026-09에 추가했다 — "
+              "기존 search()는 그대로 두고 별도 옵션으로 추가했으며, 정답셋 기반 Recall@5 정량 비교는 아직 "
+              "하지 않았다",
+)
+add_lightweight_paper(
+    paper_id="latest-09",
+    title="MTEB: Massive Text Embedding Benchmark",
+    title_ko="MTEB — 대규모 텍스트 임베딩 벤치마크",
+    authors="Muennighoff, Tazi, Magne, Reimers",
+    year="2022", doi="",
+    source_url="https://arxiv.org/abs/2210.07316",
+    abstract_ko="8개 과제 유형·58개 데이터셋·112개 언어에 걸쳐 33개 임베딩 모델을 벤치마크했다. 가장 중요한 "
+                "발견은 모든 과제에서 보편적으로 1등인 단일 임베딩 모델은 없다는 것이다 — 검색·분류·군집화 등 "
+                "과제별로 최적 모델이 달라진다.",
+    key_facts="'보편적 1위 모델 없음'이 핵심 결론 — 마주봄이 현재 쓰는 text-embedding-3-small(OpenAI 자체 "
+              "발표 MTEB 평균 62.3, ada-002 61.0·large 64.6 대비)의 우열을 이 벤치마크만으로 단정할 수 없고, "
+              "도메인(치매·낙상 논문) 자체 Recall@5 평가가 필요하다는 근거로 인용",
+)
+
+
 # ── 단독 테스트 ──────────────────────────────────────────────────────────
 if __name__ == "__main__":
     print("=== paper_kb.py 자체 테스트 (2026-09-10 복구본) ===\n")
@@ -1127,6 +1345,12 @@ if __name__ == "__main__":
 
     if result.get("n_embedded", 0) > 0:
         sr = search("보행속도 감소와 낙상 위험의 관계", top_k=3)
-        print("\n[search 예시]", sr.get("success"))
+        print("\n[search 예시 — 벡터 단독]", sr.get("success"))
         for r in sr.get("results", []):
             print(f"  {r['score']:.3f}  {r['paper_id']}/{r['section']}  {r['original_text'][:60]}")
+
+        hr = search_hybrid("보행속도 감소와 낙상 위험의 관계", top_k=3)
+        print("\n[search_hybrid 예시 — 벡터+BM25 RRF]", hr.get("success"))
+        for r in hr.get("results", []):
+            print(f"  {r['score']:.5f}  vec#{r['vector_rank']} bm25#{r['bm25_rank']}  "
+                  f"{r['paper_id']}/{r['section']}  {r['original_text'][:60]}")

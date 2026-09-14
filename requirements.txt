@@ -3,3 +3,4 @@ flask-cors==6.0.2
 werkzeug==3.1.8
 blinker==1.9.0
 itsdangerous==2.2.0
+rank_bm25==0.2.2

@@ -1,0 +1,698 @@
+{
+  "profile": {
+    "height_cm": 170.0,
+    "weight_kg": 62.0,
+    "base_step_length_m": 0.527
+  },
+  "events": [
+    {
+      "t": "2026-08-01T01:30:48.658914+00:00",
+      "type": "exit",
+      "posture_before": "edge_sit"
+    },
+    {
+      "t": "2026-08-01T05:16:45.342985+00:00",
+      "type": "exit",
+      "posture_before": "edge_sit"
+    },
+    {
+      "t": "2026-08-01T13:21:54.527976+00:00",
+      "type": "exit",
+      "posture_before": "edge_sit"
+    },
+    {
+      "t": "2026-08-01T18:44:15.922659+00:00",
+      "type": "exit",
+      "posture_before": "edge_sit"
+    },
+    {
+      "t": "2026-08-01T20:27:06.533066+00:00",
+      "type": "exit",
+      "posture_before": "edge_sit"
+    },
+    {
+      "t": "2026-08-02T11:05:10.238384+00:00",
+      "type": "exit",
+      "posture_before": "edge_sit"
+    },
+    {
+      "t": "2026-08-02T11:55:56.188206+00:00",
+      "type": "exit",
+      "posture_before": "edge_sit"
+    },
+    {
+      "t": "2026-08-02T21:29:00.323732+00:00",
+      "type": "exit",
+      "posture_before": "edge_sit"
+    },
+    {
+      "t": "2026-08-03T04:06:18.982561+00:00",
+      "type": "exit",
+      "posture_before": "edge_sit"
+    },
+    {
+      "t": "2026-08-03T04:56:39.075655+00:00",
+      "type": "exit",
+      "posture_before": "edge_sit"
+    },
+    {
+      "t": "2026-08-03T09:54:40.014621+00:00",
+      "type": "exit",
+      "posture_before": "edge_sit"
+    },
+    {
+      "t": "2026-08-04T00:55:11.698134+00:00",
+      "type": "exit",
+      "posture_before": "edge_sit"
+    },
+    {
+      "t": "2026-08-04T01:59:12.683106+00:00",
+      "type": "exit",
+      "posture_before": "edge_sit"
+    },
+    {
+      "t": "2026-08-04T06:50:18.676012+00:00",
+      "type": "exit",
+      "posture_before": "edge_sit"
+    },
+    {
+      "t": "2026-08-04T07:36:27.665548+00:00",
+      "type": "exit",
+      "posture_before": "edge_sit"
+    },
+    {
+      "t": "2026-08-04T10:22:12.185947+00:00",
+      "type": "exit",
+      "posture_before": "edge_sit"
+    },
+    {
+      "t": "2026-08-05T00:28:57.553792+00:00",
+      "type": "exit",
+      "posture_before": "edge_sit"
+    },
+    {
+      "t": "2026-08-05T04:46:31.387300+00:00",
+      "type": "exit",
+      "posture_before": "edge_sit"
+    },
+    {
+      "t": "2026-08-05T12:41:35.127745+00:00",
+      "type": "exit",
+      "posture_before": "edge_sit"
+    },
+    {
+      "t": "2026-08-05T13:40:28.674078+00:00",
+      "type": "exit",
+      "posture_before": "edge_sit"
+    },
+    {
+      "t": "2026-08-06T00:30:24.659557+00:00",
+      "type": "exit",
+      "posture_before": "edge_sit"
+    },
+    {
+      "t": "2026-08-06T08:58:16.350983+00:00",
+      "type": "exit",
+      "posture_before": "edge_sit"
+    },
+    {
+      "t": "2026-08-06T13:47:53.664651+00:00",
+      "type": "exit",
+      "posture_before": "edge_sit"
+    },
+    {
+      "t": "2026-08-07T11:04:16.357295+00:00",
+      "type": "exit",
+      "posture_before": "edge_sit"
+    },
+    {
+      "t": "2026-08-08T01:02:58.222460+00:00",
+      "type": "exit",
+      "posture_before": "edge_sit"
+    },
+    {
+      "t": "2026-08-09T23:13:35.080227+00:00",
+      "type": "exit",
+      "posture_before": "edge_sit"
+    },
+    {
+      "t": "2026-08-10T02:33:09.664564+00:00",
+      "type": "exit",
+      "posture_before": "edge_sit"
+    },
+    {
+      "t": "2026-08-10T04:05:15.604392+00:00",
+      "type": "exit",
+      "posture_before": "edge_sit"
+    },
+    {
+      "t": "2026-08-10T09:01:58.935921+00:00",
+      "type": "exit",
+      "posture_before": "edge_sit"
+    },
+    {
+      "t": "2026-08-10T18:08:23.437036+00:00",
+      "type": "exit",
+      "posture_before": "edge_sit"
+    },
+    {
+      "t": "2026-08-10T19:10:46.150256+00:00",
+      "type": "exit",
+      "posture_before": "edge_sit"
+    },
+    {
+      "t": "2026-08-11T00:04:54.178354+00:00",
+      "type": "exit",
+      "posture_before": "edge_sit"
+    },
+    {
+      "t": "2026-08-11T01:49:12.989849+00:00",
+      "type": "exit",
+      "posture_before": "edge_sit"
+    },
+    {
+      "t": "2026-08-11T11:30:37.640259+00:00",
+      "type": "exit",
+      "posture_before": "edge_sit"
+    },
+    {
+      "t": "2026-08-11T22:13:36.151578+00:00",
+      "type": "exit",
+      "posture_before": "edge_sit"
+    },
+    {
+      "t": "2026-08-12T02:43:19.461291+00:00",
+      "type": "exit",
+      "posture_before": "edge_sit"
+    },
+    {
+      "t": "2026-08-13T05:39:26.694227+00:00",
+      "type": "exit",
+      "posture_before": "edge_sit"
+    },
+    {
+      "t": "2026-08-13T17:40:54.485346+00:00",
+      "type": "exit",
+      "posture_before": "edge_sit"
+    },
+    {
+      "t": "2026-08-13T23:46:53.486511+00:00",
+      "type": "exit",
+      "posture_before": "edge_sit"
+    },
+    {
+      "t": "2026-08-14T07:07:35.353407+00:00",
+      "type": "exit",
+      "posture_before": "edge_sit"
+    },
+    {
+      "t": "2026-08-15T06:16:14.309443+00:00",
+      "type": "exit",
+      "posture_before": "edge_sit"
+    },
+    {
+      "t": "2026-08-15T13:38:13.915194+00:00",
+      "type": "exit",
+      "posture_before": "edge_sit"
+    },
+    {
+      "t": "2026-08-16T02:40:58.552108+00:00",
+      "type": "exit",
+      "posture_before": "edge_sit"
+    },
+    {
+      "t": "2026-08-16T13:39:35.821168+00:00",
+      "type": "exit",
+      "posture_before": "edge_sit"
+    },
+    {
+      "t": "2026-08-17T10:25:58.351328+00:00",
+      "type": "exit",
+      "posture_before": "edge_sit"
+    },
+    {
+      "t": "2026-08-17T18:13:16.632862+00:00",
+      "type": "exit",
+      "posture_before": "edge_sit"
+    },
+    {
+      "t": "2026-08-18T00:35:29.814667+00:00",
+      "type": "exit",
+      "posture_before": "edge_sit"
+    },
+    {
+      "t": "2026-08-18T02:36:08.201428+00:00",
+      "type": "exit",
+      "posture_before": "edge_sit"
+    },
+    {
+      "t": "2026-08-18T13:37:07.833810+00:00",
+      "type": "exit",
+      "posture_before": "edge_sit"
+    },
+    {
+      "t": "2026-08-18T18:43:27.773972+00:00",
+      "type": "exit",
+      "posture_before": "edge_sit"
+    },
+    {
+      "t": "2026-08-18T22:35:47.136853+00:00",
+      "type": "exit",
+      "posture_before": "edge_sit"
+    },
+    {
+      "t": "2026-08-19T15:07:19.596708+00:00",
+      "type": "exit",
+      "posture_before": "edge_sit"
+    },
+    {
+      "t": "2026-08-20T19:53:48.035542+00:00",
+      "type": "exit",
+      "posture_before": "edge_sit"
+    },
+    {
+      "t": "2026-08-21T09:38:27.059458+00:00",
+      "type": "exit",
+      "posture_before": "edge_sit"
+    },
+    {
+      "t": "2026-08-21T17:52:11.541309+00:00",
+      "type": "exit",
+      "posture_before": "edge_sit"
+    },
+    {
+      "t": "2026-08-21T19:20:27.948235+00:00",
+      "type": "exit",
+      "posture_before": "edge_sit"
+    },
+    {
+      "t": "2026-08-22T01:15:29.024707+00:00",
+      "type": "exit",
+      "posture_before": "edge_sit"
+    },
+    {
+      "t": "2026-08-22T08:47:43.143940+00:00",
+      "type": "exit",
+      "posture_before": "edge_sit"
+    },
+    {
+      "t": "2026-08-22T20:27:46.889308+00:00",
+      "type": "exit",
+      "posture_before": "edge_sit"
+    },
+    {
+      "t": "2026-08-22T20:27:46.889308+00:00",
+      "type": "FALL_SUSPECTED",
+      "reasons": [
+        "낙상 의심: 이탈 직전 자세=edge_sit → 이탈 후 12.0초간 mmWave 보행 미검출",
+        "융합 점수 0.17 (ToF 0.10×0.4 + mmWave 0.22×0.6)"
+      ]
+    },
+    {
+      "t": "2026-08-22T22:14:23.591981+00:00",
+      "type": "exit",
+      "posture_before": "edge_sit"
+    },
+    {
+      "t": "2026-08-23T05:11:26.328058+00:00",
+      "type": "exit",
+      "posture_before": "edge_sit"
+    },
+    {
+      "t": "2026-08-23T22:31:34.032013+00:00",
+      "type": "exit",
+      "posture_before": "edge_sit"
+    },
+    {
+      "t": "2026-08-24T03:23:56.238223+00:00",
+      "type": "exit",
+      "posture_before": "edge_sit"
+    },
+    {
+      "t": "2026-08-24T06:28:24.494645+00:00",
+      "type": "exit",
+      "posture_before": "edge_sit"
+    },
+    {
+      "t": "2026-08-24T17:28:26.876081+00:00",
+      "type": "exit",
+      "posture_before": "edge_sit"
+    },
+    {
+      "t": "2026-08-24T23:04:24.959661+00:00",
+      "type": "exit",
+      "posture_before": "edge_sit"
+    },
+    {
+      "t": "2026-08-25T13:42:48.989384+00:00",
+      "type": "exit",
+      "posture_before": "edge_sit"
+    },
+    {
+      "t": "2026-08-25T16:18:24.203977+00:00",
+      "type": "exit",
+      "posture_before": "edge_sit"
+    },
+    {
+      "t": "2026-08-26T01:32:52.272505+00:00",
+      "type": "exit",
+      "posture_before": "edge_sit"
+    },
+    {
+      "t": "2026-08-26T09:38:41.275026+00:00",
+      "type": "exit",
+      "posture_before": "edge_sit"
+    },
+    {
+      "t": "2026-08-26T12:13:55.511690+00:00",
+      "type": "exit",
+      "posture_before": "edge_sit"
+    },
+    {
+      "t": "2026-08-27T01:45:22.978099+00:00",
+      "type": "exit",
+      "posture_before": "edge_sit"
+    },
+    {
+      "t": "2026-08-27T07:23:35.407977+00:00",
+      "type": "exit",
+      "posture_before": "edge_sit"
+    },
+    {
+      "t": "2026-08-27T15:58:26.393304+00:00",
+      "type": "exit",
+      "posture_before": "edge_sit"
+    },
+    {
+      "t": "2026-08-28T02:12:23.412384+00:00",
+      "type": "exit",
+      "posture_before": "edge_sit"
+    },
+    {
+      "t": "2026-08-28T03:36:30.862326+00:00",
+      "type": "exit",
+      "posture_before": "edge_sit"
+    }
+  ],
+  "weekly_snapshots": [
+    {
+      "week_of": "2026-08-01",
+      "stats": {
+        "posture_change_rate_mu": 1.3333,
+        "edge_sit_ratio_mu": 0.0043,
+        "out_of_bed_ratio_mu": 0.0161,
+        "speed_mu": 0.9085,
+        "speed_cv_mu": 0.118,
+        "sway_mu": 0.0392,
+        "freeze_ratio_mu": 0.0875,
+        "stride_length_mu": 0.5355,
+        "stride_cv_mu": 0.0764
+      }
+    },
+    {
+      "week_of": "2026-08-08",
+      "stats": {
+        "posture_change_rate_mu": 1.3929,
+        "edge_sit_ratio_mu": 0.0033,
+        "out_of_bed_ratio_mu": 0.0083,
+        "speed_mu": 0.8749,
+        "speed_cv_mu": 0.1382,
+        "sway_mu": 0.0349,
+        "freeze_ratio_mu": 0.0694,
+        "stride_length_mu": 0.5379,
+        "stride_cv_mu": 0.0826
+      }
+    },
+    {
+      "week_of": "2026-08-15",
+      "stats": {
+        "posture_change_rate_mu": 1.28,
+        "edge_sit_ratio_mu": 0.0026,
+        "out_of_bed_ratio_mu": 0.0071,
+        "speed_mu": 0.997,
+        "speed_cv_mu": 0.1115,
+        "sway_mu": 0.0362,
+        "freeze_ratio_mu": 0.0964,
+        "stride_length_mu": 0.5233,
+        "stride_cv_mu": 0.0867
+      }
+    },
+    {
+      "week_of": "2026-08-22",
+      "stats": {
+        "posture_change_rate_mu": 1.2739,
+        "edge_sit_ratio_mu": 0.0046,
+        "out_of_bed_ratio_mu": 0.0093,
+        "speed_mu": 0.5394,
+        "speed_cv_mu": 0.2113,
+        "sway_mu": 0.0859,
+        "freeze_ratio_mu": 0.1473,
+        "stride_length_mu": 0.4656,
+        "stride_cv_mu": 0.1326
+      }
+    }
+  ],
+  "per_week_reports": [
+    {
+      "bed_id": "bed_01",
+      "report_date": "2026-08-08",
+      "n_weeks_available": 1,
+      "findings": [],
+      "overall": "비교불가",
+      "recommendation": "베이스라인 누적 기간이 짧아(2주 미만) 이번 주는 추세 비교 없이 현재값만 기록합니다."
+    },
+    {
+      "bed_id": "bed_01",
+      "report_date": "2026-08-15",
+      "n_weeks_available": 2,
+      "findings": [
+        {
+          "metric": "edge_sit_ratio",
+          "metric_ko": "걸터앉음 체류 비율",
+          "prior_avg": 0.004,
+          "recent": 0.003,
+          "pct_change": -23.3,
+          "worsened": false
+        },
+        {
+          "metric": "out_of_bed_ratio",
+          "metric_ko": "침상 이탈 비율",
+          "prior_avg": 0.016,
+          "recent": 0.008,
+          "pct_change": -48.4,
+          "worsened": false
+        },
+        {
+          "metric": "speed_cv",
+          "metric_ko": "보행 속도 변동성",
+          "prior_avg": 0.118,
+          "recent": 0.138,
+          "pct_change": 17.1,
+          "worsened": true
+        },
+        {
+          "metric": "sway",
+          "metric_ko": "좌우 흔들림",
+          "prior_avg": 0.039,
+          "recent": 0.035,
+          "pct_change": -11.0,
+          "worsened": false
+        },
+        {
+          "metric": "freeze_ratio",
+          "metric_ko": "멈칫거림 비율",
+          "prior_avg": 0.087,
+          "recent": 0.069,
+          "pct_change": -20.7,
+          "worsened": false
+        }
+      ],
+      "findings_text": [
+        "침상 이탈 비율 ▼48% (이전 평균 0.016 → 이번주 0.008) — 개선",
+        "걸터앉음 체류 비율 ▼23% (이전 평균 0.004 → 이번주 0.003) — 개선",
+        "멈칫거림 비율 ▼21% (이전 평균 0.087 → 이번주 0.069) — 개선",
+        "보행 속도 변동성 ▲17% (이전 평균 0.118 → 이번주 0.138) — 악화",
+        "좌우 흔들림 ▼11% (이전 평균 0.039 → 이번주 0.035) — 개선"
+      ],
+      "overall": "개선",
+      "recommendation": "이번 주 지표가 전반적으로 개선되었습니다. 현재 관리 방식을 유지하세요."
+    },
+    {
+      "bed_id": "bed_01",
+      "report_date": "2026-08-22",
+      "n_weeks_available": 3,
+      "findings": [
+        {
+          "metric": "edge_sit_ratio",
+          "metric_ko": "걸터앉음 체류 비율",
+          "prior_avg": 0.004,
+          "recent": 0.003,
+          "pct_change": -31.6,
+          "worsened": false
+        },
+        {
+          "metric": "out_of_bed_ratio",
+          "metric_ko": "침상 이탈 비율",
+          "prior_avg": 0.012,
+          "recent": 0.007,
+          "pct_change": -41.8,
+          "worsened": false
+        },
+        {
+          "metric": "speed",
+          "metric_ko": "보행 속도",
+          "prior_avg": 0.892,
+          "recent": 0.997,
+          "pct_change": 11.8,
+          "worsened": false
+        },
+        {
+          "metric": "speed_cv",
+          "metric_ko": "보행 속도 변동성",
+          "prior_avg": 0.128,
+          "recent": 0.112,
+          "pct_change": -13.0,
+          "worsened": false
+        },
+        {
+          "metric": "freeze_ratio",
+          "metric_ko": "멈칫거림 비율",
+          "prior_avg": 0.078,
+          "recent": 0.096,
+          "pct_change": 22.9,
+          "worsened": true
+        }
+      ],
+      "findings_text": [
+        "침상 이탈 비율 ▼42% (이전 평균 0.012 → 이번주 0.007) — 개선",
+        "걸터앉음 체류 비율 ▼32% (이전 평균 0.004 → 이번주 0.003) — 개선",
+        "멈칫거림 비율 ▲23% (이전 평균 0.078 → 이번주 0.096) — 악화",
+        "보행 속도 변동성 ▼13% (이전 평균 0.128 → 이번주 0.112) — 개선",
+        "보행 속도 ▲12% (이전 평균 0.892 → 이번주 0.997) — 개선"
+      ],
+      "overall": "개선",
+      "recommendation": "이번 주 지표가 전반적으로 개선되었습니다. 현재 관리 방식을 유지하세요."
+    },
+    {
+      "bed_id": "bed_01",
+      "report_date": "2026-08-29",
+      "n_weeks_available": 4,
+      "findings": [
+        {
+          "metric": "edge_sit_ratio",
+          "metric_ko": "걸터앉음 체류 비율",
+          "prior_avg": 0.003,
+          "recent": 0.005,
+          "pct_change": 35.3,
+          "worsened": true
+        },
+        {
+          "metric": "out_of_bed_ratio",
+          "metric_ko": "침상 이탈 비율",
+          "prior_avg": 0.011,
+          "recent": 0.009,
+          "pct_change": -11.4,
+          "worsened": false
+        },
+        {
+          "metric": "speed",
+          "metric_ko": "보행 속도",
+          "prior_avg": 0.927,
+          "recent": 0.539,
+          "pct_change": -41.8,
+          "worsened": true
+        },
+        {
+          "metric": "speed_cv",
+          "metric_ko": "보행 속도 변동성",
+          "prior_avg": 0.123,
+          "recent": 0.211,
+          "pct_change": 72.4,
+          "worsened": true
+        },
+        {
+          "metric": "sway",
+          "metric_ko": "좌우 흔들림",
+          "prior_avg": 0.037,
+          "recent": 0.086,
+          "pct_change": 133.6,
+          "worsened": true
+        },
+        {
+          "metric": "freeze_ratio",
+          "metric_ko": "멈칫거림 비율",
+          "prior_avg": 0.084,
+          "recent": 0.147,
+          "pct_change": 74.5,
+          "worsened": true
+        },
+        {
+          "metric": "stride_length",
+          "metric_ko": "보폭",
+          "prior_avg": 0.532,
+          "recent": 0.466,
+          "pct_change": -12.5,
+          "worsened": true
+        },
+        {
+          "metric": "stride_cv",
+          "metric_ko": "보폭 변동성",
+          "prior_avg": 0.082,
+          "recent": 0.133,
+          "pct_change": 61.9,
+          "worsened": true
+        }
+      ],
+      "findings_text": [
+        "좌우 흔들림 ▲134% (이전 평균 0.037 → 이번주 0.086) — 악화",
+        "멈칫거림 비율 ▲74% (이전 평균 0.084 → 이번주 0.147) — 악화",
+        "보행 속도 변동성 ▲72% (이전 평균 0.123 → 이번주 0.211) — 악화",
+        "보폭 변동성 ▲62% (이전 평균 0.082 → 이번주 0.133) — 악화",
+        "보행 속도 ▼42% (이전 평균 0.927 → 이번주 0.539) — 악화",
+        "걸터앉음 체류 비율 ▲35% (이전 평균 0.003 → 이번주 0.005) — 악화",
+        "보폭 ▼12% (이전 평균 0.532 → 이번주 0.466) — 악화",
+        "침상 이탈 비율 ▼11% (이전 평균 0.011 → 이번주 0.009) — 개선"
+      ],
+      "overall": "악화",
+      "recommendation": "좌우 흔들림이(가) 지난 평균 대비 134% 악화되었습니다. 낙상 위험 요인 재평가 및 담당의 확인을 권장합니다."
+    }
+  ],
+  "cumulative": {
+    "as_of": "2026-08-29",
+    "tof_behavior": {
+      "n": 28,
+      "posture_change_rate_mu": 1.32,
+      "posture_change_rate_sigma": 0.3,
+      "edge_sit_ratio_mu": 0.004,
+      "edge_sit_ratio_sigma": 0.03,
+      "out_of_bed_ratio_mu": 0.01,
+      "out_of_bed_ratio_sigma": 0.03,
+      "age_days": 0.0
+    },
+    "mmwave_gait": {
+      "n": 75,
+      "speed_mu": 0.827,
+      "speed_sigma": 0.336,
+      "speed_cv_mu": 0.145,
+      "speed_cv_sigma": 0.047,
+      "sway_mu": 0.049,
+      "sway_sigma": 0.026,
+      "freeze_ratio_mu": 0.101,
+      "freeze_ratio_sigma": 0.041,
+      "stride_length_mu": 0.516,
+      "stride_length_sigma": 0.041,
+      "stride_cv_mu": 0.094,
+      "stride_cv_sigma": 0.031,
+      "age_days": 0.0
+    }
+  },
+  "tof_frame_pool_labels": [
+    "edge_sit",
+    "empty",
+    "side_left",
+    "side_right",
+    "sitting",
+    "supine"
+  ],
+  "note": "전부 합성 데이터 — 실제 환자 데이터 아님. ToF raw는 실측 재사용+노이즈, mmWave 보행은 문헌 파라미터 기반 합성(실측 보행 시계열 없음)."
+}
