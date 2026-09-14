@@ -1,0 +1,630 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="마주봄 AI 개발 진행 현황. 참고 논문, 알고리즘 선택 이유, 실험 성능, 벡터 DB 적재, AI 페르소나와 검증 과제를 정리한 HTML 발표 자료.">
+  <title>마주봄 AI 개발 진행 현황</title>
+  <style>
+    :root { --ink:#192c43; --muted:#536274; --blue:#245a89; --line:#cdd6df; --wash:#f0f4f8; --green:#256249; --amber:#925b14; --scale:1; }
+    * { box-sizing:border-box; }
+    html,body { margin:0; min-height:100%; }
+    body { background:#e4e9ef; color:var(--ink); font-family:"Malgun Gothic","Apple SD Gothic Neo","Noto Sans KR",sans-serif; word-break:keep-all; }
+    button,select { font:inherit; }
+    button,select,a { -webkit-tap-highlight-color:transparent; }
+    button { cursor:pointer; }
+    a { color:var(--blue); text-underline-offset:3px; }
+    :focus-visible { outline:3px solid #4180b6; outline-offset:4px; }
+    #viewport { height:calc(100vh - 76px); height:calc(100dvh - 76px); display:flex; justify-content:center; align-items:center; overflow:hidden; }
+    #stage { flex:none; }
+    #deck { width:1280px; transform:scale(var(--scale)); transform-origin:top left; }
+    .slide { display:none; position:relative; width:1280px; height:720px; padding:38px 56px 26px; background:white; flex-direction:column; overflow:hidden; }
+    .slide.active { display:flex; }
+    .slide::before { content:""; position:absolute; left:0; top:0; width:100%; height:6px; background:var(--ink); }
+    .eyebrow { font-size:15px; font-weight:700; letter-spacing:1px; color:var(--blue); margin:0 0 11px; }
+    h1,h2,h3,p { margin:0; }
+    h1 { font-size:58px; line-height:1.3; letter-spacing:-2.4px; font-weight:800; }
+    h2 { font-size:37px; line-height:1.3; letter-spacing:-1.5px; font-weight:800; }
+    h3 { font-size:25px; line-height:1.4; letter-spacing:-.6px; }
+    .subtitle { margin-top:11px; font-size:21px; line-height:1.5; color:var(--muted); }
+    .content { flex:1; min-height:0; display:flex; flex-direction:column; padding-top:28px; gap:22px; }
+    .content.tight { gap:17px; padding-top:23px; }
+    .body-text { font-size:22px; line-height:1.65; }
+    .muted { color:var(--muted); }
+    .small { font-size:18px; line-height:1.55; }
+    .tiny { font-size:16px; line-height:1.5; }
+    .blue { color:var(--blue); }
+    .green { color:var(--green); }
+    .amber { color:var(--amber); }
+    .mono { font-family:Consolas,"SFMono-Regular",monospace; font-size:.9em; word-break:normal; }
+    strong { font-weight:800; }
+    ul { margin:13px 0 0; padding-left:24px; font-size:22px; line-height:1.65; }
+    li + li { margin-top:10px; }
+    .cols { display:grid; grid-template-columns:1fr 1fr; gap:42px; }
+    .cols.wide-left { grid-template-columns:1.15fr 1fr; }
+    .cols > * { min-width:0; }
+    .rule-top { border-top:2px solid var(--line); padding-top:17px; }
+    .takeaway { margin-top:auto; border-left:5px solid var(--blue); padding:13px 19px; background:var(--wash); font-size:22px; line-height:1.5; }
+    .takeaway.warning { border-left-color:var(--amber); background:#faf5ed; }
+    .foot { margin-top:20px; padding-top:12px; border-top:1px solid var(--line); display:flex; justify-content:space-between; align-items:center; gap:22px; font-size:14px; color:var(--muted); line-height:1.4; }
+    .foot .page { flex:none; font-variant-numeric:tabular-nums; font-weight:700; color:var(--ink); }
+    .foot .source { max-width:1050px; }
+    .notes { display:none; }
+    table { width:100%; border-collapse:collapse; table-layout:fixed; font-size:21px; line-height:1.5; }
+    th,td { text-align:left; vertical-align:top; padding:13px 15px; border-bottom:1px solid var(--line); }
+    th { font-size:18px; color:var(--muted); font-weight:700; background:var(--wash); border-top:2px solid var(--ink); }
+    td:first-child { font-weight:700; }
+    .compact th,.compact td { padding:11px 14px; }
+    .table-dense th,.table-dense td { padding:9px 15px; }
+    .status { font-weight:700; white-space:nowrap; }
+    .flow { display:flex; align-items:stretch; gap:14px; }
+    .step { position:relative; flex:1; min-width:0; padding:18px 17px; border:1px solid var(--line); border-top:3px solid var(--blue); background:#fff; }
+    .step + .step::before { content:"→"; position:absolute; left:-20px; top:50%; transform:translateY(-50%); font-size:22px; width:24px; text-align:center; color:var(--muted); background:white; }
+    .step .num { display:block; color:var(--blue); font-size:16px; font-weight:800; margin-bottom:9px; }
+    .step h3 { font-size:24px; }
+    .step p { font-size:19px; color:var(--muted); line-height:1.55; margin-top:9px; }
+    .steps4 .step { padding:17px 16px; }
+    .metrics { display:flex; border-top:2px solid var(--ink); border-bottom:1px solid var(--line); padding:23px 0; }
+    .metric { flex:1; padding:0 24px; border-left:1px solid var(--line); }
+    .metric:first-child { padding-left:0; border-left:none; }
+    .metric .value { font-size:44px; font-weight:800; line-height:1.15; font-variant-numeric:tabular-nums; color:var(--blue); }
+    .metric .label { margin-top:8px; font-size:19px; line-height:1.5; }
+    .ledger { display:grid; grid-template-columns:100px 1fr; gap:0 20px; border-top:2px solid var(--ink); }
+    .ledger .label,.ledger .text { padding:12px 0; border-bottom:1px solid var(--line); font-size:21px; line-height:1.6; }
+    .ledger .label { font-weight:700; color:var(--blue); }
+    .lane { display:grid; grid-template-columns:155px 1fr 30px 1.15fr 30px 1fr; gap:10px; align-items:stretch; }
+    .lane-label { display:flex; align-items:center; font-size:25px; font-weight:800; }
+    .lane-cell { border:1px solid var(--line); padding:17px 18px; font-size:22px; line-height:1.45; }
+    .lane-cell b { display:block; margin-bottom:5px; }
+    .lane-cell span { display:block; color:var(--muted); font-size:18px; line-height:1.5; }
+    .arrow { display:flex; align-items:center; justify-content:center; color:var(--blue); font-size:26px; }
+    .bridge { border-top:1px solid var(--line); padding-top:22px; display:grid; grid-template-columns:1.2fr 35px 1.05fr 35px 1.2fr; gap:12px; align-items:center; }
+    .bridge > .block { font-size:24px; line-height:1.5; }
+    .bridge .detail { display:block; font-size:19px; color:var(--muted); margin-top:4px; }
+    .cover { padding-top:64px; }
+    .cover .eyebrow { margin-bottom:36px; }
+    .cover .lead { margin-top:28px; max-width:1000px; font-size:29px; line-height:1.6; letter-spacing:-.7px; }
+    .cover .cover-line { display:flex; gap:20px; align-items:center; margin-top:38px; padding:22px 0; border-top:2px solid var(--ink); border-bottom:1px solid var(--line); font-size:24px; font-weight:700; }
+    .cover .cover-line span:nth-child(even) { color:var(--muted); font-weight:400; }
+    .cover .meta { margin-top:28px; font-size:19px; color:var(--muted); }
+    .numbered { display:grid; grid-template-columns:64px 1fr; gap:0 20px; }
+    .numbered .n { padding-top:18px; font-size:31px; font-weight:800; color:var(--blue); border-top:1px solid var(--line); }
+    .numbered .item { padding:18px 0 19px; border-top:1px solid var(--line); }
+    .numbered .item p { margin-top:6px; font-size:21px; line-height:1.55; color:var(--muted); }
+    .record { border-top:2px solid var(--ink); }
+    .record-row { display:grid; grid-template-columns:132px 1fr; gap:15px; border-bottom:1px solid var(--line); padding:11px 0; font-size:19px; line-height:1.5; }
+    .record-row .key { font-weight:700; color:var(--blue); }
+    .big-statement { font-size:30px; line-height:1.55; letter-spacing:-.8px; padding:22px 0; border-bottom:1px solid var(--line); }
+    .toolbar { height:72px; position:fixed; bottom:4px; left:0; right:0; display:flex; justify-content:center; align-items:center; gap:10px; padding:10px 16px; background:#f7f9fc; border-top:1px solid var(--line); z-index:5; color:var(--ink); }
+    .toolbar .brand { font-size:15px; font-weight:700; margin-right:15px; }
+    .toolbar button,.toolbar select { border:1px solid #b9c6d3; background:white; color:var(--ink); min-height:39px; padding:7px 11px; border-radius:4px; font-size:14px; }
+    .toolbar button:hover { background:var(--wash); }
+    .toolbar button[aria-pressed="true"] { background:var(--ink); color:white; border-color:var(--ink); }
+    .toolbar button:disabled { opacity:.35; cursor:default; }
+    #slide-select { width:258px; }
+    .divider { width:1px; height:25px; background:var(--line); margin:0 4px; }
+    #progress { position:fixed; left:0; bottom:0; width:100%; height:4px; background:#cad4de; z-index:8; }
+    #progress-bar { height:100%; width:0; background:var(--blue); transition:width .12s ease; }
+    .sr-only { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; }
+    body.is-fullscreen .toolbar,body.is-fullscreen #progress { display:none; }
+    body.is-fullscreen #viewport { height:100vh; height:100dvh; }
+    body.overview { overflow:auto; padding-bottom:85px; }
+    body.overview #viewport { height:auto; overflow:visible; display:block; padding:24px 0; }
+    body.overview #stage { height:auto !important; margin:0 auto; }
+    body.overview #deck { transform:none; width:100%; }
+    body.overview .slide { display:flex; zoom:var(--scale); margin-bottom:28px; cursor:pointer; }
+    body.overview .slide.active { outline:4px solid var(--blue); outline-offset:4px; }
+    dialog { max-width:820px; width:calc(100% - 40px); max-height:85vh; overflow:auto; padding:28px 32px; border:1px solid var(--line); border-radius:7px; color:var(--ink); }
+    dialog::backdrop { background:#14223499; }
+    .dialog-head { display:flex; justify-content:space-between; align-items:start; gap:25px; border-bottom:1px solid var(--line); padding-bottom:16px; }
+    .dialog-head h2 { font-size:25px; }
+    .dialog-head button { padding:7px 13px; border:1px solid var(--line); background:white; border-radius:3px; }
+    #evidence-content { padding-top:20px; font-size:17px; line-height:1.8; overflow-wrap:anywhere; }
+    #evidence-content p + p { margin-top:15px; }
+    #evidence-content ul { font-size:17px; }
+    #evidence-content .source { margin-top:20px; padding-top:14px; border-top:1px solid var(--line); font-size:15px; }
+
+    .gap10 { margin-top:10px; }
+    .gap12 { margin-top:12px; }
+    blockquote.prompt { margin:15px 0 0; padding:15px 18px; border-left:3px solid var(--blue); background:var(--wash); font-size:21px; line-height:1.65; }
+    #evidence-content blockquote.prompt { font-size:17px; }
+    @media (max-width:1000px) { .toolbar .brand { display:none; } }
+    @media (max-width:650px) { .toolbar { gap:5px; padding:9px 7px; flex-wrap:wrap; height:94px; } .toolbar button { padding:6px 9px; min-height:32px; font-size:12px; } #slide-select { width:210px; min-height:32px; font-size:12px; } .divider { display:none; } #viewport { height:calc(100dvh - 98px); } }
+    @media (prefers-reduced-motion:reduce) { #progress-bar { transition:none; } }
+    @page { size:13.333333in 7.5in; margin:0; }
+    @media print {
+      html,body,body.overview { margin:0 !important; padding:0 !important; width:1280px; background:white; overflow:visible; }
+      #viewport,body.overview #viewport { height:auto; display:block; padding:0; overflow:visible; }
+      #stage,body.overview #stage { width:1280px !important; height:auto !important; margin:0; }
+      #deck,body.overview #deck { transform:none; width:1280px; }
+      .slide,body.overview .slide { display:flex !important; width:1280px; height:720px; zoom:1; margin:0; outline:none !important; break-after:page; break-inside:avoid; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+      .slide:last-child { break-after:auto; }
+      .toolbar,#progress,dialog,.sr-only { display:none !important; }
+      .foot a { color:var(--muted); text-decoration:none; }
+    }
+  </style>
+</head>
+<body>
+  <main id="viewport" aria-label="마주봄 AI 개발 진행 현황 발표">
+    <div id="stage"><div id="deck">
+
+      <section class="slide cover active" id="slide-1" data-title="개발 진행 현황" aria-labelledby="title-1">
+        <p class="eyebrow">마주봄 · 개발 진행 보고 · 2026.09.14</p>
+        <h1 id="title-1">마주봄 AI<br>개발 진행 현황</h1>
+        <p class="lead">논문에서 어떤 방법을 참고했고, 왜 선택했으며,<br>현재 어디까지 구현·검증했는지 보고합니다.</p>
+        <div class="cover-line"><span>논문·선택 근거</span><span>→</span><span>구현·검증</span><span>→</span><span>근거 검색</span><span>→</span><span>AI 리포트</span></div>
+        <p class="meta">보고 범위: 알고리즘 근거 · 실제 실험 성능 · Vector DB · AI 페르소나</p>
+        <div style="flex:1"></div>
+        <footer class="foot"><span class="source">기준: <a href="docs/ai_plan.html">AI 기획 문서</a> + 현재 소스 코드 + 로컬 DB·결과 파일</span><span class="page"></span></footer>
+        <aside class="notes"><p>2026-09-14 작업 폴더 기준으로 작성했다. docs/ai_plan.html의 과거 구현·검증 기록과 현재 파일 상태를 대조했다. 검토 범위는 서버, ToF 수집·학습·미리보기, mmWave 수집·실험, 대시보드, 설계·인수인계 문서 및 로컬 저장 결과다. ESP-IDF 등 외부 SDK의 내부 구현은 발표 범위에 포함하지 않았다.</p><p>발표에 적힌 저장 건수는 로컬 스냅샷이다. 이번 작업에서는 운영 센서 서버를 구동하거나 새 LLM·임베딩 호출을 실행하지 않았다. 과거 문서의 실험 수치는 별도로 표시했다.</p></aside>
+      </section>
+
+      <section class="slide" id="slide-2" data-title="현재 구현 상태" aria-labelledby="title-2">
+        <p class="eyebrow">01 · 현재 위치</p>
+        <h2 id="title-2">주요 모듈과 저장 기반은 갖췄습니다</h2>
+        <p class="subtitle">센서 처리와 AI 조사·리포트 코드는 확보했고, 일부 실시간 연결을 보완하는 단계입니다.</p>
+        <div class="content tight">
+          <table class="compact"><colgroup><col style="width:23%"><col style="width:18%"><col></colgroup><thead><tr><th>영역</th><th>현재 상태</th><th>확인한 내용</th></tr></thead><tbody>
+            <tr><td>ToF 자세·재실</td><td class="status green">구현 확인</td><td>6개 자세 분류, 빈 침대 기준, 시간 안정화 판정</td></tr>
+            <tr><td>mmWave 보행</td><td class="status green">구현 확인</td><td>보행 특징 추출 → 개인별 기준 비교 → 위험 단계</td></tr>
+            <tr><td>SQL 저장·품질 기록</td><td class="status blue">구조·일부 연결</td><td>원시값, 정제 진단, 이벤트, 분석 이력의 저장 구조</td></tr>
+            <tr><td>논문 Vector DB</td><td class="status green">저장 확인</td><td><strong>73편 · 631개 청크</strong>와 검색 코드(벡터+BM25 하이브리드 포함)</td></tr>
+            <tr><td>AI 조사·리포트</td><td class="status green">코드·결과 확인</td><td>반복 검색, 종합 리포트, SQL 분석 기록 <strong>9건</strong></td></tr>
+            <tr><td>운영 연결·검증</td><td class="status amber">보완 필요</td><td>ToF 행동 조회, 과거 분석 자동 반영, 대시보드 연결</td></tr>
+          </tbody></table>
+          <p class="small muted">현재 실행 구성은 ToF와 mmWave 두 센서입니다. WiFi CSI는 실행 기능에서 제외됐습니다.</p>
+        </div>
+        <footer class="foot"><span class="source">근거: server/run_all.py · tof_server.py · mmw_server.py · majubom.db · lancedb_store</span><span class="page"></span></footer>
+        <aside class="notes"><p>읽기 전용 SQLite 조회에서 ai_analysis 9행, activity_log 9행을 확인했다. LanceDB에서는 paper_chunks 631행(서로 다른 paper_id 73개 — 2026-09 문헌 재검토로 9편 추가), analysis_chunks 7행을 확인했다. SQL 원시 센서 테이블·정제 진단 테이블·baseline_history는 현재 로컬 DB에서 0행이므로, 저장 구조와 운영 누적을 구분했다.</p><p>run_all.py는 ToF 5001, mmWave 5002만 실행한다. 기존 README에는 CSI가 남아 있지만 현재 실행 코드를 기준으로 정리했다. 로컬 DB에 남은 빈 CSI 레거시 테이블은 기능이 동작한다는 근거가 아니다.</p></aside>
+      </section>
+
+      <section class="slide" id="slide-3" data-title="전체 데이터 흐름" aria-labelledby="title-3">
+        <p class="eyebrow">02 · 전체 흐름</p>
+        <h2 id="title-3">실시간 상태와 누적 기록을 함께 활용합니다</h2>
+        <p class="subtitle">두 센서는 각자의 서버에서 분석하고, AI는 환자 기록과 논문 근거를 모아 설명합니다.</p>
+        <div class="content">
+          <div class="lane"><div class="lane-label">ToF</div><div class="lane-cell"><b>거리 격자</b><span>VL53L5CX ×2<br>ESP32 → WiFi</span></div><div class="arrow">→</div><div class="lane-cell"><b>ToF 서버</b><span>자세·재실·침상 위험<br>수신·저장 / 상태 조회</span></div><div class="arrow">→</div><div class="lane-cell"><b>실시간 대시보드</b><span>센서 상태·판정 표시</span></div></div>
+          <div class="lane"><div class="lane-label">mmWave</div><div class="lane-cell"><b>점군·트래킹</b><span>IWR6843AOP<br>USB → Raspberry Pi</span></div><div class="arrow">→</div><div class="lane-cell"><b>mmWave 서버</b><span>보행 지표·평소 대비 변화<br>수신·분석·저장</span></div><div class="arrow">→</div><div class="lane-cell"><b>SQLite</b><span>센서·환자·분석 기록</span></div></div>
+          <div class="bridge"><div class="block"><strong>현재 상태 + SQL 기록</strong><span class="detail">환자 정보·투약·최근 활동</span></div><div class="arrow">→</div><div class="block"><strong>AI Agent 조사</strong><span class="detail">논문 Vector DB 검색</span></div><div class="arrow">→</div><div class="block"><strong>리포트 생성·저장</strong><span class="detail">상태 설명 + 근거 목록</span></div></div>
+          <p class="small muted">ToF도 원시값을 SQLite에 저장합니다. AI 결과의 화면 연결과 ToF 행동 상태 조회는 보완이 필요합니다.</p>
+        </div>
+        <footer class="foot"><span class="source">근거: TOF/src/main.ino · mmWave/send_mmw.py · server/ai_agent.py · integrated_analysis.py</span><span class="page"></span></footer>
+        <aside class="notes"><p>ToF는 ESP32의 HTTP POST를 tof_server.py에서 받는다. mmWave는 send_mmw.py가 USB Serial 프레임을 해석하고 보행 특징을 HTTP로 mmw_server.py에 전달한다. 두 서버는 db.py를 통해 같은 SQLite 파일을 사용한다.</p><p>현재 구현은 센서별 독립 경로다. 기획 문서에 있는 'ToF 이탈 후에만 mmWave 활성화'를 현재 공통 동작으로 단정하지 않았다. 대시보드의 실시간 센서 폴링과 AI 리포트 화면 연결도 구분했다.</p></aside>
+      </section>
+
+      <section class="slide" id="slide-4" data-title="논문과 구현의 연결" aria-labelledby="title-4">
+      <p class="eyebrow">03 · 설계 근거 / 전체 지도</p>
+      <h2 id="title-4">논문의 방법을 센서와 데이터 조건에 맞춰 적용했습니다</h2>
+      <p class="subtitle">논문 모델의 직접 재현, 설계 원칙 참고, 향후 후보를 구분합니다.</p>
+      <div class="content tight"><table class="table-dense"><colgroup><col style="width:21%"><col style="width:34%"><col style="width:45%"></colgroup><thead><tr><th>개발 요소</th><th>참고한 연구·원리</th><th>마주봄에 반영한 범위</th></tr></thead><tbody><tr><td>ToF 자세 분류</td><td>Breiman · Random Forest</td><td>기존 RF를 사용한 6자세 분류<br><span class="small muted">이번 발표에서 원천 알고리즘 문헌 보완</span></td></tr><tr><td>개인별 이상 판정</td><td>Roshan · 개인별 참조 범위</td><td>개인 평균·편차 비교 원칙 참고<br>임계값·점수 규칙은 프로젝트에서 작성</td></tr><tr><td>mmWave 이탈 시계열</td><td>Wang · mPCT-LSTM</td><td>공간 특징 → 시간 모델 흐름 참고<br>현재는 수제 특징 + 작은 LSTM</td></tr><tr><td>침상 감시·센서 통합</td><td>eNightLog / Rehouma</td><td>영역·상태 전이 / 판정 결합 원칙 참고<br>센서 종류와 결합 규칙은 서로 다름</td></tr><tr><td>검색·리포트</td><td>Huang · LLM 환각 서베이</td><td>외부 근거와 계산된 사실 제공<br>질의·검토·서술 페르소나는 직접 작성</td></tr></tbody></table></div>
+      <footer class="foot"><span class="source">대조: docs/ai_plan.html · 현재 소스 · 논문 원문 · <a href="https://doi.org/10.1023/A:1010933404324" target="_blank" rel="noopener">Breiman (2001)</a> · <a href="https://www.sciencedirect.com/science/article/pii/S1051200425002854" target="_blank" rel="noopener">Wang et al. (2025)</a> · <a href="https://arxiv.org/abs/2311.05232" target="_blank" rel="noopener">Huang et al.</a></span><span class="page"></span></footer>
+      <aside class="notes"><p>기획 문서에 기재된 설계 참고 문헌과 현재 코드의 구현 내용을 구분했다. Random Forest의 Breiman 논문, LSTM-AE의 Malhotra 논문은 현재 구현을 설명하기 위한 원천·구조 비교 문헌으로 이번 발표에 보완했으며, 개발 당시 직접 읽거나 코드를 복제했다는 이력으로 주장하지 않는다.</p><p>[Sources]</p><p><a href="https://doi.org/10.1023/A:1010933404324" target="_blank" rel="noopener">Breiman (2001), Random Forests</a></p><p><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12101663/" target="_blank" rel="noopener">Roshan et al. (2025), Adaptive reference ranges: From A to Z</a></p><p><a href="https://www.sciencedirect.com/science/article/pii/S1051200425002854" target="_blank" rel="noopener">Wang et al. (2025), mPCT-LSTM: A lightweight human activity recognition model for 3D point clouds in millimeter-wave radar</a></p><p><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8872318/" target="_blank" rel="noopener">Cheung et al. (2022), A Night-Time Monitoring System (eNightLog) to Prevent Elderly Wandering in Hostels: A Three-Month Field Study</a></p><p><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12526565/" target="_blank" rel="noopener">Rehouma & Boukadoum (2025), Fall Detection by Deep Learning-Based Bimodal Movement and Pose Sensing with Late Fusion</a></p><p><a href="https://arxiv.org/abs/2311.05232" target="_blank" rel="noopener">Huang et al., A Survey on Hallucination in Large Language Models: Principles, Taxonomy, Challenges, and Open Questions (arXiv 2023)</a></p><p>[/Sources]</p></aside>
+    </section>
+
+      <section class="slide" id="slide-5" data-title="ToF · Random Forest 적용" aria-labelledby="title-5">
+      <p class="eyebrow">04 · 알고리즘 01 / ToF 자세 분류</p>
+      <h2 id="title-5">128개 거리값을 Random Forest로 분류합니다</h2>
+      <p class="subtitle">Breiman (2001), Random Forests — 여러 결정트리의 판단을 결합하는 분류 방법입니다.</p>
+      <div class="content tight"><div class="flow steps4"><div class="step"><span class="num">입력</span><h3>거리 격자 ×2</h3><p>8×8 + 8×8<br>총 128개 거리값</p></div><div class="step"><span class="num">전처리</span><h3>침대 영역 정리</h3><p>무효값 처리<br>ROI 밖 영역 마스킹</p></div><div class="step"><span class="num">학습</span><h3>RF · 트리 200개</h3><p>서로 다른 표본·특징<br>여러 트리의 결과 결합</p></div><div class="step"><span class="num">운영 보정</span><h3>상태 안정화</h3><p>빈 침대 기준 확인<br>짧은 판정 흔들림 완화</p></div></div><div class="cols"><div class="rule-top"><h3>프로젝트에서 개발한 부분</h3><p class="body-text gap12">두 센서 입력 구성, 6개 자세 라벨,<br>침대 마스크·재실·시간 안정화 처리</p><p class="small muted gap10">정자세 / 좌·우 측와위 / 앉음 / 걸터앉음 / 빈 침대</p></div><div class="rule-top"><h3>선택 이유</h3><p class="body-text gap12">초기 소규모 표 형식 데이터에 적용하기 쉽고,<br>CPU 서버에서 기존 수신 흐름과 연결 가능</p><p class="small muted gap10">클래스 불균형은 class_weight="balanced"로 보정</p></div></div><div class="takeaway">RF 자체를 새로 발명한 것이 아니라, 센서 입력·학습·상태 판정을 침상 환경에 맞게 구성했습니다.</div></div>
+      <footer class="foot"><span class="source">TOF/ml/train_posture.py · predict_posture.py · server/tof_server.py · <a href="https://doi.org/10.1023/A:1010933404324" target="_blank" rel="noopener">Breiman (2001)</a></span><span class="page"></span></footer>
+      <aside class="notes"><p>현재 코드의 ZONES=64이며 두 센서를 이어 붙여 128개 입력값을 만든다. RF는 scikit-learn 구현, n_estimators=200, class_weight=balanced다. 클래스별 시간순 70/30 분할을 사용한다. 센서 프레임은 정렬 후 순서로 짝지으므로 엄밀한 타임스탬프 동기화 검증은 별도다.</p><p>RF의 소규모 데이터·CPU 적합성은 현재 조건에 대한 설계 판단이다. SVM·GBM·CNN 대비 추론 시간과 성능이 우수하다는 동일 조건 벤치마크는 없다. Breiman 논문은 원천 알고리즘에 대한 이론적 대응이며 특정 논문 실험을 재현했다는 의미가 아니다.</p><p>[Sources]</p><p><a href="https://doi.org/10.1023/A:1010933404324" target="_blank" rel="noopener">Breiman (2001), Random Forests</a></p><p>[/Sources]</p></aside>
+    </section>
+
+      <section class="slide" id="slide-6" data-title="ToF · 대안과 정확도" aria-labelledby="title-6">
+      <p class="eyebrow">05 · 알고리즘 01 / 비교·검증</p>
+      <h2 id="title-6">ToF 97.9%는 단일 사람·단일 세션의 결과입니다</h2>
+      <p class="subtitle">현재 RF의 과거 실험 기록과, 다른 방법을 사용한 논문의 결과를 구분해 비교합니다.</p>
+      <div class="content tight"><table class="table-dense"><colgroup><col style="width:23%"><col style="width:39%"><col style="width:38%"></colgroup><thead><tr><th>방법</th><th>확인한 성능·조건</th><th>선택 또는 보류 이유</th></tr></thead><tbody><tr><td>현재 RF<br><span class="small muted">마주봄 과거 실험</span></td><td><strong class="blue">정확도 97.9%</strong> · 6자세<br>학습 2,320 / 평가 999프레임</td><td>초기 분류·서버 연결에 사용<br>다른 사람·날짜의 일반화는 미검증</td></tr><tr><td>고정 임계값 규칙</td><td>거리·점유 구역 수로 재실 판단<br>동일 조건 6자세 비교값 없음</td><td>설명은 쉽지만 자세·설치 변화 대응 제한<br>현재도 재실·안정화 보조에 사용</td></tr><tr><td>1D-CNN · TinyML<br><span class="small muted">Moghadar et al., 2025</span></td><td><strong>95.6%</strong> · 양자화 모델, 70/30 분할<br><strong>91.1%</strong> · 사람별 교차검증(LOSO)</td><td>15명, 출입구 활동 3종의 별도 연구<br>시간 패턴 학습 후보로 검토 가능</td></tr><tr><td>SVM / GBM</td><td>마주봄 동일 조건 비교 실험 없음</td><td>RF보다 낮다고 결론낼 근거 없음<br>같은 분할·특징으로 후속 비교</td></tr></tbody></table><div class="takeaway">논문 95.6%와 마주봄 97.9%는 과제·대상·분할이 달라 모델 우열로 비교할 수 없습니다.</div></div>
+      <footer class="foot"><span class="source">docs/ai_plan.html I1 · TOF/ml/train_posture.py · <a href="https://www.mdpi.com/2079-9292/14/17/3533" target="_blank" rel="noopener">Moghadar et al. (2025)</a></span><span class="page"></span></footer>
+      <aside class="notes"><p>97.9%는 기획 문서 I1의 기록이며 이번 발표 수정에서 재학습하지 않았다. 단일 사람·단일 세션의 인접 프레임은 유사성이 높으므로 독립적인 사람·환경에 대한 성능으로 해석할 수 없다. 증강 후 100% 기록은 대표 성능에서 제외했다.</p><p>TinyML 논문은 15명, enter/exit/approach-withdrawal 3종의 문턱 활동 분류다. 70/30 분할에서 부동소수점 96.2%, 양자화 95.6%; LOSO에서 각각 92.4%, 91.1%를 보고한다. 본문에는 실제 양자화 배포 모델의 결과를 제시했다. LOSO는 한 사람을 평가용으로 제외하며 반복하는 방식이다.</p><p>[Sources]</p><p><a href="https://www.mdpi.com/2079-9292/14/17/3533" target="_blank" rel="noopener">Moghadar et al. (2025), TinyML-Based Real-Time Doorway Activity Recognition with a Time-of-Flight Sensor</a></p><p>[/Sources]</p></aside>
+    </section>
+
+      <section class="slide" id="slide-7" data-title="침대 보정 · 논문 적용 범위" aria-labelledby="title-7">
+      <p class="eyebrow">06 · 알고리즘 02 / 설치 보정</p>
+      <h2 id="title-7">침대 영역은 반자동으로 확인하는 방향을 택했습니다</h2>
+      <p class="subtitle">Komagata et al. (2019), Semi-Automatic Calibration Method for a Bed-Monitoring System.</p>
+      <div class="content tight"><div class="cols"><div class="rule-top"><h3>논문은 어떻게 했는가</h3><ul><li>깊이 영상에서 바닥·침대 평면 추출</li><li>PCA·k-means++·경계 검출 활용</li><li>기하 정보로 설치 보정 지원</li></ul></div><div class="rule-top"><h3>마주봄에 반영한 범위</h3><ul><li>빈 침대 거리 기준을 저장</li><li>스캔 결과와 침대 영역을 미리보기</li><li>사용자가 확인·수정하는 절차 채택</li></ul></div></div><table class="table-dense"><colgroup><col style="width:25%"><col style="width:75%"></colgroup><thead><tr><th>다른 방법</th><th>선택 이유·현재 검증</th></tr></thead><tbody><tr><td>고정 ROI / 완전 자동 보정</td><td>고정 ROI는 설치마다 수정 필요 · 완전 자동 방식은 환경별 검증 필요</td></tr><tr><td>저장된 스캔 결과</td><td>유효점 30/34와 미리보기 확보 · 이 비율은 정확도가 아님</td></tr></tbody></table><div class="takeaway">반자동 보정의 원칙을 참고했습니다. 논문의 PCA·군집화 파이프라인을 그대로 구현한 상태는 아닙니다.</div></div>
+      <footer class="foot"><span class="source">TOF/ml/bed_scan_preview.html · bed_scan_result.json · /tof/calibrate · <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6832382/" target="_blank" rel="noopener">Komagata et al. (2019)</a></span><span class="page"></span></footer>
+      <aside class="notes"><p>현재 bed_scan_result.json의 n_inliers=30, n_total=34, width_cm=78.3, length_cm=91.2다. 미리보기는 ROI 길이 약 95cm를 참고하도록 한다. 이 값들은 저장된 스캔 결과로서 실제 치수의 오차율이나 정확도 평가를 뜻하지 않는다.</p><p>tof_server.py의 /tof/calibrate는 빈 침대 격자를 저장한다. 기획 문서의 /tof/bed_scan 계열 자동 보정 API는 현재 소스에 없어 복구·재연결이 필요하다. Komagata 논문의 PCA, k-means++, Canny 처리와 현재 코드의 동등성은 확인되지 않았으므로 직접 재현으로 쓰지 않았다.</p><p>[Sources]</p><p><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6832382/" target="_blank" rel="noopener">Komagata et al. (2019), Semi-Automatic Calibration Method for a Bed-Monitoring System Using Infrared Image Depth Sensors</a></p><p>[/Sources]</p></aside>
+    </section>
+
+      <section class="slide" id="slide-8" data-title="개인별 통계 · 선택 이유" aria-labelledby="title-8">
+      <p class="eyebrow">07 · 알고리즘 03 / 개인별 이상 판정</p>
+      <h2 id="title-8">집단의 고정 기준보다 개인의 평소 변화를 봅니다</h2>
+      <p class="subtitle">Roshan et al. (2025), Adaptive reference ranges: From A to Z — 개인별 참조 범위 연구.</p>
+      <div class="content tight" style="gap:13px; padding-top:20px"><div class="flow"><div class="step"><span class="num">누적</span><h3>개인의 유효 데이터</h3><p>속도·흔들림·멈춤 등<br>합계·제곱합·개수 저장</p></div><div class="step"><span class="num">기준</span><h3>평균과 표준편차</h3><p>평소 범위에 비해<br>현재 값이 얼마나 다른가</p></div><div class="step"><span class="num">점수</span><h3>표준화 편차 합산</h3><p>|현재−평균| / 표준편차<br>위험 단계로 변환</p></div></div><table class="table-dense"><colgroup><col style="width:27%"><col style="width:73%"></colgroup><thead><tr><th>대안</th><th>현재 방식 선택 이유</th></tr></thead><tbody><tr><td>집단 고정 임계값</td><td>사람마다 다른 기본 속도·행동 수준을 반영하기 어려움</td></tr><tr><td>혼합효과모형(LMM)</td><td>집단 정보·공변량을 반영하는 장점이 있으나 다수 대상의 데이터 필요</td></tr><tr><td>개인 통계 기반 판정</td><td>적은 개인 기록부터 설명 가능한 기준 구성 · 분산 최소값·준비 기간 처리</td></tr></tbody></table><div class="takeaway">개인화 원칙을 참고한 자체 규칙입니다. 마주봄의 이상 탐지 정확도는 미측정입니다.</div></div>
+      <footer class="foot"><span class="source">server/mmw_logic.py · tof_logic.py · <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12101663/" target="_blank" rel="noopener">Roshan et al. (2025)</a></span><span class="page"></span></footer>
+      <aside class="notes"><p>mmWave는 speed, speed_cv, sway, freeze_ratio, stride_length, stride_cv를 비교한다. sum/sumsq/n으로 개인 평균·분산을 누적하고 JSON baseline에 저장한다. MIN_SAMPLES=5, WARMUP_DAYS=14, 표준편차 바닥값이 있다. 급격한 height_drop은 별도 긴급 규칙이다.</p><p>Roshan 논문은 Z-score 계열과 LMM의 예측 참조 구간을 비교하며 특이도·민감도·모형 유연성의 상충을 논의한다. t 분포 기반 예측 구간 등 논문 상세 수식과 마주봄의 절대 z-score 합산은 같지 않다. 논문이 항상 Z-score를 최선으로 선정했다는 의미가 아니다. baseline 갱신에 악화 데이터가 섞이는 문제와 기준 스냅샷 보존은 후속 검증 대상이다.</p><p>[Sources]</p><p><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12101663/" target="_blank" rel="noopener">Roshan et al. (2025), Adaptive reference ranges: From A to Z</a></p><p>[/Sources]</p></aside>
+    </section>
+
+      <section class="slide" id="slide-9" data-title="mmWave · 보행 지표와 대안" aria-labelledby="title-9">
+      <p class="eyebrow">08 · 알고리즘 04 / 보행 특징 추출</p>
+      <h2 id="title-9">현재는 보행 특징을 추출해 개인 기준과 비교합니다</h2>
+      <p class="subtitle">레이더 논문은 보행 지표와 시간 모델의 근거를 제공하지만, 입력과 과제는 연구마다 다릅니다.</p>
+      <div class="content tight"><table class="table-dense"><colgroup><col style="width:27%"><col style="width:36%"><col style="width:37%"></colgroup><thead><tr><th>참고 논문·방법</th><th>논문에서 확인한 결과</th><th>마주봄 적용·선택 이유</th></tr></thead><tbody><tr><td>Siva et al. (2024)<br>레이더 보행 측정</td><td>보폭 측정 오차 <strong>4.5cm / 8.3%</strong><br>허약 고령자 35명 임상·21명 가정</td><td>속도·보폭을 관찰 지표로 채택<br>현재는 속도 FFT로 보행 주기 추정</td></tr><tr><td>Saho et al. (2022)<br>Micro-Doppler + SVM</td><td>과거 낙상군 구분 <strong>78.8%</strong><br>향후 낙상 발생 예측과는 다른 과제</td><td>낙상 결과 라벨을 확보한 뒤 비교 후보<br>현재는 개인별 변화 판정을 사용</td></tr><tr><td>Li et al. (2024)<br>CNN + BiLSTM</td><td>낙상 동작 분류 <strong>98.83%</strong><br>18–22세 97명, 별도 레이더 연구</td><td>스펙트로그램·동작 라벨이 필요<br>현재 점군 특징 경로에 바로 적용 불가</td></tr></tbody></table><p class="small muted">현재 출력: 속도 · 속도 변동 · 흔들림 · 멈춤 비율 · 보폭 · 보폭 변동</p><div class="takeaway">Siva의 Doppler 기반 측정법과 현재 FFT 구현은 다릅니다. 마주봄의 보폭 오차·낙상 정확도는 별도 검증해야 합니다.</div></div>
+      <footer class="foot"><span class="source">mmWave/send_mmw.py · server/mmw_logic.py · <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10891707/" target="_blank" rel="noopener">Siva et al. (2024)</a> · <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8839600/" target="_blank" rel="noopener">Saho et al. (2022)</a> · <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11359445/" target="_blank" rel="noopener">Li et al. (2024)</a></span><span class="page"></span></footer>
+      <aside class="notes"><p>Siva 연구는 점군 추적 및 Doppler torso profile을 활용한 걸음 길이 측정으로, 오차 4.5cm / 8.3%, ICC 0.91을 보고한다. 오차 8.3%를 정확도 91.7%로 바꾸지 않았다. 현재 _estimate_stride는 속도 시계열의 FFT로 cadence를 추정하는 프로젝트 구현이며 센서·측정법이 다르다.</p><p>Saho의 78.8%는 simulated micro-Doppler로 학습한 SVM을 실제 고령자 보행의 과거 낙상 여부 구분에 적용한 결과다. Li 연구는 97명 학생의 4,435개 표본, 80/10/10 분할, CL2440 레이더 스펙트로그램의 CNN-BiLSTM 분류다. 두 결과 모두 현재 IWR6843AOP의 치매환자 미래 낙상 예측 성능이 아니다.</p><p>[Sources]</p><p><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10891707/" target="_blank" rel="noopener">Siva et al. (2024), Automatic Radar-Based Step Length Measurement in the Home for Older Adults Living with Frailty</a></p><p><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8839600/" target="_blank" rel="noopener">Saho et al. (2022), Experimental Verification of Micro-Doppler Radar Measurements of Fall-Risk-Related Gait Differences for Community-Dwelling Elderly Adults</a></p><p><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11359445/" target="_blank" rel="noopener">Li et al. (2024), Doppler Radar Sensor-Based Fall Detection Using a Convolutional Bidirectional Long Short-Term Memory Model</a></p><p>[/Sources]</p></aside>
+    </section>
+
+      <section class="slide" id="slide-10" data-title="mmWave · LSTM 비교 실험" aria-labelledby="title-10">
+      <p class="eyebrow">09 · 알고리즘 05 / 침상이탈 시계열 실험</p>
+      <h2 id="title-10">시간 순서를 보존한 LSTM이 이탈을 더 많이 잡았습니다</h2>
+      <p class="subtitle">Wang et al. (2025), mPCT-LSTM의 공간 → 시간 처리 흐름을 참고했습니다.</p>
+      <div class="content tight" style="gap:13px; padding-top:20px"><div class="cols"><div class="rule-top"><h3>논문 → 현재 구현</h3><p class="body-text gap12">논문: 점군 Transformer → LSTM<br>현재: 프레임별 공간 특징 5개 → LSTM</p><p class="small muted gap10">30프레임 시계열 사용 · 학습형 공간 인코더는 보류</p></div><div class="rule-top"><h3>논문 성능의 범위</h3><p class="body-text gap12"><strong>평균 인식률 97.26%</strong><br>공개 데이터셋 3개의 일반 행동 인식</p><p class="small muted gap10">마주봄의 침상이탈 예측 성능과 별도</p></div></div><table class="table-dense"><colgroup><col style="width:40%"><col style="width:20%"><col style="width:20%"><col style="width:20%"></colgroup><thead><tr><th>마주봄 과거 실험</th><th>정확도</th><th>이탈 재현율</th><th>F1 (0–1)</th></tr></thead><tbody><tr><td>RF · 시간 정보를 요약</td><td>67%</td><td>7%</td><td>0.13</td></tr><tr><td>LSTM · 시간 순서 유지</td><td>65%</td><td><strong class="blue">36%</strong></td><td><strong class="blue">0.42</strong></td></tr></tbody></table><p class="small muted">1명·1세션 / 569개 시퀀스 / 이탈 17건 / 미래의 빈 상태를 대리 정답으로 사용한 초기 실험</p><div class="takeaway">이탈 재현율을 근거로 LSTM 개발을 이어갑니다. 현재 36%에서 추가 개선이 필요합니다.</div></div>
+      <footer class="foot"><span class="source">mmWave/exit_seq/HANDOFF.md · analyze_timeseries.py · mPCT-LSTM_검증_전략.md · <a href="https://www.sciencedirect.com/science/article/pii/S1051200425002854" target="_blank" rel="noopener">Wang et al. (2025)</a></span><span class="page"></span></footer>
+      <aside class="notes"><p>현재 analyze_timeseries.py는 프레임별 median x/y/z, z spread, 점 개수의 5개 특징과 LSTM(input=5, hidden=24)을 사용한다. 점군 Transformer/PCT는 현재 구현하지 않았다. 30프레임 입력, 시간순 70/30 분할, 현재 occupied이며 향후 K=6개 기록 안에 empty가 나타나는지를 대리 라벨로 만든다. 실제 낙상 사건의 임상 정답이 아니다.</p><p>정확도 67/65%, 재현율 7/36%, F1 0.13/0.42는 HANDOFF.md의 과거 기록이다. mPCT-LSTM은 공개 MMActivity, Pantomime, mHomeGes 행동 인식이며 평균 97.26%, 0.09 GFLOPS를 보고한다. 논문 성능으로 이탈 예측의 성능을 추정하지 않았다.</p><p>별도 AUGMENTATION_NOTES.md의 5시드 실험: 무증강 F1 0.396±0.124, 회전+스케일 0.322±0.108, 기하 안전 증강(지터+시간 왜곡) 0.449±0.112. 평가 표본 28개로 변동이 커 확정적인 향상으로 볼 수 없다. 이 증강 실험의 평가 구성은 위 단일 비교 실험과 구분한다.</p><p>[Sources]</p><p><a href="https://www.sciencedirect.com/science/article/pii/S1051200425002854" target="_blank" rel="noopener">Wang et al. (2025), mPCT-LSTM: A lightweight human activity recognition model for 3D point clouds in millimeter-wave radar</a></p><p>[/Sources]</p></aside>
+    </section>
+
+      <section class="slide" id="slide-11" data-title="LSTM-AE · 이상 탐지" aria-labelledby="title-11">
+      <p class="eyebrow">10 · 알고리즘 06 / 시계열 이상 탐지</p>
+      <h2 id="title-11">정상 패턴의 재구성 오차로 이상을 찾는 모델도 있습니다</h2>
+      <p class="subtitle">Malhotra et al. (2016), LSTM-based Encoder-Decoder for Multi-sensor Anomaly Detection과 구조를 대조했습니다.</p>
+      <div class="content tight" style="gap:13px; padding-top:20px"><div class="flow steps4"><div class="step"><span class="num">1</span><h3>시계열 특징</h3><p>위치·퍼짐·점유 등<br>12개 특징 × 20프레임</p></div><div class="step"><span class="num">2</span><h3>LSTM 인코더</h3><p>반복되는 시간 패턴을<br>작은 표현으로 압축</p></div><div class="step"><span class="num">3</span><h3>LSTM 디코더</h3><p>입력 시퀀스를 복원<br>MSE 오차 계산</p></div><div class="step"><span class="num">4</span><h3>이상 후보 판정</h3><p>학습 오차의<br>99백분위와 비교</p></div></div><div class="cols"><div class="rule-top"><h3>왜 이 방법을 검토했는가</h3><p class="body-text gap12">희귀한 이상 라벨이 부족할 때<br>평소의 시간 패턴부터 학습 가능</p><p class="small muted gap10">단일 값 z-score보다 시간적 조합을 표현<br>대안: Isolation Forest·One-Class SVM</p></div><div class="rule-top"><h3>현재 한계</h3><p class="body-text gap12">빈 침대 중심 학습은 사람 자체를<br>이상으로 보는 오탐을 만들 수 있음</p><p class="small muted gap10">모델 파일은 존재 · 현재 화면 판정의 참고값<br>정답 라벨 기반 정확도·재현율은 미측정</p></div></div><div class="takeaway">99백분위는 임계값을 고르는 기준입니다. 정확도 99%를 의미하지 않습니다.</div></div>
+      <footer class="foot"><span class="source">TOF/ml/lstm_anomaly.py · lstm_ae.pt · server/tof_server.py · <a href="https://arxiv.org/abs/1607.00148" target="_blank" rel="noopener">Malhotra et al. (2016)</a></span><span class="page"></span></footer>
+      <aside class="notes"><p>Malhotra 논문은 정상 시계열을 encoder-decoder로 재구성하고 오차로 이상을 감지한다. 이번 발표에서 구조적 비교 문헌으로 보완했으며 해당 논문을 개발 당시 직접 재현했다는 기록은 확인하지 않았다. 현재 구현은 12개 특징, 기본 window=20, hidden=48, MSE, 학습 corpus 오차의 99백분위 임계값으로 논문 세부 확률 모델과 동일하지 않다.</p><p>학습 코드는 겹치는 윈도우를 만든 후 무작위 85/15 분할을 하므로 인접 구간 중복에 의한 검증 누출 가능성이 있다. 사람·날짜 단위 분할 후 윈도우를 만들어 재평가해야 한다. 현재 /tof/anomaly의 화면 판정은 자세 기반 규칙이며 LSTM-AE는 참고 필드로 남아 있다. 대안과의 동일 조건 비교는 수행 기록이 없다.</p><p>[Sources]</p><p><a href="https://arxiv.org/abs/1607.00148" target="_blank" rel="noopener">Malhotra et al. (2016), LSTM-based Encoder-Decoder for Multi-sensor Anomaly Detection</a></p><p>[/Sources]</p></aside>
+    </section>
+
+      <section class="slide" id="slide-12" data-title="FSM·센서 융합의 근거" aria-labelledby="title-12">
+      <p class="eyebrow">11 · 알고리즘 07 / 침상 행동과 센서 결합</p>
+      <h2 id="title-12">자세의 전환과 여러 센서의 판정을 함께 봅니다</h2>
+      <p class="subtitle">영역·상태 전이와 판정 단계 결합은 참고했지만, 논문과 현재의 센서·규칙은 다릅니다.</p>
+      <div class="content tight"><div class="cols"><div class="rule-top"><h3>eNightLog · Cheung et al. (2022)</h3><p class="small muted gap10">ToF + UWB의 영역·상태 기반 침상이탈 감지</p><p class="body-text gap12">논문 정확도 <strong>99.8%</strong><br>26명·17개 침대·3개월 관찰</p><p class="body-text gap12"><strong>적용:</strong> 누움 → 앉음 → 이탈의 상태 관리<br>개인별 이탈 지속시간 비교로 확장</p><p class="small muted gap10">현재 완료된 이탈 평가는 존재<br>진행 중 평가·행동 API 연결은 보완 필요</p></div><div class="rule-top"><h3>Rehouma &amp; Boukadoum (2025)</h3><p class="small muted gap10">IMU와 영상 자세 모델의 늦은 융합(late fusion)</p><p class="body-text gap12">논문 <strong>F1 0.973</strong><br>오탐률 3.6% · 다른 센서의 실험</p><p class="body-text gap12"><strong>적용:</strong> 센서별 판정 이후 결합하는 원칙<br>현재 종합 점수는 사용 가능한 위험값의 최댓값</p><p class="small muted gap10">논문의 학습된 결합 모델과는 다름<br>별도 융합 모듈은 현재 파일 부재</p></div></div><div class="takeaway">FSM은 상태 전이를 설명하기 쉽고, 판정 후 결합은 서로 다른 센서를 연결하기 쉽습니다. 마주봄의 오탐 감소 효과는 미측정입니다.</div></div>
+      <footer class="foot"><span class="source">server/behavior_fsm.py · integrated_analysis.py · ai_plan.html · <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8872318/" target="_blank" rel="noopener">Cheung et al. (2022)</a> · <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12526565/" target="_blank" rel="noopener">Rehouma & Boukadoum (2025)</a></span><span class="page"></span></footer>
+      <aside class="notes"><p>eNightLog의 99.8% 정확도, 100% 민감도, 99.6% 특이도는 2022년 3개월 현장 연구의 비보조 침상이탈 감지 결과다. Kinect v2 ToF와 UWB impulse radar를 사용하며 VL53L5CX/IWR6843과 다르다. 기획 문서의 이전 eNightLog 논문 연도와 이 수치가 섞이지 않도록 원문에 맞춰 2022년으로 표기했다.</p><p>Rehouma 연구는 IMU LSTM-AE와 RGB 자세·attention의 결합이다. F1 97.3%, 오탐률 3.6%이며 IMU 11.3%, 영상 8.9%와 비교한다. 현재 max 위험 결합은 보수적인 자체 규칙으로 오히려 오탐이 늘 수도 있다. 논문의 오탐 감소를 현재 성능으로 제시하지 않았다.</p><p>대안으로 원시 입력을 합치는 early fusion은 시간 정렬·동시 수집 데이터가 필요하다. 현재 두 센서의 독립 서버 구조에서는 판정 이후 결합이 연결에 용이하다는 설계 판단이다. behavior_fsm.py에는 evaluate_completed만 있고 evaluate_ongoing 및 /tof/behavior는 현재 없다.</p><p>[Sources]</p><p><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8872318/" target="_blank" rel="noopener">Cheung et al. (2022), A Night-Time Monitoring System (eNightLog) to Prevent Elderly Wandering in Hostels: A Three-Month Field Study</a></p><p><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12526565/" target="_blank" rel="noopener">Rehouma & Boukadoum (2025), Fall Detection by Deep Learning-Based Bimodal Movement and Pose Sensing with Late Fusion</a></p><p>[/Sources]</p></aside>
+    </section>
+
+      <section class="slide" id="slide-13" data-title="유지보수 AI · 과거 설계" aria-labelledby="title-13">
+      <p class="eyebrow">12 · 알고리즘 08 / 기준 변화 감시</p>
+      <h2 id="title-13">장기 변화와 오경보를 반영하는 유지보수도 설계했습니다</h2>
+      <p class="subtitle">개인화·적응형 모니터링 원칙을 참고한 통계 규칙입니다. 현재 관련 파일은 복구가 필요합니다.</p>
+      <div class="content tight"><table class="table-dense"><colgroup><col style="width:24%"><col style="width:39%"><col style="width:37%"></colgroup><thead><tr><th>감시 항목</th><th>기획 문서에 남은 방법</th><th>다른 방식 대신 고려한 이유</th></tr></thead><tbody><tr><td>평소 기준의 변화</td><td>최근 평균과 baseline 차이를<br>평균의 표준오차로 나눠 감시</td><td>단일 순간값보다 지속적인 변화 확인<br>설명 가능한 통계량 사용</td></tr><tr><td>분류 확신도 저하</td><td>평균 확신도의 하락 추세 확인</td><td>매번 모델을 재학습하기 전에<br>설치·입력 품질 변화를 점검</td></tr><tr><td>반복되는 오경보</td><td>피드백 이력으로 임계값 조정 제안<br>변경 폭 제한·담당자 확인 설계</td><td>무조건 자동 변경하면 실제 악화를<br>정상으로 흡수할 수 있음</td></tr></tbody></table><p class="small muted">참고: Shusterman &amp; London, Personalized ECG Monitoring and Adaptive Machine Learning — 개인화 경보와 순차적 적응 원칙</p><div class="takeaway">과거 기록의 통계값은 작동 예시입니다. 유지보수 알고리즘의 정확도나 오경보 감소율은 확보하지 못했습니다.</div></div>
+      <footer class="foot"><span class="source">docs/ai_plan.html · server/maintenance_ai.py 현재 부재 · <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10843583/" target="_blank" rel="noopener">Shusterman & London</a></span><span class="page"></span></footer>
+      <aside class="notes"><p>기획 문서의 유지보수 로직은 z=(최근 평균−기준 평균)/(표준편차/√n), 임계값 2.5, 확신도 하락 0.15, 임계값 조정 폭 최대 30% 등이다. 정상 z=0.37, 변화 z=10.66은 특정 예시이며 분류 정확도가 아니다. 이 규칙의 재현 가능한 현행 파일은 현재 없다.</p><p>Shusterman & London의 논문은 personalized ECG monitoring에 대한 비기술적 리뷰로, 개인별 경보 임계값·이상 탐지·순차 적응을 논의한다. ECG 알고리즘이나 검증 성능을 ToF/mmWave에 그대로 이전한 것이 아니다.</p><p>[Sources]</p><p><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10843583/" target="_blank" rel="noopener">Shusterman & London, Personalized ECG Monitoring and Adaptive Machine Learning</a></p><p>[/Sources]</p></aside>
+    </section>
+
+      <section class="slide" id="slide-14" data-title="SQL과 데이터 보존" aria-labelledby="title-14">
+        <p class="eyebrow">13 · 데이터 저장</p>
+        <h2 id="title-14">정확한 기록은 SQL에, 검색할 지식은 벡터 DB에</h2>
+        <p class="subtitle">센서 숫자와 환자 기록은 정확히 조회하고, 논문·과거 분석은 의미가 비슷한 내용을 찾습니다.</p>
+        <div class="content tight">
+          <table class="table-dense"><colgroup><col style="width:25%"><col style="width:37%"><col></colgroup><thead><tr><th>보관 대상</th><th>저장 내용</th><th>사용 목적</th></tr></thead><tbody>
+            <tr><td>센서 원시 기록<br><span class="small muted">SQLite</span></td><td>ToF 거리값 / mmWave 보행 지표<br><span class="small muted">수신 값과 일부 서버 계산값</span></td><td>관측 이력 보존·학습 재료 확보</td></tr>
+            <tr><td>정제·이벤트·기준 이력<br><span class="small muted">SQLite 구조</span></td><td>품질 진단, 판정 방법, 원본 행 참조<br>이벤트와 baseline 스냅샷</td><td>어떤 데이터로 판단했는지 추적</td></tr>
+            <tr><td>환자·AI 분석<br><span class="small muted">SQLite</span></td><td>프로필·위험인자·투약<br>리포트·위험점수·근거 ID</td><td>대상별 정확한 조회·직전 분석 비교</td></tr>
+            <tr><td>논문·과거 분석 텍스트<br><span class="small muted">LanceDB</span></td><td>본문 조각 + 임베딩 + 메타데이터<br><span class="small muted">논문 / 분석 이력을 별도 테이블로 저장</span></td><td>관련 문헌·유사한 과거 패턴 검색</td></tr>
+          </tbody></table>
+          <div class="takeaway">정제 기록에는 판정 정보와 원본 참조를 남깁니다. 원시값 전체를 다시 복제하지 않습니다.</div>
+        </div>
+        <footer class="foot"><span class="source">근거: <a href="server/db.py">server/db.py</a> · data_integrity.py · paper_kb.py · analysis_kb.py</span><span class="page"></span></footer>
+        <aside class="notes"><p>원시 기록은 tof_readings와 mmw_readings, 진단은 sensor_clean_data, 이벤트는 activity_log, 기준 스냅샷은 baseline_history, 분석은 ai_analysis에 대응한다. mmWave SQL 기록은 원시 레이더 점군 전체가 아니라 파생된 보행 특징과 일부 판정값이다.</p><p>현재 ToF/mmWave 수신 경로는 일관성 불일치가 발견된 경우 진단·이벤트 기록을 추가한다. 이는 모든 프레임의 정제본 저장이나 자동 이상치 제거를 의미하지 않는다. ToF 라벨 전달과 baseline_history 자동 기록의 연결도 추가 확인이 필요하다.</p></aside>
+      </section>
+
+      <section class="slide" id="slide-15" data-title="논문을 청크로 만드는 과정" aria-labelledby="title-15">
+        <p class="eyebrow">14 · Vector DB / 입력 자료</p>
+        <h2 id="title-15">논문을 의미 단위로 나누고 출처를 붙였습니다</h2>
+        <p class="subtitle">청크(chunk)는 한 번에 검색할 텍스트 조각입니다. 자료 유형에 따라 나누는 방식을 달리했습니다.</p>
+        <div class="content">
+          <div class="cols">
+            <div class="rule-top"><h3>기술·방법론 논문 19편</h3><p class="small muted" style="margin-top:7px">정리해 둔 논문 HTML 페이지를 읽음</p><div class="ledger" style="margin-top:17px"><div class="label">식별</div><div class="text">제목·저자·연도</div><div class="label">내용</div><div class="text">한글 초록 · 요약 문단별 분리</div><div class="label">활용</div><div class="text">프로젝트에 사용한 부분을 필드별 분리</div></div></div>
+            <div class="rule-top"><h3>경량 등록 논문 54편</h3><p class="small muted" style="margin-top:7px">코드에 등록한 서지 정보·초록·핵심사실을 읽음</p><div class="ledger" style="margin-top:17px"><div class="label">청크 1</div><div class="text">논문 식별 정보</div><div class="label">청크 2</div><div class="text">한글 초록 + 핵심사실</div><div class="label">방식</div><div class="text">치매 임상·행동 45편 + 2026-09 하드웨어·AI 재검토 9편</div></div></div>
+          </div>
+          <div class="metrics"><div class="metric"><div class="value">73편</div><div class="label">두 입력 경로의 논문 합계</div></div><div class="metric"><div class="value">631개</div><div class="label">실제 저장된 텍스트 청크</div></div><div class="metric"><div class="value">출처 유지</div><div class="label">논문 ID · 구간 · DOI · 원문 URL</div></div></div>
+        </div>
+        <footer class="foot"><span class="source">근거: <a href="server/paper_kb.py">paper_kb.py</a> · docs/papers/paper-01~19.html · LanceDB paper_chunks 직접 조회</span><span class="page"></span></footer>
+        <aside class="notes"><p>extract_chunks_from_paper는 identity, abstract_ko, summary, used_part를 만든다. 문서의 HTML 구조에 맞춘 파서이며 고정 글자 수로 자르는 방식은 아니다. PDF 전체를 직접 수집·임베딩하는 코드로 표현하지 않았다.</p><p>로컬 저장 분포는 identity 73개, abstract_ko 73개, summary 108개, used_part 377개로 합계 631개다. 기술 논문 19편의 523개 청크와 경량 등록 54편의 108개 청크에 해당한다(45편은 치매 임상, 9편은 2026-09 하드웨어·AI 알고리즘 재검토분 — latest-01~09). source_url·doi 등은 출처 필드로 보관되지만 모든 레코드의 서지 메타데이터가 완전하다는 의미는 아니다.</p></aside>
+      </section>
+
+      <section class="slide" id="slide-16" data-title="임베딩과 벡터 DB 적재" aria-labelledby="title-16">
+        <p class="eyebrow">15 · Vector DB / 적재 과정</p>
+        <h2 id="title-16">새 청크만 임베딩해 LanceDB에 추가합니다</h2>
+        <p class="subtitle">텍스트의 의미를 숫자 벡터로 바꾸고, 본문·출처 정보와 함께 한 행으로 저장합니다.</p>
+        <div class="content">
+          <div class="flow steps4"><div class="step"><span class="num">1 · 추출</span><h3>청크 목록 생성</h3><p>논문별 본문 조각과<br>식별·출처 정보 준비</p></div><div class="step"><span class="num">2 · 중복 확인</span><h3>기존 ID 비교</h3><p>저장된 chunk_id는<br>다시 임베딩하지 않음</p></div><div class="step"><span class="num">3 · 임베딩</span><h3>OpenAI API</h3><p>text-embedding-3-small<br>현재 저장 벡터 1,536차원</p></div><div class="step"><span class="num">4 · 저장</span><h3>LanceDB에 추가</h3><p>paper_chunks 테이블<br>로컬 폴더에 보관</p></div></div>
+          <div class="cols wide-left">
+            <div class="record"><div class="record-row"><span class="key">본문</span><span>검색 대상 텍스트 <span class="mono">original_text</span></span></div><div class="record-row"><span class="key">벡터</span><span>텍스트의 의미를 비교할 숫자 배열</span></div><div class="record-row"><span class="key">메타데이터</span><span>논문 ID, 청크 ID, 제목, 구간, DOI, URL</span></div></div>
+            <div class="rule-top"><h3>적재 방식의 특징</h3><ul class="small"><li>별도 DB 서버 없이 로컬 LanceDB 사용</li><li>키·네트워크 오류는 실패로 반환</li><li>기존 JSON 벡터를 재사용하는 이전 경로도 구현</li></ul></div>
+          </div>
+          <div class="takeaway">숫자 벡터와 원문을 함께 저장했기 때문에, 검색한 이유를 실제 문장과 출처로 되짚을 수 있습니다.</div>
+        </div>
+        <footer class="foot"><span class="source">근거: paper_kb.py의 build_index · embed_texts · _to_lance_record / server/lancedb_store</span><span class="page"></span></footer>
+        <aside class="notes"><p>기본 모델은 코드의 EMBEDDING_MODEL 설정을 기준으로 적었다. 저장된 두 테이블의 벡터 길이는 각각 1,536이다. build_index(force=False)는 chunk_id가 없는 항목을 선별해 임베딩 후 create_table 또는 add를 호출한다. 기존 ID의 본문 수정까지 감지하는 내용 해시·버전 정책은 현재 구현되지 않았다.</p><p>과거 JSON 임베딩이 있고 LanceDB 테이블이 없으면 _migrate_legacy_json_if_needed가 벡터를 재사용한다. 현재 레거시 JSON은 없어 새로 마이그레이션을 수행한 것은 아니다. LanceDB의 근사검색 기능 일반론과 별도로, 현재 코드에서 명시적인 ANN 인덱스 생성은 확인되지 않았다.</p></aside>
+      </section>
+
+      <section class="slide" id="slide-17" data-title="RAG · 선택 이유와 검증" aria-labelledby="title-17">
+      <p class="eyebrow">16 · 알고리즘 09 / 검색증강생성</p>
+      <h2 id="title-17">검색한 근거를 함께 주는 RAG 구조를 선택했습니다</h2>
+      <p class="subtitle">Huang et al., A Survey on Hallucination in Large Language Models — 사실과 근거에 연결하는 설계 원칙을 참고했습니다.</p>
+      <div class="content tight"><table class="table-dense"><colgroup><col style="width:23%"><col style="width:39%"><col style="width:38%"></colgroup><thead><tr><th>대안</th><th>현재 방식과 비교</th><th>선택 판단</th></tr></thead><tbody><tr><td>LLM 단독 답변</td><td>모델의 기존 지식으로 서술<br>현재 환자 기록·근거 추적이 어려움</td><td>SQL 사실과 검색한 논문을<br>입력에 함께 제공</td></tr><tr><td>키워드 검색(BM25)</td><td>정확한 용어 일치에 강점<br>다른 표현의 의미 대응은 별도 처리 필요</td><td>현재는 임베딩 + 코사인 유사도<br>BM25·결합 검색과의 비교는 후속</td></tr><tr><td>파인튜닝</td><td>별도 학습 예시와 평가셋 필요<br>새 문헌 반영을 위한 관리 필요</td><td>현재는 문헌 DB 갱신 + 프롬프트로 구성<br>리포트 모델을 별도 학습하지 않음</td></tr><tr><td>현재 Vector RAG</td><td>로컬 LanceDB + 1,536차원 임베딩<br>원문·DOI·URL을 함께 반환</td><td>근거를 다시 조회할 수 있는 구조 확보<br>검색 정확도·환각 감소율은 미측정</td></tr></tbody></table><div class="takeaway">현재 임베딩은 text-embedding-3-small입니다. 모델 간 정확도 비교는 미실시했습니다.</div></div>
+      <footer class="foot"><span class="source">server/paper_kb.py · ai_agent.py · ai_report.py · <a href="https://arxiv.org/abs/2311.05232" target="_blank" rel="noopener">Huang et al.</a></span><span class="page"></span></footer>
+      <aside class="notes"><p>RAG는 모델 파라미터 재학습 없이 검색된 외부 정보를 생성 입력에 제공하는 방식이다. 현재 논문 DB는 수작업으로 정리한 문헌의 HTML·코드 요약을 임베딩하며 PDF 전체 원문을 자동 수집하는 시스템은 아니다. SQL은 환자 사실 조회, Vector는 문헌 의미 검색으로 역할이 나뉜다. 현재 BM25 점수와 벡터 점수의 결합은 없다.</p><p>Huang 서베이는 검색을 포함한 grounding 접근과 환각 원인·완화 방안을 정리한다. 검색 누락·오검색·생성 오류가 남을 수 있으므로 환각 제거 또는 정확도 보장을 주장하지 않았다. 검색 정답셋의 Recall@5, 근거 적합성, 생성 문장의 사실 일치율을 측정할 예정이다. 구체적인 페르소나 문장은 프로젝트에서 작성했다.</p><p>[Sources]</p><p><a href="https://arxiv.org/abs/2311.05232" target="_blank" rel="noopener">Huang et al., A Survey on Hallucination in Large Language Models: Principles, Taxonomy, Challenges, and Open Questions (arXiv 2023)</a></p><p>[/Sources]</p></aside>
+    </section>
+
+      <section class="slide" id="slide-18" data-title="AI Agent의 조사 흐름" aria-labelledby="title-18">
+        <p class="eyebrow">17 · 검색·조사</p>
+        <h2 id="title-18">AI가 검색할 질문을 만들고 근거를 모읍니다</h2>
+        <p class="subtitle">질의도 같은 모델로 임베딩한 뒤, 코사인 유사도로 가까운 논문 청크를 찾습니다.</p>
+        <div class="content tight">
+          <div class="flow steps4"><div class="step"><span class="num">1</span><h3>현재 상태 수집</h3><p>SQL 환자 정보·투약<br>최근 활동 + 센서 판정</p></div><div class="step"><span class="num">2</span><h3>질의 자동 생성</h3><p>현재 상태에서<br>확인할 연구 질문 생성</p></div><div class="step"><span class="num">3</span><h3>벡터 검색</h3><p>질의 임베딩 → 유사도<br>상위 청크 선택</p></div><div class="step"><span class="num">4</span><h3>근거 충분성 판단</h3><p>부족하면 추가 질문<br>기본 최대 2라운드</p></div></div>
+          <div class="cols">
+            <div class="rule-top"><h3>검색 예시</h3><p class="body-text" style="margin-top:12px">“보행속도 감소와 낙상 위험의 관계”</p><p class="small muted" style="margin-top:12px">관련 청크의 본문·유사도·논문 제목·출처를 반환합니다.</p></div>
+            <div class="rule-top"><h3>모은 결과의 처리</h3><ul><li>같은 청크는 ID로 중복 제거</li><li>근거가 부족하면 부족한 상태를 유지</li><li>검색 결과와 SQL 기록을 분석 단계에 전달</li></ul></div>
+          </div>
+          <div class="takeaway">Agent는 질문과 근거를 모읍니다. 위험점수 계산과 최종 리포트 작성은 다음 단계가 맡습니다.</div>
+        </div>
+        <footer class="foot"><span class="source">근거: <a href="server/ai_agent.py">ai_agent.py</a> · paper_kb.search / GET /kb/search · /agent/investigate</span><span class="page"></span></footer>
+        <aside class="notes"><p>gather_patient_state → generate_queries → paper_kb.search → judge_sufficiency 순으로 조사한다. 기본 max_rounds=2, 라운드당 질의 최대 3개, 검색당 top_k=5다. 유사도는 1 - cosine distance로 변환한다. 예시 질의는 paper_kb.py 자체 실행 예시에 있는 문구이며, 이번 작업에서 새 검색을 실행한 결과를 보여주는 것은 아니다.</p><p>여기서 SQL+Vector 결합은 환자 정보를 SQL로 읽고, 관련 논문을 의미 검색하는 방식이다. 키워드 검색과 벡터 검색 점수를 합치는 검색 엔진 구현을 뜻하지 않는다. 라이브 조회가 실패하면 해당 값은 비어 있고 오류 정보가 남는다.</p></aside>
+      </section>
+
+      <section class="slide" id="slide-19" data-title="조사 Agent · 실제 페르소나" aria-labelledby="title-19">
+      <p class="eyebrow">18 · 페르소나 01·02 / 질의 생성과 충분성 판단</p>
+      <h2 id="title-19">검색할 질문을 만드는 역할과 근거 검토 역할을 나눴습니다</h2>
+      <p class="subtitle">아래는 server/ai_agent.py에 저장된 실제 시스템 프롬프트의 발췌입니다.</p>
+      <div class="content tight"><div class="cols"><div class="rule-top"><h3>① 환자 상태를 읽는 조사 보조원</h3><blockquote class="prompt">당신은 치매환자 낙상예측시스템의 조사 보조원입니다.</blockquote><blockquote class="prompt">절대 이 데이터에 없는 사실을 지어내지 말고, 오직 &#x27;무엇을 검색해야 하는가&#x27;만 판단하세요.</blockquote><p class="small gap12"><strong>작성한 행동 규칙</strong><br>센서·위험인자·투약을 근거로 질의 생성<br>진정제·향정신성 약물이 있으면 관련 질의 포함</p><p class="small muted gap10">출력: 판단 이유 + 검색 질의 목록</p></div><div class="rule-top"><h3>② 조사의 충분성을 검토하는 보조원</h3><blockquote class="prompt">당신은 조사가 충분한지 판단하는 보조원입니다.</blockquote><blockquote class="prompt">근거를 새로 지어내지 말고 주어진 것만 근거로 판단하세요.</blockquote><p class="small gap12"><strong>작성한 행동 규칙</strong><br>현재 확보한 문헌으로 설명 가능한지 판단<br>부족하면 추가 질의를 만들고 최대 2회 조사</p><p class="small muted gap10">출력: 충분 여부 + 판단 이유 + 추가 질의</p></div></div><div class="takeaway">페르소나는 직접 작성했습니다. 검색 질문 생성과 근거 검토에 역할을 한정했습니다.</div></div>
+      <footer class="foot"><span class="source">server/ai_agent.py · QUERY_GEN_SYSTEM_PROMPT · SUFFICIENCY_SYSTEM_PROMPT · <a href="https://arxiv.org/abs/2311.05232" target="_blank" rel="noopener">Huang et al.</a></span><span class="page"></span></footer>
+      <aside class="notes"><p>두 프롬프트는 Python 문자열 상수다. 별도의 사람이나 독립적으로 학습된 모델이 아니라 역할별 시스템 프롬프트로 같은 호출 함수를 사용하는 구성이다. 기본 모델은 gpt-4o-mini이며 환경변수로 변경 가능하다.</p><p><strong>질의 생성 프롬프트 전체</strong></p><blockquote class="prompt">당신은 치매환자 낙상예측시스템의 조사 보조원입니다. 아래 JSON은 한 환자의 현재 센서 상태·위험인자·투약 요약입니다. 이 상태를 근거로, 관련 연구 문헌에서 무엇을 더 확인해야 하는지 판단해 자연어 검색 질의를 만드세요. 절대 이 데이터에 없는 사실을 지어내지 말고, 오직 &#x27;무엇을 검색해야 하는가&#x27;만 판단하세요. 환자가 진정제·향정신성 약물(예: 트라조돈, 벤조디아제핀 계열 등)을 복용 중이라면, 그 약물과 낙상·섬망·다제병용 위험의 관계를 확인하는 질의를 최소 1개 반드시 포함하세요 — 이는 통합분석 리포트의 &#x27;투약 조정 제안&#x27; 항목의 근거로 쓰입니다. 반드시 아래 JSON 스키마로만 답하세요(다른 텍스트 금지): {&quot;reasoning&quot;: &quot;판단 근거 한두 문장&quot;, &quot;queries&quot;: [&quot;검색질의1&quot;, &quot;검색질의2&quot;, ...]}</blockquote><p><strong>충분성 판단 프롬프트 전체</strong></p><blockquote class="prompt">당신은 조사가 충분한지 판단하는 보조원입니다. 아래에는 환자 상태와, 지금까지 검색된 논문 근거들이 주어집니다. 이 근거들이 환자의 현재 위험 상태를 설명하는 데 충분한지 판단하세요. 근거를 새로 지어내지 말고 주어진 것만 근거로 판단하세요. 반드시 아래 JSON 스키마로만 답하세요: {&quot;sufficient&quot;: true/false, &quot;reasoning&quot;: &quot;판단 근거&quot;, &quot;additional_queries&quot;: [&quot;부족하면 추가로 검색할 질의&quot;, ...]}</blockquote><p>[Sources]</p><p><a href="https://arxiv.org/abs/2311.05232" target="_blank" rel="noopener">Huang et al., A Survey on Hallucination in Large Language Models: Principles, Taxonomy, Challenges, and Open Questions (arXiv 2023)</a></p><p>[/Sources]</p></aside>
+    </section>
+
+      <section class="slide" id="slide-20" data-title="검증용 환자 페르소나" aria-labelledby="title-20">
+      <p class="eyebrow">19 · 검증 사례 / 입력과 조사 결과</p>
+      <h2 id="title-20">테스트 환자의 위험인자와 투약이 검색 질문에 반영됐습니다</h2>
+      <p class="subtitle">기획 문서에 기록된 101호 환자 페르소나 조사 사례입니다. 실제 임상 유효성 평가와 구분합니다.</p>
+      <div class="content tight" style="gap:13px; padding-top:20px"><div class="flow"><div class="step"><span class="num">입력 페르소나</span><h3>101호 테스트 환자</h3><p>중등도 알츠하이머병<br>트라조돈 복용<br>과거 낙상 이력</p></div><div class="step"><span class="num">생성된 질문 · 과거 기록</span><h3>환자 조건에 맞춘 검색</h3><p>알츠하이머병과 낙상 위험<br>트라조돈 복용과<br>낙상 위험의 관계</p></div><div class="step"><span class="num">당시 조사 결과</span><h3>추가 조사 후 부족 판정</h3><p>1차 검색 → 2차 재검색<br>최종 sufficient: false<br>관련 임상 문헌 부족을 표시</p></div></div><div class="cols"><div class="rule-top"><h3>이 사례에서 확인한 동작</h3><p class="body-text gap12">환자 기록 → 질의 생성 → 반복 검색<br>근거 부족을 반환하는 흐름</p><p class="small muted gap10">당시 14편 코퍼스의 사례 · 현재는 64편 저장</p></div><div class="rule-top"><h3>4주 시뮬레이션은 별도 검증</h3><p class="body-text gap12">ToF 실측 재사용 + 합성 보행으로<br>주간 4건·누적 1건의 사실 결과 생성</p><p class="small muted gap10">저장본의 LLM 서술은 당시 키 오류로 비어 있음</p></div></div><div class="takeaway">환자 조건을 반영하는 조사 흐름을 확인했습니다. 임상 정확도·효과 검증은 후속 과제입니다.</div></div>
+      <footer class="foot"><span class="source">근거: docs/ai_plan.html I8·가상환자 시뮬레이션 · server/sim_month_output.json · reports/*.json</span><span class="page"></span></footer>
+      <aside class="notes"><p>기획 문서 I8은 101호 김순임이라는 테스트 페르소나로 조사한 예를 기록한다. 발표에는 환자 이름 대신 테스트 역할과 필요한 임상 조건만 제시했다. 그 사례의 코퍼스는 14편이었으며 현재 저장된 64편 코퍼스로 재실행한 결과와 혼동하지 않도록 과거 기록으로 명시했다.</p><p>가상환자 생성은 문서에 semi-Markov 상태기계, 상태 지속시간의 역변환 표본추출, 신체 치수 기반 보행 파라미터, 실측 ToF 재샘플링과 mmWave 합성으로 기록되어 있다. 마지막 주의 악화는 인위적으로 주입한 시나리오다. 현재 virtual_patient.py와 weekly_report.py는 없어 해당 알고리즘의 현행 재현은 보완이 필요하다. 저장된 2026-09-03 결과는 구조화된 사실은 있으나 ai_narrative가 비어 있고 missing_key 오류가 남아 있다.</p></aside>
+    </section>
+
+      <section class="slide" id="slide-21" data-title="과거 분석의 벡터화" aria-labelledby="title-21">
+        <p class="eyebrow">20 · 과거 분석 재사용</p>
+        <h2 id="title-21">과거 분석은 논문과 분리해 저장했습니다</h2>
+        <p class="subtitle">연구에서 나온 근거와 환자에게 관측된 과거 패턴이 섞이지 않도록 관리합니다.</p>
+        <div class="content">
+          <div class="flow steps4"><div class="step"><span class="num">1 · SQL 이력</span><h3>분석 기록 읽기</h3><p>환자별 ai_analysis<br>요약·위험요인·향후 서술</p></div><div class="step"><span class="num">2 · 청크 생성</span><h3>분석 1건 → 1청크</h3><p>주요 문장을 하나로 결합<br>본문의 환자 이름 치환</p></div><div class="step"><span class="num">3 · 별도 저장</span><h3>analysis_chunks</h3><p>공용 임베딩 로직 재사용<br>논문 테이블과 분리</p></div><div class="step"><span class="num">4 · 의미 검색</span><h3>유사 패턴 찾기</h3><p>환자 ID로 범위 제한 후<br>과거 분석의 유사도 비교</p></div></div>
+          <div class="cols">
+            <div class="rule-top"><h3>저장된 현재 상태</h3><p class="body-text" style="margin-top:13px">SQL 분석 <strong class="blue">9건</strong> / 벡터화된 분석 <strong class="blue">7건</strong></p><p class="small muted" style="margin-top:10px">새 분석을 인덱스에 반영하는 시점과 자동 실행이 필요합니다.</p></div>
+            <div class="rule-top"><h3>현재 리포트에서 쓰는 과거 기록</h3><p class="body-text" style="margin-top:13px">직전 분석을 SQL에서 조회해 비교합니다.</p><p class="small muted" style="margin-top:10px">유사 과거 분석의 벡터 검색은 함수로 구현돼 있으며,<br>리포트 자동 생성 경로에는 아직 연결되지 않았습니다.</p></div>
+          </div>
+          <div class="takeaway">현재는 직전 기록 비교까지 연결돼 있습니다. 다음은 비슷했던 과거 상황을 자동으로 함께 찾는 단계입니다.</div>
+        </div>
+        <footer class="foot"><span class="source">근거: <a href="server/analysis_kb.py">analysis_kb.py</a> · integrated_analysis.py · 로컬 SQL·LanceDB 건수 조회</span><span class="page"></span></footer>
+        <aside class="notes"><p>extract_chunk_from_analysis는 summary, 주요_위험_요인, 향후_위험_가능성을 결합한다. _strip_identifiers는 patient_name의 정확히 일치하는 문자열을 '환자'로 바꾸는 최소 조치이며 완전한 비식별화가 아니다. patient_id·analysis_id는 별도 메타데이터로 유지된다.</p><p>로컬 analysis_chunks에는 분석 ID 2~8의 7행, SQL ai_analysis에는 ID 2~10의 9행이 있다. generate_integrated_report는 db.get_latest_ai_analysis만 호출하며 analysis_kb의 build_index나 search_similar_patterns를 호출하지 않는다. 전체 과거 분석 검색이 자동 운영된다고 표현하지 않았다.</p></aside>
+      </section>
+
+      <section class="slide" id="slide-22" data-title="리포트 생성·근거 추적" aria-labelledby="title-22">
+        <p class="eyebrow">21 · AI 종합 리포트</p>
+        <h2 id="title-22">위험 수치는 코드가 계산하고, AI는 설명합니다</h2>
+        <p class="subtitle">현재 판정·환자 기록·직전 분석·검색된 논문을 하나의 리포트로 정리합니다.</p>
+        <div class="content">
+          <div class="cols">
+            <div class="rule-top"><h3>코드가 정하는 것</h3><ul><li>센서 위험 단계를 점수로 변환</li><li>확보된 신호 중 가장 높은 위험값 사용</li><li>신호가 없으면 정보 없음으로 유지</li></ul><p class="small muted" style="margin-top:16px">위험점수는 단계 대응값이며, 실제 낙상 확률을 뜻하지 않습니다.</p></div>
+            <div class="rule-top"><h3>LLM이 작성하는 것</h3><ul><li>현재 상태와 최근 변화</li><li>주요 위험요인·과거 분석과의 비교</li><li>관련 연구 근거·추가 관찰·투약 검토 항목</li></ul><p class="small muted" style="margin-top:16px">새 수치·논문을 만들지 않고 정보 부족을 표시하도록 지시합니다.</p></div>
+          </div>
+          <div class="bridge"><div class="block"><strong>15개 항목 리포트</strong><span class="detail">한국어 JSON 응답</span></div><div class="arrow">→</div><div class="block"><strong>SQL 분석 이력</strong><span class="detail">본문·모델·프롬프트 버전</span></div><div class="arrow">→</div><div class="block"><strong>논문 근거 역조회</strong><span class="detail">청크 ID → 문장·DOI·URL</span></div></div>
+          <div class="takeaway">리포트에 연결된 근거 목록을 되짚을 수 있습니다. 문장별 인용 검증과 실제 미래 예측은 후속 과제입니다.</div>
+        </div>
+        <footer class="foot"><span class="source">근거: <a href="server/integrated_analysis.py">integrated_analysis.py</a> · ai_report.py · /agent/analyze · /agent/evidence</span><span class="page"></span></footer>
+        <aside class="notes"><p>위험 단계 대응표는 normal 0.1, caution 0.4, warning 0.7, critical 0.95다. 세 신호 중 확보된 값의 최댓값을 사용하고, 신호 확보 비율을 data_confidence로 계산한다. 이는 예측 확률이나 검증된 정확도 지표가 아니다. LLM 공용 호출 기본 모델은 ai_report.py의 gpt-4o-mini이며 환경변수로 바꿀 수 있다.</p><p>리포트는 15개 한국어 항목을 요구한다. 투약 항목은 검토 방향과 근거를 다루며 구체적 용량·용법을 지시하지 않도록 프롬프트에 제한했다. 이 발표는 환자별 의료 판단이나 처방 제안 자체를 제공하지 않는다.</p><p>evidence_ids에는 조사 단계에서 모은 최종 검색 청크 목록을 저장한다. 리포트의 각 문장이 그 근거로 입증되는지 검사하거나 문장별 인용을 강제하는 코드는 없다. '근거 목록 역조회'와 '모든 주장 검증 완료'를 구분했다.</p></aside>
+      </section>
+
+      <section class="slide" id="slide-23" data-title="리포트 · 실제 페르소나" aria-labelledby="title-23">
+      <p class="eyebrow">22 · 페르소나 03·04 / 임상 보조와 통합분석</p>
+      <h2 id="title-23">AI의 역할을 사실을 설명하는 임상 보조 작성자로 정했습니다</h2>
+      <p class="subtitle">기본 리포트 프롬프트 원문과, 통합분석 프롬프트에 추가한 규칙입니다.</p>
+      <div class="content tight"><div class="cols wide-left"><div class="rule-top"><h3>기본 리포트 · 실제 원문</h3><blockquote class="prompt">당신은 치매환자 낙상예측시스템의 임상 보조 리포트 작성자입니다. 아래 JSON은 이미 계산이 끝난 사실입니다. 절대 새로운 수치를 만들어내거나 주어진 수치를 변경하지 마세요. 당신의 역할은 이 사실들을 보호자/의료진이 이해하기 쉬운 한국어 서술문으로 정리하고, 임상적으로 합리적인 맥락(왜 이 변화가 우려되는지)을 짧게 덧붙이는 것뿐입니다. 확정 진단이나 처방을 내리지 말고, &#x27;재평가 권장&#x27; 수준의 신중한 어조를 유지하세요.</blockquote></div><div class="rule-top"><h3>통합분석에 추가한 규칙</h3><ul class="small"><li>SQL·센서 판정·직전 분석·검색 근거만 사용</li><li>수치·논문 생성 금지, 부족하면 “정보 부족”</li><li>향후 위험은 현재 상태·추세의 신중한 설명</li><li>투약은 근거와 검토 방향만, 용량·용법 지시 금지</li><li>15개 항목의 한국어 JSON으로 응답</li></ul><p class="small muted gap12">기본 모델: gpt-4o-mini<br>별도 파인튜닝 없이 시스템 프롬프트로 역할 지정</p></div></div><div class="takeaway">수치는 코드가 계산하고, LLM은 설명합니다. 프롬프트 준수율·사실 일치율은 후속 평가합니다.</div></div>
+      <footer class="foot"><span class="source">server/ai_report.py SYSTEM_PROMPT · integrated_analysis.py INTEGRATED_SYSTEM_PROMPT · <a href="https://arxiv.org/abs/2311.05232" target="_blank" rel="noopener">Huang et al.</a></span><span class="page"></span></footer>
+      <aside class="notes"><p>시스템 프롬프트의 정확한 문구는 프로젝트에서 직접 작성했다. 논문 또는 GitHub에서 그대로 가져온 페르소나가 아니다. Huang 서베이의 사실 grounding 원칙과 기획 문서의 설계 방향이 대응한다. 프롬프트는 Python 상수로 저장되며 별도 프롬프트 관리 서비스는 연동하지 않았다. 통합 분석 저장 시 prompt_version=integrated_v1을 기록한다.</p><p><strong>통합분석 프롬프트 전체</strong></p><blockquote class="prompt">당신은 치매환자 낙상예측시스템의 통합분석 리포트 작성자입니다. 아래 JSON에는 이미 계산이 끝난 사실(환자 프로필·위험인자·투약, ToF/mmWave 현재 판정, 이미 계산된 위험점수, 직전 분석 기록, 검색된 논문 근거)만 들어있습니다. 절대 새로운 수치를 만들어내거나 주어진 수치를 바꾸지 마세요. 논문 근거는 주어진 것 외에 새로 지어내지 마세요. 정보가 부족한 항목은 빈 문자열이나 &#x27;정보 부족&#x27;으로 정직하게 표시하고 추측으로 채우지 마세요. &#x27;향후 위험 가능성&#x27;은 실제 예측 모델이 아니라 현재 판정과 최근 변화 추세에 대한 신중한 설명이어야 하며, 확정적으로 단정하지 마세요. &#x27;투약_조정_제안&#x27; 항목은 특히 신중하게 작성하세요: 주어진 &#x27;투약&#x27; 목록과 낙상 위험점수·검색된 논문 근거(특히 진정제·향정신성약물·다제병용과 낙상/섬망의 관계를 다루는 논문)만 근거로, 감량 검토가 필요한지 증량 검토가 필요한지 현 상태 유지가 적절한지 판단하되, 절대 구체적인 용량·용법을 지시하지 마세요 (당신은 처방 권한이 없습니다 — 방향성과 근거만 제시). 근거가 부족하면 &#x27;정보 부족으로 판단 불가&#x27;라고 정직하게 쓰세요. 이 항목의 마지막 문장은 반드시 &#x27;이 제안은 참고용이며 최종 처방 변경은 담당 의사가 판단해야 합니다.&#x27;로 끝내세요. 반드시 아래 JSON 스키마로만, 모든 키를 한국어 문자열 값으로 채워 답하세요: {&quot;현재_상태&quot;: &quot;&quot;, &quot;최근_변화&quot;: &quot;&quot;, &quot;ToF_변화&quot;: &quot;&quot;, &quot;mmWave_변화&quot;: &quot;&quot;, &quot;보행_변화&quot;: &quot;&quot;, &quot;활동_변화&quot;: &quot;&quot;, &quot;침상_관련_행동&quot;: &quot;&quot;, &quot;낙상_위험도_설명&quot;: &quot;&quot;, &quot;주요_위험_요인&quot;: &quot;&quot;, &quot;과거_데이터와의_비교&quot;: &quot;&quot;, &quot;향후_위험_가능성&quot;: &quot;&quot;, &quot;관련_연구_근거&quot;: &quot;&quot;, &quot;투약_조정_제안&quot;: &quot;&quot;, &quot;데이터_신뢰도_설명&quot;: &quot;&quot;, &quot;추가_관찰이_필요한_항목&quot;: &quot;&quot;}</blockquote><p>[Sources]</p><p><a href="https://arxiv.org/abs/2311.05232" target="_blank" rel="noopener">Huang et al., A Survey on Hallucination in Large Language Models: Principles, Taxonomy, Challenges, and Open Questions (arXiv 2023)</a></p><p>[/Sources]</p></aside>
+    </section>
+
+      <section class="slide" id="slide-24" data-title="성능 · 보고 가능한 범위" aria-labelledby="title-24">
+      <p class="eyebrow">23 · 검증 현황 / 수치의 의미</p>
+      <h2 id="title-24">현재 보고할 수 있는 성능과 미측정 항목을 구분했습니다</h2>
+      <p class="subtitle">아래 마주봄 수치는 저장된 과거 실험 기록입니다. 이번 발표 수정에서 재학습·재실행하지 않았습니다.</p>
+      <div class="content tight"><table class="table-dense"><colgroup><col style="width:28%"><col style="width:33%"><col style="width:39%"></colgroup><thead><tr><th>개발 항목</th><th>마주봄에서 확보한 결과</th><th>판단 범위</th></tr></thead><tbody><tr><td>ToF RF · 6자세</td><td>정확도 <strong>97.9%</strong></td><td>1명·1세션 · 다른 대상·환경 평가 필요</td></tr><tr><td>mmWave RF · 4자세</td><td>정확도 <strong>54.9%</strong></td><td>초기 실험 · 현재 학습 파일 복구 필요</td></tr><tr><td>mmWave LSTM · 이탈</td><td>정확도 <strong>65%</strong> / 재현율 <strong>36%</strong><br>F1 <strong>0.42</strong></td><td>569시퀀스·17이탈 · 대리 정답 사용</td></tr><tr><td>LSTM-AE / 개인 통계 / 융합</td><td>정확도·오탐률 <strong>미측정</strong></td><td>99백분위·z값·위험점수는 정확도가 아님</td></tr><tr><td>Vector 검색 / LLM 리포트</td><td>73편·631청크(하이브리드 검색 포함) / SQL 분석 9건</td><td>저장·처리 확인값 · 검색·서술 정확도 미측정</td></tr></tbody></table><div class="takeaway">아직 전체 시스템을 대표하는 “낙상 예측 정확도 ○○%”는 없습니다. 과제별 독립 검증으로 확보해야 합니다.</div></div>
+      <footer class="foot"><span class="source">근거: docs/ai_plan.html I1·I2 · mmWave/exit_seq/HANDOFF.md · 현재 코드·로컬 DB</span><span class="page"></span></footer>
+      <aside class="notes"><p>97.9%는 ai_plan.html I1의 학습 2,320 / 평가 999 프레임 기록이다. 증강 후 100% 기록은 단일 세션의 한계가 커 대표 성능으로 제시하지 않았다. mmWave 54.9%는 I2의 자세 분류 기록이며 미래 낙상 예측 성능이 아니다. 별도의 exit_seq 실험에는 569개 시퀀스와 LSTM 결과가 있으나 서로 다른 과제라 여기서 정확도를 합치지 않았다.</p><p>backup_4x4_analysis.json quality_report.total_rows는 866,593행이다. 파일의 source_db 설명과 기획 문서는 866,594행이라 발표에는 '약 86.7만 행'으로 표기했다. tof1 accuracy=0.3975, tof2=0.436이며 사람의 정답 라벨에 대한 임상 검증이 아니다.</p><p>server/reports의 주간 4개·누적 1개 파일은 generated_at=2026-09-03이며 ai_narrative가 비어 있고 ai_error.error_type=missing_key다. 이는 해당 저장본의 실행 결과이지 현재 API 키 설정 상태를 뜻하지 않는다. 별도로 SQL에는 종합 분석 결과 9건이 남아 있다.</p><p>mmWave 규칙 기반 32.1% 기록은 exit를 제외한 3개 클래스 평가이고 RF 54.9%는 4개 클래스라 공정한 직접 성능 비교로 사용하지 않았다. ToF 백업 재실 분류 39.8/43.6%는 규칙이 생성한 대리 라벨을 재현하는 별도 실험으로, ToF 6자세 97.9%와 동일 평가가 아니다. 통합 data_confidence는 사용 가능한 신호 수/3이며 통계적으로 보정된 확률 또는 정확도가 아니다.</p></aside>
+    </section>
+
+      <section class="slide" id="slide-25" data-title="2026-09 최신 논문 재검토" aria-labelledby="title-25">
+      <p class="eyebrow">24 · 2026-09 재검토 / 대안 논문과 대조</p>
+      <h2 id="title-25">치매 임상 논문은 그대로 두고, 하드웨어·AI 논문만 다시 찾았습니다</h2>
+      <p class="subtitle">2021년 이후 논문을 우선 기준으로, 지금 방식보다 나은 방법이 있는지 항목별로 재검토했습니다.</p>
+      <div class="content tight"><table class="table-dense"><colgroup><col style="width:18%"><col style="width:16%"><col style="width:44%"><col style="width:22%"></colgroup><thead><tr><th>개발 요소</th><th>기존 인용</th><th>2026-09 재검토에서 찾은 것</th><th>조치</th></tr></thead><tbody>
+      <tr><td>ToF 자세분류(RF)</td><td>Breiman(2001)</td><td>Papillon 외(2025) — 저해상도 침상센서를 <strong>교차피험자</strong>로 평가하면 RF가 32.2%(4지선다 chance=25%)로 붕괴<br>TabPFN(Hollmann 외, Nature 2025) — 소규모 표형데이터 전용 파운데이션 모델</td><td>우리 데이터로 RF·TabPFN 직접 비교<br><span class="small muted">→ 다음 슬라이드</span></td></tr>
+      <tr><td>mmWave 이탈예측(LSTM)</td><td>Wang 외(2025) 구조 참고</td><td>Sykes 외(2026, Sensors) — 유사한 소수클래스 이벤트예측 벤치마크에서 GRU가 LSTM·Transformer보다 경보를 더 많이 잡음<br>Iwana &amp; Uchida(2021) — 시계열 증강 12종 비교, window-warp/slice가 최상위권</td><td>우리 데이터로 GRU·신규증강 재실험<br><span class="small muted">→ 다음 슬라이드</span></td></tr>
+      <tr><td>이상탐지(LSTM-AE)</td><td>Malhotra 외(2016)</td><td>Bijlani 외(2022, JMIR Aging) — <strong>치매환자 전용</strong>, 환자 1명씩 개인화하는 통계기법(Contextual Matrix Profile)으로 실제 UTI·입원 사건 대비 재현율 84.3%</td><td>유력 대안으로 제안 등록<br><span class="small muted">미구현 — 정답 라벨이 없어 우리 데이터 비교는 아직 불가</span></td></tr>
+      <tr><td>센서 융합(max) /<br>베드 캘리브레이션</td><td>Cheung(2022)·Rehouma(2025) /<br>Komagata(2019)</td><td>Li 외(2026) — early fusion이 late fusion보다 우수(웨어러블 4종 센서 실험이라 하드웨어 전혀 다름)<br>Komagata 후속 연구 없음 — 인용 추적(citing 4건)으로 확인된 정직한 부재</td><td>대안 채택 근거 부족 확인<br><span class="small muted">→ 현행 유지, 이유는 기록</span></td></tr>
+      </tbody></table><div class="takeaway">mmWave·ToF·RAG 3곳은 실제 코드를 실행해 재확인했습니다(다음 슬라이드). 나머지 2곳은 “대안 없음”을 논문 추적으로 확인한 것 자체가 결과입니다.</div></div>
+      <footer class="foot"><span class="source">근거: 2026-09 문헌 재검토(3개 연구 에이전트) · 전체 비교·인용은 <a href="docs/ai_plan.html">ai_plan.html “최신 논문 반영” 탭</a></span><span class="page"></span></footer>
+      <aside class="notes"><p>치매 임상·행동 논문(45편)은 사용자 지침에 따라 이번 재검토 대상에서 제외하고 그대로 두었다. 재검토 대상은 하드웨어·AI 알고리즘 근거 논문뿐이다. "2021년 이후"는 마지노선이며, 가능한 한 가장 최근(2024~2026) 논문을 우선 확인했다.</p><p>Papillon 외의 저해상도 압력센서 그리드(약 144 sensel)는 우리 ToF 128차원 벡터와 규모가 비슷하다. 4자세(supine/prone/좌우측와위) 교차피험자 5-fold에서 RF 0.322·XGBoost 0.324인 반면 사전학습 ViTMAE 미세조정은 0.770 — 단, RGB/ImageNet 사전학습 모델이라 mm 단위 깊이 격자로의 전이는 검증되지 않았고, 112명 규모 데이터가 필요해 지금 바로 적용할 수는 없다. 우리 97.9%가 단일 세션 특유일 수 있다는 내부 우려를 뒷받침하는 외부 근거로만 인용한다.</p><p>Komagata(2019) 인용 추적은 Semantic Scholar 기준 4건이며(적외선 추적, 철회된 edge-detection 논문, 카테터 제거 센서, 보행 가속도계) 그중 어느 것도 침대 경계 보정 방법 자체를 잇지 않았다. 2025년 종합 리뷰(Tamura &amp; Huang, Sensors 25(6):1879)도 이 하위주제를 아예 다루지 않는다 — 후속 연구가 없다는 것이 검색 부족이 아니라 확인된 사실이라는 뜻이다.</p><p>[Sources]</p><p><a href="https://arxiv.org/abs/2505.08111" target="_blank" rel="noopener">Papillon et al. (2025), Sleep Position Classification using Transfer Learning for Bed-based Pressure Sensors, arXiv:2505.08111</a></p><p><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11711098/" target="_blank" rel="noopener">Hollmann et al. (2025), Accurate predictions on small data with a tabular foundation model, Nature 637:319-326</a></p><p><a href="https://doi.org/10.3390/s26113326" target="_blank" rel="noopener">Sykes, Maghsoudimehrabani &amp; Al-Shanoon (2026), Benchmarking Time-Series AI Architectures for Wearable Sensor-Based Fall Prediction, Sensors 26(11):3326</a></p><p><a href="https://doi.org/10.1371/journal.pone.0254841" target="_blank" rel="noopener">Iwana &amp; Uchida (2021), An Empirical Survey of Data Augmentation for Time Series Classification with Neural Networks, PLOS ONE 16(7):e0254841</a></p><p><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC9531007/" target="_blank" rel="noopener">Bijlani, Nilforooshan &amp; Kouchaki (2022), An Unsupervised Data-Driven Anomaly Detection Approach for Adverse Health Conditions in People Living With Dementia, JMIR Aging 5(3):e38211</a></p><p><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC13527089/" target="_blank" rel="noopener">Li et al. (2026), Intelligent fall risk prediction and real-time warning system based on multimodal deep learning and wearable sensor fusion, Scientific Reports</a></p><p>[/Sources]</p></aside>
+    </section>
+
+      <section class="slide" id="slide-26" data-title="2026-09 재실험 결과" aria-labelledby="title-26">
+      <p class="eyebrow">25 · 2026-09 재검토 / 실제로 재실행한 결과</p>
+      <h2 id="title-26">세 가지는 문헌을 코드로 직접 재실험해 실제 숫자를 얻었습니다</h2>
+      <p class="subtitle">표본이 작아 확정할 수는 없지만, 방향은 문헌과 일치했습니다. 아래 스크립트를 그대로 실행하면 재현됩니다.</p>
+      <div class="content tight"><table class="table-dense"><colgroup><col style="width:24%"><col style="width:52%"><col style="width:24%"></colgroup><thead><tr><th>실험</th><th>오늘(2026-09-14) 실측</th><th>판단</th></tr></thead><tbody>
+      <tr><td>mmWave 이탈예측<br>GRU vs LSTM<br><span class="small muted">analyze_v2.py · 5시드 평균 · 무증강</span></td><td>LSTM 정확도 71.1±5.5% F1 48.7±14.0<br>GRU 정확도 <strong class="blue">73.2±2.6%</strong> F1 <strong class="blue">50.4±13.4</strong><br>파라미터 3,026→2,282(-25%), 정확도 분산 절반↓</td><td>GRU가 모든 지표에서 동률 이상<br><span class="small muted">유력 후보 · 확정 아님</span></td></tr>
+      <tr><td>ToF 자세분류<br>RF vs TabPFN<br><span class="small muted">compare_rf_tabpfn.py</span></td><td>RF <strong class="blue">97.9%</strong>(기존 기록과 소수점까지 재현)<br>TabPFN: 온라인 라이선스 로그인 게이트로 이 환경에서 실행 불가</td><td>RF 유지<br><span class="small muted">전환 근거도, 지금 돌려볼 방법도 없음</span></td></tr>
+      <tr><td>논문 검색<br>벡터단독 vs 하이브리드<br><span class="small muted">paper_kb.search_hybrid() · 신규 코드</span></td><td>질의 “보행속도 감소와 낙상 위험의 관계”에서 벡터단독 상위 3위엔 없던 dementia-01(보행속도 SD 1↓당 낙상위험 +33%)이 하이브리드 1위로 등장<br><span class="small muted">그 청크의 벡터 순위는 8위, BM25 순위는 1위였음</span></td><td>하이브리드 코드 추가 완료<br><span class="small muted">정량 Recall@5 비교는 후속 과제</span></td></tr>
+      </tbody></table><div class="takeaway">세 결과 모두 재실행 가능한 스크립트로 얻었습니다 — mmWave/exit_seq/analyze_v2.py · TOF/ml/compare_rf_tabpfn.py · server/paper_kb.py.</div></div>
+      <footer class="foot"><span class="source">근거: mmWave/exit_seq/analyze_v2.py · TOF/ml/compare_rf_tabpfn.py · server/paper_kb.py search_hybrid() · docs/ai_plan.html(전체 표)</span><span class="page"></span></footer>
+      <aside class="notes"><p>흥미로운 재현성 관찰: 코드를 하나도 바꾸지 않은 기존 analyze_aug.py를 오늘 다시 실행했더니 무증강 기준값이 과거 기록(F1 39.6±12.4)과 다르게 나왔다(오늘 F1 48.7±14.0). 반면 증강을 적용한 조건(기하안전 1:1)은 44.9±11.2 → 44.9±14.1로 소수점까지 거의 동일하게 재현됐다. 표본이 늘수록(157개 vs 27개) 재현성도 오른다는 간접 증거이자, test 28개짜리 평가로 "증강이 이득"이라 확정할 수 없다는 기존 결론을 재확인한다.</p><p>GRU는 무증강 조건에서만 우세하다 — GRU+기하안전 조합은 오히려 크게 나빠졌다(F1 33.0±11.6, recall 30%). "GRU가 항상 낫다"가 아니라 "GRU+무증강 조합이 지금까지 시도한 6가지 조합 중 최고"가 정확한 결론이다. window-slice/warp 신규 증강은 기존 기하안전 대비 근소하게 개선됐다(LSTM 기준 F1 44.9±14.1→46.8±11.1, recall 41%→44%, 분산도 감소).</p><p>TabPFN은 `pip install tabpfn`까지는 되지만 실행 시 사전학습 가중치를 받으려면 브라우저로 priorlabs.ai에 로그인해 라이선스에 동의해야 한다 — 헤드리스 서버 환경에서는 이 단계에서 막힌다. 문헌상으로도 TabPFN이 이 규모에서 항상 RF를 이긴다는 확증은 없다(Bansal &amp; Gangwani 2025, arXiv:2512.00888 — Wine-Quality 3,920행에서 RF 89.49% vs TabPFN 88.88%, 추론은 RF가 44배 빠름). 설치에 쓴 tabpfn/click 관련 패키지 충돌은 작업 종료 시 원복했다(platformio 빌드 환경 보호).</p><p>하이브리드 검색은 LanceDB 코사인 검색 결과 전체 순위와, 저장된 원문에 대해 그때그때 만든 BM25(rank_bm25) 순위를 Reciprocal Rank Fusion으로 합친다(server/paper_kb.py search_hybrid(), k=60). 기존 search()는 그대로 두었고 ai_agent.py의 실제 조사 흐름은 아직 search()를 쓴다 — 이 함수는 별도 옵션으로 추가된 상태다. 예시 1건은 방향성 있는 사례이지 정답셋 기반 Recall@5 검증이 아니다.</p><p>[Sources]</p><p><a href="https://doi.org/10.3390/s26113326" target="_blank" rel="noopener">Sykes, Maghsoudimehrabani &amp; Al-Shanoon (2026), Sensors 26(11):3326</a></p><p><a href="https://doi.org/10.1371/journal.pone.0254841" target="_blank" rel="noopener">Iwana &amp; Uchida (2021), PLOS ONE 16(7):e0254841</a></p><p><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11711098/" target="_blank" rel="noopener">Hollmann et al. (2025), Nature 637:319-326 (TabPFN)</a></p><p><a href="https://arxiv.org/abs/2512.00888" target="_blank" rel="noopener">Bansal &amp; Gangwani (2025), arXiv:2512.00888</a></p><p><a href="https://arxiv.org/abs/2404.07220" target="_blank" rel="noopener">Sawarkar, Mangal &amp; Solanki (2024), Blended RAG, arXiv:2404.07220</a></p><p>[/Sources]</p></aside>
+    </section>
+
+      <section class="slide" id="slide-27" data-title="현재 남은 연결 과제" aria-labelledby="title-27">
+        <p class="eyebrow">26 · 남은 과제</p>
+        <h2 id="title-27">다음 병목은 모듈 사이의 실제 연결입니다</h2>
+        <p class="subtitle">기획 문서의 완료 기록과 현재 소스를 대조해, 운영 경로에 필요한 차이를 정리했습니다.</p>
+        <div class="content tight">
+          <table class="table-dense"><colgroup><col style="width:23%"><col style="width:39%"><col></colgroup><thead><tr><th>우선 확인할 연결</th><th>현재 상태</th><th>완료되어야 하는 동작</th></tr></thead><tbody>
+            <tr><td>ToF 행동 → Agent</td><td>Agent가 기대하는 행동 조회 API 부재<br><span class="small muted">진행 중 이탈 평가도 현재 모듈에서 누락</span></td><td>자세 통계·이탈 경과시간이<br>AI 입력까지 전달</td></tr>
+            <tr><td>분석 저장 → 벡터 갱신</td><td>SQL 9건 / 벡터 7건<br><span class="small muted">새 분석 반영·유사 패턴 검색의 자동 호출 부재</span></td><td>리포트 생성 뒤 인덱스 갱신,<br>다음 분석에서 유사 이력 활용</td></tr>
+            <tr><td>판정 → 이력·화면</td><td>정제 진단·기준 이력의 연결 보완 필요<br><span class="small muted">종합 AI 화면 일부가 정적 대기 상태</span></td><td>원본·판정·근거·리포트를<br>같은 대상 기준으로 조회</td></tr>
+            <tr><td>과거 구현 → 재현</td><td>주간 리포트 집계·시뮬레이터·<br>유지보수·별도 융합 파일 등 부재</td><td>필요 기능 복구 후<br>현재 코드로 통합 검증 기록 확보</td></tr>
+          </tbody></table>
+          <div class="takeaway">기획·모듈·저장 결과는 확보했습니다. 완료 기준은 실제 센서 입력부터 화면·근거 조회까지 이어지는 동작입니다.</div>
+        </div>
+        <footer class="foot"><span class="source">대조: ai_plan.html I4·I5·I10·I11 · tof_server.py · integrated_analysis.py · site/dashboard_design.html</span><span class="page"></span></footer>
+        <aside class="notes"><p>현재 소스에 없는 파일은 server/weekly_report.py, virtual_patient.py, simulate_data.py, maintenance_ai.py, fusion_logic.py 및 mmWave/train_posture_mmwave.py다. ai_plan.html에는 2026-09-10 파일 유실·복구 기록이 있다. 복구된 핵심 파일의 존재와 모든 과거 기능의 복구 완료는 구분했다.</p><p>baseline_history와 sensor_clean_data는 현재 로컬 DB에서 비어 있다. ToF 수신 경로는 입력을 저장한 뒤 latest[sensor_id].posture를 읽어 진단하지만, 현재 자세 추론은 별도 조회 경로에서 이뤄져 라벨 전달을 보완해야 한다. 자동 baseline 스냅샷 호출도 현재 누적 모듈에서는 확인되지 않는다.</p><p>test_e2e_pipeline.py는 존재하지만 이번 작업에서 실행하지 않았다. ai_plan.html의 과거 12개 PASS 기록을 현재 복구된 코드의 실시간 통과 결과로 재사용하지 않았다.</p></aside>
+      </section>
+
+      <section class="slide" id="slide-28" data-title="다음 검증 · 교수님 보고 기준" aria-labelledby="title-28">
+      <p class="eyebrow">27 · 다음 단계 / 검증 계획</p>
+      <h2 id="title-28">동일한 평가 조건으로 대안과 비교하는 것이 다음 목표입니다</h2>
+      <p class="subtitle">기능 연결을 복구한 뒤, 아래 지표로 현재 선택이 적절한지 확인하겠습니다.</p>
+      <div class="content tight"><table class="table-dense"><colgroup><col style="width:23%"><col style="width:45%"><col style="width:32%"></colgroup><thead><tr><th>검증 대상</th><th>다음 평가 방법</th><th>보고할 지표</th></tr></thead><tbody><tr><td>자세 분류·이탈 모델</td><td>사람·날짜·설치를 분리한 평가셋<br>RF·SVM/GBM·LSTM을 같은 조건에서 비교</td><td>클래스별 재현율·F1<br>이탈 놓침·경보 지연</td></tr><tr><td>통계 판정·센서 융합</td><td>담당자가 확인한 사건 정답 확보<br>ToF 단독 / mmWave 단독 / 결합 비교</td><td>침대·일별 오경보 수<br>사건 감지율·오탐 감소</td></tr><tr><td>문헌 검색</td><td>질문별 정답 근거 목록을 먼저 작성<br>구현된 벡터+BM25 하이브리드(RRF)와 벡터 단독 비교</td><td>Recall@5<br>검색된 근거의 적합성</td></tr><tr><td>페르소나·리포트</td><td>같은 입력으로 규칙 유무 비교<br>누락·충돌·근거 부족 사례 포함</td><td>수치 일치·근거 지지율<br>정보 부족 표시·출력 형식 준수율</td></tr></tbody></table><div class="takeaway"><strong>다음 보고:</strong> 전체 흐름의 재현 기록과, 같은 평가 조건에서 얻은 모델별 성능표</div></div>
+      <footer class="foot"><span class="source">후속 검증 계획 · 수집 대상·기간·목표 성능은 평가셋을 정한 뒤 확정</span><span class="page"></span></footer>
+      <aside class="notes"><p>학습과 평가 사이의 사람·기간 중복을 막고, 시간 윈도우는 분할 이후에 생성한다. 현재 코드의 연결 공백은 ToF 행동 API, 진행 중 이탈 평가, 새 분석의 자동 벡터화, 유사 분석 검색 호출, 기준 이력·화면 연결이다.</p><p>Recall@5는 각 질문의 정답 근거 중 검색 결과 상위 5개에 포함된 비율이다. 생성 평가는 수치 일치와 문장별 근거 지지, 금지된 단정·정보 부족 처리, JSON 형식 준수 등을 분리한다. 확정된 일정이나 이미 달성한 수치로 제시하지 않았다.</p></aside>
+    </section>
+
+    </div></div>
+  </main>
+
+  <nav class="toolbar" aria-label="발표 제어">
+    <span class="brand">마주봄 · 진행 현황</span>
+    <button id="prev" type="button" aria-label="이전 슬라이드" title="이전 (←)">←</button>
+    <label class="sr-only" for="slide-select">슬라이드 선택</label>
+    <select id="slide-select"></select>
+    <button id="next" type="button" aria-label="다음 슬라이드" title="다음 (→ / Space)">→</button>
+    <span class="divider" aria-hidden="true"></span>
+    <button id="overview" type="button" aria-pressed="false" title="전체 슬라이드 보기 (O)">전체 보기</button>
+    <button id="evidence" type="button" title="현재 슬라이드의 상세 근거 (S)">근거</button>
+    <button id="fullscreen" type="button" title="전체화면 (F)">전체화면</button>
+    <button id="print" type="button" title="전체 슬라이드 인쇄 / PDF 저장">인쇄 / PDF</button>
+  </nav>
+  <div id="progress" role="progressbar" aria-label="발표 진행" aria-valuemin="1" aria-valuemax="28" aria-valuenow="1"><div id="progress-bar"></div></div>
+  <p class="sr-only" id="announcement" role="status" aria-live="polite"></p>
+  <dialog id="evidence-dialog" aria-labelledby="evidence-title">
+    <div class="dialog-head"><h2 id="evidence-title">확인 근거</h2><button type="button" id="close-dialog">닫기</button></div>
+    <div id="evidence-content"></div>
+  </dialog>
+  <noscript><style>#viewport{height:auto;display:block;overflow:auto}#stage{width:1280px!important;height:auto!important}#deck{transform:none}.slide{display:flex;margin-bottom:20px}.toolbar,#progress{display:none}body{overflow:auto}</style></noscript>
+  <script>
+    (() => {
+      'use strict';
+      const slides = [...document.querySelectorAll('.slide')];
+      document.getElementById('progress').setAttribute('aria-valuemax', slides.length);
+      const stage = document.getElementById('stage');
+      const select = document.getElementById('slide-select');
+      const dialog = document.getElementById('evidence-dialog');
+      const prev = document.getElementById('prev');
+      const next = document.getElementById('next');
+      const overviewButton = document.getElementById('overview');
+      const fullButton = document.getElementById('fullscreen');
+      const announce = document.getElementById('announcement');
+      let current = 0;
+      let overview = false;
+      let touch = null;
+      slides.forEach((slide, i) => {
+        slide.querySelector('.page').textContent = `${String(i + 1).padStart(2, '0')} / ${slides.length}`;
+        const option = document.createElement('option');
+        option.value = i;
+        option.textContent = `${String(i + 1).padStart(2, '0')} · ${slide.dataset.title}`;
+        select.append(option);
+        slide.addEventListener('click', event => {
+          if (overview && !event.target.closest('a,button,select')) {
+            show(i);
+            setOverview(false);
+          }
+        });
+      });
+      function resize() {
+        const controlHeight = document.querySelector('.toolbar').getBoundingClientRect().height + 4;
+        const width = Math.max(240, window.innerWidth - (window.innerWidth < 650 ? 16 : 40));
+        const height = Math.max(130, window.innerHeight - controlHeight - 30);
+        const scale = overview ? Math.min(width / 1280, .90) : Math.min(width / 1280, height / 720);
+        document.documentElement.style.setProperty('--scale', scale.toFixed(5));
+        stage.style.width = `${1280 * scale}px`;
+        stage.style.height = `${720 * scale}px`;
+      }
+      function show(index, updateHash = true) {
+        current = Math.max(0, Math.min(slides.length - 1, Number(index) || 0));
+        slides.forEach((slide, i) => {
+          slide.classList.toggle('active', i === current);
+          slide.setAttribute('aria-hidden', String(!overview && i !== current));
+          slide.inert = !overview && i !== current;
+        });
+        select.value = String(current);
+        prev.disabled = current === 0;
+        next.disabled = current === slides.length - 1;
+        document.getElementById('progress-bar').style.width = `${(current + 1) / slides.length * 100}%`;
+        document.getElementById('progress').setAttribute('aria-valuenow', current + 1);
+        announce.textContent = `${current + 1} / ${slides.length}. ${slides[current].dataset.title}`;
+        document.title = `마주봄 · ${slides[current].dataset.title} (${current + 1}/${slides.length})`;
+        if (updateHash) {
+          const hash = `#slide-${current + 1}`;
+          try { history.replaceState(null, '', hash); } catch { location.hash = hash; }
+        }
+        if (overview) slides[current].scrollIntoView({ block:'center', behavior:'instant' });
+      }
+      function fromHash() {
+        const match = location.hash.match(/^#slide-(\d+)$/);
+        show(match ? Number(match[1]) - 1 : 0, false);
+      }
+      function setOverview(value) {
+        overview = value;
+        document.body.classList.toggle('overview', value);
+        overviewButton.setAttribute('aria-pressed', String(value));
+        overviewButton.textContent = value ? '발표 보기' : '전체 보기';
+        resize();
+        show(current, false);
+        if (!value) window.scrollTo(0, 0);
+      }
+      function showEvidence() {
+        document.getElementById('evidence-title').textContent = `${current + 1}. ${slides[current].dataset.title} — 확인 근거`;
+        const content = document.getElementById('evidence-content');
+        content.innerHTML = slides[current].querySelector('.notes').innerHTML;
+        content.append(slides[current].querySelector('.source').cloneNode(true));
+        dialog.showModal();
+      }
+      async function fullscreen() {
+        try {
+          if (document.fullscreenElement) await document.exitFullscreen();
+          else if (document.documentElement.requestFullscreen) await document.documentElement.requestFullscreen();
+          else announce.textContent = '이 브라우저에서는 F11로 전체화면을 사용할 수 있습니다.';
+        } catch { announce.textContent = '전체화면 전환을 사용할 수 없습니다. 브라우저의 F11을 사용해주세요.'; }
+      }
+      prev.addEventListener('click', () => show(current - 1));
+      next.addEventListener('click', () => show(current + 1));
+      select.addEventListener('change', () => show(select.value));
+      overviewButton.addEventListener('click', () => setOverview(!overview));
+      document.getElementById('evidence').addEventListener('click', showEvidence);
+      fullButton.addEventListener('click', fullscreen);
+      document.getElementById('print').addEventListener('click', () => window.print());
+      document.getElementById('close-dialog').addEventListener('click', () => dialog.close());
+      dialog.addEventListener('click', event => { if (event.target === dialog) { const r = dialog.getBoundingClientRect(); if (event.clientX < r.left || event.clientX > r.right || event.clientY < r.top || event.clientY > r.bottom) dialog.close(); } });
+      document.addEventListener('fullscreenchange', () => {
+        fullButton.textContent = document.fullscreenElement ? '전체화면 해제' : '전체화면';
+        document.body.classList.toggle('is-fullscreen', Boolean(document.fullscreenElement));
+        resize();
+      });
+      window.addEventListener('resize', resize);
+      window.addEventListener('hashchange', fromHash);
+      window.addEventListener('beforeprint', () => slides.forEach(slide => { slide.inert = false; slide.setAttribute('aria-hidden', 'false'); }));
+      window.addEventListener('afterprint', () => show(current, false));
+      window.addEventListener('keydown', event => {
+        if (dialog.open || event.altKey || event.ctrlKey || event.metaKey || event.target.closest('input,textarea,select,[contenteditable="true"]')) return;
+        if (event.target.closest('button,a') && [' ', 'Enter'].includes(event.key)) return;
+        const key = event.key.toLowerCase();
+        if (['arrowright','arrowdown','pagedown',' '].includes(key)) { event.preventDefault(); show(current + (event.shiftKey && key === ' ' ? -1 : 1)); }
+        else if (['arrowleft','arrowup','pageup'].includes(key)) { event.preventDefault(); show(current - 1); }
+        else if (key === 'home') { event.preventDefault(); show(0); }
+        else if (key === 'end') { event.preventDefault(); show(slides.length - 1); }
+        else if (key === 'o') { event.preventDefault(); setOverview(!overview); }
+        else if (key === 's') { event.preventDefault(); showEvidence(); }
+        else if (key === 'f') { event.preventDefault(); fullscreen(); }
+        else if (key === 'escape' && overview) setOverview(false);
+      });
+      document.getElementById('viewport').addEventListener('touchstart', event => { if (event.touches.length === 1) touch = { x:event.touches[0].clientX, y:event.touches[0].clientY }; }, { passive:true });
+      document.getElementById('viewport').addEventListener('touchend', event => {
+        if (!touch || overview || dialog.open || !event.changedTouches.length) return;
+        const dx = event.changedTouches[0].clientX - touch.x;
+        const dy = event.changedTouches[0].clientY - touch.y;
+        if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) show(current + (dx < 0 ? 1 : -1));
+        touch = null;
+      }, { passive:true });
+      resize();
+      fromHash();
+    })();
+  </script>
+</body>
+</html>
