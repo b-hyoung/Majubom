@@ -117,7 +117,7 @@ label, conf = predict(_posture_model, latest)   # latest = {"tof1":..,"tof2":..}
 1. **일반화 데이터**: 다른 사람 체격·침대 위 다른 위치로 각 클래스 보강 → supine/side 혼동 완화
 2. **특징 보강**: 존별 `targets`, 좌우/상하 무게중심, 유효존 수 등 파생 특징 추가
 3. **시간 정보**: 낙상·전이 감지는 프레임 단위가 아니라 **시퀀스**(LSTM/1D-CNN) 필요 — 별도 라벨 수집
-4. **역할 분담**: 낙상 = mmWave, 호흡·심박 이상 = CSI (ToF는 자세·재실 담당)
+4. **역할 분담**: 낙상 = mmWave, ToF는 자세·재실 담당(호흡·심박 이상은 CSI 담당 계획이었으나 2026-09-10 WiFi CSI 기능 자체를 완전히 제거하며 범위에서 빠짐)
 
 ## 재현/데이터
 - 데이터 수집: `TOF/capture_dataset.py`, 스파이크 제거: `TOF/preprocess_dataset.py`

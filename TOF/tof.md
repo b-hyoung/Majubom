@@ -8,7 +8,7 @@
                                           [PC/노트북 브라우저] ── GET 폴링 ──┘  대시보드로 실시간 표시
 ```
 
-- **서버**는 라즈베리파이5에서 돌아감 (포트: ToF=5001, CSI=5003, mmWave=5002)
+- **서버**는 라즈베리파이5에서 돌아감 (포트: ToF=5001, mmWave=5002)
 - ESP32와 PC(대시보드)는 **모두 Pi와 같은 WiFi**에 있어야 함
 - 현재 네트워크: WiFi **`2411 ServerRoom`**, Pi IP **`192.168.6.10`**
   > ⚠️ Pi IP는 네트워크가 바뀌거나 재부팅하면 달라짐. Pi에서 `hostname -I`로 확인.
@@ -18,14 +18,14 @@
 cd ~/Documents/GitHub/Majubom
 pip install -r requirements.txt      # 최초 1회 (flask, flask-cors)
 cd server
-python3 run_all.py                   # ToF+CSI+mmWave 한 번에 실행 (Ctrl+C로 종료)
+python3 run_all.py                   # ToF+mmWave 한 번에 실행 (Ctrl+C로 종료)
 ```
 - 실행되면 raw 데이터가 `server/majubom.db`의 `tof_readings` 테이블에 자동 저장됨
 
 ### B. PC/노트북 — 대시보드 보기
 Pi와 같은 WiFi(`2411 ServerRoom`)에 접속한 뒤 브라우저에서:
 ```
-http://192.168.6.10:5003/dashboard
+http://192.168.6.10:5001/dashboard
 ```
 > IP가 바뀌었으면 Pi의 `hostname -I` 값으로 접속. 화면 상단 호스트 입력칸은 비워두면 접속 주소를 자동으로 사용.
 

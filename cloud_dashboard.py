@@ -2,13 +2,13 @@
 # 이 PC가 대시보드를 "같은 출처"로 서빙 + 라즈베리파이 데이터 중계 →
 # 단일 URL(터널)만으로 대시보드+실시간 데이터가 모두 동작.
 #   대시보드의 url(kind,path) 를 same-origin(path) 으로 바꿔 서빙하고,
-#   /tof/* → RPi:5001, /csi/* → RPi:5003, /mmw* → RPi:5002 로 프록시.
+#   /tof/* → RPi:5001, /mmw* → RPi:5002 로 프록시.
 from flask import Flask, Response, request
 import urllib.request, urllib.error
 import os, mimetypes
 
 RPI   = "http://192.168.6.10"
-PORTS = {"tof": 5001, "csi": 5003, "mmw": 5002, "mmwave": 5002}
+PORTS = {"tof": 5001, "mmw": 5002, "mmwave": 5002}
 REPO  = os.path.dirname(os.path.abspath(__file__))
 SITE  = os.path.join(REPO, "site", "index.html")
 PORT  = 8080
@@ -45,8 +45,6 @@ def _target(path):
             return f"{RPI}:{port}{path}"
     if path.startswith("/beds"):
         return f"{RPI}:{PORTS['tof']}{path}"
-    if path.startswith("/health"):
-        return f"{RPI}:{PORTS['csi']}{path}"
     return None
 
 
@@ -80,6 +78,6 @@ def proxy(path):
 if __name__ == "__main__":
     print("=" * 56)
     print(f"  대시보드 프록시 : http://localhost:{PORT}")
-    print(f"  데이터 중계     : {RPI} (tof:5001 csi:5003 mmw:5002)")
+    print(f"  데이터 중계     : {RPI} (tof:5001 mmw:5002)")
     print("=" * 56)
     app.run(host="0.0.0.0", port=PORT, threaded=True)
