@@ -14,6 +14,7 @@ from flask_cors import CORS
 from datetime import datetime
 import os, json, sys
 import db
+import sim_state
 
 # Windows 콘솔(cp949)이 —/⚠ 같은 유니코드를 못 그리면 print()가 UnicodeEncodeError로
 # 죽어 서버 전체가 내려가므로, 그런 문자는 죽는 대신 대체 문자로 바꿔 출력만 깨지게 함.
@@ -298,6 +299,9 @@ def calibrate():
 
 @app.route("/tof/presence", methods=["GET"])
 def get_presence():
+    bed_id = request.args.get("bed_id")
+    if bed_id and sim_state.is_simulated(bed_id):
+        return jsonify(sim_state.synthetic_tof_presence(bed_id))
     return jsonify({
         "in_bed": presence["in_bed"],
         "since": presence["since"],
@@ -417,6 +421,9 @@ def _fall_risk(disp, now_iso):
 
 @app.route("/tof/latest", methods=["GET"])
 def get_latest():
+    bed_id = request.args.get("bed_id")
+    if bed_id and sim_state.is_simulated(bed_id):
+        return jsonify(sim_state.synthetic_tof_latest(bed_id))
     resp = dict(latest)                      # 원본 latest 훼손 방지
     if _POSTURE is not None:
         try:

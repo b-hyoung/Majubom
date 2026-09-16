@@ -47,11 +47,16 @@ def init_dashboard_schema():
                 active INTEGER DEFAULT 1, notes TEXT
             );
         """)
-        # Previously created databases may use a wider patient schema.
-        columns = {r["name"] for r in conn.execute("PRAGMA table_info(patients)")}
-        for name in ("name", "mmw_target_id"):
-            if name not in columns:
-                conn.execute(f"ALTER TABLE patients ADD COLUMN {name} TEXT")
+        # Previously created databases may use a narrower schema for these tables.
+        for table, needed in (
+            ("patients", ("name", "mmw_target_id", "room_no", "age", "sex", "room", "diagnosis", "notes")),
+            ("medications", ("frequency", "notes")),
+            ("risk_factors", ("factor", "severity", "notes")),
+        ):
+            columns = {r["name"] for r in conn.execute(f"PRAGMA table_info({table})")}
+            for name in needed:
+                if name not in columns:
+                    conn.execute(f"ALTER TABLE {table} ADD COLUMN {name} TEXT")
         conn.execute("INSERT OR IGNORE INTO beds (bed_id) VALUES (?)", (LIVE_BED_ID,))
         conn.execute("""INSERT OR IGNORE INTO patients (bed_id, name, mmw_target_id)
                         VALUES (?, ?, ?)""", (LIVE_BED_ID, "연결 환자", DEFAULT_TARGET))
@@ -148,9 +153,10 @@ def ensure_demo_patients():
         for p in DEMO_PATIENTS:
             bed_id = p["bed_id"]
             conn.execute("INSERT OR IGNORE INTO beds (bed_id) VALUES (?)", (bed_id,))
-            conn.execute("""INSERT OR IGNORE INTO patients (bed_id, name, age, sex, room, diagnosis, notes)
-                            VALUES (?, ?, ?, ?, ?, ?, ?)""", (
-                bed_id, p["name"], p["age"], p["sex"], p["room"], p["diagnosis"],
+            conn.execute("""INSERT OR IGNORE INTO patients
+                            (bed_id, name, age, sex, room, room_no, mmw_target_id, diagnosis, notes)
+                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""", (
+                bed_id, p["name"], p["age"], p["sex"], p["room"], p["room"], f"sim_{bed_id}", p["diagnosis"],
                 "데모 시뮬레이션 환자 — 프런트엔드에서 생성한 가상 센서 데이터",
             ))
             has_meds = conn.execute("SELECT 1 FROM medications WHERE bed_id = ? LIMIT 1", (bed_id,)).fetchone()
@@ -160,9 +166,12 @@ def ensure_demo_patients():
                                     VALUES (?, ?, ?, ?, ?)""", (bed_id, name, dose, frequency, notes))
             has_risks = conn.execute("SELECT 1 FROM risk_factors WHERE bed_id = ? LIMIT 1", (bed_id,)).fetchone()
             if not has_risks:
+                severity_weight = {"high": 0.3, "medium": 0.2, "low": 0.1}
                 for factor, severity, notes in p["risk_factors"]:
-                    conn.execute("""INSERT INTO risk_factors (bed_id, factor, severity, notes)
-                                    VALUES (?, ?, ?, ?)""", (bed_id, factor, severity, notes))
+                    conn.execute("""INSERT INTO risk_factors (bed_id, label, weight, factor, severity, notes)
+                                    VALUES (?, ?, ?, ?, ?, ?)""", (
+                        bed_id, factor, severity_weight.get(severity, 0.1), factor, severity, notes,
+                    ))
 
 
 def _decode_rows(rows):
@@ -331,6 +340,27 @@ def create_blueprint(analysis_runner=None, status_provider=None):
                        history={"tof": [dict(row) for row in reversed(tof)],
                                 "mmwave": [dict(row) for row in reversed(mmw)]},
                        analyses=analyses, summary=db.get_patient_timeseries_summary(bed_id))
+
+    @api.get("/patients/<bed_id>/events")
+    def patient_events(bed_id):
+        """"이전 이벤트" 날짜 필터 — date(YYYY-MM-DD)가 있으면 그 하루, 없으면 오늘 기준
+        최근 7일치를 돌려준다(대시보드 기본값)."""
+        if db.get_patient(bed_id) is None:
+            return failure("환자를 찾을 수 없습니다.", "not_found", 404)
+        date_str = request.args.get("date")
+        now = datetime.now()
+        if date_str:
+            try:
+                day = datetime.strptime(date_str, "%Y-%m-%d")
+            except ValueError:
+                return failure("date는 YYYY-MM-DD 형식이어야 합니다.", "bad_request")
+            since = day.strftime("%Y-%m-%d 00:00:00")
+            until = (day + timedelta(days=1)).strftime("%Y-%m-%d 00:00:00")
+        else:
+            since = (now - timedelta(days=7)).strftime("%Y-%m-%d 00:00:00")
+            until = None
+        events = db.get_activity_log(bed_id, limit=500, since=since, until=until)
+        return jsonify(success=True, events=_decode_rows(events))
 
     @api.post("/patients/<bed_id>/medications")
     def create_medication(bed_id):

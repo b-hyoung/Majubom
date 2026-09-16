@@ -28,6 +28,7 @@ from flask_cors import CORS
 
 import mmw_logic as L
 import db
+import sim_state
 
 try:
     import data_integrity as _data_integrity
@@ -174,6 +175,9 @@ def receive_live():
 
 @app.route("/mmw/live", methods=["GET"])
 def get_live():
+    bed_id = request.args.get("bed_id")
+    if bed_id and sim_state.is_simulated(bed_id):
+        return jsonify(sim_state.synthetic_mmw_live(bed_id))
     return jsonify(live_snapshot)
 
 
@@ -281,7 +285,7 @@ function render(data){
 
 async function poll(){
   try{
-    let r=await fetch('/mmw/live');
+    let r=await fetch('/mmw/live'+location.search);
     let d=await r.json();
     if(d.ts!==lastTs){render(d);lastTs=d.ts}
   }catch(e){}

@@ -410,13 +410,22 @@ def insert_sensor_event(bed_id: str, event_type: str, ts: str | None = None, lev
         return cur.lastrowid
 
 
-def get_activity_log(bed_id: str, event_type: str | None = None, limit: int = 50) -> list[dict]:
+def get_activity_log(bed_id: str, event_type: str | None = None, limit: int = 50,
+                      since: str | None = None, until: str | None = None) -> list[dict]:
+    """since/until: "YYYY-MM-DD HH:MM:SS" 형태 문자열 경계(since 이상, until 미만).
+    대시보드 "이전 이벤트" 날짜 필터(dashboard_api.py의 /events)가 사용."""
     with get_conn() as conn:
         q = "SELECT * FROM activity_log WHERE bed_id = ?"
         params: list = [bed_id]
         if event_type:
             q += " AND event_type = ?"
             params.append(event_type)
+        if since:
+            q += " AND ts >= ?"
+            params.append(since)
+        if until:
+            q += " AND ts < ?"
+            params.append(until)
         q += " ORDER BY ts DESC LIMIT ?"
         params.append(limit)
         rows = conn.execute(q, params).fetchall()

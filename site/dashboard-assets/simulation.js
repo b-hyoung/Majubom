@@ -32,9 +32,18 @@
     toss: { name: '수면 중 뒤척임', icon: '💤', dur: 20, posture: 'tossing', postureLabel: '뒤척임', inBed: true,
       tofRisk: 'caution', speed: 0.02, sway: 0.01, stride: 0, cv: 0.22, freeze: 0.90, mmRisk: 'caution', level: 'caution',
       activity: 'inBed', pos: { x: 1.05, y: 2.6 } },
+    edge: { name: '기상 준비 · 걸터앉음', icon: '🪑', dur: 12, posture: null, postureLabel: '걸터앉음', inBed: true,
+      tofRisk: 'caution', speed: 0.01, sway: 0.02, stride: 0, cv: 0.15, freeze: 0.75, mmRisk: 'caution', level: 'caution',
+      reason: null, activity: 'inBed' },
     exit: { name: '침상 이탈 감지', icon: '🛏️', dur: 25, posture: null, postureLabel: '침상 이탈 중', inBed: false,
       tofRisk: 'warning', speed: 0.12, sway: 0.03, stride: 0.15, cv: 0.18, freeze: 0.60, mmRisk: 'warning', level: 'warning',
       reason: '침상 가장자리 이탈 감지', activity: 'outOfBed', pos: { x: 1.75, y: 2.85 } },
+    checkingNormal: { name: '낙상 의심 · 교차검증 중', icon: '🔎', dur: 10, posture: null, postureLabel: '움직임 없음 · 확인 중', inBed: false,
+      tofRisk: 'warning', speed: 0, sway: 0, stride: 0, cv: 0, freeze: 1.00, mmRisk: 'warning', level: 'warning',
+      reason: '이탈 전 자세: 걸터앉음(정상) — 이탈 후 움직임 없음, AI 교차검증 중', activity: 'checking', pos: { x: 1.75, y: 2.85 } },
+    checkingAbnormal: { name: '낙상 의심 · 교차검증 중', icon: '🔎', dur: 10, posture: null, postureLabel: '움직임 없음 · 확인 중', inBed: false,
+      tofRisk: 'warning', speed: 0, sway: 0, stride: 0, cv: 0, freeze: 1.00, mmRisk: 'warning', level: 'warning',
+      reason: '이탈 전 자세: 뒤척임(비정상) — 이탈 후 움직임 없음, AI 교차검증 중', activity: 'checking', pos: { x: 1.75, y: 2.85 } },
     walk: { name: '이탈 후 이동', icon: '🚶', dur: 20, posture: null, postureLabel: '보행 중', inBed: false,
       tofRisk: 'normal', speed: 0.86, sway: 0.02, stride: 0.62, cv: 0.11, freeze: 0.05, mmRisk: 'normal', level: 'normal',
       reason: null, activity: 'walking', posFrom: { x: 1.9, y: 3.0 }, posTo: { x: 3.6, y: 5.25 } },
@@ -51,10 +60,10 @@
   // is a cheap way to bias how much of the cycle a patient spends at that severity.
   var SCENARIOS = {
     bed_sim_calm:        { label: '수면 위주 · 안정',      keys: ['sleep', 'toss'] },
-    bed_sim_bedexit:     { label: '침상 이탈 반복',        keys: ['sleep', 'exit', 'walk'] },
+    bed_sim_bedexit:     { label: '침상 이탈 반복',        keys: ['sleep', 'edge', 'exit', 'checkingNormal', 'walk'] },
     bed_sim_gaitcaution: { label: '뒤척임 반복 · 주의',    keys: ['sleep', 'toss', 'toss'] },
-    bed_sim_risk:        { label: '낙상 위험 임박 · 회복', keys: ['sleep', 'toss', 'risk', 'toss'] },
-    bed_sim_fall:        { label: '낙상 시나리오',         keys: ['sleep', 'toss', 'exit', 'walk', 'risk', 'fall'] }
+    bed_sim_risk:        { label: '낙상 위험 임박 · 회복', keys: ['sleep', 'toss', 'edge', 'risk', 'toss'] },
+    bed_sim_fall:        { label: '낙상 시나리오',         keys: ['sleep', 'toss', 'exit', 'checkingAbnormal', 'fall'] }
   };
 
   var FALL_BED_ID = 'bed_sim_fall';
@@ -122,6 +131,8 @@
       roomPos: roomPosition(ph, state.progress, t, seed),
       phaseKey: state.key, phaseName: ph.name, phaseIcon: ph.icon,
       phaseIndex: state.index, phaseCount: state.count,
+      phaseElapsedSec: Math.round(ph.dur * state.progress),
+      phaseDurSec: ph.dur,
       scenarioLabel: (SCENARIOS[bedId] || {}).label || null
     };
   }
@@ -134,7 +145,7 @@
       base = { x: ph.posFrom.x + (ph.posTo.x - ph.posFrom.x) * progress, y: ph.posFrom.y + (ph.posTo.y - ph.posFrom.y) * progress };
     }
     if (!base) return null;
-    var amp = ph.activity === 'walking' ? 0.05 : ph.activity === 'fallen' ? 0.01 : 0.08;
+    var amp = ph.activity === 'walking' ? 0.05 : (ph.activity === 'fallen' || ph.activity === 'checking') ? 0.01 : 0.08;
     return { x: round2(base.x + Math.sin(t * 0.9 + seed) * amp), y: round2(base.y + Math.cos(t * 0.8 + seed) * amp * 0.6) };
   }
 
@@ -147,21 +158,22 @@
       { fromH: 3.2, toH: 3.6, key: 'toss' }
     ],
     bed_sim_bedexit: [
-      { fromH: 1.0, toH: 1.4, key: 'exit' }, { fromH: 1.4, toH: 1.7, key: 'walk' },
-      { fromH: 14.3, toH: 14.6, key: 'exit' }, { fromH: 14.6, toH: 14.8, key: 'walk' }
+      { fromH: 0.9, toH: 1.0, key: 'edge' }, { fromH: 1.0, toH: 1.3, key: 'exit' },
+      { fromH: 1.3, toH: 1.45, key: 'checkingNormal' }, { fromH: 1.45, toH: 1.7, key: 'walk' },
+      { fromH: 14.2, toH: 14.3, key: 'edge' }, { fromH: 14.3, toH: 14.5, key: 'exit' },
+      { fromH: 14.5, toH: 14.65, key: 'checkingNormal' }, { fromH: 14.65, toH: 14.9, key: 'walk' }
     ],
     bed_sim_gaitcaution: [
       { fromH: 2.0, toH: 2.4, key: 'toss' }, { fromH: 11.1, toH: 11.4, key: 'toss' },
       { fromH: 20.2, toH: 20.6, key: 'toss' }
     ],
     bed_sim_risk: [
-      { fromH: 3.0, toH: 3.3, key: 'toss' }, { fromH: 3.3, toH: 3.65, key: 'risk' },
-      { fromH: 3.65, toH: 3.9, key: 'toss' }
+      { fromH: 3.0, toH: 3.25, key: 'toss' }, { fromH: 3.25, toH: 3.35, key: 'edge' },
+      { fromH: 3.35, toH: 3.7, key: 'risk' }, { fromH: 3.7, toH: 3.95, key: 'toss' }
     ],
     bed_sim_fall: [
-      { fromH: 21.0, toH: 21.25, key: 'toss' }, { fromH: 21.25, toH: 21.5, key: 'exit' },
-      { fromH: 21.5, toH: 21.7, key: 'walk' }, { fromH: 21.7, toH: 21.95, key: 'risk' },
-      { fromH: 21.95, toH: 22.2, key: 'fall' }
+      { fromH: 21.0, toH: 21.3, key: 'toss' }, { fromH: 21.3, toH: 21.55, key: 'exit' },
+      { fromH: 21.55, toH: 21.75, key: 'checkingAbnormal' }, { fromH: 21.75, toH: 22.0, key: 'fall' }
     ]
   };
 

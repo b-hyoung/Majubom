@@ -395,6 +395,11 @@
     if (snap.activity === 'inBed') {
       return '<circle r="10" fill="' + color + '" opacity="0.16"/><circle r="7" fill="' + color + '" opacity="0.4"/><circle r="4.5" fill="' + color + '"/>';
     }
+    if (snap.activity === 'checking') {
+      return '<circle r="14" fill="none" stroke="' + color + '" stroke-width="2" opacity="0.55" class="marker-pulse-ring"/>' +
+        '<circle r="8" fill="' + color + '" opacity="0.35"/><circle r="5" fill="' + color + '"/>' +
+        '<text y="3" text-anchor="middle" font-size="9" font-weight="800" fill="#fff">?</text>';
+    }
     return '<circle r="12" fill="' + color + '" opacity="0.16"/><circle r="8" fill="' + color + '" opacity="0.4"/><circle r="5" fill="' + color + '"/>';
   }
 
@@ -493,18 +498,108 @@
     if (noteEl) noteEl.textContent = walking ? '' : '현재 보행 중이 아니며, 마지막으로 잠긴 위치를 정지 상태로 표시하고 있습니다.';
   }
 
+  function eventRowHtml(e) {
+    var level = e.level || 'info';
+    var note = e.note ? '<div class="event-note">' + escapeHtml(e.note) + '</div>' : '';
+    return '<div class="event-row">' +
+      '<span class="event-time mono">' + escapeHtml(fmtTime(e.ts || e.timestamp)) + '</span>' +
+      '<span class="dot ' + escapeHtml(level) + '"></span>' +
+      '<span class="event-title">' + escapeHtml(e.title || e.event_type || '이벤트') + '</span>' +
+      note +
+      '</div>';
+  }
+
+  function todayIsoDate() {
+    var d = new Date();
+    return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2);
+  }
+
+  // 오늘 이벤트는 전부, 이전 이벤트는 기본값으로 최근 7일치만 남긴다(그 이전은 날짜를
+  // 직접 골라야 보임 — /patients/<id>/events?date= 로 서버에서 별도 조회).
+  function splitEventsByDay(events) {
+    var todayStr = new Date().toDateString();
+    var cutoff = Date.now() - 7 * 24 * 3600 * 1000;
+    var today = [], past = [];
+    events.forEach(function (e) {
+      var d = new Date(String(e.ts || e.timestamp));
+      if (Number.isNaN(d.getTime())) return;
+      if (d.toDateString() === todayStr) today.push(e);
+      else if (d.getTime() >= cutoff) past.push(e);
+    });
+    return { today: today, past: past };
+  }
+
+  function eventTocHtml(pastEvents) {
+    // 이전 이벤트를 날짜별로 묶어 AI 리포트 목록처럼 목차 형태로 보여준다.
+    var groups = [], byDate = {};
+    pastEvents.forEach(function (e) {
+      var d = new Date(String(e.ts || e.timestamp));
+      var key = Number.isNaN(d.getTime()) ? '날짜 미상' :
+        d.toLocaleDateString('ko-KR', { month: '2-digit', day: '2-digit', weekday: 'short' });
+      if (!byDate[key]) { byDate[key] = []; groups.push(key); }
+      byDate[key].push(e);
+    });
+    return groups.map(function (key) {
+      return '<div class="event-toc-date">' + escapeHtml(key) + '</div>' +
+        byDate[key].map(eventRowHtml).join('');
+    }).join('');
+  }
+
+  // 당일 이벤트는 고정 크기의 스크롤 로그 박스에 오래된 것이 위 · 새 이벤트가 아래에 쌓이고,
+  // 이전 이벤트는 기본 최근 7일 목차 + 날짜 선택 input(고르면 그 날짜만 서버에서 다시 불러옴).
   function renderEvents(events) {
-    if (!events || events.length === 0) return '<div class="empty-state">최근 기록된 이벤트가 없습니다.</div>';
-    return '<div class="events-list">' + events.slice(0, 20).map(function (e) {
-      var level = e.level || 'info';
-      var note = e.note ? '<div class="event-note">' + escapeHtml(e.note) + '</div>' : '';
-      return '<div class="event-row">' +
-        '<span class="event-time mono">' + escapeHtml(fmtTime(e.ts || e.timestamp)) + '</span>' +
-        '<span class="dot ' + escapeHtml(level) + '"></span>' +
-        '<span class="event-title">' + escapeHtml(e.title || e.event_type || '이벤트') + '</span>' +
-        note +
-        '</div>';
-    }).join('') + '</div>';
+    events = events || [];
+    var bedId = state.selectedId || '';
+    var wrapOpen = '<div class="events-wrap" data-bed="' + escapeHtml(bedId) + '">';
+    if (events.length === 0) {
+      return wrapOpen + '<div class="empty-state">최근 기록된 이벤트가 없습니다.</div></div>';
+    }
+    var split = splitEventsByDay(events.slice(0, 60));
+    var todayAsc = split.today.slice().reverse(); // 오래된 것 위 → 새 것 아래
+    var html = wrapOpen;
+    html += '<div class="event-log-label">오늘의 이벤트<span class="event-log-count">' +
+      todayAsc.length + '건</span></div>' +
+      '<div class="event-log-box">' + (
+        todayAsc.length ? todayAsc.map(eventRowHtml).join('') :
+          '<div class="event-log-empty">오늘 기록된 이벤트가 없습니다.</div>'
+      ) + '</div>';
+    html += '<div class="event-log-label"><span class="event-past-label">이전 이벤트 (최근 7일)</span>' +
+      '<input type="date" class="event-date-pick" max="' + todayIsoDate() + '" title="날짜를 고르면 그 날짜의 이벤트만 봅니다"></div>' +
+      '<div class="events-list">' + (
+        split.past.length ? eventTocHtml(split.past) :
+          '<div class="empty-state">최근 7일간 기록된 이벤트가 없습니다.</div>'
+      ) + '</div>';
+    html += '</div>';
+    return html;
+  }
+
+  // "이전 이벤트" 날짜 선택 — 고른 날짜(또는 초기화 시 기본 7일)를 서버에서 다시 조회해
+  // 그 events-wrap 안의 목록·라벨만 갱신한다(오늘 로그 박스는 건드리지 않음).
+  document.addEventListener('change', function (ev) {
+    var inp = ev.target.closest ? ev.target.closest('.event-date-pick') : null;
+    if (!inp) return;
+    var wrap = inp.closest('.events-wrap');
+    var bedId = wrap && wrap.getAttribute('data-bed');
+    var list = wrap && wrap.querySelector('.events-list');
+    var label = wrap && wrap.querySelector('.event-past-label');
+    if (!bedId || !list) return;
+    var dateVal = inp.value;
+    if (label) label.textContent = dateVal ? (dateVal + ' 이벤트') : '이전 이벤트 (최근 7일)';
+    list.innerHTML = '<div class="empty-state">불러오는 중…</div>';
+    api('/api/dashboard/patients/' + encodeURIComponent(bedId) + '/events' +
+      (dateVal ? ('?date=' + encodeURIComponent(dateVal)) : ''))
+      .then(function (res) {
+        var evs = (res && res.success && res.events) || [];
+        list.innerHTML = evs.length ? eventTocHtml(evs) :
+          '<div class="empty-state">' + (dateVal ? '이 날짜엔' : '최근 7일간') + ' 기록된 이벤트가 없습니다.</div>';
+      })
+      .catch(function () { list.innerHTML = '<div class="empty-state">불러오지 못했습니다.</div>'; });
+  });
+
+  // 위 렌더링 직후 호출 — 오늘 로그 박스를 항상 최신(맨 아래)으로 스크롤한다.
+  function scrollEventLogToBottom(containerEl) {
+    var box = containerEl && containerEl.querySelector('.event-log-box');
+    if (box) box.scrollTop = box.scrollHeight;
   }
 
   var LEVEL_LABEL = { caution: '주의', warning: '경고', critical: '위험' };
@@ -516,6 +611,9 @@
     var level = snap ? dominantOf(snap.tof && snap.tof.riskLevel, snap.mmwave && snap.mmwave.riskLevel, true, true) : null;
     if (mode === 'none' || !level || level === 'normal') { el.hidden = true; el.innerHTML = ''; return; }
     var reason = (snap.mmwave && snap.mmwave.reason) || (snap.tof && snap.tof.reason) || null;
+    if (reason && snap.activity === 'checking' && snap.phaseDurSec) {
+      reason += ' (' + Math.min(snap.phaseElapsedSec, snap.phaseDurSec) + '/' + snap.phaseDurSec + '초)';
+    }
     var simNote = mode === 'sim' ? ' · 시뮬레이션 데이터' : '';
     el.hidden = false;
     el.innerHTML = '<div class="risk-banner risk-banner-' + escapeHtml(level) + '">' +
@@ -552,6 +650,7 @@
     sub.textContent = mode === 'live' ? '실제 센서 이벤트 기록 기반' : '';
     if (!events.length) { el.innerHTML = '<div class="empty-state">최근 24시간 동안 기록된 이벤트가 없습니다.</div>'; return; }
     el.innerHTML = renderEvents(events);
+    scrollEventLogToBottom(el);
   }
 
   var SEVERITY_LABEL = { high: '높음', medium: '중간', low: '낮음' };
@@ -686,7 +785,9 @@
     renderTimeline24h();
     $('#ovRiskFactors').innerHTML = renderRiskFactors(state.detail && state.detail.risk_factors);
     $('#ovMedications').innerHTML = renderMedications(state.detail && state.detail.medications);
-    $('#ovEvents').innerHTML = renderEvents(state.detail && state.detail.events);
+    var ovEventsEl = $('#ovEvents');
+    ovEventsEl.innerHTML = renderEvents(state.detail && state.detail.events);
+    scrollEventLogToBottom(ovEventsEl);
   }
 
   /* ---------------- Sparklines ---------------- */
@@ -782,7 +883,9 @@
       var tofHist = (d && d.history && d.history.tof) || [];
       $('#trendTof').innerHTML = renderTofTrend(tofHist);
     }
-    $('#trendEvents').innerHTML = renderEvents(d && d.events);
+    var trendEventsEl = $('#trendEvents');
+    trendEventsEl.innerHTML = renderEvents(d && d.events);
+    scrollEventLogToBottom(trendEventsEl);
   }
 
   /* ---------------- AI report ---------------- */
@@ -940,17 +1043,26 @@
       '</span> · 마지막 수신: ' + escapeHtml(mmw && mmw.lastSeen ? fmtTime(mmw.lastSeen) : '—') + '</div>';
   }
 
+  // 시뮬레이션 환자면 실제 /tof/3d·/mmw/viz 뷰어(렌더링 코드는 그대로)에 ?bed_id=를 달아서
+  // 하드웨어 없이도 시나리오 값으로 채워진 3D/포인트클라우드가 뜨게 한다. 라이브(bed_01)는
+  // 파라미터 없이 지금과 완전히 동일하게 동작.
+  function refreshRawViewerSrc(box) {
+    var mode = currentSensorMode();
+    var suffix = mode === 'sim' ? ('?bed_id=' + encodeURIComponent(state.selectedId)) : '';
+    var key = mode + ':' + (state.selectedId || '');
+    if (box.dataset.loaded === key) return;
+    box.dataset.loaded = key;
+    box.innerHTML =
+      '<div class="raw-viewer-wrap raw-viewer"><div class="uppercase-label">ToF 3D 자세</div><iframe src="/tof/3d' + suffix + '" loading="lazy"></iframe></div>' +
+      '<div class="raw-viewer-wrap raw-viewer"><div class="uppercase-label">mmWave 포인트클라우드</div><iframe src="/mmw/viz' + suffix + '" loading="lazy"></iframe></div>';
+  }
+
   function wireRawViewerToggle(buttonId, boxId) {
     var btn = $(buttonId), box = $(boxId);
     if (!btn || !box) return;
     btn.addEventListener('click', function () {
       box.hidden = !box.hidden;
-      if (!box.hidden && !box.dataset.loaded) {
-        box.dataset.loaded = '1';
-        box.innerHTML =
-          '<div class="raw-viewer-wrap raw-viewer"><div class="uppercase-label">ToF 3D 자세</div><iframe src="/tof/3d" loading="lazy"></iframe></div>' +
-          '<div class="raw-viewer-wrap raw-viewer"><div class="uppercase-label">mmWave 포인트클라우드</div><iframe src="/mmw/viz" loading="lazy"></iframe></div>';
-      }
+      if (!box.hidden) refreshRawViewerSrc(box);
       btn.textContent = box.hidden ? '3D/포인트클라우드 뷰어 열기' : '뷰어 닫기';
     });
   }

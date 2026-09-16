@@ -648,8 +648,8 @@ function draw(){
 async function poll(){
   try{
     const [lres,pres]=await Promise.all([
-      fetch(SERVER+'/tof/latest',{cache:'no-store'}),
-      fetch(SERVER+'/tof/presence',{cache:'no-store'}),
+      fetch(SERVER+'/tof/latest'+location.search,{cache:'no-store'}),
+      fetch(SERVER+'/tof/presence'+location.search,{cache:'no-store'}),
     ]);
     if(!lres.ok || !pres.ok) throw new Error('server '+lres.status+'/'+pres.status);
     const lr=await lres.json(), pr=await pres.json();
