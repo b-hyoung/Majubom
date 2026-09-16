@@ -3,7 +3,7 @@
 # 단일 URL(터널)만으로 대시보드+실시간 데이터가 모두 동작.
 #   대시보드의 url(kind,path) 를 same-origin(path) 으로 바꿔 서빙하고,
 #   /tof/* → RPi:5001, /mmw* → RPi:5002 로 프록시.
-from flask import Flask, Response, request
+from flask import Flask, Response, request, send_from_directory
 import urllib.request, urllib.error
 import os, mimetypes
 
@@ -28,8 +28,14 @@ def dashboard_html():
 
 @app.route("/")
 @app.route("/dashboard")
+@app.route("/dashboard_design.html")
 def dash():
     return dashboard_html()
+
+
+@app.route("/dashboard-assets/<path:filename>")
+def dashboard_asset(filename):
+    return send_from_directory(os.path.join(REPO, "site", "dashboard-assets"), filename, max_age=0)
 
 
 @app.route("/tof/3d")
@@ -43,7 +49,8 @@ def _target(path):
     for k, port in PORTS.items():
         if path == "/" + k or path.startswith("/" + k + "/"):
             return f"{RPI}:{port}{path}"
-    if path.startswith("/beds"):
+    if path == "/beds" or any(path.startswith(prefix) for prefix in
+                              ("/patients/", "/api/dashboard/", "/agent/", "/kb/")):
         return f"{RPI}:{PORTS['tof']}{path}"
     return None
 
@@ -53,22 +60,18 @@ def proxy(path):
     full = "/" + path
     tgt = _target(full)
     if tgt is None:                                   # site/ 정적 파일 폴백
-        fp = os.path.join(REPO, "site", path)
-        if os.path.isfile(fp):
-            ct = mimetypes.guess_type(fp)[0] or "application/octet-stream"
-            with open(fp, "rb") as f:
-                return Response(f.read(), content_type=ct)
-        return Response("not found", status=404)
+        return send_from_directory(os.path.join(REPO, "site"), path)
     if request.query_string:
         tgt += "?" + request.query_string.decode()
     try:
         body = request.get_data() if request.method == "POST" else None
         req = urllib.request.Request(tgt, data=body, method=request.method)
         req.add_header("Content-Type", request.headers.get("Content-Type", "application/json"))
-        with urllib.request.urlopen(req, timeout=5) as r:
+        with urllib.request.urlopen(req, timeout=15) as r:
             data = r.read()
             ct = r.headers.get("Content-Type", "application/json")
-        return Response(data, content_type=ct)
+            status = r.status
+        return Response(data, status=status, content_type=ct)
     except urllib.error.HTTPError as e:
         return Response(e.read(), status=e.code, content_type="application/json")
     except Exception as e:

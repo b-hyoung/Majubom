@@ -41,7 +41,7 @@ def compute_risk_score(patient_state: dict) -> dict:
 
     posture_level = (tof.get("posture_baseline") or {}).get("alert_level")
     exit_level = (tof.get("exit_episode") or {}).get("alert_level")
-    mmw_level = mmw.get("alert_level")
+    mmw_level = mmw.get("alert_level") if not mmw.get("measuring_held") and (mmw.get("quality") or {}).get("reliable") is not False else None
 
     components = {
         "tof_posture": posture_level, "tof_exit": exit_level, "mmwave_gait": mmw_level,
@@ -72,6 +72,10 @@ INTEGRATED_SYSTEM_PROMPT = (
     "당신은 치매환자 낙상예측시스템의 통합분석 리포트 작성자입니다. 아래 JSON에는 이미 계산이 끝난 "
     "사실(환자 프로필·위험인자·투약, ToF/mmWave 현재 판정, 이미 계산된 위험점수, 직전 분석 기록, "
     "검색된 논문 근거)만 들어있습니다. 절대 새로운 수치를 만들어내거나 주어진 수치를 바꾸지 마세요. "
+    "'최근_이벤트_상세'는 시각순 실제 이벤트 로그입니다 — 낙상(level=critical, event_type에 fall 포함) "
+    "이벤트가 있다면 '침상_관련_행동'과 '낙상_위험도_설명'에 그 발생 사실과 시각을 명시하고, 그 낙상 "
+    "이벤트보다 앞선 시각의 이벤트들(주의·경고 수준 상승 등) 중 전조로 볼 만한 것이 있다면 함께 짚어 "
+    "'최근_변화'에 서술하세요 — 이벤트 로그에 없는 전조는 지어내지 마세요. "
     "논문 근거는 주어진 것 외에 새로 지어내지 마세요. 정보가 부족한 항목은 빈 문자열이나 '정보 부족'으로 "
     "정직하게 표시하고 추측으로 채우지 마세요. '향후 위험 가능성'은 실제 예측 모델이 아니라 현재 판정과 "
     "최근 변화 추세에 대한 신중한 설명이어야 하며, 확정적으로 단정하지 마세요. "
@@ -99,6 +103,7 @@ def _build_payload(bed_id: str, investigation: dict, risk: dict, confidence: flo
         "ToF_현재_판정": investigation["patient_state"].get("tof_behavior"),
         "mmWave_현재_판정": investigation["patient_state"].get("mmw_latest"),
         "최근_24시간_활동_요약": investigation["patient_state"].get("recent_24h"),
+        "최근_이벤트_상세": investigation["patient_state"].get("recent_events"),
         "계산된_위험점수": risk,
         "데이터_신뢰도_비율": confidence,
         "직전_분석_기록": prev_analysis,
@@ -112,7 +117,7 @@ def _build_payload(bed_id: str, investigation: dict, risk: dict, confidence: flo
 
 
 def generate_integrated_report(bed_id: str, max_rounds: int = 2, top_k: int = 5,
-                                persist: bool = True) -> dict:
+                                persist: bool = True, override_created_at: str | None = None) -> dict:
     """전체 STEP 21-23 파이프라인. 반환: {"success":bool, "analysis_id", "risk", "report", ...}
     또는 실패 시 ai_agent/ai_report와 동일한 정직한 실패 shape을 그대로 전파한다."""
     investigation = ai_agent.investigate(bed_id, max_rounds=max_rounds, top_k=top_k)
@@ -149,11 +154,12 @@ def generate_integrated_report(bed_id: str, max_rounds: int = 2, top_k: int = 5,
             detected_patterns=[report.get("주요_위험_요인", "")],
             predicted_risks=[report.get("향후_위험_가능성", "")],
             evidence_ids=evidence_ids, model_version=result.get("model", DEFAULT_MODEL),
-            prompt_version=PROMPT_VERSION, confidence=confidence, report=report,
+            prompt_version=PROMPT_VERSION, confidence=confidence, report=report, risk=risk,
+            created_at=override_created_at,
         )
         db.insert_sensor_event(
-            bed_id, "ai_analysis_completed", level=risk.get("dominant_signal") and
-            ("caution" if risk["combined_risk_score"] and risk["combined_risk_score"] < 0.7 else "warning"),
+            bed_id, "ai_analysis_completed", ts=override_created_at, level=(
+                risk["component_levels"].get(risk["dominant_signal"]) if risk["dominant_signal"] else None),
             title="AI 통합분석 완료", note=report.get("현재_상태", "")[:200],
         )
 

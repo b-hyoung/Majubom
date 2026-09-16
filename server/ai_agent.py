@@ -20,12 +20,13 @@ from __future__ import annotations
 
 import json
 import os
+from datetime import datetime
 
 import requests
 
 import ai_report
 import db
-import paper_kb
+import sim_state
 
 TOF_BASE = os.environ.get("MAJUBOM_TOF_BASE", "http://127.0.0.1:5001")
 MMW_BASE = os.environ.get("MAJUBOM_MMW_BASE", "http://127.0.0.1:5002")
@@ -34,13 +35,24 @@ MAX_ROUNDS_DEFAULT = 2
 QUERIES_PER_ROUND_DEFAULT = 3
 
 
+def _fresh(timestamp, seconds):
+    """Receiver timestamps are local ISO dates; never count old memory as live data."""
+    if not timestamp:
+        return False
+    try:
+        age = datetime.now().timestamp() - datetime.fromisoformat(str(timestamp).replace("Z", "+00:00")).timestamp()
+        return -5 <= age <= seconds
+    except (ValueError, TypeError, OverflowError):
+        return False
+
+
 # ── ① 현재 상태 수집 (SQL DB + 실서버 라이브 상태) ────────────────────────
 def gather_patient_state(bed_id: str) -> dict:
     """환자 프로필·위험인자·투약(SQL DB)과, ToF/mmWave 실서버의 현재 판정을 한데 모은다.
     실서버가 꺼져있어도(개발 중 등) 예외를 던지지 않고 그 부분만 None으로 정직하게 비운다 —
     "조회 실패"와 "정보 없음"을 헷갈리지 않도록 각 필드에 상태를 남긴다."""
     patient = db.get_patient(bed_id)
-    mmw_target_id = (patient or {}).get("mmw_target_id")
+    mmw_target_id = (patient or {}).get("mmw_target_id") or ("room_01" if bed_id == "bed_01" else None)
 
     state: dict = {
         "bed_id": bed_id,
@@ -48,22 +60,59 @@ def gather_patient_state(bed_id: str) -> dict:
         "risk_factors": db.list_risk_factors(bed_id) if patient else [],
         "medications": db.list_medications(bed_id) if patient else [],
         "recent_24h": db.get_patient_timeseries_summary(bed_id, window="24h"),
+        # 실제 개별 이벤트(시각·제목·메모) — 집계 요약(recent_24h)만으로는 "언제 어떤 전조가
+        # 있었는지"를 알 수 없어, 낙상 등 특정 사건 전후의 시계열 근거로 그대로 씀.
+        "recent_events": db.get_activity_log(bed_id, limit=20) if patient else [],
         "tof_behavior": None, "tof_behavior_error": None,
         "mmw_latest": None, "mmw_latest_error": None,
     }
 
-    try:
-        r = requests.get(f"{TOF_BASE}/tof/behavior", timeout=3)
-        state["tof_behavior"] = r.json() if r.status_code == 200 else None
-    except requests.exceptions.RequestException as e:
-        state["tof_behavior_error"] = f"{type(e).__name__} — ToF 서버 미기동/네트워크 문제일 수 있음"
+    # The bed_sim_* demo patients have no hardware at all — their "sensors" are a
+    # deterministic client-side scenario (site/dashboard-assets/simulation.js). Mirror that
+    # same formula here (sim_state.py) so a report generated with nobody's browser open
+    # still has real signals to reason about, matching whatever is on screen at that moment.
+    if sim_state.is_simulated(bed_id):
+        state["tof_behavior"] = sim_state.simulated_tof_behavior(bed_id)
+        state["mmw_latest"] = sim_state.simulated_mmw_latest(bed_id)
+        return state
+
+    # The shared hardware stream is wired to the first patient only. The retired
+    # /tof/behavior route no longer exists; use current posture and presence APIs.
+    if bed_id == "bed_01":
+        try:
+            r = requests.get(f"{TOF_BASE}/tof/latest", timeout=3)
+            latest = r.json() if r.status_code == 200 else {}
+            frames = [latest.get(sensor) or {} for sensor in ("tof1", "tof2")]
+            if any(_fresh(frame.get("received_at"), 10) for frame in frames):
+                p = requests.get(f"{TOF_BASE}/tof/presence", timeout=3)
+                presence = p.json() if p.status_code == 200 else None
+                risk = latest.get("risk") or {}
+                risk_level = None
+                if risk.get("posture") and _fresh(risk.get("at"), 10):
+                    risk_level = "warning" if risk.get("status") == "anomaly" else (
+                        "normal" if risk.get("status") == "normal" else None)
+                state["tof_behavior"] = {
+                    "posture": latest.get("posture"), "posture_ko": latest.get("posture_ko"),
+                    "posture_conf": latest.get("posture_conf"), "presence": presence, "risk": risk,
+                    "posture_baseline": {"alert_level": risk_level, "source": "current_posture_edge_detector"},
+                    "exit_episode": None,
+                    "note": "현재 자세·가장자리 감지 결과. 이탈 빈도 및 과거 자세 통계는 제공되지 않음.",
+                }
+            else:
+                state["tof_behavior_error"] = "최근 ToF 수신 데이터가 없습니다."
+        except (requests.exceptions.RequestException, ValueError):
+            state["tof_behavior_error"] = "ToF 서버 상태를 조회하지 못했습니다."
 
     if mmw_target_id:
         try:
             r = requests.get(f"{MMW_BASE}/mmw/latest", params={"target": mmw_target_id}, timeout=3)
-            state["mmw_latest"] = r.json() if r.status_code == 200 else None
-        except requests.exceptions.RequestException as e:
-            state["mmw_latest_error"] = f"{type(e).__name__} — mmWave 서버 미기동/네트워크 문제일 수 있음"
+            latest = r.json() if r.status_code == 200 else {}
+            if latest and _fresh(latest.get("received_at"), 90):
+                state["mmw_latest"] = latest
+            else:
+                state["mmw_latest_error"] = "최근 mmWave 수신 데이터가 없습니다."
+        except (requests.exceptions.RequestException, ValueError):
+            state["mmw_latest_error"] = "mmWave 서버 상태를 조회하지 못했습니다."
 
     return state
 
@@ -138,6 +187,8 @@ def investigate(bed_id: str, max_rounds: int = MAX_ROUNDS_DEFAULT,
                  "sufficient":bool, "reasoning":str}
     이 결과는 STEP 21-23(통합분석/리포트)이 그대로 입력으로 받게 될 재료다 — 이 함수 자체는
     최종 리포트나 위험점수를 만들지 않는다."""
+    import paper_kb
+
     patient_state = gather_patient_state(bed_id)
 
     rounds: list[dict] = []

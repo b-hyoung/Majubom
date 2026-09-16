@@ -15,6 +15,11 @@ from datetime import datetime
 import os, json, sys
 import db
 
+# Windows 콘솔(cp949)이 —/⚠ 같은 유니코드를 못 그리면 print()가 UnicodeEncodeError로
+# 죽어 서버 전체가 내려가므로, 그런 문자는 죽는 대신 대체 문자로 바꿔 출력만 깨지게 함.
+sys.stdout.reconfigure(errors="replace")
+sys.stderr.reconfigure(errors="replace")
+
 # 12번 탭(시스템 확장) STEP 6-9 raw/clean 일관성 진단 — 옵션(없어도 서버는 정상 동작)
 try:
     import data_integrity as _data_integrity
@@ -447,6 +452,7 @@ _SITE = os.path.join(HERE, "..", "site", "index.html")
 
 
 @app.route("/dashboard", methods=["GET"])
+@app.route("/dashboard_design.html", methods=["GET"])
 def dashboard():
     try:
         with open(_SITE, "r", encoding="utf-8") as f:
@@ -457,6 +463,15 @@ def dashboard():
         return resp
     except FileNotFoundError:
         return Response("site/index.html not found", status=404)
+
+
+@app.route("/dashboard-assets/<path:filename>", methods=["GET"])
+def dashboard_asset(filename):
+    return send_from_directory(os.path.join(HERE, "..", "site", "dashboard-assets"), filename, max_age=0)
+
+
+from dashboard_api import register_dashboard
+register_dashboard(app)
 
 
 # ── mmWave(:5002) 프록시 ──────────────────────────────────────────────
@@ -509,7 +524,7 @@ def get_risk_factors_route(bed_id):
 
 
 # ── 12번 탭 STEP 13-17: 논문 Vector DB 검색 ────────────────────────────
-@app.route("/kb/search", methods=["GET"])
+@app.route("/kb/search", methods=["POST"])
 def kb_search_route():
     import paper_kb
     q = request.args.get("q", "")
@@ -518,7 +533,7 @@ def kb_search_route():
 
 
 # ── 12번 탭 STEP 18-20: AI Agent 조사 ──────────────────────────────────
-@app.route("/agent/investigate", methods=["GET"])
+@app.route("/agent/investigate", methods=["POST"])
 def agent_investigate_route():
     import ai_agent
     bed_id = request.args.get("bed_id", "bed_01")
@@ -528,7 +543,7 @@ def agent_investigate_route():
 
 
 # ── 12번 탭 STEP 21-23: 통합분석 + 종합 리포트 ─────────────────────────
-@app.route("/agent/analyze", methods=["GET"])
+@app.route("/agent/analyze", methods=["POST"])
 def agent_analyze_route():
     import integrated_analysis
     bed_id = request.args.get("bed_id", "bed_01")

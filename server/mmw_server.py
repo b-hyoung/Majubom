@@ -183,6 +183,7 @@ def viz():
 <title>mmWave Point Cloud</title>
 <style>
  *{margin:0;padding:0;box-sizing:border-box}
+ html,body{overscroll-behavior:none}
  body{background:#0d0b1a;color:#e8e6f5;font-family:system-ui,sans-serif;
       display:flex;flex-direction:column;align-items:center;padding:16px}
  h2{margin-bottom:8px;font-size:18px;font-weight:700}

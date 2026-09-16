@@ -17,8 +17,18 @@ TOF_ZONES     = 64   # ToF 8x8 존 개수 (distances_mm 를 d0..d63 컬럼으로
 
 
 # ── 연결 ──────────────────────────────────────────────────────────────
+class _ClosingConnection(sqlite3.Connection):
+    def __exit__(self, *args):
+        # sqlite3's default context manager commits but leaves the handle open.
+        # Dashboard polling creates many short-lived reads; close after each one.
+        try:
+            return super().__exit__(*args)
+        finally:
+            self.close()
+
+
 def get_conn() -> sqlite3.Connection:
-    conn = sqlite3.connect(DB_PATH)
+    conn = sqlite3.connect(DB_PATH, factory=_ClosingConnection)
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA foreign_keys = ON")
     return conn
@@ -87,6 +97,11 @@ def init_db():
             CREATE INDEX IF NOT EXISTS idx_ai_analysis_patient
                 ON ai_analysis(patient_id, analysis_type, created_at);
         """)
+        # risk_json(센서별 component_levels/dominant_signal 전체) — 대시보드가 과거 분석
+        # 기록에서도 "센서별 판정 · AI 교차검증" 블록을 그대로 재현할 수 있게 함.
+        ai_cols = {row["name"] for row in conn.execute("PRAGMA table_info(ai_analysis)")}
+        if "risk_json" not in ai_cols:
+            conn.execute("ALTER TABLE ai_analysis ADD COLUMN risk_json TEXT")
 
         # activity_log에 confidence/source_table/source_id 컬럼 추가 — CREATE TABLE IF NOT
         # EXISTS는 이미 있는 테이블에 컬럼을 못 더하므로 PRAGMA로 확인 후 없는 것만 ALTER.
@@ -257,6 +272,42 @@ def list_medications(bed_id: str, active_only: bool = True) -> list[dict]:
         return [dict(r) for r in rows]
 
 
+def get_medication(med_id: int) -> dict | None:
+    with get_conn() as conn:
+        row = conn.execute("SELECT * FROM medications WHERE id = ?", (med_id,)).fetchone()
+        return dict(row) if row else None
+
+
+def insert_medication(bed_id: str, name: str, dose: str | None = None, frequency: str | None = None,
+                       notes: str | None = None, start_date: str | None = None,
+                       end_date: str | None = None) -> int:
+    with get_conn() as conn:
+        cur = conn.execute("""INSERT INTO medications (bed_id, name, dose, frequency, start_date, end_date, notes)
+                              VALUES (?, ?, ?, ?, ?, ?, ?)""",
+                           (bed_id, name, dose, frequency, start_date, end_date, notes))
+        return cur.lastrowid
+
+
+def update_medication(med_id: int, **fields) -> None:
+    """fields: any of name/dose/frequency/notes/start_date/end_date/active. Nurse-editable —
+    unknown keys are ignored rather than raising, so a stray field in a request body can't
+    error out an otherwise-valid edit."""
+    allowed = {"name", "dose", "frequency", "notes", "start_date", "end_date", "active"}
+    cols = [k for k in fields if k in allowed]
+    if not cols:
+        return
+    with get_conn() as conn:
+        conn.execute(f"UPDATE medications SET {', '.join(c + ' = ?' for c in cols)} WHERE id = ?",
+                     [fields[c] for c in cols] + [med_id])
+
+
+def delete_medication(med_id: int) -> None:
+    """Soft delete (active=0) rather than removing the row — keeps a record of what a
+    patient was once on, consistent with list_medications(active_only=True) hiding it."""
+    with get_conn() as conn:
+        conn.execute("UPDATE medications SET active = 0 WHERE id = ?", (med_id,))
+
+
 def list_risk_factors(bed_id: str, active_only: bool = True) -> list[dict]:
     with get_conn() as conn:
         q = "SELECT * FROM risk_factors WHERE bed_id = ?"
@@ -376,22 +427,52 @@ def get_activity_log(bed_id: str, event_type: str | None = None, limit: int = 50
 def insert_ai_analysis(patient_id: str, analysis_type: str, risk_score: float | None,
                         summary: str, detected_patterns: list | None, predicted_risks: list | None,
                         evidence_ids: list | None, model_version: str, prompt_version: str,
-                        confidence: float | None, report: dict) -> int:
+                        confidence: float | None, report: dict, risk: dict | None = None,
+                        created_at: str | None = None) -> int:
+    """created_at: normally left None (defaults to now). The weekly backfill script passes an
+    explicit past timestamp so historical demo-patient reports land on their real report week
+    instead of all being stamped with today's date."""
     import json as _json
     with get_conn() as conn:
-        cur = conn.execute("""
-            INSERT INTO ai_analysis
-                (patient_id, analysis_type, risk_score, summary, detected_patterns_json,
-                 predicted_risks_json, evidence_ids_json, model_version, prompt_version,
-                 confidence, report_json)
-            VALUES (?,?,?,?,?,?,?,?,?,?,?)
-        """, (patient_id, analysis_type, risk_score, summary,
-              _json.dumps(detected_patterns or [], ensure_ascii=False, default=str),
-              _json.dumps(predicted_risks or [], ensure_ascii=False, default=str),
-              _json.dumps(evidence_ids or [], ensure_ascii=False, default=str),
-              model_version, prompt_version, confidence,
-              _json.dumps(report, ensure_ascii=False, default=str)))
+        if created_at is not None:
+            cur = conn.execute("""
+                INSERT INTO ai_analysis
+                    (patient_id, created_at, analysis_type, risk_score, summary, detected_patterns_json,
+                     predicted_risks_json, evidence_ids_json, model_version, prompt_version,
+                     confidence, report_json, risk_json)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)
+            """, (patient_id, created_at, analysis_type, risk_score, summary,
+                  _json.dumps(detected_patterns or [], ensure_ascii=False, default=str),
+                  _json.dumps(predicted_risks or [], ensure_ascii=False, default=str),
+                  _json.dumps(evidence_ids or [], ensure_ascii=False, default=str),
+                  model_version, prompt_version, confidence,
+                  _json.dumps(report, ensure_ascii=False, default=str),
+                  _json.dumps(risk, ensure_ascii=False, default=str) if risk is not None else None))
+        else:
+            cur = conn.execute("""
+                INSERT INTO ai_analysis
+                    (patient_id, analysis_type, risk_score, summary, detected_patterns_json,
+                     predicted_risks_json, evidence_ids_json, model_version, prompt_version,
+                     confidence, report_json, risk_json)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,?)
+            """, (patient_id, analysis_type, risk_score, summary,
+                  _json.dumps(detected_patterns or [], ensure_ascii=False, default=str),
+                  _json.dumps(predicted_risks or [], ensure_ascii=False, default=str),
+                  _json.dumps(evidence_ids or [], ensure_ascii=False, default=str),
+                  model_version, prompt_version, confidence,
+                  _json.dumps(report, ensure_ascii=False, default=str),
+                  _json.dumps(risk, ensure_ascii=False, default=str) if risk is not None else None))
         return cur.lastrowid
+
+
+def get_analysis_count(patient_id: str, analysis_type: str | None = None) -> int:
+    with get_conn() as conn:
+        q = "SELECT COUNT(*) AS n FROM ai_analysis WHERE patient_id = ?"
+        params: list = [patient_id]
+        if analysis_type:
+            q += " AND analysis_type = ?"
+            params.append(analysis_type)
+        return conn.execute(q, params).fetchone()["n"]
 
 
 def get_latest_ai_analysis(patient_id: str, analysis_type: str | None = None) -> dict | None:
