@@ -1,0 +1,15 @@
+{"id": "mmw:429", "weak_target": 0, "tof_only": 0.0005916628455768614, "radar_only": 0.8390022436409332, "early_features": 0.027032113235475597, "late_max": 0.8390022436409332}
+{"id": "mmw:430", "weak_target": 0, "tof_only": 0.002339592650696994, "radar_only": 0.19320714071031583, "early_features": 0.021160357434236433, "late_max": 0.19320714071031583}
+{"id": "mmw:431", "weak_target": 0, "tof_only": 0.001773140213740927, "radar_only": 0.1320113945722295, "early_features": 0.0017025631835936208, "late_max": 0.1320113945722295}
+{"id": "mmw:432", "weak_target": 0, "tof_only": 0.0005060004038898158, "radar_only": 0.0037243836624234155, "early_features": 5.21707379175164e-06, "late_max": 0.0037243836624234155}
+{"id": "mmw:437", "weak_target": 0, "tof_only": 0.007501903224749008, "radar_only": 0.002147069039194916, "early_features": 0.0009737730080181591, "late_max": 0.007501903224749008}
+{"id": "mmw:438", "weak_target": 0, "tof_only": 0.016547865352181095, "radar_only": 0.0016858762539404375, "early_features": 0.005807622649229846, "late_max": 0.016547865352181095}
+{"id": "mmw:439", "weak_target": 0, "tof_only": 0.41680420205239394, "radar_only": 0.07286341994073961, "early_features": 0.02051969566736181, "late_max": 0.41680420205239394}
+{"id": "mmw:440", "weak_target": 0, "tof_only": 0.7893193057208717, "radar_only": 0.25387083958083156, "early_features": 0.024781707296241143, "late_max": 0.7893193057208717}
+{"id": "mmw:441", "weak_target": 0, "tof_only": 0.014709032478148549, "radar_only": 0.5419346041946144, "early_features": 0.005826243143890646, "late_max": 0.5419346041946144}
+{"id": "mmw:442", "weak_target": 0, "tof_only": 0.05525987030507258, "radar_only": 0.5510887660690055, "early_features": 0.009250163506987853, "late_max": 0.5510887660690055}
+{"id": "mmw:450", "weak_target": 1, "tof_only": 0.96154195014481, "radar_only": 0.00013477280969105036, "early_features": 0.0789361534454658, "late_max": 0.96154195014481}
+{"id": "mmw:451", "weak_target": 1, "tof_only": 0.5856566514757254, "radar_only": 0.00016574418840989435, "early_features": 0.006424160855158857, "late_max": 0.5856566514757254}
+{"id": "mmw:480", "weak_target": 1, "tof_only": 0.8801596435521029, "radar_only": 0.6601029647355875, "early_features": 0.06501183336597871, "late_max": 0.8801596435521029}
+{"id": "mmw:496", "weak_target": 1, "tof_only": 0.006697874690537284, "radar_only": 0.27285231405322435, "early_features": 0.047628224246639386, "late_max": 0.27285231405322435}
+{"id": "mmw:497", "weak_target": 1, "tof_only": 0.06977056929128687, "radar_only": 0.24405876799441317, "early_features": 0.11525568692801379, "late_max": 0.24405876799441317}

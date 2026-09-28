@@ -1,0 +1,28 @@
+{
+  "version": "2026-09-18-v1",
+  "created_before_evaluation": true,
+  "label_type": "assistant_authored_relevance_seed",
+  "review_status": "needs_independent_domain_review",
+  "judgement_unit": "unique paper (aliases collapsed)",
+  "aliases": {"latest-02": "paper-20", "latest-03": "paper-21", "latest-04": "paper-22", "latest-06": "paper-23", "latest-07": "paper-24", "latest-08": "paper-25", "latest-09": "paper-26"},
+  "queries": [
+    {"id":"q01","query":"루이소체 치매에서 보행속도 감소와 낙상 위험의 관계","relevant_papers":["dementia-01"],"evidence":"server/paper_kb.py dementia-01: DLB gait and fall risk"},
+    {"id":"q02","query":"치매 환자의 낙상과 활보시간 변동성 보행 지표 메타분석","relevant_papers":["dementia-13"],"evidence":"server/paper_kb.py dementia-13: spatiotemporal gait meta-analysis"},
+    {"id":"q03","query":"노인의 진정수면제와 낙상 관련 응급실 방문의 연관성","relevant_papers":["dementia-02"],"evidence":"server/paper_kb.py dementia-02: association is not a treatment recommendation"},
+    {"id":"q04","query":"치매 환자의 CNS 활성 다제병용 시작과 트라조돈 처방 현황","relevant_papers":["dementia-16"],"evidence":"server/paper_kb.py dementia-16: CNS-active polypharmacy initiation"},
+    {"id":"q05","query":"장기요양시설 치매 환자의 위험한 배회와 무단이탈 원인","relevant_papers":["dementia-06"],"evidence":"server/paper_kb.py dementia-06: elopement reports"},
+    {"id":"q06","query":"개인별 참조범위에서 z-score와 선형혼합모형의 민감도 특이도 비교","relevant_papers":["paper-09"],"evidence":"docs/papers/paper-09.html: adaptive reference ranges"},
+    {"id":"q07","query":"소규모 표형 데이터 분류에 사전학습 파운데이션 모델 TabPFN 사용","relevant_papers":["paper-21"],"evidence":"docs/papers/paper-21.html: tabular foundation model"},
+    {"id":"q08","query":"침상 압력센서 수면자세 분류에서 교차피험자 평가와 전이학습","relevant_papers":["paper-22"],"evidence":"docs/papers/paper-22.html: pressure sensors, not ToF clinical validation"},
+    {"id":"q09","query":"시계열 분류 신경망에서 window slicing과 window warping 데이터 증강","relevant_papers":["paper-20"],"evidence":"docs/papers/paper-20.html: augmentation benchmark"},
+    {"id":"q10","query":"웨어러블 낙상 예측에서 early fusion과 late fusion 비교","relevant_papers":["paper-23"],"evidence":"docs/papers/paper-23.html: wearable modality comparison"},
+    {"id":"q11","query":"치매 재가 모니터링에서 Contextual Matrix Profile로 요로감염과 입원 이상탐지","relevant_papers":["latest-05"],"evidence":"server/paper_kb.py latest-05; https://aging.jmir.org/2022/3/e38211/"},
+    {"id":"q12","query":"대규모 언어모델 검색증강생성 RAG의 검색 전후 처리와 재랭킹 서베이","relevant_papers":["paper-24"],"evidence":"docs/papers/paper-24.html: RAG survey"},
+    {"id":"q13","query":"Blended RAG dense sparse 하이브리드 검색의 검색 품질 비교","relevant_papers":["paper-25"],"evidence":"docs/papers/paper-25.html: hybrid retrieval, not universal superiority"},
+    {"id":"q14","query":"단일 텍스트 임베딩 모델이 모든 검색 과제에 최적인가 MTEB 평가","relevant_papers":["paper-26"],"evidence":"docs/papers/paper-26.html: text embedding benchmark"},
+    {"id":"q15","query":"LLM 환각의 유형과 근거 없는 생성에 대한 완화 방법 서베이","relevant_papers":["paper-14"],"evidence":"docs/papers/paper-14.html: hallucination survey"},
+    {"id":"q16","query":"레이더 IWR6843AOP로 집에서 노쇠 노인의 보폭 측정","relevant_papers":["paper-16"],"evidence":"docs/papers/paper-16.html: radar stride length"},
+    {"id":"q17","query":"적외선 깊이센서 침상 모니터링 반자동 캘리브레이션 PCA","relevant_papers":["paper-05"],"evidence":"docs/papers/paper-05.html: bed calibration"},
+    {"id":"q18","query":"고령 입원환자 무선 침상이탈 알람의 민감도와 양성예측도","relevant_papers":["paper-11"],"evidence":"docs/papers/paper-11.html: bed absence sensor hospital trial"}
+  ]
+}

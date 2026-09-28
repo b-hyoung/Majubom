@@ -33,7 +33,7 @@ from datetime import datetime, timezone
 
 import lancedb
 import requests
-from rank_bm25 import BM25Okapi
+from retrieval import fuse_rankings, sparse_scores
 
 import ai_report  # get_api_key() 재사용 — 키 로딩 로직을 중복 구현하지 않는다
 
@@ -367,11 +367,13 @@ def search_hybrid(query: str, top_k: int = 5, k_rrf: int = 60) -> dict:
     arXiv:2404.07220 — dense+sparse 하이브리드가 데이터셋에 따라 순수 dense 단독 대비
     NDCG@10을 유의미하게 개선한다고 보고(그들의 Elasticsearch+ELSER 파이프라인 실험이며
     우리 자료가 아니므로 "그러니 낫다"가 아니라 "그래서 우리 데이터로 직접 비교할 가치가
-    있다"). 정답셋(Recall@5) 기반 정량 비교는 아직 미실시 — 이 함수는 search()를 대체하지
-    않고 별도 옵션으로 추가했다(ai_agent.py는 여전히 search()를 사용).
+    있다"). 2026-09-18: ai_agent의 기본 검색에 연결하고 18개 근거 연결 질의로 비교했다.
+    정답셋은 독립 검수 전의 개발용 seed이며 상세 결과는 research/alternatives/artifacts에 있다.
 
     RRF 자체는 Cormack, Clarke & Buettcher (2009)의 표준 랭킹 결합 공식(1/(k+rank) 합산)이며
     학습이 필요 없다 — 우리에게 없는 '융합 학습용 라벨 데이터'가 필요 없다는 뜻."""
+    if not isinstance(top_k, int) or top_k < 1 or not isinstance(k_rrf, int) or k_rrf < 1:
+        return {"success": False, "error_type": "invalid_argument", "message": "top_k와 k_rrf는 양의 정수여야 합니다."}
     db_conn = _connect()
     if not _table_exists(db_conn, PAPERS_TABLE):
         return {"success": False, "error_type": "no_index",
@@ -391,36 +393,25 @@ def search_hybrid(query: str, top_k: int = 5, k_rrf: int = 60) -> dict:
 
     # 1) 벡터 랭킹 — 전체 후보를 코사인 유사도로 정렬(순위만 쓰므로 전체가 필요)
     vec_rows = tbl.search(q_vec).metric("cosine").limit(n_candidates).to_list()
-    vec_rank = {r["chunk_id"]: i for i, r in enumerate(vec_rows)}
-
-    # 2) BM25 랭킹 — 저장된 원문으로 즉석 색인(613개 규모라 매 호출 재구축해도 가벼움)
+    # 2) BM25: 0점/음수 무매치 문서는 투표하지 않는다. 동점은 같은 순위.
     by_id = {r["chunk_id"]: r for r in all_rows}
     corpus_ids = [r["chunk_id"] for r in all_rows]
-    bm25 = BM25Okapi([r["original_text"].lower().split() for r in all_rows])
-    bm25_scores = bm25.get_scores(query.lower().split())
-    bm25_order = sorted(range(len(corpus_ids)), key=lambda i: -bm25_scores[i])
-    bm25_rank = {corpus_ids[i]: rank for rank, i in enumerate(bm25_order)}
-
-    # 3) RRF 결합 — score = sum(1/(k_rrf + rank+1))
-    fused = sorted(
-        corpus_ids,
-        key=lambda cid: -(
-            (1.0 / (k_rrf + vec_rank[cid] + 1) if cid in vec_rank else 0.0)
-            + (1.0 / (k_rrf + bm25_rank[cid] + 1) if cid in bm25_rank else 0.0)
-        ),
+    lexical = dict(zip(corpus_ids, sparse_scores(query, [r["original_text"] for r in all_rows])))
+    # 3) RRF — 1-based ranks, same pure function as the offline evaluator.
+    fused, fused_scores, vec_rank, bm25_rank = fuse_rankings(
+        [r["chunk_id"] for r in vec_rows], lexical, k_rrf=k_rrf,
     )
 
     results = []
     for cid in fused[:top_k]:
         r = by_id[cid]
-        rrf = ((1.0 / (k_rrf + vec_rank[cid] + 1) if cid in vec_rank else 0.0)
-               + (1.0 / (k_rrf + bm25_rank[cid] + 1) if cid in bm25_rank else 0.0))
+        rrf = fused_scores[cid]
         results.append({"score": round(rrf, 5), "chunk_id": cid, "paper_id": r["paper_id"],
                          "title": r["title"], "section": r["section"], "original_text": r["original_text"],
                          "source_url": r["source_url"], "doi": r["doi"],
                          "vector_rank": vec_rank.get(cid), "bm25_rank": bm25_rank.get(cid)})
     return {"success": True, "query": query, "n_candidates": n_candidates,
-            "method": "hybrid_rrf_v1", "results": results}
+            "method": "hybrid_rrf_v2", "rank_base": 1, "score_kind": "ranking_score_not_probability", "results": results}
 
 
 # ── 2026-09 1차 확장(14→26편) — 기술논문 5편은 paper-15~19.html + docs/papers, 치매 임상 7편 경량 ──

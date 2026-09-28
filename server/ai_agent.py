@@ -179,8 +179,9 @@ def judge_sufficiency(patient_state: dict, results_so_far: list[dict]) -> dict:
 
 # ── ④ 반복 검색 Agent 루프 (STEP 16, 20) ─────────────────────────────────
 def investigate(bed_id: str, max_rounds: int = MAX_ROUNDS_DEFAULT,
-                 max_queries_per_round: int = QUERIES_PER_ROUND_DEFAULT, top_k: int = 5) -> dict:
-    """전체 루프: 상태수집 → query생성 → Vector 검색 → 충분성판단 → (부족하면) 추가검색 반복
+                 max_queries_per_round: int = QUERIES_PER_ROUND_DEFAULT, top_k: int = 5,
+                 search_method: str = "hybrid") -> dict:
+    """전체 루프: 상태수집 → query생성 → Hybrid 검색 → 충분성판단 → (부족하면) 추가검색 반복
     → SQL 환자기록은 ①에서 이미 gather_patient_state()로 모아뒀으므로 여기서 다시 붙인다(Hybrid).
 
     반환 shape: {"success":bool, "bed_id", "patient_state", "rounds":[...], "final_results":[...],
@@ -189,6 +190,10 @@ def investigate(bed_id: str, max_rounds: int = MAX_ROUNDS_DEFAULT,
     최종 리포트나 위험점수를 만들지 않는다."""
     import paper_kb
 
+    if search_method not in {"hybrid", "dense"}:
+        return {"success": False, "error_type": "invalid_argument", "stage": "search_configuration",
+                "message": "search_method는 hybrid 또는 dense여야 합니다."}
+    retrieve = paper_kb.search_hybrid if search_method == "hybrid" else paper_kb.search
     patient_state = gather_patient_state(bed_id)
 
     rounds: list[dict] = []
@@ -207,17 +212,18 @@ def investigate(bed_id: str, max_rounds: int = MAX_ROUNDS_DEFAULT,
             break
         round_results = []
         for q in queries:
-            sr = paper_kb.search(q, top_k=top_k)
+            sr = retrieve(q, top_k=top_k)
             if not sr["success"]:
                 # Vector DB 쪽이 실패(키 미설정 등)해도 지금까지 모은 SQL 상태는 살려서 반환 —
                 # "검색을 못 했다"와 "검색했는데 결과가 없다"를 구분해 정직하게 기록.
                 return {"success": False, **{k: v for k, v in sr.items() if k != "success"},
                         "bed_id": bed_id, "patient_state": patient_state,
-                        "rounds": rounds, "stage": "vector_search", "query": q}
+                        "rounds": rounds, "stage": "vector_search", "search_method": search_method, "query": q}
             for r in sr["results"]:
                 all_results[r["chunk_id"]] = r
                 round_results.append(r)
-        rounds.append({"round": round_i + 1, "queries": queries, "n_results": len(round_results)})
+        rounds.append({"round": round_i + 1, "queries": queries, "n_results": len(round_results),
+                       "search_method": search_method})
 
         sufficiency = judge_sufficiency(patient_state, list(all_results.values()))
         if not sufficiency["success"]:
@@ -233,6 +239,7 @@ def investigate(bed_id: str, max_rounds: int = MAX_ROUNDS_DEFAULT,
         "sufficient": sufficiency.get("sufficient", False),
         "reasoning": sufficiency.get("reasoning", ""),
         "initial_query_reasoning": qgen.get("reasoning", ""),
+        "search_method": search_method,
     }
 
 

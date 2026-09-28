@@ -34,7 +34,7 @@ def _pad(a):
 
 
 def frame_vec(latest):
-    """latest = {"tof1":{"distances_mm":[..]}, "tof2":{...}} → 32차원 벡터(없으면 None).
+    """latest = {"tof1":{"distances_mm":[..]}, "tof2":{...}} → 128차원 벡터(없으면 None).
     학습과 동일하게 침대 밖 존은 ROI로 -1 처리."""
     t1 = (latest.get("tof1") or {}).get("distances_mm")
     t2 = (latest.get("tof2") or {}).get("distances_mm")

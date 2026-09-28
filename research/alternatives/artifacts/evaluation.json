@@ -1,0 +1,256 @@
+{
+  "date": "2026-09-18",
+  "anomaly": {
+    "task": "capture-labelled non-lying posture proxy, not clinical anomaly/fall",
+    "features": "12 distance summary features, 20 paired frames; NOT deployment 12 spatial features",
+    "split": {
+      "train": 27,
+      "calibration": 6,
+      "test": 59
+    },
+    "contexts": {
+      "occupied": 92
+    },
+    "normalization": "training windows only",
+    "threshold": "99th percentile of six normal calibration windows",
+    "cmp": {
+      "n": 59,
+      "positive": 42,
+      "threshold": 1.0,
+      "accuracy": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "roc_auc": 1.0,
+      "average_precision": 1.0,
+      "confusion_tn_fp_fn_tp": [
+        17,
+        0,
+        0,
+        42
+      ]
+    },
+    "fresh_cpu_lstm_ae": {
+      "n": 59,
+      "positive": 42,
+      "threshold": 0.6473432779312134,
+      "accuracy": 0.9322033898305084,
+      "precision": 0.9130434782608695,
+      "recall": 1.0,
+      "f1": 0.9545454545454546,
+      "roc_auc": 1.0,
+      "average_precision": 1.0,
+      "confusion_tn_fp_fn_tp": [
+        13,
+        4,
+        0,
+        42
+      ]
+    },
+    "deploy": false,
+    "limitations": [
+      "single known recording day, subject IDs unavailable",
+      "only six calibration windows; unstable 99th percentile",
+      "no clinical outcome labels",
+      "empty recordings fail continuity gate: empty context abstains, never treated as an anomaly",
+      "sitting/edge_sit can be normal daily activity; proxy positives are not real hazards"
+    ]
+  },
+  "fusion": {
+    "task": "3-second future sustained ToF RF empty transition (weak target)",
+    "strict_eligible": 0,
+    "weak_label_counts": {
+      "None": 338,
+      "0": 208,
+      "1": 23
+    },
+    "alignment_counts": {
+      "past_only_within_500ms_clock_unverified": 417,
+      "missing_past_tof": 152
+    },
+    "split": {
+      "train": {
+        "n": 103,
+        "positive": 8
+      },
+      "calibration": {
+        "n": 54,
+        "positive": 0
+      },
+      "test": {
+        "n": 15,
+        "positive": 5
+      },
+      "purged": {
+        "n": 15,
+        "positive": 0
+      }
+    },
+    "deploy": false,
+    "architecture": "balanced logistic regression on concatenated low-level summaries",
+    "limitations": [
+      "no strict high-confidence occupied labels; exploratory only",
+      "same short single-subject recording",
+      "ToF classifier supplies target; correlated labelling error and teacher bias remain",
+      "clock sync unverified; KST conversion plus past-only 500ms matching is provisional",
+      "late max comparator uses learned modality probabilities, NOT deployed alert-level max",
+      "calibration block has no positives; fixed 0.5 threshold, no tuning or probability calibration"
+    ],
+    "metrics": {
+      "tof_only": {
+        "n": 15,
+        "positive": 5,
+        "threshold": 0.5,
+        "accuracy": 0.8,
+        "precision": 0.75,
+        "recall": 0.6,
+        "f1": 0.6666666666666666,
+        "roc_auc": 0.8200000000000001,
+        "average_precision": 0.7742424242424242,
+        "confusion_tn_fp_fn_tp": [
+          9,
+          1,
+          2,
+          3
+        ]
+      },
+      "radar_only": {
+        "n": 15,
+        "positive": 5,
+        "threshold": 0.5,
+        "accuracy": 0.5333333333333333,
+        "precision": 0.25,
+        "recall": 0.2,
+        "f1": 0.2222222222222222,
+        "roc_auc": 0.44,
+        "average_precision": 0.3895238095238095,
+        "confusion_tn_fp_fn_tp": [
+          7,
+          3,
+          4,
+          1
+        ]
+      },
+      "early_features": {
+        "n": 15,
+        "positive": 5,
+        "threshold": 0.5,
+        "accuracy": 0.6666666666666666,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "roc_auc": 0.9,
+        "average_precision": 0.8999999999999999,
+        "confusion_tn_fp_fn_tp": [
+          10,
+          0,
+          5,
+          0
+        ]
+      },
+      "late_max": {
+        "n": 15,
+        "positive": 5,
+        "threshold": 0.5,
+        "accuracy": 0.6,
+        "precision": 0.42857142857142855,
+        "recall": 0.6,
+        "f1": 0.5,
+        "roc_auc": 0.76,
+        "average_precision": 0.7088888888888889,
+        "confusion_tn_fp_fn_tp": [
+          6,
+          4,
+          2,
+          3
+        ]
+      }
+    },
+    "status": "exploratory_completed"
+  },
+  "drift": {
+    "engineering_controls": {
+      "stationary": {
+        "alarm_indices": [],
+        "delay_samples": null,
+        "false_alarms_before_shift": 0
+      },
+      "injected_shift": {
+        "alarm_indices": [
+          417
+        ],
+        "delay_samples": 17,
+        "false_alarms_before_shift": 0
+      }
+    },
+    "historical_replay": {
+      "statuses": {
+        "observed": 562,
+        "out_of_bounds": 14,
+        "unreliable_or_held": 37
+      },
+      "candidates": 0
+    },
+    "clinical_sensitivity": null,
+    "automatic_baseline_update": false,
+    "limitations": [
+      "bounded ADWIN1-style implementation, not ADWIN2",
+      "unlabelled speed changes may reflect activity, not deterioration"
+    ]
+  },
+  "lmm": {
+    "real_data_status": "blocked_missing_independent_subject_ids_and_longitudinal_outcomes",
+    "requires_outcome_labels_to_fit": false,
+    "requires_population_reference_data": true,
+    "synthetic_engineering_fit": {
+      "mean": 4.519636968650751,
+      "within_variance": 0.0769656383922465,
+      "between_variance": 2.3839355333230516,
+      "example": {
+        "expected": 5.483923463141507,
+        "predictive_sd": 0.29092513427022365,
+        "z": 8.648536136865554,
+        "interval_95": [
+          4.913710199971868,
+          6.054136726311146
+        ],
+        "method": "random_intercept_reml_plugin_interval",
+        "clinical_prediction": false
+      }
+    },
+    "deploy": false,
+    "note": "Recording files and simulated beds were not invented as independent real people."
+  },
+  "rag": {
+    "status": "completed",
+    "queries": 18,
+    "index_chunks": 631,
+    "corpus_fingerprint": "5862b10525050a4a2e55708ea127ce41002aa379da30af1b5b9d812b25c39f90",
+    "qrels_sha256": "89a64b5a7ac885474bda7a92e439c0da9290877be355380a31fa17526d3b96e5",
+    "embedding_model": "text-embedding-3-small",
+    "label_scope": "assistant-authored, evidence-linked relevance seed; not independent exhaustive judgements",
+    "metrics": {
+      "dense": {
+        "recall_at_5": 1.0,
+        "mrr_at_5": 0.9629629629629629,
+        "ndcg_at_5": 0.9722222222222222
+      },
+      "bm25": {
+        "recall_at_5": 1.0,
+        "mrr_at_5": 1.0,
+        "ndcg_at_5": 1.0
+      },
+      "hybrid": {
+        "recall_at_5": 1.0,
+        "mrr_at_5": 1.0,
+        "ndcg_at_5": 1.0
+      }
+    },
+    "limitations": [
+      "small curated development set, no clinical performance claim",
+      "unjudged papers counted nonrelevant provisionally",
+      "unique-paper top5 differs from live chunk top5; inspect rag_per_query.json before tuning"
+    ]
+  },
+  "elapsed_seconds": 11.437999999994645
+}
