@@ -34,7 +34,7 @@
       activity: 'inBed', pos: { x: 1.05, y: 2.6 } },
     edge: { name: '기상 준비 · 걸터앉음', icon: '🪑', dur: 12, posture: null, postureLabel: '걸터앉음', inBed: true,
       tofRisk: 'caution', speed: 0.01, sway: 0.02, stride: 0, cv: 0.15, freeze: 0.75, mmRisk: 'caution', level: 'caution',
-      reason: null, activity: 'inBed' },
+      reason: null, activity: 'inBed', pos: { x: 1.5, y: 3.0 } },
     exit: { name: '침상 이탈 감지', icon: '🛏️', dur: 25, posture: null, postureLabel: '침상 이탈 중', inBed: false,
       tofRisk: 'warning', speed: 0.12, sway: 0.03, stride: 0.15, cv: 0.18, freeze: 0.60, mmRisk: 'warning', level: 'warning',
       reason: '침상 가장자리 이탈 감지', activity: 'outOfBed', pos: { x: 1.75, y: 2.85 } },

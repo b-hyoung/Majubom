@@ -30,13 +30,13 @@ _POSTURE_COLOR = {
 PHASES: dict[str, dict] = {
     "sleep": {"name": "정상 수면", "dur": 30, "posture": "supine", "posture_ko": "바로 누움", "in_bed": True,
               "tof_risk": "normal", "speed": 0.0, "sway": 0.0, "stride": 0.0, "cv": 0.10, "freeze": 1.00,
-              "mmw_risk": "normal", "reason": None, "activity": "inBed", "pos": None},
+              "mmw_risk": "normal", "reason": None, "activity": "inBed", "pos": (1.1, 1.9)},
     "toss": {"name": "수면 중 뒤척임", "dur": 20, "posture": "tossing", "posture_ko": "뒤척임", "in_bed": True,
              "tof_risk": "caution", "speed": 0.02, "sway": 0.01, "stride": 0.0, "cv": 0.22, "freeze": 0.90,
-             "mmw_risk": "caution", "reason": None, "activity": "inBed", "pos": None},
+             "mmw_risk": "caution", "reason": None, "activity": "inBed", "pos": (1.05, 2.6)},
     "edge": {"name": "기상 준비 · 걸터앉음", "dur": 12, "posture": None, "posture_ko": "걸터앉음", "in_bed": True,
              "tof_risk": "caution", "speed": 0.01, "sway": 0.02, "stride": 0.0, "cv": 0.15, "freeze": 0.75,
-             "mmw_risk": "caution", "reason": None, "activity": "inBed", "pos": None},
+             "mmw_risk": "caution", "reason": None, "activity": "inBed", "pos": (1.5, 3.0)},
     "exit": {"name": "침상 이탈 감지", "dur": 25, "posture": None, "posture_ko": "침상 이탈 중", "in_bed": False,
              "tof_risk": "warning", "speed": 0.12, "sway": 0.03, "stride": 0.15, "cv": 0.18, "freeze": 0.60,
              "mmw_risk": "warning", "reason": "침상 가장자리 이탈 감지", "activity": "outOfBed", "pos": (1.75, 2.85)},
@@ -52,7 +52,8 @@ PHASES: dict[str, dict] = {
                           "activity": "checking", "pos": (1.75, 2.85)},
     "walk": {"name": "이탈 후 이동", "dur": 20, "posture": None, "posture_ko": "보행 중", "in_bed": False,
              "tof_risk": "normal", "speed": 0.86, "sway": 0.02, "stride": 0.62, "cv": 0.11, "freeze": 0.05,
-             "mmw_risk": "normal", "reason": None, "activity": "walking", "pos": (2.75, 4.13)},
+             "mmw_risk": "normal", "reason": None, "activity": "walking", "pos": None,
+             "pos_from": (1.9, 3.0), "pos_to": (3.6, 5.25)},
     "risk": {"name": "낙상 위험 임박", "dur": 20, "posture": None, "posture_ko": "불안정 보행", "in_bed": False,
              "tof_risk": "warning", "speed": 0.55, "sway": 0.09, "stride": 0.33, "cv": 0.38, "freeze": 0.34,
              "mmw_risk": "warning", "reason": "보행 변동성 증가 — 낙상 전조 패턴", "activity": "walking", "pos": (2.8, 4.2)},
@@ -107,10 +108,18 @@ def current_phase(bed_id: str, now_ts: float | None = None) -> dict | None:
     return {"key": first, "progress": 0.0, **PHASES[first]}
 
 
-def _room_position(phase: dict, now_ts: float, bed_id: str) -> tuple[float, float] | None:
+def _room_position(phase: dict, now_ts: float, bed_id: str, progress: float = 0.0) -> tuple[float, float] | None:
     """simulation.js의 roomPosition()과 동일한 흔들림 공식 — 같은 순간엔 같은 좌표가 나오도록
-    seed/계수를 그대로 맞춤. pos가 없는 phase(침대 안)는 프런트와 동일하게 None(마커 없음)."""
+    seed/계수를 그대로 맞춤. pos가 없는 phase(침대 안)는 프런트와 동일하게 None(마커 없음).
+    posFrom/posTo가 있는 phase(예: walk)는 progress로 선형보간 — simulation.js의 roomPosition()이
+    posFrom→posTo로 이동시키는 것과 정확히 같은 좌표를 내야 프런트 평면도와 raw mmWave 뷰어가
+    서로 다른 위치를 보여주지 않는다."""
     base = phase.get("pos")
+    if not base:
+        pos_from, pos_to = phase.get("pos_from"), phase.get("pos_to")
+        if pos_from and pos_to:
+            base = (pos_from[0] + (pos_to[0] - pos_from[0]) * progress,
+                    pos_from[1] + (pos_to[1] - pos_from[1]) * progress)
     if not base:
         return None
     activity = phase.get("activity")
@@ -172,6 +181,7 @@ def synthetic_tof_latest(bed_id: str) -> dict:
     frame = {"resolution": "8x8", "targets": None, "received_at": now_iso}
     color = _POSTURE_COLOR.get(phase["posture"] or "", "#9aa0b4")
     return {
+        "sim": True,  # tof_3d.html이 스파이크필터/배경적응 등 실제 센서용 지연 로직을 건너뛰게 하는 표시
         "tof1": {**frame, "distances_mm": grid1},
         "tof2": {**frame, "distances_mm": grid2},
         "posture": phase["posture"], "posture_raw": phase["posture"],
@@ -199,12 +209,14 @@ def synthetic_mmw_live(bed_id: str) -> dict:
     now_ts = time.time()
     if not phase:
         return {"targets": [], "ts": int(now_ts * 1000)}
-    pos = _room_position(phase, now_ts, bed_id)
+    pos = _room_position(phase, now_ts, bed_id, phase["progress"])
     if pos is None:
         return {"targets": [], "ts": int(now_ts * 1000)}
     # 아주 짧은 시간차 위치를 다시 계산해 속도 벡터를 근사(진짜 물리 시뮬레이션이 아니라
-    # roomPosition()의 흔들림 공식 자체를 미분한 것 — "그럴듯한 값"이면 충분).
-    pos_prev = _room_position(phase, now_ts - 0.2, bed_id)
+    # roomPosition()의 흔들림+posFrom/posTo 이동 공식 자체를 미분한 것 — "그럴듯한 값"이면 충분).
+    # walk처럼 progress로 실제 이동하는 phase도 있어 current_phase를 다시 불러 progress를 새로 구한다.
+    phase_prev = current_phase(bed_id, now_ts - 0.2) or phase
+    pos_prev = _room_position(phase_prev, now_ts - 0.2, bed_id, phase_prev["progress"])
     vx = round((pos[0] - pos_prev[0]) / 0.2, 3) if pos_prev else 0.0
     vy = round((pos[1] - pos_prev[1]) / 0.2, 3) if pos_prev else 0.0
     return {"targets": [{"tid": 1, "x": pos[0], "y": pos[1], "vx": vx, "vy": vy}],

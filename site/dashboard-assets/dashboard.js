@@ -186,6 +186,12 @@
     $('#mainContent').setAttribute('data-patient-id', bedId);
     renderPatientList($('#patientSearch').value);
     $('#reportModal').hidden = true;
+    // raw 3D/포인트클라우드 뷰어가 이미 열려있는 채로 환자를 바꾸면(패널을 다시 안 열어도)
+    // 새로 선택한 환자의 bed_id로 iframe을 다시 가리키게 한다 — 안 그러면 예전 환자 화면이
+    // 계속 떠 있어서 "반응이 느리다"처럼 보인다.
+    [$('#ovRawViewer'), $('#rawViewers')].forEach(function (box) {
+      if (box && !box.hidden) refreshRawViewerSrc(box);
+    });
     // A handful of fixed patients (live + demo) — boot() prefetches all of them, so switching
     // is normally instant with no "불러오는 중" flash. Only a patient we've truly never fetched
     // yet (e.g. one just added) falls back to showing a loading state while it fetches.
