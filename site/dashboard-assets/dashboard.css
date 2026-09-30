@@ -339,6 +339,25 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .evidence-meta a { color: var(--accent); font-size: 11px; text-decoration: none; }
 .evidence-meta a:hover { text-decoration: underline; }
 
+.report-review { border: 1px solid var(--line); border-radius: var(--r-md); padding: 16px; margin-bottom: 20px; background: var(--bg-inset); font-size: 12px; line-height: 1.65; overflow-wrap: anywhere; }
+.report-review p { margin: 8px 0; }
+.report-review .row { gap: 8px; flex-wrap: wrap; }
+.report-review a { color: var(--accent); }
+.review-direct { border-left: 3px solid var(--accent); padding-left: 12px; margin: 14px 0; }
+.review-details { border-top: 1px solid var(--line); padding: 10px 0; }
+.review-details summary { cursor: pointer; font-weight: 600; }
+.review-checks { padding-left: 18px; }
+.review-checks li { margin-bottom: 8px; }
+.review-finding { margin: 12px 0; padding: 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg-elev-1); }
+.review-finding blockquote { margin: 8px 0; border-left: 2px solid var(--line); padding-left: 10px; color: var(--fg-muted); white-space: pre-wrap; }
+.review-correction { color: var(--fg); }
+.review-json { white-space: pre-wrap; overflow-wrap: anywhere; max-height: 350px; overflow-y: auto; font-size: 11px; }
+.review-facts { display: grid; grid-template-columns: 92px minmax(0, 1fr); gap: 8px; }
+.review-facts dt { font-weight: 600; }
+.review-facts dd { margin: 0; }
+.review-paper { border-top: 1px solid var(--line); padding: 12px 0; }
+.review-missing { color: var(--fg-muted); }
+
 /* ── Theme switch ──────────────────────────────────────────── */
 .theme-switch { background: transparent; border: 0; padding: 0; cursor: pointer; flex: none; }
 .theme-switch-track {

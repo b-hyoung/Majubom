@@ -19,6 +19,7 @@ from datetime import datetime, timedelta, timezone
 from flask import Blueprint, jsonify, request
 
 import db
+import gait_prior
 
 LIVE_BED_ID = "bed_01"
 DEFAULT_TARGET = "room_01"  # mmWave/send_mmw.py --target default
@@ -51,12 +52,15 @@ def init_dashboard_schema():
         for table, needed in (
             ("patients", ("name", "mmw_target_id", "room_no", "age", "sex", "room", "diagnosis", "notes")),
             ("medications", ("frequency", "notes")),
-            ("risk_factors", ("factor", "severity", "notes")),
+            # label·weight는 ensure_demo_patients()가 쓴다 — 새로 만든 DB에서도 서버가 뜨도록 보강
+            ("risk_factors", ("factor", "severity", "notes", "label", "weight")),
         ):
             columns = {r["name"] for r in conn.execute(f"PRAGMA table_info({table})")}
             for name in needed:
                 if name not in columns:
                     conn.execute(f"ALTER TABLE {table} ADD COLUMN {name} TEXT")
+        # EMR 원문 기록과 문헌 기반 보행 기대값(gait_prior.py) 테이블
+        gait_prior.init_schema(conn)
         conn.execute("INSERT OR IGNORE INTO beds (bed_id) VALUES (?)", (LIVE_BED_ID,))
         conn.execute("""INSERT OR IGNORE INTO patients (bed_id, name, mmw_target_id)
                         VALUES (?, ?, ?)""", (LIVE_BED_ID, "연결 환자", DEFAULT_TARGET))
@@ -178,6 +182,9 @@ def _decode_rows(rows):
     decoded = []
     for original in rows:
         row = dict(original)
+        if "input_snapshot_json" in row:
+            # List views need provenance, not a full duplicate of sensitive report inputs.
+            row["input_snapshot_available"] = bool(row.pop("input_snapshot_json"))
         for key, value in list(row.items()):
             if key.endswith("_json"):
                 try:
@@ -185,6 +192,16 @@ def _decode_rows(rows):
                 except (TypeError, json.JSONDecodeError):
                     row[key[:-5]] = None
                 del row[key]
+        if "report" in row:
+            import report_review
+            saved = report_review.saved_review(original)
+            row["review_summary"] = report_review.summary(saved) if saved else None
+            if row.get("model_version") == "demo-history-seed":
+                row["report_source"] = "demo_seed"
+            elif row.get("patient_id") in DEMO_BED_IDS:
+                row["report_source"] = "simulation_ai"
+            else:
+                row["report_source"] = "patient_ai"
         decoded.append(row)
     return decoded
 
@@ -333,13 +350,110 @@ def create_blueprint(analysis_runner=None, status_provider=None):
                 freeze_ratio, height_drop, stride_length, stride_cv, reliable,
                 samples_count, total_abs, alert_level FROM mmw_readings
                 WHERE target_id = ? ORDER BY id DESC LIMIT 60""", (target,)).fetchall() if target else []
+            prior = gait_prior.get_active_prior(conn, bed_id)
         analyses = _decode_rows(db.list_ai_analysis(bed_id, limit=30))
         return jsonify(success=True, patient=_patient(profile), profile=_patient(profile),
                        medications=db.list_medications(bed_id), risk_factors=db.list_risk_factors(bed_id),
+                       emr_records=db.list_emr_records(bed_id), nursing_records=db.list_nursing_records(bed_id),
                        events=_decode_rows(db.get_activity_log(bed_id, limit=60)),
                        history={"tof": [dict(row) for row in reversed(tof)],
                                 "mmwave": [dict(row) for row in reversed(mmw)]},
-                       analyses=analyses, summary=db.get_patient_timeseries_summary(bed_id))
+                       analyses=analyses, summary=db.get_patient_timeseries_summary(bed_id),
+                       gait_prior=gait_prior.summarize(prior))
+
+    @api.post("/patients/<bed_id>/emr")
+    def ingest_emr(bed_id):
+        """입원 기록(EMR) 입력. profile(나이·성별·키·몸무게·진단)은 보낸 필드만 갱신하고,
+        records(과거 병원 기록 원문)는 추가만 한다. 보행 기대값은 /gait-prior에서 따로 만든다."""
+        if db.get_patient(bed_id) is None:
+            return failure("환자를 찾을 수 없습니다.", "not_found", 404)
+        body = request.get_json(silent=True)
+        if not isinstance(body, dict):
+            return failure("JSON 본문이 필요합니다.", "bad_request")
+        profile = body.get("profile") or {}
+        records = body.get("records") or []
+        if not isinstance(profile, dict) or not isinstance(records, list) or len(records) > 50:
+            return failure("profile은 객체, records는 50개 이하의 목록이어야 합니다.", "bad_request")
+
+        updates = {}
+        ranges = {"age": (0, 120), "height_cm": (100, 220), "weight_kg": (20, 250)}
+        for key, (lo, hi) in ranges.items():
+            if key in profile:
+                value = profile[key]
+                if isinstance(value, bool) or not isinstance(value, (int, float)) or not lo <= value <= hi:
+                    return failure(f"{key}는 {lo}–{hi} 범위의 숫자여야 합니다.", "bad_request")
+                updates[key] = int(value) if key == "age" else float(value)
+        if "sex" in profile:
+            if profile["sex"] not in ("M", "F"):
+                return failure("sex는 M 또는 F여야 합니다.", "bad_request")
+            updates["sex"] = profile["sex"]
+        if "diagnoses" in profile:
+            dx = profile["diagnoses"]
+            if not isinstance(dx, list) or not all(isinstance(d, str) and d.strip() for d in dx):
+                return failure("diagnoses는 문자열 목록이어야 합니다.", "bad_request")
+            updates["diagnosis_json"] = json.dumps([d.strip() for d in dx], ensure_ascii=False)
+        if "diagnosis" in profile:
+            if not isinstance(profile["diagnosis"], str):
+                return failure("diagnosis는 문자열이어야 합니다.", "bad_request")
+            updates["diagnosis"] = profile["diagnosis"].strip()
+
+        clean = []
+        for rec in records:
+            text = rec.get("text") if isinstance(rec, dict) else None
+            if not isinstance(text, str) or not text.strip() or len(text) > 20000:
+                return failure("각 기록에는 20,000자 이하의 text가 필요합니다.", "bad_request")
+            meta = {k: rec.get(k) for k in ("record_date", "source", "record_type")}
+            if any(v is not None and not isinstance(v, str) for v in meta.values()):
+                return failure("record_date·source·record_type은 문자열이어야 합니다.", "bad_request")
+            clean.append({**meta, "text": text.strip()})
+
+        with db.get_conn() as conn:
+            if updates:
+                conn.execute(f"UPDATE patients SET {', '.join(k + ' = ?' for k in updates)} WHERE bed_id = ?",
+                             list(updates.values()) + [bed_id])
+            ids = gait_prior.add_emr_records(conn, bed_id, clean)
+        return jsonify(success=True, updated_fields=sorted(updates), record_ids=ids), 201
+
+    @api.get("/patients/<bed_id>/gait-prior")
+    def get_gait_prior(bed_id):
+        if db.get_patient(bed_id) is None:
+            return failure("환자를 찾을 수 없습니다.", "not_found", 404)
+        with db.get_conn() as conn:
+            prior = gait_prior.get_active_prior(conn, bed_id)
+        return jsonify(success=True, prior=prior, summary=gait_prior.summarize(prior))
+
+    @api.post("/patients/<bed_id>/gait-prior")
+    def create_gait_prior(bed_id):
+        """EMR과 문헌값으로 보행 기대값을 만든다. use_ai=true면 AI가 기록 인용을 근거로 사실 확인·비중 선택을
+        하고, 키가 없거나 호출이 실패하면 규칙 결과만 저장한 뒤 실패 이유를 그대로 돌려준다."""
+        if db.get_patient(bed_id) is None:
+            return failure("환자를 찾을 수 없습니다.", "not_found", 404)
+        # 본문이 비어 있으면 기본값({}), 있으면 JSON 객체여야 한다. 잘못된 본문으로 기존 값을 바꾸지 않는다.
+        raw_body = request.get_data(cache=True)
+        if raw_body.strip():
+            try:
+                body = json.loads(raw_body)
+            except (UnicodeDecodeError, json.JSONDecodeError):
+                return failure("JSON 본문을 읽지 못했습니다.", "bad_request")
+            if not isinstance(body, dict):
+                return failure("JSON 본문은 객체여야 합니다.", "bad_request")
+        else:
+            body = {}
+        if "use_ai" in body and not isinstance(body["use_ai"], bool):
+            return failure("use_ai는 true 또는 false여야 합니다.", "bad_request")
+        care_setting = body.get("care_setting")
+        if care_setting is not None and care_setting not in gait_prior.SETTINGS:
+            return failure("care_setting은 " + ", ".join(gait_prior.SETTINGS) + " 중 하나여야 합니다.", "bad_request")
+        use_ai = body.get("use_ai") is True
+        with db.get_conn() as conn:
+            patient, text = gait_prior.collect_records_text(conn, bed_id)
+        # AI 호출(최대 30초)은 DB 연결 밖에서 한다.
+        prior = gait_prior.build_prior(patient, text, care_setting=care_setting, use_ai=use_ai)
+        with db.get_conn() as conn:
+            prior["id"] = gait_prior.save_prior(conn, bed_id, patient.get("mmw_target_id"), prior)
+        prior["bed_id"] = bed_id
+        prior["target_id"] = patient.get("mmw_target_id")
+        return jsonify(success=True, prior=prior, summary=gait_prior.summarize(prior)), 201
 
     @api.get("/patients/<bed_id>/events")
     def patient_events(bed_id):
@@ -411,6 +525,17 @@ def create_blueprint(analysis_runner=None, status_provider=None):
         if db.get_patient(bed_id) is None:
             return failure("환자를 찾을 수 없습니다.", "not_found", 404)
         return jsonify(success=True, analyses=_decode_rows(db.list_ai_analysis(bed_id, limit=100)))
+
+    @api.get("/analyses/<int:analysis_id>/review")
+    def analysis_review(analysis_id):
+        import report_review
+        row = db.get_analysis_by_id(analysis_id)
+        if row is None or request.args.get("bed_id", row["patient_id"]) != row["patient_id"]:
+            return failure("해당 환자의 리포트를 찾을 수 없습니다.", "not_found", 404)
+        # GET remains read-only, including older reports without a saved review.
+        review = report_review.saved_review(row) or report_review.build_review(row)
+        return jsonify(success=True, analysis_id=analysis_id, bed_id=row["patient_id"],
+                       review=review, input_snapshot=report_review.decode(row.get("input_snapshot_json")))
 
     @api.post("/analyses")
     def start_analysis():

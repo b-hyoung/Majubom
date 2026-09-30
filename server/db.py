@@ -102,6 +102,14 @@ def init_db():
         ai_cols = {row["name"] for row in conn.execute("PRAGMA table_info(ai_analysis)")}
         if "risk_json" not in ai_cols:
             conn.execute("ALTER TABLE ai_analysis ADD COLUMN risk_json TEXT")
+        if "input_snapshot_json" not in ai_cols:
+            conn.execute("ALTER TABLE ai_analysis ADD COLUMN input_snapshot_json TEXT")
+        conn.execute("""CREATE TABLE IF NOT EXISTS ai_report_reviews (
+            analysis_id INTEGER PRIMARY KEY REFERENCES ai_analysis(id) ON DELETE CASCADE,
+            content_hash TEXT NOT NULL,
+            review_json TEXT NOT NULL,
+            reviewed_at TEXT NOT NULL
+        )""")
 
         # activity_log에 confidence/source_table/source_id 컬럼 추가 — CREATE TABLE IF NOT
         # EXISTS는 이미 있는 테이블에 컬럼을 못 더하므로 PRAGMA로 확인 후 없는 것만 ALTER.
@@ -260,6 +268,26 @@ def get_patient(bed_id: str) -> dict | None:
     with get_conn() as conn:
         row = conn.execute("SELECT * FROM patients WHERE bed_id = ?", (bed_id,)).fetchone()
         return dict(row) if row else None
+
+
+def _list_patient_records(table: str, bed_id: str, limit: int) -> list[dict]:
+    """Read optional clinical-record tables; an older DB can legitimately lack them."""
+    if table not in {"emr_records", "nurse_reports"}:
+        raise ValueError("Unsupported patient record table")
+    with get_conn() as conn:
+        if not conn.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name=?", (table,)).fetchone():
+            return []
+        rows = conn.execute(f"SELECT * FROM {table} WHERE bed_id=? ORDER BY id DESC LIMIT ?",
+                            (bed_id, limit)).fetchall()
+        return [dict(row) for row in rows]
+
+
+def list_emr_records(bed_id: str, limit: int = 50) -> list[dict]:
+    return _list_patient_records("emr_records", bed_id, limit)
+
+
+def list_nursing_records(bed_id: str, limit: int = 20) -> list[dict]:
+    return _list_patient_records("nurse_reports", bed_id, limit)
 
 
 def list_medications(bed_id: str, active_only: bool = True) -> list[dict]:
@@ -437,7 +465,7 @@ def insert_ai_analysis(patient_id: str, analysis_type: str, risk_score: float | 
                         summary: str, detected_patterns: list | None, predicted_risks: list | None,
                         evidence_ids: list | None, model_version: str, prompt_version: str,
                         confidence: float | None, report: dict, risk: dict | None = None,
-                        created_at: str | None = None) -> int:
+                        created_at: str | None = None, input_snapshot: dict | None = None) -> int:
     """created_at: normally left None (defaults to now). The weekly backfill script passes an
     explicit past timestamp so historical demo-patient reports land on their real report week
     instead of all being stamped with today's date."""
@@ -448,29 +476,31 @@ def insert_ai_analysis(patient_id: str, analysis_type: str, risk_score: float | 
                 INSERT INTO ai_analysis
                     (patient_id, created_at, analysis_type, risk_score, summary, detected_patterns_json,
                      predicted_risks_json, evidence_ids_json, model_version, prompt_version,
-                     confidence, report_json, risk_json)
-                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)
+                     confidence, report_json, risk_json, input_snapshot_json)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)
             """, (patient_id, created_at, analysis_type, risk_score, summary,
                   _json.dumps(detected_patterns or [], ensure_ascii=False, default=str),
                   _json.dumps(predicted_risks or [], ensure_ascii=False, default=str),
                   _json.dumps(evidence_ids or [], ensure_ascii=False, default=str),
                   model_version, prompt_version, confidence,
                   _json.dumps(report, ensure_ascii=False, default=str),
-                  _json.dumps(risk, ensure_ascii=False, default=str) if risk is not None else None))
+                  _json.dumps(risk, ensure_ascii=False, default=str) if risk is not None else None,
+                  _json.dumps(input_snapshot, ensure_ascii=False, default=str) if input_snapshot is not None else None))
         else:
             cur = conn.execute("""
                 INSERT INTO ai_analysis
                     (patient_id, analysis_type, risk_score, summary, detected_patterns_json,
                      predicted_risks_json, evidence_ids_json, model_version, prompt_version,
-                     confidence, report_json, risk_json)
-                VALUES (?,?,?,?,?,?,?,?,?,?,?,?)
+                     confidence, report_json, risk_json, input_snapshot_json)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)
             """, (patient_id, analysis_type, risk_score, summary,
                   _json.dumps(detected_patterns or [], ensure_ascii=False, default=str),
                   _json.dumps(predicted_risks or [], ensure_ascii=False, default=str),
                   _json.dumps(evidence_ids or [], ensure_ascii=False, default=str),
                   model_version, prompt_version, confidence,
                   _json.dumps(report, ensure_ascii=False, default=str),
-                  _json.dumps(risk, ensure_ascii=False, default=str) if risk is not None else None))
+                  _json.dumps(risk, ensure_ascii=False, default=str) if risk is not None else None,
+                  _json.dumps(input_snapshot, ensure_ascii=False, default=str) if input_snapshot is not None else None))
         return cur.lastrowid
 
 
@@ -519,17 +549,19 @@ def list_ai_analysis(patient_id: str, analysis_type: str | None = None, limit: i
 _WINDOW_HOURS = {"1h": 1, "24h": 24, "7d": 24 * 7, "30d": 24 * 30}
 
 
-def get_patient_timeseries_summary(patient_id: str, window: str = "24h") -> dict:
+def get_patient_timeseries_summary(patient_id: str, window: str = "24h", exclude_types: tuple = ()) -> dict:
     """환자의 최근 window 기간 활동 요약 — activity_log 이벤트 레벨 분포 + 개수.
     실서버가 안 떠있거나 이벤트가 없으면 빈 요약을 정직하게 반환(추측으로 채우지 않음)."""
     hours = _WINDOW_HOURS.get(window, 24)
     cutoff = (datetime.now(timezone.utc) - timedelta(hours=hours)).isoformat()
+    exclusion = " AND COALESCE(event_type, '') NOT IN (" + ",".join("?" for _ in exclude_types) + ")" if exclude_types else ""
     with get_conn() as conn:
         rows = conn.execute("""
             SELECT event_type, level, COUNT(*) n FROM activity_log
-            WHERE bed_id = ? AND ts >= ?
+            WHERE bed_id = ? AND datetime(ts) >= datetime(?) AND datetime(ts) <= datetime('now')
+        """ + exclusion + """
             GROUP BY event_type, level
-        """, (patient_id, cutoff)).fetchall()
+        """, (patient_id, cutoff, *exclude_types)).fetchall()
     if not rows:
         return {"window": window, "n_events": 0, "by_event_type": {}, "note": "해당 기간 이벤트 없음"}
     by_type: dict[str, dict] = {}

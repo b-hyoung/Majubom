@@ -107,6 +107,8 @@
       speed: nonnegative(raw.speed), sway: nonnegative(raw.sway), stride: nonnegative(raw.stride_length),
       cv: nonnegative(raw.speed_cv), freeze: nonnegative(raw.freeze_ratio),
       riskLevel, targetId: String(targetId), position, metricsFresh,
+      // 개인 기준이 생기기 전 문헌 기대 범위와 비교한 '잠정' 판정인지 (정식 알람 아님)
+      provisional: readingFresh && latest.provisional === true,
       reason: readingFresh && Array.isArray(latest.reasons) ? latest.reasons.filter(value => typeof value === 'string').join(' · ') || null : null
     };
   }

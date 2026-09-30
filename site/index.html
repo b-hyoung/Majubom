@@ -71,6 +71,10 @@
           </div>
         </div>
         <div class="card">
+          <div class="card-h"><div><div class="card-title">보행 기대 범위</div><div class="card-sub">입원 기록과 문헌 기준값으로 계산한 참고 범위 · 낙상 확률 아님</div></div></div>
+          <div id="ovGaitPrior"><div class="empty-state">불러오는 중…</div></div>
+        </div>
+        <div class="card">
           <div class="card-h"><div><div class="card-title">24시간 활동 타임라인</div><div class="card-sub" id="ovTimelineSub"></div></div></div>
           <div id="ovTimeline"><div class="empty-state">불러오는 중…</div></div>
         </div>
@@ -198,6 +202,7 @@
       <div><div class="card-title">AI 주간 리포트</div><div class="card-sub" id="reportModalSub"></div></div>
       <button class="btn icon ghost" id="reportModalClose" type="button" aria-label="닫기">✕</button>
     </div>
+    <div id="reportModalReview" aria-live="polite"></div>
     <div id="reportModalBody"></div>
     <div id="reportModalEvidence"></div>
   </div>
@@ -216,6 +221,7 @@
 
 <script src="dashboard-assets/data.js"></script>
 <script src="dashboard-assets/simulation.js"></script>
+<script src="dashboard-assets/report-review.js"></script>
 <script src="dashboard-assets/dashboard.js"></script>
 </body>
 </html>

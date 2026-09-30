@@ -283,7 +283,9 @@
         '<div class="sensor-empty">마지막 수신: ' + escapeHtml(age) + '</div>';
     }
     var tag = mode === 'sim' ? SIM_TAG : '';
-    return '<div class="card-h"><div class="card-title">mmWave · 보행</div>' + tag + levelPill(mmw.riskLevel) + '</div>' +
+    // 잠정: 개인 기준이 생기기 전 입원 기록·문헌 기대 범위와 비교한 판정(정식 알람 아님)
+    var provisional = mmw.provisional ? '<span class="pill sm" title="개인 보행 기록 5건 전 — 문헌 기대 범위와 비교한 잠정 판정">잠정</span>' : '';
+    return '<div class="card-h"><div class="card-title">mmWave · 보행</div>' + tag + provisional + levelPill(mmw.riskLevel) + '</div>' +
       '<div class="sensor-metrics">' +
       '<div class="metric"><span class="metric-label">속도</span><span class="num metric-value">' + fmt2(mmw.speed) + '<span class="unit">m/s</span></span></div>' +
       '<div class="metric"><span class="metric-label">흔들림</span><span class="num metric-value">' + fmt2(mmw.sway) + '</span></div>' +
@@ -668,7 +670,7 @@
       var sev = f.severity || 'low';
       var pill = '<span class="pill ' + (SEVERITY_CLASS[sev] || '') + ' sm">' + escapeHtml(SEVERITY_LABEL[sev] || sev) + '</span>';
       return '<div class="factor-row">' + pill +
-        '<div><div class="factor-label">' + escapeHtml(f.factor || '') + '</div>' +
+        '<div><div class="factor-label">' + escapeHtml(f.factor || f.label || '') + '</div>' +
         (f.notes ? '<div class="factor-note muted">' + escapeHtml(f.notes) + '</div>' : '') + '</div></div>';
     }).join('') + '</div>';
   }
@@ -681,6 +683,62 @@
         '<span class="muted mono" style="font-size:11px">' + escapeHtml(m.frequency || '') + '</span></div>' +
         (m.notes ? '<div class="med-note muted">' + escapeHtml(m.notes) + '</div>' : '') + '</div>';
     }).join('') + '</div>';
+  }
+
+  var SEVERITY_KO = { none: '치매 기록 없음', cognitive_impairment: '인지저하', mild: '경도 치매', moderate: '중등도 치매',
+    severe: '중증 치매', unknown: '치매(중증도 기록 없음)' };
+  var AMBULATION_KO = { independent: '독립 보행', assisted: '보조 필요', walker: '보행기 사용',
+    wheelchair_user: '휠체어 사용(걷는지 기록 없음)', non_ambulatory: '보행 불가(와상 등)', unknown: '보행 상태 기록 없음' };
+
+  // gait_prior.py 요약(/patients/<id>의 gait_prior). 숫자는 서버가 계산한 값만 표시한다.
+  function renderGaitPrior(summary) {
+    var button = '<button class="btn sm" id="gaitPriorBuild" type="button">입원 기록으로 계산</button>';
+    if (!summary) {
+      return '<div class="empty-state">아직 계산하지 않았습니다. 나이·키·진단·과거 기록을 입력한 뒤 계산하세요.</div>' + button;
+    }
+    var rows = [];
+    if (summary.not_applicable) {
+      rows.push('<div class="factor-row"><span class="pill sm">계산 안 함</span><div class="factor-label">' +
+        escapeHtml(summary.not_applicable) + '</div></div>');
+    } else if (summary.speed_expected_mps) {
+      var s = summary.speed_expected_mps;
+      rows.push('<div class="factor-row"><span class="pill sm">보행속도</span><div><div class="factor-label">' +
+        '평균 <b class="num">' + fmt2(s.mean) + '</b> m/s · 기대 범위 <span class="num">' + fmt2(s.p10) + '–' + fmt2(s.p90) +
+        '</span> m/s</div><div class="factor-note muted">하위 10%–상위 10% 범위 · 개인 보행 기록이 쌓이면 개인 기준이 우선</div></div></div>');
+    }
+    rows.push('<div class="factor-row"><span class="pill sm">기록</span><div class="factor-label">' +
+      escapeHtml(SEVERITY_KO[summary.dementia_severity] || '—') + ' · ' +
+      escapeHtml(AMBULATION_KO[summary.ambulation] || '—') +
+      (summary.ai_used ? ' · <span class="muted">AI 기록 확인 사용</span>' : ' · <span class="muted">규칙 추출</span>') +
+      '</div></div>');
+    var oos = summary.out_of_scope_factors || [];
+    rows.push('<div class="factor-row"><span class="pill ' + (oos.length ? 'caution' : '') + ' sm">센서 밖</span><div>' +
+      '<div class="factor-label">' + (oos.length ? escapeHtml(oos.join(' · ')) : '해당 기록 없음') + '</div>' +
+      '<div class="factor-note muted">걸려 넘어짐·갑자기 힘이 빠지는 주저앉음 같은 낙상은 센서가 미리 알 수 없습니다</div></div></div>');
+    return '<div class="factor-list">' + rows.join('') + '</div>' + button.replace('입원 기록으로 계산', '다시 계산');
+  }
+
+  function wireGaitPriorButton() {
+    var btn = $('#gaitPriorBuild');
+    if (!btn) return;
+    btn.addEventListener('click', async function () {
+      btn.disabled = true;
+      btn.textContent = '계산 중…';
+      var bedId = state.selectedId;
+      try {
+        var useAi = !!(state.ai && state.ai.configured);
+        var res = await api('/api/dashboard/patients/' + encodeURIComponent(bedId) + '/gait-prior', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ use_ai: useAi })
+        });
+        if (!res || !res.success) throw new Error((res && res.message) || '계산하지 못했습니다.');
+        await loadDetail(bedId);
+        if (bedId === state.selectedId) renderOverview();
+      } catch (e) {
+        btn.disabled = false;
+        btn.textContent = '다시 시도';
+        $('#ovGaitPrior').insertAdjacentHTML('beforeend', '<div class="empty-state">' + escapeHtml(e.message) + '</div>');
+      }
+    });
   }
 
   var medicationEditingId = null;
@@ -791,6 +849,8 @@
     renderTimeline24h();
     $('#ovRiskFactors').innerHTML = renderRiskFactors(state.detail && state.detail.risk_factors);
     $('#ovMedications').innerHTML = renderMedications(state.detail && state.detail.medications);
+    $('#ovGaitPrior').innerHTML = renderGaitPrior(state.detail && state.detail.gait_prior);
+    wireGaitPriorButton();
     var ovEventsEl = $('#ovEvents');
     ovEventsEl.innerHTML = renderEvents(state.detail && state.detail.events);
     scrollEventLogToBottom(ovEventsEl);
@@ -899,8 +959,8 @@
     현재_상태: '현재 상태', 최근_변화: '최근 변화', ToF_변화: 'ToF 변화', mmWave_변화: 'mmWave 변화',
     보행_변화: '보행 변화', 활동_변화: '활동 변화', 침상_관련_행동: '침상 관련 행동',
     낙상_위험도_설명: '낙상 위험도', 주요_위험_요인: '주요 위험 요인', 과거_데이터와의_비교: '과거 데이터와의 비교',
-    향후_위험_가능성: '향후 위험 가능성 (병세 악화 예측)', 관련_연구_근거: '관련 연구 근거',
-    투약_조정_제안: '투약 조정 제안', 데이터_신뢰도_설명: '데이터 신뢰도', 추가_관찰이_필요한_항목: '추가 관찰이 필요한 항목'
+    향후_위험_가능성: '향후 위험 가능성 (현재 기록에 따른 설명)', 관련_연구_근거: '관련 연구 근거',
+    투약_조정_제안: '투약 검토 사항', 데이터_신뢰도_설명: '데이터 신뢰도', 추가_관찰이_필요한_항목: '추가 관찰이 필요한 항목'
   };
   var REPORT_SECTIONS = [
     { title: '관측된 변화', keys: ['최근_변화', 'ToF_변화', 'mmWave_변화', '보행_변화', '활동_변화', '침상_관련_행동'] },
@@ -922,9 +982,9 @@
         (isDominant ? '<span class="faint" style="font-size:10.5px">최종 판정 근거</span>' : '') + '</div>';
     }).join('');
     var confText = confidence != null ?
-      '<div class="muted" style="font-size:11.5px;margin-top:8px">신호 ' + keys.length + '/3종 확보 · 교차검증 신뢰도 ' + Math.round(confidence * 100) + '%' +
-      (confidence < 1 ? ' — 일부 신호가 없어 참고용으로만 사용하세요.' : ' — 두 센서가 일치했습니다.') + '</div>' : '';
-    return '<div class="report-section"><div class="uppercase-label">센서별 판정 · AI 교차검증</div>' + pills + confText + '</div>';
+      '<div class="muted" style="font-size:11.5px;margin-top:8px">신호 ' + keys.length + '/3종 확보 · 확보 비율 ' + Math.round(confidence * 100) + '%' +
+      ' — 신호의 확보 정도이며 AI 정확도나 센서 간 일치율이 아닙니다.</div>' : '';
+    return '<div class="report-section"><div class="uppercase-label">센서별 판정 근거</div>' + pills + confText + '</div>';
   }
 
   function renderEvidenceList(evidence, targetSel) {
@@ -947,13 +1007,22 @@
     if (!el) return;
     if (!report || typeof report !== 'object') { el.innerHTML = '<div class="empty-state">리포트 내용이 없습니다.</div>'; return; }
     var metaRow = '';
+    var source = meta && meta.report_source;
+    if (!source && meta && meta.model_version === 'demo-history-seed') source = 'demo_seed';
+    var sourceLabel = source === 'demo_seed' ? '미리 작성한 시뮬레이션 예시 · AI 생성 아님' :
+      source === 'simulation_ai' ? '시뮬레이션 기반 AI 리포트' : '';
+    if (sourceLabel) metaRow += '<span class="pill info report-source">' + escapeHtml(sourceLabel) + '</span>';
     if (meta && meta.risk_score != null) {
       metaRow += '<span class="pill ' + (riskCls(meta.risk_score) || 'ok') + '">위험점수 ' + Math.round(meta.risk_score * 100) + '%</span>';
     }
     if (meta && meta.confidence != null) {
-      metaRow += '<span class="muted" style="font-size:11px;margin-left:8px">데이터 신뢰도 ' + Math.round(meta.confidence * 100) + '%</span>';
+      metaRow += '<span class="muted" style="font-size:11px;margin-left:8px">신호 확보 비율 ' + Math.round(meta.confidence * 100) + '%</span>';
     }
     var html = metaRow ? '<div class="report-meta row">' + metaRow + '</div>' : '';
+    html += '<div class="muted" style="font-size:11.5px;margin:8px 0">위험점수는 위험 단계를 수치로 표시한 값이며, 낙상 발생 확률이 아닙니다.</div>';
+    if (meta && meta.input_snapshot_available === false) {
+      html += '<div class="muted" style="font-size:11.5px;margin:8px 0">이 과거 리포트는 작성 당시의 전체 입력 기록이 보존되어 있지 않습니다.</div>';
+    }
     if (report['현재_상태']) {
       html += '<div class="report-field-highlight" style="margin-bottom:12px;background:var(--bg-inset);border-color:var(--line)">' +
         '<div class="report-field-label" style="color:var(--fg-muted)">현재 상태</div>' +
@@ -971,7 +1040,7 @@
       if (!parts) return;
       html += '<div class="report-section"><div class="uppercase-label">' + escapeHtml(sec.title) + '</div>' + parts + '</div>';
     });
-    html += renderCrossValidation(meta && meta.risk, meta && meta.data_confidence);
+    html += renderCrossValidation(meta && meta.risk, meta && (meta.data_confidence != null ? meta.data_confidence : meta.confidence));
     el.innerHTML = html || '<div class="empty-state">리포트 내용이 없습니다.</div>';
   }
 
@@ -980,7 +1049,8 @@
     return '<button class="analysis-row" data-analysis-id="' + a.id + '" type="button">' +
       '<span class="mono" style="font-size:11px">' + escapeHtml(fmtTime(a.created_at)) + '</span>' +
       '<span class="num">' + score + '</span>' +
-      '<span class="muted analysis-summary">' + escapeHtml((a.summary || '').slice(0, 80)) + '</span>' +
+      '<span class="analysis-summary">' + window.MajubomReportReview.badge(a.review_summary) +
+      '<span class="muted"> ' + escapeHtml((a.summary || '').slice(0, 80)) + '</span></span>' +
       '</button>';
   }
 
@@ -995,14 +1065,31 @@
   function closeReportModal() { $('#reportModal').hidden = true; }
 
   function openReportModal(analysis) {
+    var patientId = state.selectedId;
+    var reviewBox = $('#reportModalReview');
+    $('#reportModal').dataset.analysisId = String(analysis.id);
+    function isCurrent() {
+      return !$('#reportModal').hidden && $('#reportModal').dataset.analysisId === String(analysis.id) && state.selectedId === patientId;
+    }
     var when = fmtTime(analysis.created_at);
     var score = analysis.risk_score != null ? ' · 위험점수 ' + Math.round(analysis.risk_score * 100) + '%' : '';
     $('#reportModalSub').textContent = when + score;
     renderReportResult(analysis.report, analysis, '#reportModalBody');
     $('#reportModalEvidence').innerHTML = '';
     $('#reportModal').hidden = false;
+    reviewBox.innerHTML = '<div class="empty-state">작성 근거와 검토 결과를 불러오는 중…</div>';
+    api('/api/dashboard/analyses/' + encodeURIComponent(analysis.id) + '/review?bed_id=' + encodeURIComponent(patientId))
+      .then(function (res) {
+        if (!isCurrent()) return;
+        reviewBox.innerHTML = res && res.success ? window.MajubomReportReview.render(res) :
+          '<div class="empty-state">검토 결과를 불러오지 못했습니다. 서버 업데이트 여부를 확인하세요.</div>';
+      }).catch(function () {
+        if (isCurrent()) reviewBox.innerHTML = '<div class="empty-state">검토 결과를 불러오지 못했습니다. 다시 열어 주세요.</div>';
+      });
     api('/agent/evidence?analysis_id=' + encodeURIComponent(analysis.id))
-      .then(function (res) { if (res && res.success) renderEvidenceList(res.evidence, '#reportModalEvidence'); })
+      .then(function (res) {
+        if (isCurrent() && res && res.success) renderEvidenceList(Array.isArray(res.evidence) ? res.evidence : (res.evidence && res.evidence.found), '#reportModalEvidence');
+      })
       .catch(function () { /* best-effort */ });
   }
 

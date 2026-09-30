@@ -20,7 +20,7 @@ from __future__ import annotations
 
 import json
 import os
-from datetime import datetime
+from datetime import datetime, timezone
 
 import requests
 
@@ -46,6 +46,17 @@ def _fresh(timestamp, seconds):
         return False
 
 
+def _recent_record(timestamp, hours=24):
+    try:
+        stamp = datetime.fromisoformat(str(timestamp).replace("Z", "+00:00"))
+        if stamp.tzinfo is None:
+            stamp = stamp.replace(tzinfo=timezone.utc)  # SQLite event timestamps are UTC.
+        age = (datetime.now(timezone.utc) - stamp).total_seconds()
+        return 0 <= age <= hours * 3600
+    except (ValueError, TypeError, OverflowError):
+        return False
+
+
 # ── ① 현재 상태 수집 (SQL DB + 실서버 라이브 상태) ────────────────────────
 def gather_patient_state(bed_id: str) -> dict:
     """환자 프로필·위험인자·투약(SQL DB)과, ToF/mmWave 실서버의 현재 판정을 한데 모은다.
@@ -59,10 +70,14 @@ def gather_patient_state(bed_id: str) -> dict:
         "patient_profile": patient,
         "risk_factors": db.list_risk_factors(bed_id) if patient else [],
         "medications": db.list_medications(bed_id) if patient else [],
-        "recent_24h": db.get_patient_timeseries_summary(bed_id, window="24h"),
+        "emr_records": db.list_emr_records(bed_id) if patient else [],
+        "nursing_records": db.list_nursing_records(bed_id) if patient else [],
+        "data_source": "simulation" if sim_state.is_simulated(bed_id) else "patient_records_and_live_sensors",
+        "recent_24h": db.get_patient_timeseries_summary(bed_id, window="24h", exclude_types=("ai_analysis_completed",)),
         # 실제 개별 이벤트(시각·제목·메모) — 집계 요약(recent_24h)만으로는 "언제 어떤 전조가
         # 있었는지"를 알 수 없어, 낙상 등 특정 사건 전후의 시계열 근거로 그대로 씀.
-        "recent_events": db.get_activity_log(bed_id, limit=20) if patient else [],
+        "recent_events": [e for e in db.get_activity_log(bed_id, limit=60)
+                          if e.get("event_type") != "ai_analysis_completed" and _recent_record(e.get("ts"))][:20] if patient else [],
         "tof_behavior": None, "tof_behavior_error": None,
         "mmw_latest": None, "mmw_latest_error": None,
     }
@@ -121,7 +136,10 @@ def gather_patient_state(bed_id: str) -> dict:
 QUERY_GEN_SYSTEM_PROMPT = (
     "당신은 치매환자 낙상예측시스템의 조사 보조원입니다. 아래 JSON은 한 환자의 현재 센서 상태·위험인자·"
     "투약 요약입니다. 이 상태를 근거로, 관련 연구 문헌에서 무엇을 더 확인해야 하는지 판단해 자연어 검색 "
-    "질의를 만드세요. 절대 이 데이터에 없는 사실을 지어내지 말고, 오직 '무엇을 검색해야 하는가'만 판단하세요. "
+    "질의를 만드세요. emr_records와 nursing_records가 있으면 해당 환자의 원문 기록도 참고하세요. "
+    "walking=false는 지금 걷는 신호가 없다는 뜻이며, 의학적으로 보행이 불가능하다는 뜻이 아닙니다. "
+    "data_source=simulation이면 가상 환자와 가상 센서 상태입니다. "
+    "절대 이 데이터에 없는 사실을 지어내지 말고, 오직 '무엇을 검색해야 하는가'만 판단하세요. "
     "환자가 진정제·향정신성 약물(예: 트라조돈, 벤조디아제핀 계열 등)을 복용 중이라면, 그 약물과 낙상·섬망·"
     "다제병용 위험의 관계를 확인하는 질의를 최소 1개 반드시 포함하세요 — 이는 통합분석 리포트의 '투약 "
     "조정 제안' 항목의 근거로 쓰입니다. "
@@ -212,14 +230,16 @@ def investigate(bed_id: str, max_rounds: int = MAX_ROUNDS_DEFAULT,
             break
         round_results = []
         for q in queries:
-            sr = retrieve(q, top_k=top_k)
+            # Titles/authors alone cannot substantiate a report's medical claims.
+            sr = retrieve(q, top_k=top_k * 3)
             if not sr["success"]:
                 # Vector DB 쪽이 실패(키 미설정 등)해도 지금까지 모은 SQL 상태는 살려서 반환 —
                 # "검색을 못 했다"와 "검색했는데 결과가 없다"를 구분해 정직하게 기록.
                 return {"success": False, **{k: v for k, v in sr.items() if k != "success"},
                         "bed_id": bed_id, "patient_state": patient_state,
                         "rounds": rounds, "stage": "vector_search", "search_method": search_method, "query": q}
-            for r in sr["results"]:
+            content_results = [r for r in sr["results"] if r.get("section") != "identity"][:top_k]
+            for r in content_results:
                 all_results[r["chunk_id"]] = r
                 round_results.append(r)
         rounds.append({"round": round_i + 1, "queries": queries, "n_results": len(round_results),
