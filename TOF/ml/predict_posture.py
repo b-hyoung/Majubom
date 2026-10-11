@@ -25,7 +25,12 @@ MODEL_PATH = os.path.join(HERE, "posture_model.joblib")
 
 def load_model(path=MODEL_PATH):
     d = joblib.load(path)
-    return d["model"]
+    model = d["model"]
+    # 한 프레임씩 예측하므로 병렬(n_jobs=-1)은 스레드 생성 비용만 커진다. Pi 서버에서 응답이 0.5초대로 느려져
+    # ESP 수신까지 밀렸다(2026-10-08) → 추론은 단일 스레드. 결과는 같다.
+    if hasattr(model, "n_jobs"):
+        model.n_jobs = 1
+    return model
 
 
 def _pad(a):

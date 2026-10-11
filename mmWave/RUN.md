@@ -7,6 +7,14 @@ IWR6843(AOP) → `send_mmw.py`(TLV 파싱·보행지표·환자 특정) → `mmw
 
 ---
 
+## 현재 두 대시보드 실행
+
+현재 설치는 높이 2.5m, 하향50°이며 `AOP_diag_2m5_d50.cfg`를 사용한다.
+단일 `send_mmw.py`가 기존 간호사 :5002 수신 경로와 별도 :5012 로우데이터 화면에 함께 전송한다.
+진단 화면 분기는 최신 프레임만 메모리로 유지하며 기존 운영 DB 수집은 계속한다.
+실행 절차/설정/현장 제한: [docs/SENSOR_DIAGNOSTICS.md](../docs/SENSOR_DIAGNOSTICS.md).
+아래 2.7~3m/15°와 기존 침대 영역은 과거 배치 예시이며 새 현장에서는 재검증한다.
+
 ## 1. 최초 1회 셋업
 
 ```bash
@@ -108,3 +116,9 @@ raw={...} | tid=8 aff=0.98 cand=1 lock=True walk=True str=0.83 n=2
 - 포트: `--cli COM5 --data COM6` (Enhanced/Standard)
 - 한글 콘솔 깨짐 방지: `PYTHONIOENCODING=utf-8` (Linux는 기본 UTF-8이라 불필요)
 - 나머지 동일.
+
+
+추가 진단은 실패하거나 `--diagnostics-url ""`로 꺼도 기존 보행 전송을 계속한다.
+DATA UART는 exclusive 모드이므로 다른 USB 리더가 먼저 열었으면 시작하지 않는다.
+`/mmw/live`는 사람이 없는 프레임 또는 2초 넘게 프레임 수신이 멈췄을 때 빈 targets를 전송해,
+이전 사람 위치가 간호사 화면에서 현재 위치로 계속 표시되는 것을 방지한다.

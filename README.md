@@ -4,6 +4,12 @@
 
 > 원래 WiFi CSI(ESP32 기반 심박·호흡 센싱)도 세 번째 센서로 개발했으나, 단일 안테나로는 HRV 절대값 신뢰도를 확보하기 어려워 2026-09-10에 기능 자체를 완전히 제거했습니다. 관련 코드·문서는 저장소 히스토리에 남아있습니다.
 
+## AI와 함께 작업할 때
+
+코드 작성·수정 전에 [AGENTS.md](AGENTS.md), [AI 시작 안내](docs/AI_START_HERE.md),
+[전체 파일 구조](docs/PROJECT_STRUCTURE.md)를 읽습니다. 파일 구조를 변경하면
+`python3 tools/update_project_structure.py`로 목록을 갱신하고, 역할·실행 방법 변경도 관련 문서에 반영합니다.
+
 ## 동작 방식
 
 [시스템 구성도와 AI·통계 역할 설명](SYSTEM_ARCHITECTURE.md)에서 센서부터 대시보드·AI 리포트까지의 연결을 볼 수 있습니다.
@@ -14,6 +20,14 @@
 - **mmWave** (TI IWR6843AOP) — 보행 패턴 분석.
 
 ESP32와 라즈베리파이가 raw 데이터를 모아 서버로 보내고, 서버는 환자별 baseline 대비 z-score를 계산해 위험도를 4단계(🟢 normal / 🟡 caution / 🟠 warning / 🔴 critical)로 띄웁니다. 절대값이 아니라 "평소보다 얼마나 벗어났나"를 보기 때문에 환자마다 기준이 다르고, 여러 신호 중 가장 높은 위험 단계를 대표값으로 씁니다.
+
+## 화면 접속
+
+- 간호사 대시보드: `http://<Pi-IP>:5001/dashboard`
+- ToF·mmWave 로우데이터: `http://<Pi-IP>:5012/` (추가 사본만 메모리에 표시)
+- [HTML 시스템 구성도](docs/SYSTEM_ARCHITECTURE.html): `http://<Pi-IP>:5001/system-architecture`
+
+두 화면 동시 실행은 [진단 안내](docs/SENSOR_DIAGNOSTICS.md)를 참고합니다.
 
 ## 저장소 구조
 

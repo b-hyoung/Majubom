@@ -58,20 +58,20 @@
 <div id="panel">
   <h2>센서 배치 (실물과 맞추기)</h2>
   <div class="ctl">
-    <label><span style="color:var(--t1)">머리쪽</span> 높이 <b><span id="v-h1">0.30</span> m</b></label>
-    <input id="s-h1" type="range" min="0.1" max="2.2" step="0.02" value="0.30">
+    <label><span style="color:var(--t1)">머리쪽</span> 높이 <b><span id="v-h1">1.20</span> m</b></label>
+    <input id="s-h1" type="range" min="0.1" max="2.2" step="0.02" value="1.20">
   </div>
   <div class="ctl">
-    <label><span style="color:var(--t2)">발쪽</span> 높이 <b><span id="v-h2">0.72</span> m</b></label>
-    <input id="s-h2" type="range" min="0.1" max="2.2" step="0.02" value="0.72">
+    <label><span style="color:var(--t2)">발쪽</span> 높이 <b><span id="v-h2">1.20</span> m</b></label>
+    <input id="s-h2" type="range" min="0.1" max="2.2" step="0.02" value="1.20">
   </div>
   <div class="ctl">
-    <label><span style="color:var(--t1)">머리쪽</span> 기울기 <b><span id="v-t1">90</span>°</b></label>
-    <input id="s-t1" type="range" min="0" max="90" step="1" value="90">
+    <label><span style="color:var(--t1)">머리쪽</span> 기울기 <b><span id="v-t1">70</span>°</b></label>
+    <input id="s-t1" type="range" min="0" max="90" step="1" value="70">
   </div>
   <div class="ctl">
-    <label><span style="color:var(--t2)">발쪽</span> 기울기 <b><span id="v-t2">80</span>°</b></label>
-    <input id="s-t2" type="range" min="0" max="90" step="1" value="80">
+    <label><span style="color:var(--t2)">발쪽</span> 기울기 <b><span id="v-t2">70</span>°</b></label>
+    <input id="s-t2" type="range" min="0" max="90" step="1" value="70">
   </div>
   <div class="ctl">
     <label>센서 간 거리(머리~발) <b><span id="v-w">2.12</span> m</b></label>
@@ -133,7 +133,7 @@ const FOV_DEG = 45;                    // 8×8 축당 시야각(대각 63° → 
 const BED_WID = 0.95;                  // 매트리스 폭(양옆 사이, Y, m)
 
 // 조절값
-let SENSOR_H1 = 0.30, SENSOR_H2 = 0.72, TILT1 = 90, TILT2 = 80, SEP = 2.12, MAX_MM = 4000;
+let SENSOR_H1 = 1.20, SENSOR_H2 = 1.20, TILT1 = 70, TILT2 = 70, SEP = 2.12, MAX_MM = 4000;
 let showSurf = true, showRay = false;
 
 // 시점

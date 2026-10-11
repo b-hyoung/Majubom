@@ -19,6 +19,8 @@ mmWave가 보내는 것 : raw(speed/speed_cv/sway/freeze_ratio/height_drop) + qu
       한글은 JSON/HTML 응답(UTF-8)으로만 내보낸다.
 """
 import math
+from copy import deepcopy
+from diagnostic_observer import observer, mmwave_snapshot, patient_target
 import os
 import time
 from datetime import datetime
@@ -114,7 +116,31 @@ def receive_mmw():
         data["quality"] = {**data["quality"], "walking": False, "invalid_fields": invalid}
 
     # baseline 갱신 + z-score/alert 계산 (mmw_logic). EMR 기반 문헌 사전분포가 있으면 함께 넘긴다.
-    result = L.evaluate(data, baseline_store, persist=True, prior=_prior_for(data["target_id"]))
+    before = deepcopy(baseline_store.get(data["target_id"]))
+    prior = _prior_for(data["target_id"])
+    try:
+        result = L.evaluate(data, baseline_store, persist=True, prior=prior)
+    except Exception as exc:
+        observer.record('mmwave:' + data['target_id'], 'evaluation',
+                        {'status': 'failed', 'error': str(exc)}, event=True)
+        raise
+    after = deepcopy(baseline_store.get(data["target_id"]))
+    observer.record('mmwave:' + data['target_id'], 'evaluation', {
+        'status': 'evaluated', 'before': before, 'after': after,
+        'baseline_updated': before != after,
+        'baseline_used': (None if result.get('zscore') is None or (prior and (prior.get('metrics') or {}).get('speed'))
+                          else result.get('baseline')),
+        'comparison_order': ('not_executed' if result.get('zscore') is None else
+                             'before_update_prior' if prior and (prior.get('metrics') or {}).get('speed')
+                             else 'after_update_legacy'),
+        'prior': prior, 'inputs': {'raw': deepcopy(raw), 'quality': deepcopy(data['quality']),
+                                  'presence': deepcopy(data['presence'])},
+        'zscore': result.get('zscore'), 'level': result.get('alert_level'),
+        'alarm': result.get('alarm'), 'reason': result.get('reasons'),
+        'invalid_fields': invalid,
+        'diagnostic_inputs': deepcopy(data.get('diagnostic_inputs')),
+    }, event=bool(result.get('alarm') or result.get('measuring_held')))
+
 
     latest_by_target[result["target_id"]] = result
     mmw_log.append(result)
@@ -125,12 +151,14 @@ def receive_mmw():
     z = result.get("zscore") or {}
     raw_id = None
     try:
-        raw_id = db.insert_mmw(
+        raw_id = observer.write('mmwave:' + result['target_id'], 'mmw_readings', db.insert_mmw,
             result["target_id"],
             result.get("received_at") or datetime.now().isoformat(),
             raw, data.get("quality") or {}, data.get("presence") or {},
             total_abs=z.get("total_abs"),
             alert_level=result.get("alert_level"),
+            labels={'target_id': result['target_id'], 'alert_level': result.get('alert_level'),
+                    'total_abs': z.get('total_abs'), 'note': '각 지표 z/보행 라벨 전체는 이 테이블에 저장하지 않음'},
         )
     except Exception as e:
         print(f"[DB] MMW insert failed: {e}")
@@ -143,16 +171,21 @@ def receive_mmw():
             quality = data.get("quality") or {}
             diag = _data_integrity.check_mmw_consistency(
                 int(quality.get("samples_count") or 0), bool(quality.get("walking")))
+            observer.record('mmwave:' + result['target_id'], 'integrity', diag)
             if diag.get("consistent") is False:
                 now_iso = result.get("received_at") or datetime.now().isoformat()
-                db.insert_clean_data(
+                observer.write('mmwave:' + result['target_id'], 'sensor_clean_data', db.insert_clean_data,
                     patient_id="bed_01", sensor_type="mmwave", timestamp=now_iso,
                     cleaned_value={"diagnosis": diag}, preprocessing_method="mmw_walking_sample_check",
                     confidence=None, removed_outlier=False, raw_table="mmw_readings", raw_id=raw_id,
+                    labels={'preprocessing_method': 'mmw_walking_sample_check', 'patient_id': 'bed_01',
+                            'sensor_type': 'mmwave', 'raw_id': raw_id},
                 )
-                db.insert_sensor_event("bed_01", "data_integrity_flag", ts=now_iso, level="caution",
+                observer.write('mmwave:' + result['target_id'], 'activity_log', db.insert_sensor_event,
+                                        "bed_01", "data_integrity_flag", ts=now_iso, level="caution",
                                         title="mmWave 일관성 불일치", note=diag.get("note"),
-                                        source_table="mmw_readings", source_id=raw_id)
+                                        source_table="mmw_readings", source_id=raw_id,
+                                        labels={'event_type': 'data_integrity_flag', 'level': 'caution', 'source_id': raw_id})
         except Exception as e:
             print(f"[data_integrity] mmWave 진단 실패: {e}")
 
@@ -168,6 +201,20 @@ def receive_mmw():
           f"level={lvl}{' ALARM' if result.get('alarm') else ''}")
     return jsonify({"ok": True, "alert_level": result.get("alert_level"),
                     "alarm": result.get("alarm")}), 200
+
+
+@app.route('/api/diagnostics/mmwave', methods=['GET'])
+def diagnostic_mmwave():
+    bed_id = request.args.get('bed_id', 'bed_01')
+    assigned = patient_target(db.DB_PATH, bed_id)
+    target = request.args.get('target', assigned or 'room_01')
+    if bed_id != 'bed_01' or target != assigned:
+        response = jsonify(scope_error='실측 관측은 연결 환자 bed_01과 실제 배정된 mmWave 대상만 조회합니다.',
+                           bed_id=bed_id, requested_target=target, assigned_target=assigned)
+    else:
+        response = jsonify(mmwave_snapshot(L, baseline_store, latest_by_target, db.DB_PATH, target, bed_id))
+    response.headers['Cache-Control'] = 'no-store'
+    return response
 
 
 # ── 조회 ───────────────────────────────────────────────────────────────

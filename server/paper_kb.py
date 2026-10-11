@@ -24,6 +24,7 @@ Vector DB — LanceDB(무료·오픈소스 Apache 2.0, 서버 프로세스 없�
 임베디드 벡터DB). 근사 최근접 검색·메타데이터 필터링 같은 진짜 벡터DB 기능을 쓸 수 있다.
 """
 from __future__ import annotations
+import report_trace
 
 import html
 import json
@@ -185,6 +186,7 @@ def build_all_chunks_lightweight() -> list[dict]:
 
 
 # ── 2) Embedding — ai_report.py와 동일한 정직한 실패 패턴 ────────────────
+@report_trace.traced_stage('embedding', '검색 질의 임베딩')
 def embed_texts(texts: list[str], model: str = EMBEDDING_MODEL, timeout: float = 60.0) -> dict:
     """OpenAI Embeddings API 호출. 반환: {"success":bool, "embeddings":[[float,...],...]} 또는
     ai_report.call_openai()과 동일한 {"success":False,"error_type":...,"message":...}.
@@ -328,6 +330,7 @@ def resolve_chunks(chunk_ids: list[str]) -> dict:
     return {"success": True, "found": found, "missing_chunk_ids": missing}
 
 
+@report_trace.traced_stage('vector_search', 'LanceDB 코사인 벡터 검색')
 def search(query: str, top_k: int = 5) -> dict:
     """query를 임베딩해 LanceDB에서 코사인 거리 기준 top_k를 반환(거리를 1-거리=유사도로 환산).
     인덱스가 없거나 비어있으면(키 미설정 등) 정직하게 실패를 반환한다 —
@@ -348,6 +351,7 @@ def search(query: str, top_k: int = 5) -> dict:
         return q_result
 
     q_vec = q_result["embeddings"][0]
+    report_trace.emit('vector_index', 'completed', '실제 임베딩 인덱스와 질의 벡터 확인', {'database': LANCEDB_DIR, 'table': PAPERS_TABLE, 'candidate_chunks': n_candidates, 'embedding_model': q_result.get('model', EMBEDDING_MODEL), 'query_vector_dimensions': len(q_vec), 'distance': 'cosine'})
     rows = tbl.search(q_vec).metric("cosine").limit(top_k).to_list()
     return {
         "success": True, "query": query, "n_candidates": n_candidates,
@@ -360,6 +364,7 @@ def search(query: str, top_k: int = 5) -> dict:
     }
 
 
+@report_trace.traced_stage('hybrid_search', '벡터·BM25·RRF 하이브리드 검색')
 def search_hybrid(query: str, top_k: int = 5, k_rrf: int = 60) -> dict:
     """벡터 검색(cosine) + BM25(키워드) 결과를 Reciprocal Rank Fusion(RRF)으로 결합한
     하이브리드 검색. 2026-09 문헌조사 근거: Sawarkar, Mangal & Solanki (2024), "Blended
@@ -390,6 +395,7 @@ def search_hybrid(query: str, top_k: int = 5, k_rrf: int = 60) -> dict:
     if not q_result["success"]:
         return q_result
     q_vec = q_result["embeddings"][0]
+    report_trace.emit('vector_index', 'completed', '실제 임베딩 인덱스와 질의 벡터 확인', {'database': LANCEDB_DIR, 'table': PAPERS_TABLE, 'candidate_chunks': n_candidates, 'embedding_model': q_result.get('model', EMBEDDING_MODEL), 'query_vector_dimensions': len(q_vec), 'distance': 'cosine'})
 
     # 1) 벡터 랭킹 — 전체 후보를 코사인 유사도로 정렬(순위만 쓰므로 전체가 필요)
     vec_rows = tbl.search(q_vec).metric("cosine").limit(n_candidates).to_list()
@@ -402,6 +408,7 @@ def search_hybrid(query: str, top_k: int = 5, k_rrf: int = 60) -> dict:
         [r["chunk_id"] for r in vec_rows], lexical, k_rrf=k_rrf,
     )
 
+    report_trace.emit('ranking_fusion', 'completed', '벡터 순위와 BM25 순위를 RRF로 결합', {'query': query, 'formula': 'Σ 1 / (k_rrf + rank)', 'k_rrf': k_rrf, 'rank_base': 1, 'score_kind': '순위 점수(확률 아님)', 'selected': [{'chunk_id': cid, 'vector_rank': vec_rank.get(cid), 'bm25_rank': bm25_rank.get(cid), 'bm25_score': lexical.get(cid), 'rrf_score': fused_scores[cid]} for cid in fused[:top_k]]})
     results = []
     for cid in fused[:top_k]:
         r = by_id[cid]

@@ -27,6 +27,7 @@ import requests
 import ai_report
 import db
 import sim_state
+import report_trace
 
 TOF_BASE = os.environ.get("MAJUBOM_TOF_BASE", "http://127.0.0.1:5001")
 MMW_BASE = os.environ.get("MAJUBOM_MMW_BASE", "http://127.0.0.1:5002")
@@ -58,6 +59,7 @@ def _recent_record(timestamp, hours=24):
 
 
 # ── ① 현재 상태 수집 (SQL DB + 실서버 라이브 상태) ────────────────────────
+@report_trace.traced_stage('patient_state', '환자 기록·실측 상태 수집')
 def gather_patient_state(bed_id: str) -> dict:
     """환자 프로필·위험인자·투약(SQL DB)과, ToF/mmWave 실서버의 현재 판정을 한데 모은다.
     실서버가 꺼져있어도(개발 중 등) 예외를 던지지 않고 그 부분만 None으로 정직하게 비운다 —
@@ -148,6 +150,7 @@ QUERY_GEN_SYSTEM_PROMPT = (
 )
 
 
+@report_trace.traced_stage('query_generation', '현재 상황에 필요한 검색 질문 생성')
 def generate_queries(patient_state: dict, max_queries: int = QUERIES_PER_ROUND_DEFAULT) -> dict:
     """현재 상태를 LLM에 넘겨 검색 질의를 생성시킨다. 정직한 실패 shape은 ai_report.call_openai()와 동일."""
     user_content = (
@@ -176,6 +179,7 @@ SUFFICIENCY_SYSTEM_PROMPT = (
 )
 
 
+@report_trace.traced_stage('sufficiency', '근거 충분성 판단·추가 질문')
 def judge_sufficiency(patient_state: dict, results_so_far: list[dict]) -> dict:
     user_content = (
         f"환자 상태(JSON):\n{json.dumps(patient_state, ensure_ascii=False, indent=2, default=str)}\n\n"
@@ -196,6 +200,7 @@ def judge_sufficiency(patient_state: dict, results_so_far: list[dict]) -> dict:
 
 
 # ── ④ 반복 검색 Agent 루프 (STEP 16, 20) ─────────────────────────────────
+@report_trace.traced_run('investigation')
 def investigate(bed_id: str, max_rounds: int = MAX_ROUNDS_DEFAULT,
                  max_queries_per_round: int = QUERIES_PER_ROUND_DEFAULT, top_k: int = 5,
                  search_method: str = "hybrid") -> dict:
@@ -206,6 +211,7 @@ def investigate(bed_id: str, max_rounds: int = MAX_ROUNDS_DEFAULT,
                  "sufficient":bool, "reasoning":str}
     이 결과는 STEP 21-23(통합분석/리포트)이 그대로 입력으로 받게 될 재료다 — 이 함수 자체는
     최종 리포트나 위험점수를 만들지 않는다."""
+    report_trace.emit('retrieval_configuration', 'running', '문헌 검색 구성 확인', {'method': search_method, 'max_rounds': max_rounds, 'queries_per_round': max_queries_per_round, 'top_k': top_k})
     import paper_kb
 
     if search_method not in {"hybrid", "dense"}:
@@ -216,6 +222,7 @@ def investigate(bed_id: str, max_rounds: int = MAX_ROUNDS_DEFAULT,
 
     rounds: list[dict] = []
     all_results: dict[str, dict] = {}  # chunk_id -> result (중복 검색 결과 제거)
+    emr_results, emr_statuses = {}, {}
 
     qgen = generate_queries(patient_state, max_queries=max_queries_per_round)
     if not qgen["success"]:
@@ -238,7 +245,19 @@ def investigate(bed_id: str, max_rounds: int = MAX_ROUNDS_DEFAULT,
                 return {"success": False, **{k: v for k, v in sr.items() if k != "success"},
                         "bed_id": bed_id, "patient_state": patient_state,
                         "rounds": rounds, "stage": "vector_search", "search_method": search_method, "query": q}
+            import emr_kb
+            emr_result = emr_kb.search(bed_id, q, top_k=3)
+            for record in emr_result.get('results', []) if emr_result.get('success') else []:
+                emr_results[record['chunk_id']] = record
+            status_key = emr_result.get('error_type') or ('complete' if (emr_result.get('coverage') or {}).get('complete') else 'partial')
+            emr_statuses[status_key] = {k:emr_result.get(k) for k in ('success','error_type','message','coverage','warning')}
             content_results = [r for r in sr["results"] if r.get("section") != "identity"][:top_k]
+            report_trace.emit('evidence_selection', 'completed', '실제 검색 근거 선택', {
+                'round': round_i + 1, 'query': q, 'method': search_method,
+                'retrieved': len(sr['results']), 'selected': len(content_results),
+                'excluded_identity': sum(r.get('section') == 'identity' for r in sr['results']),
+                'evidence': content_results,
+            })
             for r in content_results:
                 all_results[r["chunk_id"]] = r
                 round_results.append(r)
@@ -252,10 +271,13 @@ def investigate(bed_id: str, max_rounds: int = MAX_ROUNDS_DEFAULT,
         if sufficiency["sufficient"] or round_i == max_rounds - 1:
             break
         queries = sufficiency["additional_queries"][:max_queries_per_round]
+        report_trace.emit('additional_queries', 'completed', '근거 부족으로 재검색 질문 선택', {'round': round_i + 2, 'queries': queries})
 
     return {
         "success": True, "bed_id": bed_id, "patient_state": patient_state,
         "rounds": rounds, "final_results": list(all_results.values()),
+        "emr_retrieval": {"results":list(emr_results.values()), "statuses":list(emr_statuses.values()),
+                          "method":"local-text-hash-v1", "note":"환자 원문 검색; 논문 근거와 별도, 어휘 점수는 확률 아님"},
         "sufficient": sufficiency.get("sufficient", False),
         "reasoning": sufficiency.get("reasoning", ""),
         "initial_query_reasoning": qgen.get("reasoning", ""),

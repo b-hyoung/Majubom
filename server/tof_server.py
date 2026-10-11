@@ -9,12 +9,15 @@ GET  /tof/presence     — 침상 재실 판정
 POST /tof/calibrate    — 빈 침대 베이스라인 저장
 """
 
-from flask import Flask, request, jsonify, send_from_directory, Response
+from flask import Flask, request, jsonify, send_from_directory, Response, redirect
 from flask_cors import CORS
 from datetime import datetime
 import os, json, sys
 import db
+from copy import deepcopy
+from diagnostic_observer import observer, tof_snapshot
 import sim_state
+from live_diagnostics import publisher as diagnostic_publisher
 
 # Windows 콘솔(cp949)이 —/⚠ 같은 유니코드를 못 그리면 print()가 UnicodeEncodeError로
 # 죽어 서버 전체가 내려가므로, 그런 문자는 죽는 대신 대체 문자로 바꿔 출력만 깨지게 함.
@@ -124,7 +127,11 @@ def save_baseline():
     try:
         with open(BASELINE_FILE, "w", encoding="utf-8") as f:
             json.dump(baseline, f)
+        observer.record('tof', 'baseline_save', {'status': 'written', 'path': BASELINE_FILE,
+                                                'note': '수동 보정 거리 기준 저장; 누적 평균 아님'}, event=True)
     except Exception as e:
+        observer.record('tof', 'baseline_save', {'status': 'failed', 'path': BASELINE_FILE,
+                                                'error': str(e)}, event=True)
         print(f"[baseline] 저장 실패: {e}")
 
 
@@ -224,13 +231,30 @@ def receive_tof():
         "received_at": now,
     }
 
+    # Original storage/analysis continues below. This extra copy is latest-only RAM transport.
+    diagnostic_publisher.publish(sensor_id, {
+        'sensor': sensor_id, 'resolution': resolution, 'distances_mm': distances,
+        'raw_distances_mm': data.get('raw_distances_mm'),
+        'target_status': data.get('target_status'), 'targets': targets, 'received_at': now,
+        # 펌웨어가 보내는 설치 각도는 20°로 고정돼 있어(업로드 전) 실제 설치값으로 표시한다(2026-10-08 설치).
+        'mount_height_m': TOF_MOUNT.get(sensor_id, {}).get('height_m', data.get('mount_height_m')),
+        'mount_down_tilt_deg': TOF_MOUNT.get(sensor_id, {}).get('down_tilt_deg', data.get('mount_down_tilt_deg')),
+    })
+
     log.append({"sensor": sensor_id, "resolution": resolution,
                  "distances_mm": distances, "received_at": now})
     if len(log) > 100:
         log.pop(0)
 
     # 재실(있다/없다) 판정 업데이트
+    previous_presence = deepcopy(presence)
     update_presence(sensor_id, distances, now)
+    observer.record('tof', 'ingest', {'sensor': sensor_id, 'received_at': now,
+                    'zones_received': len(distances), 'occupied': presence[sensor_id]['occupied'],
+                    'presence_before': previous_presence, 'presence_after': deepcopy(presence),
+                    'in_bed': presence['in_bed'],
+                    'reason': '재실 전환' if previous_presence['in_bed'] != presence['in_bed'] else '기존 재실 유지'},
+                    event=previous_presence['in_bed'] != presence['in_bed'])
 
     # LSTM-AE 이상탐지: 이번 프레임 특징을 버퍼에 넣고 재구성오차 점수 갱신
     if _ANOM is not None and _frame_feature is not None:
@@ -241,6 +265,9 @@ def receive_tof():
             if r:
                 r["at"] = now
                 anomaly_latest.update(r)
+            observer.record('tof', 'lstm', {'features': list(feat), 'result': deepcopy(r),
+                            'filled': len(_ANOM.buf), 'seq': _ANOM.seq,
+                            'normalization_mu': _ANOM.mu.tolist(), 'normalization_sd': _ANOM.sd.tolist()})
         except Exception as e:
             print(f"[anomaly] 계산 실패: {e}")
 
@@ -248,9 +275,12 @@ def receive_tof():
     label, _conf = None, None
     raw_id = None
     try:
-        raw_id = db.insert_tof(sensor_id, now, resolution, distances, targets,
+        raw_id = observer.write('tof', 'tof_readings', db.insert_tof, sensor_id, now, resolution, distances, targets,
                                 occupied=presence[sensor_id]["occupied"],
-                                in_bed=presence["in_bed"])
+                                in_bed=presence["in_bed"],
+                                labels={'sensor': sensor_id, 'in_bed': presence['in_bed'],
+                                        'occupied': presence[sensor_id]['occupied'], 'posture': None,
+                                        'note': 'tof_readings에는 자세 라벨 컬럼 없음'})
     except Exception as e:
         print(f"[DB] ToF insert failed: {e}")
 
@@ -260,15 +290,20 @@ def receive_tof():
         try:
             label = (latest.get(sensor_id) or {}).get("posture") or None
             diag = _data_integrity.check_tof_consistency(distances, label, TOF_VALID_ZONE_EXPECTED)
+            observer.record('tof', 'integrity', diag)
             if diag.get("consistent") is False:
-                db.insert_clean_data(
+                observer.write('tof', 'sensor_clean_data', db.insert_clean_data,
                     patient_id="bed_01", sensor_type="tof", timestamp=now,
                     cleaned_value={"diagnosis": diag}, preprocessing_method="tof_valid_zone_check",
                     confidence=None, removed_outlier=False, raw_table="tof_readings", raw_id=raw_id,
+                    labels={'preprocessing_method': 'tof_valid_zone_check', 'patient_id': 'bed_01',
+                            'sensor_type': 'tof', 'raw_id': raw_id},
                 )
-                db.insert_sensor_event("bed_01", "data_integrity_flag", ts=now, level="caution",
+                observer.write('tof', 'activity_log', db.insert_sensor_event,
+                                        "bed_01", "data_integrity_flag", ts=now, level="caution",
                                         title=f"ToF({sensor_id}) 일관성 불일치", note=diag.get("note"),
-                                        source_table="tof_readings", source_id=raw_id)
+                                        source_table="tof_readings", source_id=raw_id,
+                                        labels={'event_type': 'data_integrity_flag', 'level': 'caution', 'source_id': raw_id})
         except Exception as e:
             print(f"[data_integrity] ToF 진단 실패: {e}")
 
@@ -283,6 +318,7 @@ def receive_tof():
 @app.route("/tof/calibrate", methods=["POST", "GET"])
 def calibrate():
     """빈 침대 상태에서 호출 → 현재 거리 격자를 베이스라인으로 저장."""
+    before = deepcopy(baseline)
     captured = {}
     for sid in ("tof1", "tof2"):
         d = latest[sid]["distances_mm"]
@@ -293,6 +329,8 @@ def calibrate():
         return jsonify({"ok": False,
                         "error": "센서 데이터가 아직 없음 - 잠시 후 다시"}), 400
     save_baseline()
+    observer.record('tof', 'calibration', {'before': before, 'after': deepcopy(baseline),
+                                        'captured_valid_zones': captured})
     print(f"[calibrate] 베이스라인 저장: {captured}")
     return jsonify({"ok": True, "captured_valid_zones": captured}), 200
 
@@ -416,7 +454,17 @@ def _fall_risk(disp, now_iso):
     risk_latest.update({"reason": reason,
                         "y": round(ymean, 3) if ymean is not None else None,
                         "ratio": round(ratio, 3), "posture": disp, "at": now_iso})
+    observer.record('tof', 'body_risk', {'n_points': npts, 'mean_y_m': ymean,
+                    'sum_y_m': ymean * npts if ymean is not None else None,
+                    'lying': lying, 'danger_candidate': danger, 'pending': deepcopy(_risk_pending),
+                    'status': risk_latest['status'], 'reason': reason}, event=bool(danger))
     return risk_latest
+
+
+# 현장 실측 설치값(2026-10-08): tof1=발 쪽, tof2=머리 쪽. TOF/ml/roi.py 의 TILT 값과 같은 설치.
+TOF_MOUNT = {"tof1": {"height_m": 1.2, "down_tilt_deg": 50}, "tof2": {"height_m": 1.2, "down_tilt_deg": 30}}
+
+_posture_cache = {"key": None, "fields": {}}
 
 
 @app.route("/tof/latest", methods=["GET"])
@@ -425,6 +473,12 @@ def get_latest():
     if bed_id and sim_state.is_simulated(bed_id):
         return jsonify(sim_state.synthetic_tof_latest(bed_id))
     resp = dict(latest)                      # 원본 latest 훼손 방지
+    # 자세 판정은 새 센서 프레임이 들어왔을 때만 한다. 대시보드 여러 개가 자주 조회하면 조회마다 RF를 돌려
+    # CPU가 포화되고 ESP 수신까지 밀렸다(2026-10-08). 뒤척임·쏠림 상태도 조회 빈도가 아니라 프레임 기준이 된다.
+    frame_key = (latest["tof1"].get("received_at"), latest["tof2"].get("received_at"))
+    if _POSTURE is not None and _posture_cache.get("key") == frame_key:
+        resp.update(_posture_cache["fields"])
+        return jsonify(resp)
     if _POSTURE is not None:
         try:
             label, conf = _predict_posture(_POSTURE, latest)
@@ -443,8 +497,17 @@ def get_latest():
             resp["posture_color"] = color
             resp["posture_conf"]  = round(conf, 3) if conf is not None else None
             resp["risk"]          = _fall_risk(disp, now_iso) if disp else dict(risk_latest)
-        except Exception:
+            observer.record('tof', 'posture', {'raw_label': label, 'display_label': disp,
+                            'confidence': resp['posture_conf'], 'sensor_at': now_iso,
+                            'risk': deepcopy(resp['risk']),
+                            'body_mean': observer.latest_stage('tof', 'body_risk') if disp else None,
+                            'gate_occupied': occ, 'status': 'executed_on_tof_latest'})
+            _posture_cache["key"] = frame_key
+            _posture_cache["fields"] = {k: resp[k] for k in ("posture", "posture_raw", "posture_ko",
+                                                             "posture_color", "posture_conf", "risk")}
+        except Exception as exc:
             resp["posture"] = None
+            observer.record('tof', 'posture', {'status': 'failed', 'error': str(exc)})
     return jsonify(resp)
 
 
@@ -456,6 +519,11 @@ def tof_3d():
 
 # ── 대시보드 서빙 (CSI 제거 → tof_server가 대시보드 호스팅) ──────────────
 _SITE = os.path.join(HERE, "..", "site", "index.html")
+
+
+@app.route("/emr", methods=["GET"])
+def emr_view():
+    return send_from_directory(os.path.join(HERE, '..', 'site'), 'emr-dashboard.html', max_age=0)
 
 
 @app.route("/dashboard", methods=["GET"])
@@ -664,6 +732,39 @@ poll();
 </script>
 </body></html>"""
 
+
+@app.get('/raw-data')
+def raw_data_dashboard():
+    host = request.host.split(':')[0]
+    return redirect(f'http://{host}:5012/')
+
+
+@app.get('/system-architecture')
+def system_architecture():
+    return send_from_directory(os.path.join(HERE, '..', 'docs'), 'SYSTEM_ARCHITECTURE.html')
+
+
+
+@app.route('/api/diagnostics/tof', methods=['GET'])
+def diagnostic_tof():
+    bed_id = request.args.get('bed_id', 'bed_01')
+    response = jsonify(tof_snapshot(sys.modules[__name__], bed_id) if bed_id == 'bed_01' else
+                       {'scope_error':'ToF 실측 스트림은 연결 환자 bed_01 전용입니다.', 'bed_id':bed_id})
+    response.headers['Cache-Control'] = 'no-store'
+    return response
+
+
+@app.route('/api/diagnostics/reports', methods=['GET'])
+def diagnostic_reports():
+    try:
+        from report_trace import snapshot
+        bed_id = request.args.get('bed_id', 'bed_01')
+        body = snapshot(bed_id) if bed_id == 'bed_01' else {'runs':[], 'scope_error':'실측 리포트 관측은 연결 환자 bed_01 전용입니다.'}
+    except ImportError:
+        body = {'runs': [], 'status': 'trace_module_unavailable'}
+    response = jsonify(body)
+    response.headers['Cache-Control'] = 'no-store'
+    return response
 
 if __name__ == "__main__":
     db.init_db()

@@ -23,9 +23,10 @@ from datetime import datetime, timezone
 import ai_agent
 import ai_report
 import db
+import report_trace
 
 DEFAULT_MODEL = ai_report.DEFAULT_MODEL
-PROMPT_VERSION = "integrated_v6"   # v6: 현재 24시간 사건만 전달, 리포트 생성 이력은 활동에서 제외
+PROMPT_VERSION = "integrated_v7_emr"   # v7: 환자 EMR 어휘 검색과 문헌 근거를 분리해 전달
 REPORT_FIELDS = (
     "현재_상태", "최근_변화", "ToF_변화", "mmWave_변화", "보행_변화", "활동_변화",
     "침상_관련_행동", "낙상_위험도_설명", "주요_위험_요인", "과거_데이터와의_비교",
@@ -95,6 +96,9 @@ def compute_data_confidence(patient_state: dict, risk: dict) -> float | None:
 
 # ── AI 종합 리포트 — 15개 항목(12번 탭 STEP 20, 투약_조정_제안 포함) ─────
 INTEGRATED_SYSTEM_PROMPT = (
+    "환자_EMR_검색_결과는 해당 환자 원문의 로컬 어휘 검색이며 입원_기록_원문과 중복될 수 있습니다. "
+    "검색 점수는 확률·위험도가 아닙니다. EMR 기록 ID를 논문 근거 ID로 인용하지 마세요. "
+    "검색 실패/부분 갱신은 자료 가용성으로 설명하고 없는 EMR 정보를 만들지 마세요. "
     "당신은 치매환자 낙상예측시스템의 통합분석 리포트 작성자입니다. 아래 JSON에는 이미 계산이 끝난 "
     "사실(환자 프로필·위험인자·투약, ToF/mmWave 현재 판정, 이미 계산된 위험점수, 직전 분석 기록, "
     "검색된 논문 근거)만 들어있습니다. 절대 새로운 수치를 만들어내거나 주어진 수치를 바꾸지 마세요. "
@@ -150,6 +154,7 @@ def _build_payload(bed_id: str, investigation: dict, risk: dict, confidence: flo
         "위험인자": investigation["patient_state"].get("risk_factors"),
         "투약": investigation["patient_state"].get("medications"),
         "입원_기록_원문": investigation["patient_state"].get("emr_records", []),
+        "환자_EMR_검색_결과": investigation.get("emr_retrieval", {}),
         "간호_기록_원문": investigation["patient_state"].get("nursing_records", []),
         "데이터_출처": investigation["patient_state"].get("data_source"),
         "검증_조건": investigation["patient_state"].get("evaluation_context"),
@@ -172,6 +177,7 @@ def _build_payload(bed_id: str, investigation: dict, risk: dict, confidence: flo
     }
 
 
+@report_trace.traced_run('report')
 def generate_integrated_report(bed_id: str, max_rounds: int = 2, top_k: int = 5,
                                 persist: bool = True, override_created_at: str | None = None) -> dict:
     """전체 STEP 21-23 파이프라인. 반환: {"success":bool, "analysis_id", "risk", "report", ...}
@@ -182,6 +188,7 @@ def generate_integrated_report(bed_id: str, max_rounds: int = 2, top_k: int = 5,
 
     risk = compute_risk_score(investigation["patient_state"])
     confidence = compute_data_confidence(investigation["patient_state"], risk)
+    report_trace.emit('risk_fusion', 'completed', '두 센서의 기존 위험 단계 결합', {'risk': risk, 'confidence': confidence, 'formula': 'max(기존 위험 단계 대응 점수)', 'note': '낙상 확률이 아닙니다. 잠정 보행 판정은 제외합니다.'})
     prev_analysis = db.get_latest_ai_analysis(bed_id, analysis_type="integrated_status")
 
     payload = _build_payload(bed_id, investigation, risk, confidence, prev_analysis)
@@ -189,6 +196,7 @@ def generate_integrated_report(bed_id: str, max_rounds: int = 2, top_k: int = 5,
         "다음은 한 환자의 통합분석에 필요한 사실입니다. 이 사실만 근거로 15개 항목 리포트를 "
         "작성하세요.\n\n" + json.dumps(payload, ensure_ascii=False, indent=2, default=str)
     )
+    report_trace.emit('report_generation', 'running', '실제 근거와 환자 기록으로 15개 항목 작성 요청', {'prompt_version': PROMPT_VERSION, 'fields': REPORT_FIELDS, 'evidence_ids': [r['chunk_id'] for r in investigation.get('final_results', [])], 'previous_analysis_id': (prev_analysis or {}).get('id'), 'data_source': investigation['patient_state'].get('data_source')})
     result = ai_report.call_openai(system_prompt=INTEGRATED_SYSTEM_PROMPT,
                                     user_content=user_content, json_mode=True)
     if not result["success"]:
@@ -208,6 +216,7 @@ def generate_integrated_report(bed_id: str, max_rounds: int = 2, top_k: int = 5,
                 "invalid_fields": invalid,
                 "stage": "parse_report", "risk": risk}
 
+    report_trace.emit('report_validation', 'completed', '필수 15개 필드 검증 완료', {'fields': list(report), 'report': report})
     evidence_ids = [r["chunk_id"] for r in investigation.get("final_results", [])]
     analysis_id = None
     review = None
@@ -222,16 +231,20 @@ def generate_integrated_report(bed_id: str, max_rounds: int = 2, top_k: int = 5,
             created_at=override_created_at,
             input_snapshot=payload,
         )
+        report_trace.emit('report_storage', 'completed', '운영 DB에 리포트 저장 완료', {'database': db.DB_PATH, 'table': 'ai_analysis', 'row_id': analysis_id, 'analysis_type': 'integrated_status', 'evidence_ids': evidence_ids, 'model': result.get('model', DEFAULT_MODEL), 'prompt_version': PROMPT_VERSION, 'risk': risk, 'confidence': confidence})
         import report_review
         review = report_review.review_and_save(db.get_analysis_by_id(analysis_id), {
             "success": True, "found": investigation.get("final_results", []), "missing_chunk_ids": [],
         })
+        report_trace.emit('report_review', 'completed', '생성 리포트 근거 검토 완료', {'review': review})
         db.insert_sensor_event(
             bed_id, "ai_analysis_completed", ts=override_created_at, level=(
                 risk["component_levels"].get(risk["dominant_signal"]) if risk["dominant_signal"] else None),
             title="AI 통합분석 완료", note=report.get("현재_상태", "")[:200],
         )
 
+    if not persist:
+        report_trace.emit('report_storage', 'skipped', '리포트 저장 생략', {'reason': 'persist=False'})
     return {
         "success": True, "bed_id": bed_id, "analysis_id": analysis_id,
         "risk": risk, "data_confidence": confidence, "report": report,

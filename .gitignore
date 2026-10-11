@@ -63,3 +63,28 @@ TOF/ml/in_bed_model_tof1.joblib
 TOF/ml/in_bed_model_tof2.joblib
 
 assets/*
+# AI 작업 안내/구조 문서는 저장소에서 유지
+!docs/AI_START_HERE.md
+!docs/PROJECT_STRUCTURE.md
+!docs/SENSOR_CHECK_2026-10-06.md
+# 연구 검토 질문·나중에 할 일(2026-10-07~)
+!docs/질문.md
+!docs/나중에_할일.md
+!docs/captures/
+.venv/
+
+TOF/src/secrets.h
+!docs/SENSOR_DIAGNOSTICS.md
+
+!docs/SYSTEM_ARCHITECTURE.html
+
+# PlatformIO가 임시 생성하는 Arduino 전처리 소스
+TOF/src/*.ino.cpp
+
+# 환자별 벡터 인덱스는 런타임 데이터이며 Git에 기록하지 않음
+server/lancedb_store/emr_chunks.lance/
+server/lancedb_store/emr_semantic_chunks.lance/
+!docs/EMR_DATA_MODEL.md
+
+# SQLite 임시 저널(실행 중 생성)
+server/majubom.db-journal

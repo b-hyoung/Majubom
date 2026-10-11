@@ -361,6 +361,46 @@ def create_blueprint(analysis_runner=None, status_provider=None):
                        analyses=analyses, summary=db.get_patient_timeseries_summary(bed_id),
                        gait_prior=gait_prior.summarize(prior))
 
+    @api.get("/patients/<bed_id>/emr-storage")
+    def emr_storage(bed_id):
+        if db.get_patient(bed_id) is None:
+            return failure("환자를 찾을 수 없습니다.", "not_found", 404)
+        import emr_kb
+        tables = ('patients','emr_records','medications','risk_factors','gait_priors','ai_analysis')
+        with db.get_conn() as conn:
+            schema = {table: [dict(row) for row in conn.execute(f'PRAGMA table_info({table})')] for table in tables}
+        return jsonify(success=True, patient=_patient(db.get_patient(bed_id)),
+                       database=db.DB_PATH, schema=schema,
+                       relations=[{'from': 'patients.bed_id', 'to': 'emr_records.bed_id'},
+                                  {'from': 'patients.bed_id', 'to': 'medications.bed_id'},
+                                  {'from': 'patients.bed_id', 'to': 'risk_factors.bed_id'},
+                                  {'from': 'emr_records.id', 'to': 'emr_chunks.record_id'},
+                                  {'from': 'patients.bed_id', 'to': 'emr_chunks.patient_id'}],
+                       emr_records=db.list_emr_records(bed_id, limit=1000),
+                       medications=db.list_medications(bed_id),risk_factors=db.list_risk_factors(bed_id),
+                       vector=emr_kb.status(bed_id))
+
+    @api.post("/patients/<bed_id>/emr-index")
+    def emr_index(bed_id):
+        if db.get_patient(bed_id) is None:
+            return failure("환자를 찾을 수 없습니다.", "not_found", 404)
+        import emr_kb
+        body = request.get_json(silent=True)
+        if body is None and not request.data:
+            body = {}
+        if not isinstance(body, dict):
+            return failure("JSON 객체가 필요합니다.", "bad_request")
+        result = emr_kb.build_index(bed_id, body.get('method','local'))
+        return jsonify(result), 200 if result.get('success') else 400
+
+    @api.get("/patients/<bed_id>/emr-search")
+    def emr_search(bed_id):
+        if db.get_patient(bed_id) is None:
+            return failure("환자를 찾을 수 없습니다.", "not_found", 404)
+        import emr_kb
+        result = emr_kb.search(bed_id, request.args.get('q',''))
+        return jsonify(result), 200 if result.get('success') else 400
+
     @api.post("/patients/<bed_id>/emr")
     def ingest_emr(bed_id):
         """입원 기록(EMR) 입력. profile(나이·성별·키·몸무게·진단)은 보낸 필드만 갱신하고,
@@ -412,7 +452,9 @@ def create_blueprint(analysis_runner=None, status_provider=None):
                 conn.execute(f"UPDATE patients SET {', '.join(k + ' = ?' for k in updates)} WHERE bed_id = ?",
                              list(updates.values()) + [bed_id])
             ids = gait_prior.add_emr_records(conn, bed_id, clean)
-        return jsonify(success=True, updated_fields=sorted(updates), record_ids=ids), 201
+        import emr_kb
+        vector_result = emr_kb.build_index(bed_id) if ids else None
+        return jsonify(success=True, updated_fields=sorted(updates), record_ids=ids, vector_index=vector_result), 201
 
     @api.get("/patients/<bed_id>/gait-prior")
     def get_gait_prior(bed_id):
@@ -648,5 +690,8 @@ def start_weekly_scheduler():
 def register_dashboard(app):
     init_dashboard_schema()
     ensure_demo_patients()
+    import demo_emr
+    demo_emr.seed_records()
+    demo_emr.seed_vectors()
     start_weekly_scheduler()
     app.register_blueprint(create_blueprint())

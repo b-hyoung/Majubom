@@ -3,6 +3,31 @@
 어르신의 움직임을 숫자로 살피고, 평소와 달라진 점을 찾아 간호사에게 보여주는 구조입니다.
 현재 소스 기준으로 자세를 분류하는 AI, 보행 점수를 계산하는 통계, 리포트를 쓰는 AI를 구분했습니다.
 
+## 실제 배치와 두 화면(2026-10-06)
+
+[HTML 시스템 구성도](docs/SYSTEM_ARCHITECTURE.html)에서 노드별 코드·API와 두 데이터 경로를 볼 수 있습니다.
+
+- ToF 둘 다 높이 1.2m, 수평에서 하향 tof1(발) 50°·tof2(머리) 30°(2026-10-08 변경; 20°는 매트리스가 시야 아래 몇 줄에만 닿아 폐기). 센서마다 ESP32-S3 하나, 2.4GHz Wi-Fi → 유선 Pi.
+- mmWave 높이 2.5m, 하향50°. USB DATA는 send_mmw.py 한 프로세스가 읽습니다.
+- 기존 간호사 경로는 센서 수신 → SQLite·판정 → :5001/dashboard로 계속 동작합니다.
+- 같은 수신값의 추가 사본은 server/live_diagnostics.py → :5012/api/ingest → 로우데이터 화면으로 갑니다.
+  이 추가 분기만 최신 프레임을 메모리에 유지하고 DB·파일·브라우저 히스토리에 저장하지 않습니다.
+  기존 운영 데이터 저장을 대체하지 않습니다.
+- 실제 센서 스트림과 로우데이터 관측은 연결 환자 bed_01 전용입니다. 가상 환자 EMR과 기존 시뮬레이션은 별도 경로입니다.
+- 로우데이터 화면의 ToF/mmWave 탭은 수식·실제 입력·평균·Z-score·DB 행/라벨을 읽기 전용으로 관측합니다.
+  융합·이벤트 탭은 실제 판정/저장 사건을, AI 탭은 실제 생성 질문·검색·작성·저장 단계를 보여줍니다.
+  diagnostic_observer.py와 report_trace.py는 제한된 RAM 기록만 추가하며 조회로 기존 처리를 재실행하지 않습니다.
+- 실행과 좌표/장치 검증 한계는 [진단 안내](docs/SENSOR_DIAGNOSTICS.md)를 읽습니다.
+
+## 개인 EMR 저장과 검색
+
+`/emr` 화면은 실제 SQLite 원문과 SQL 열, 환자별 LanceDB 연결을 보여줍니다.
+원문 emr_records.id/bed_id → emr_chunks.record_id/patient_id → 해당 환자만 검색 → AI 리포트 입력.
+가상 환자 5명의 EMR 15건은 별도로 표시하며 실제 연결 환자에게 넣지 않습니다.
+현재 개인 EMR은 512차원 로컬 어휘 벡터이며 API 의미 임베딩은 emr_semantic_chunks로 분리합니다.
+논문 paper_chunks와 과거 보고서 analysis_chunks는 각각 기존 컬렉션을 유지합니다.
+자세한 정책과 실행은 [EMR 데이터 모델](docs/EMR_DATA_MODEL.md)을 읽습니다.
+
 ## 한눈에 보는 구성
 
 ```mermaid

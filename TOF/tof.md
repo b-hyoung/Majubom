@@ -1,134 +1,52 @@
 # VL53L5CX ToF 센서 운용 가이드
 
-## 전체 연결 흐름 (한눈에)
+## 현재 연결(2026-10-06)
 
-```
-[ESP32-S3 + ToF 센서 2개]  ──POST /tof (WiFi)──▶  [라즈베리파이5: Flask 서버]  ──▶  SQLite 저장
-                                                          │
-                                          [PC/노트북 브라우저] ── GET 폴링 ──┘  대시보드로 실시간 표시
-```
+ESP32-S3 한 보드당 VL53L5CX 하나, 총 두 보드(tof1/tof2), 8×8 거리 64개.
+센서는 둘 다 바닥에서 1.20m, 수평에서 아래로 tof1(발) 50°·tof2(머리) 30° 설치했다(2026-10-08; 이전 20°는 매트리스 커버 부족).
+ESP32는 공유기 majubom의 2.4GHz Wi-Fi, Pi는 동일 LAN의 유선 연결이다.
+Pi 현재 IP 192.168.0.4, 수신 주소 `http://192.168.0.4:5001/tof`.
 
-- **서버**는 라즈베리파이5에서 돌아감 (포트: ToF=5001, mmWave=5002)
-- ESP32와 PC(대시보드)는 **모두 Pi와 같은 WiFi**에 있어야 함
-- 현재 네트워크: WiFi **`2411 ServerRoom`**, Pi IP **`192.168.6.10`**
-  > ⚠️ Pi IP는 네트워크가 바뀌거나 재부팅하면 달라짐. Pi에서 `hostname -I`로 확인.
+기존 간호사 화면 :5001/dashboard와 추가 로우데이터 화면 :5012를 함께 사용한다.
+서버가 기존 저장/분석을 수행하고 로우데이터 화면으로 최신 프레임만 비동기 복사한다.
+자세한 실행/저장 구분은 [SENSOR_DIAGNOSTICS.md](../docs/SENSOR_DIAGNOSTICS.md).
 
-### A. 라즈베리파이(서버) — 최초 1회 + 매번
+## 배선(두 보드 동일)
+
+| VL53L5CX | ESP32-S3 |
+|---|---|
+| VIN/GND | 3V3/GND |
+| SDA/SCL | GPIO 8 / GPIO 9 |
+| LPN | GPIO 4 |
+| INT | 미연결 |
+
+## 펌웨어 설정과 업로드
+
+`src/secrets.example.h`를 `src/secrets.h`로 복사해 실제 2.4GHz 비밀번호를 입력한다.
+MAJUBOM_SENSOR_NAME은 보드별 tof1/tof2, MAJUBOM_WIFI_SSID는 majubom,
+MAJUBOM_SERVER_URL은 현재 Pi IP의 :5001/tof로 설정한다. secrets.h는 Git 제외다.
+Pi 주소는 DHCP로 바뀔 수 있으므로 공유기에서 예약하거나 업로드 전 다시 확인한다.
+
 ```bash
-cd ~/Documents/GitHub/Majubom
-pip install -r requirements.txt      # 최초 1회 (flask, flask-cors)
-cd server
-python3 run_all.py                   # ToF+mmWave 한 번에 실행 (Ctrl+C로 종료)
-```
-- 실행되면 raw 데이터가 `server/majubom.db`의 `tof_readings` 테이블에 자동 저장됨
-
-### B. PC/노트북 — 대시보드 보기
-Pi와 같은 WiFi(`2411 ServerRoom`)에 접속한 뒤 브라우저에서:
-```
-http://192.168.6.10:5001/dashboard
-```
-> IP가 바뀌었으면 Pi의 `hostname -I` 값으로 접속. 화면 상단 호스트 입력칸은 비워두면 접속 주소를 자동으로 사용.
-
-### C. ESP32(ToF 센서) — 아래 "펌웨어 업로드" 참고
-`src/main.ino`의 WiFi/서버 IP를 현재 네트워크에 맞춰 수정 후 업로드.
-
----
-
-## 하드웨어 배선
-
-### 센서 1 (tof1)
-| VL53L5CX 핀 | ESP32-S3 핀 |
-|-------------|-------------|
-| VIN         | 3V3         |
-| GND         | GND         |
-| SDA         | GPIO 8      |
-| SCL         | GPIO 9      |
-| LPN         | GPIO 4      |
-| INT         | 미연결      |
-
-### 센서 2 (tof2)
-| VL53L5CX 핀 | ESP32-S3 핀 |
-|-------------|-------------|
-| VIN         | 3V3         |
-| GND         | GND         |
-| SDA         | GPIO 8 (공유) |
-| SCL         | GPIO 9 (공유) |
-| LPN         | GPIO 5      |
-| INT         | 미연결      |
-
----
-
-## 펌웨어 업로드
-
-### 1. WiFi / 서버 IP 설정
-`src/main.ino` 상단에서 수정 (현재 네트워크 기준 설정값):
-```cpp
-const char* WIFI_SSID  = "2411 ServerRoom";
-const char* WIFI_PASS  = "D@lstn!0722";
-const char* SERVER_URL = "http://192.168.6.10:5001/tof";
-```
-- `WIFI_SSID`/`WIFI_PASS`: **Pi가 붙어 있는 것과 같은 WiFi** (ESP32-S3는 2.4GHz만 지원)
-- `SERVER_URL` IP: **서버(라즈베리파이) IP**로 지정 → Pi에서 `hostname -I`로 확인
-  > 네트워크가 바뀌면 Pi IP도 바뀌므로 이 세 줄을 그때그때 맞춰야 함
-
-### 2. 업로드
-```powershell
-~\.platformio\penv\Scripts\pio.exe run -t upload
-```
-- 업로드 실패 시: ESP32-S3에서 **BOOT 버튼 누른 채로 RESET 버튼** 눌렀다 떼기 → BOOT 떼기
-
----
-
-## 부팅 및 정상 동작 확인
-
-시리얼 모니터 실행:
-```powershell
-~\.platformio\penv\Scripts\pio.exe device monitor --port COM4 --baud 115200
+# 프로젝트 루트에서
+cd TOF/src
+../../.venv/bin/pio run
+../../.venv/bin/pio run -t upload --upload-port <ESP32-USB-포트>
+../../.venv/bin/pio device monitor --port <ESP32-USB-포트> --baud 115200
 ```
 
-정상 부팅 시 출력:
-```
-=== VL53L5CX Dual Sensor Boot ===
-[tof2] 초기화 중... (수 초 소요)
-  scan: 0x2A(8b=0x54)
-  is_alive -> s=0 alive=1
-  vl53l5cx_init -> 0
-[tof2] 0x54 OK
-[tof1] 초기화 중... (수 초 소요)
-  scan: 0x29(8b=0x52) 0x2A(8b=0x54)
-  is_alive -> s=0 alive=1
-  vl53l5cx_init -> 0
-[tof1] 0x52 OK
-[tof1] ranging 시작
-[tof2] ranging 시작
-[WiFi] IP: 192.168.6.xx
-=== 측정 시작 ===
-```
+현재 펌웨어 컴파일은 검증했으며 비밀번호 입력과 실제 업로드는 아직 수행하지 않았다.
+최초 Wi-Fi 연결은 10초 후 재시도한다. raw_distances_mm와 target_status를 함께 보내고,
+distances_mm의 유효 상태(status 5) 필터는 유지한다.
+상하/좌우 방향은 로우데이터 화면에서 기준 물체를 움직여 확인한 뒤 결정한다.
+설치 각도만으로 센서 PCB의 롤 방향을 알 수 없어 자동 반전하지 않는다.
 
-측정이 시작되면 각 프레임마다 서버 전송 결과가 찍힘:
-```
-[tof1] POST → HTTP 200      # 200이면 서버가 정상 수신 (대시보드에 값 뜸)
-[tof2] POST → HTTP 200
-```
+## 정상 동작 확인
 
-### 값이 대시보드에 안 뜰 때 체크
-| 시리얼 로그 | 원인 | 해결 |
-|-------------|------|------|
-| WiFi 연결 실패 | SSID/비번 오타, 5GHz AP | `WIFI_SSID`/`WIFI_PASS` 확인, 2.4GHz인지 확인 |
-| `POST → HTTP -1` | 서버 IP 틀림 / 서버 미실행 | Pi에서 `hostname -I`로 IP 재확인 후 `SERVER_URL` 수정, `run_all.py` 실행 여부 확인 |
-| `POST → HTTP 200`인데 화면 X | PC가 다른 WiFi | PC를 Pi와 같은 WiFi에 접속, 대시보드 주소의 IP 확인 |
+시리얼에 `Single Sensor Boot`, 센서 초기화 성공, Wi-Fi IP, `POST → HTTP 200`이 표시되고
+서버 `/tof/latest`에서 해당 ID 수신 시각이 갱신되어야 한다.
+둘 다 ID가 같으면 다른 센서 프레임을 덮어쓰므로 두 보드를 구분해 업로드한다.
+Wi-Fi가 연결돼도 서버 주소/포트/LAN 격리가 잘못되면 POST가 실패한다.
+Pi가 유선인 것은 문제없고, ESP32-S3 연결 대상 Wi-Fi는 2.4GHz여야 한다.
 
----
-
-## 주의사항
-
-### I2C 주소 관련
-- VL53L5CX 기본 주소: **0x52 (8bit)** — USB 재연결(전원 재공급)시에만 초기화됨
-- LPN 핀 토글로는 주소 리셋 안 됨
-- 펌웨어가 부팅 시 I2C 버스를 스캔해서 현재 주소를 자동 감지하므로 전원을 끊지 않아도 됨
-
-### 업로드 전 시리얼 모니터 종료
-- 시리얼 모니터가 열려 있으면 업로드 실패 → 모니터 먼저 종료 후 업로드
-
-### ESP32-S3는 2.4GHz WiFi 전용
-- 5GHz AP에는 연결 불가
+과거 듀얼센서 버스/4×4 문제 해결 기록은 TROUBLESHOOTING.md에 있으며 현재 배선 가이드와 구분한다.
