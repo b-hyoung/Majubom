@@ -18,6 +18,7 @@ mmWave가 보내는 것 : raw(speed/speed_cv/sway/freeze_ratio/height_drop) + qu
 주의: Windows 콘솔(cp949)에서 한글 print 시 깨질 수 있어 콘솔 출력은 ASCII만.
       한글은 JSON/HTML 응답(UTF-8)으로만 내보낸다.
 """
+import logging
 import math
 from copy import deepcopy
 from diagnostic_observer import observer, mmwave_snapshot, patient_target
@@ -41,6 +42,8 @@ except Exception:
 PORT = 5002
 
 app = Flask(__name__)
+# 센서 POST마다 남는 접속 기록이 /tmp 로그를 하루 수백 MB씩 키웠다(2026-10-11) → 경고 이상만 남긴다.
+logging.getLogger("werkzeug").setLevel(logging.WARNING)
 CORS(app)  # 사이트(file:// 또는 타 포트)에서 fetch 허용
 
 # 대상별 baseline 누적 통계 (영속: mmw_baseline.json) — 시작 시 로드
@@ -84,6 +87,15 @@ def _bad_metric(v) -> bool:
 
 
 # ── 수신 ───────────────────────────────────────────────────────────────
+def _person_present(data: dict) -> bool:
+    """send_mmw가 보낸 presence.n_targets(생존 track 수) 기준. 구 payload는 신뢰 가능한 구간이면 사람 있음으로 본다."""
+    presence = data.get("presence") or {}
+    n = presence.get("n_targets")
+    if isinstance(n, (int, float)) and not isinstance(n, bool):
+        return n >= 1
+    return bool((data.get("quality") or {}).get("reliable"))
+
+
 @app.route("/mmw", methods=["POST"])
 def receive_mmw():
     data = request.get_json(silent=True)
@@ -148,25 +160,29 @@ def receive_mmw():
         mmw_log.pop(0)
 
     # raw + 계산값 SQLite 저장 (AI 학습용 원천 데이터 누적)
+    # 2026-10-11: 방에 사람(추적 track)이 있을 때만 저장한다. 사람이 없으면 0값 구간만 6초마다 쌓였다(4만 행 중 3.9만).
+    # 높이 급강하(낙상) 판정은 사람이 있어야 나오므로 저장 조건과 충돌하지 않는다. 판정·대시보드는 그대로 동작한다.
     z = result.get("zscore") or {}
     raw_id = None
-    try:
-        raw_id = observer.write('mmwave:' + result['target_id'], 'mmw_readings', db.insert_mmw,
-            result["target_id"],
-            result.get("received_at") or datetime.now().isoformat(),
-            raw, data.get("quality") or {}, data.get("presence") or {},
-            total_abs=z.get("total_abs"),
-            alert_level=result.get("alert_level"),
-            labels={'target_id': result['target_id'], 'alert_level': result.get('alert_level'),
-                    'total_abs': z.get('total_abs'), 'note': '각 지표 z/보행 라벨 전체는 이 테이블에 저장하지 않음'},
-        )
-    except Exception as e:
-        print(f"[DB] MMW insert failed: {e}")
+    person_present = _person_present(data)
+    if person_present:
+        try:
+            raw_id = observer.write('mmwave:' + result['target_id'], 'mmw_readings', db.insert_mmw,
+                result["target_id"],
+                result.get("received_at") or datetime.now().isoformat(),
+                raw, data.get("quality") or {}, data.get("presence") or {},
+                total_abs=z.get("total_abs"),
+                alert_level=result.get("alert_level"),
+                labels={'target_id': result['target_id'], 'alert_level': result.get('alert_level'),
+                        'total_abs': z.get('total_abs'), 'note': '각 지표 z/보행 라벨 전체는 이 테이블에 저장하지 않음'},
+            )
+        except Exception as e:
+            print(f"[DB] MMW insert failed: {e}")
 
     # 12번 탭 STEP 6-9: raw/clean 일관성 진단 — samples_count는 실제 포인트클라우드
     # 개수가 아니라 이 엔드포인트에서 확인 가능한 근사치(quality.samples_count)라는
     # 한계를 그대로 이어받는다.
-    if _data_integrity is not None:
+    if _data_integrity is not None and person_present:
         try:
             quality = data.get("quality") or {}
             diag = _data_integrity.check_mmw_consistency(

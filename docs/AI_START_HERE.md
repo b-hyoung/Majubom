@@ -19,6 +19,9 @@ Claude는 루트 CLAUDE.md에서 같은 필독 문서들을 가져온다.
 - 실측 센서값과 로우데이터 계산 관측은 실제 연결 환자 bed_01 전용이다. 가상 EMR 환자의 기존 시뮬레이션 경로와 섞지 않는다.
 - 로우데이터 탭은 ToF/mmWave로 분리하고 운영 계산·DB 저장 행·융합 이벤트와 실제 AI 리포트 실행을 관측한다.
   diagnostic_observer.py/report_trace.py의 추가 기록은 제한된 RAM이며 관측 API는 재평가·리포트 생성·DB 쓰기를 하지 않는다.
+- 원시 저장 정책(2026-10-11): ToF `tof_readings`는 침상 재실 중과 이탈 후 10초만, mmWave `mmw_readings`는 방에 사람(track)이 있을 때만 저장한다.
+  판정·대시보드·로우데이터 화면은 저장 여부와 관계없이 동작한다. 3일 지난 원시 기록은 매일 03:30 cron(`tools/archive_raw.py`)이
+  `server/raw_archive/날짜/*.jsonl.gz`로 옮긴다(gzip JSONL, `--read`·zcat·pandas로 바로 읽음). DB는 WAL 모드.
 - `server/run_all.py`는 HTTP 수신 서버 두 개만 켠다. mmWave 리더는 별도 실행해야 한다.
 - `site/index.html`과 `site/dashboard-assets/`가 간호사 대시보드이며 ToF 서버가 제공한다.
 - 실측 위험 판정, 실험 모델, 시뮬레이션, LLM 보고서 설명은 서로 다른 경로다.

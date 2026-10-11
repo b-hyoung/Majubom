@@ -24,7 +24,7 @@ PlatformIO 빌드, node_modules, 로그, LanceDB 저장 엔진 내부 파일은 
 | docs/ | AI 시작 안내·전체 구조·현장 점검·운영 개념·관련 연구·원격 제어·연구 검토 질문(질문.md)·나중에 할 일(나중에_할일.md) 및 역사 specs |
 | research/alternatives/ | 후보 알고리즘 실험, 평가 데이터와 산출물; 운영 코드와 구분 |
 | test_8x8/ | 8×8 검증용 firmware와 :5011 실험 서버. 운영 TOF/src와 별개 |
-| tools/ | 구조 문서 자동 갱신/검사 도구 |
+| tools/ | 구조 문서 자동 갱신/검사 도구, 원시 기록 날짜별 압축 보관 archive_raw.py(cron 매일 03:30) |
 | cloud_dashboard.py | Pi ToF 대시보드를 별도 포트로 프록시하는 보조 Flask 앱(설정 확인 후 사용) |
 | README.md / SYSTEM_ARCHITECTURE.md | 프로젝트 소개 / 센서·판정·DB·UI·AI 데이터 흐름 설명 |
 | 0704*, 0707*, ai_progress_presentation.html | 과거 작업/인수인계 및 발표 자료; 현재 운영 설정의 기준으로 사용하지 않음 |
@@ -56,6 +56,7 @@ Majubom/
 │   ├── captures/
 │   │   └── 2026-10-11/
 │   │       ├── 00_system_architecture.png
+│   │       ├── 03_collect_preprocess_zoom.png
 │   │       ├── 03a_raw_tof_grid.png
 │   │       ├── 03b_raw_mmwave_pointcloud.png
 │   │       ├── 04b_mmwave_algorithms.png
@@ -145,6 +146,7 @@ Majubom/
 │   │   │   └── [LanceDB 자동 생성 내부 파일 생략]
 │   │   └── paper_chunks.lance/
 │   │       └── [LanceDB 자동 생성 내부 파일 생략]
+│   ├── raw_archive/
 │   ├── reports/
 │   │   ├── 2026-08-08.json
 │   │   ├── 2026-08-15.json
@@ -170,7 +172,8 @@ Majubom/
 │   ├── live_diagnostics.py
 │   ├── maintenance_ai.py
 │   ├── majubom.db
-│   ├── majubom.db-journal
+│   ├── majubom.db-shm
+│   ├── majubom.db-wal
 │   ├── majubom.db.4x4bak.gz
 │   ├── mmw_baseline.json
 │   ├── mmw_logic.py
@@ -463,6 +466,7 @@ Majubom/
 │   ├── TROUBLESHOOTING.md
 │   └── viewer_proxy.py
 ├── tools/
+│   ├── archive_raw.py
 │   ├── seed_demo_emr.py
 │   └── update_project_structure.py
 ├── .gitignore

@@ -12,6 +12,7 @@ POST /tof/calibrate    — 빈 침대 베이스라인 저장
 from flask import Flask, request, jsonify, send_from_directory, Response, redirect
 from flask_cors import CORS
 from datetime import datetime
+import logging
 import os, json, sys
 import db
 from copy import deepcopy
@@ -73,6 +74,8 @@ anomaly_latest = {"status": "init", "err": None, "threshold": None,
                   "ratio": None, "filled": 0, "seq": None, "at": None}
 
 app = Flask(__name__)
+# 센서 POST마다 남는 접속 기록이 /tmp 로그를 하루 수백 MB씩 키웠다(2026-10-11) → 경고 이상만 남긴다.
+logging.getLogger("werkzeug").setLevel(logging.WARNING)
 CORS(app)
 
 # ── 침상 재실(있다/없다) 감지 설정 ────────────────────────────────────
@@ -105,6 +108,20 @@ presence = {
     "tof1": {"occupied": 0, "detected": False, "at": None},
     "tof2": {"occupied": 0, "detected": False, "at": None},
 }
+
+
+# 원시 프레임 저장 조건(2026-10-11): 침상에 사람이 있을 때 + 이탈 확정 후 TOF_STORE_AFTER_EXIT_SEC초.
+# 빈 침대 프레임은 같은 값만 반복돼 하루 수백만 행이 쌓였다(DB 1.1GB). 재실 판정·대시보드·로우데이터 화면은
+# 저장 여부와 관계없이 그대로 동작한다.
+TOF_STORE_AFTER_EXIT_SEC = 10.0
+_raw_store = {"until": 0.0}
+
+
+def _should_store_raw(in_bed: bool, now_ts: float) -> bool:
+    if in_bed:
+        _raw_store["until"] = now_ts + TOF_STORE_AFTER_EXIT_SEC
+        return True
+    return now_ts < _raw_store["until"]
 
 
 def load_baseline():
@@ -274,19 +291,21 @@ def receive_tof():
     # raw SQLite 저장 (AI 학습용 원천 데이터 누적) — distances/targets 는 존별 컬럼
     label, _conf = None, None
     raw_id = None
-    try:
-        raw_id = observer.write('tof', 'tof_readings', db.insert_tof, sensor_id, now, resolution, distances, targets,
-                                occupied=presence[sensor_id]["occupied"],
-                                in_bed=presence["in_bed"],
-                                labels={'sensor': sensor_id, 'in_bed': presence['in_bed'],
-                                        'occupied': presence[sensor_id]['occupied'], 'posture': None,
-                                        'note': 'tof_readings에는 자세 라벨 컬럼 없음'})
-    except Exception as e:
-        print(f"[DB] ToF insert failed: {e}")
+    store_raw = _should_store_raw(presence["in_bed"], _time.time())
+    if store_raw:
+        try:
+            raw_id = observer.write('tof', 'tof_readings', db.insert_tof, sensor_id, now, resolution, distances, targets,
+                                    occupied=presence[sensor_id]["occupied"],
+                                    in_bed=presence["in_bed"],
+                                    labels={'sensor': sensor_id, 'in_bed': presence['in_bed'],
+                                            'occupied': presence[sensor_id]['occupied'], 'posture': None,
+                                            'note': 'tof_readings에는 자세 라벨 컬럼 없음'})
+        except Exception as e:
+            print(f"[DB] ToF insert failed: {e}")
 
     # 12번 탭 STEP 6-9: raw/clean 일관성 진단(라벨이 있을 때만 — 지금은 실시간 라벨이
     # latest.posture에 들어있을 수 있어 그걸 사용, 없으면 None으로 판단 보류)
-    if _data_integrity is not None:
+    if _data_integrity is not None and store_raw:
         try:
             label = (latest.get(sensor_id) or {}).get("posture") or None
             diag = _data_integrity.check_tof_consistency(distances, label, TOF_VALID_ZONE_EXPECTED)
@@ -307,11 +326,10 @@ def receive_tof():
         except Exception as e:
             print(f"[data_integrity] ToF 진단 실패: {e}")
 
-    valid = [d for d in distances if d and d > 0]
-    min_d = min(valid) if valid else -1
-    print(f"[{now}] {sensor_id} ({resolution}) | zones={len(distances)} | "
-          f"min={min_d} mm | occ={presence[sensor_id]['occupied']} | "
-          f"침상={'있음' if presence['in_bed'] else '없음'}")
+    # 콘솔 로그는 재실이 바뀔 때만 남긴다(프레임마다 찍으면 /tmp 로그가 하루 수백 MB씩 커진다).
+    if previous_presence["in_bed"] != presence["in_bed"]:
+        print(f"[{now}] {sensor_id} | occ={presence[sensor_id]['occupied']} | "
+              f"침상={'있음' if presence['in_bed'] else '없음'} | 원시 저장={'계속' if store_raw else '중지'}")
     return jsonify({"ok": True}), 200
 
 

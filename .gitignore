@@ -88,3 +88,9 @@ server/lancedb_store/emr_semantic_chunks.lance/
 
 # SQLite 임시 저널(실행 중 생성)
 server/majubom.db-journal
+
+# 원시 센서 기록 압축 보관(tools/archive_raw.py, 날짜별 jsonl.gz) — 노트북 등으로 옮겨 보관, 커밋 X
+server/raw_archive/
+# SQLite WAL 모드 보조 파일
+server/majubom.db-wal
+server/majubom.db-shm
