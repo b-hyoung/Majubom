@@ -17,3 +17,10 @@
 - 한계: 같은 날·같은 사람, 독립 시험셋 없음, 걸터앉음 223건 중 20건을 빈 침대로 오분류.
 
 새 설치 위치의 거리값에는 쓸 수 없다. 비교 실험에 쓸 때는 이전 설치 데이터(`TOF/dataset/`)와 함께 쓴다.
+
+## 2026-10-20: S01 단독 v2 모델 보관
+| 파일 | 원본 | 내용 |
+|---|---|---|
+| `posture_model_v2_S01only_20261008.joblib` | `TOF/ml/posture_model.joblib`(10-08 학습) | 새 설치 위치 v2, S01 1명 + 빈 침대. S02로 시험 시 73.0% |
+| `posture_model_v2_S01only_20261008_report.json` | `posture_model_v2_report.json` | 위 모델 평가(회차 단위) |
+운영 모델은 S01+S02로 교체했다(TOF/ml/README.md).

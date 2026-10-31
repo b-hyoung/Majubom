@@ -60,6 +60,23 @@ def _recent_record(timestamp, hours=24):
 
 # ── ① 현재 상태 수집 (SQL DB + 실서버 라이브 상태) ────────────────────────
 @report_trace.traced_stage('patient_state', '환자 기록·실측 상태 수집')
+def _attach_fall_risk(state: dict, bed_id: str) -> dict:
+    """환자별 낙상 위험도(Morse + 변동 점수)와 거동 범위 — 2026-10-12
+    + 보행 저하 추세 예측(gait_trend.py, 2026-10-13): 리포트의 '향후 위험 가능성'이 계산된 예측을 근거로 쓰게 한다."""
+    try:
+        import fall_risk
+        with db.get_conn() as conn:
+            state["fall_risk_profile"] = fall_risk.get_profile(conn, bed_id, events=10)
+    except Exception as e:
+        state["fall_risk_profile_error"] = f"위험도 프로필을 읽지 못했습니다: {type(e).__name__}"
+    try:
+        import gait_trend
+        state["gait_trend"] = gait_trend.summary_for_bed(bed_id)
+    except Exception as e:
+        state["gait_trend"] = {"status": "error", "message": f"보행 추세 예측을 계산하지 못했습니다: {type(e).__name__}"}
+    return state
+
+
 def gather_patient_state(bed_id: str) -> dict:
     """환자 프로필·위험인자·투약(SQL DB)과, ToF/mmWave 실서버의 현재 판정을 한데 모은다.
     실서버가 꺼져있어도(개발 중 등) 예외를 던지지 않고 그 부분만 None으로 정직하게 비운다 —
@@ -91,7 +108,7 @@ def gather_patient_state(bed_id: str) -> dict:
     if sim_state.is_simulated(bed_id):
         state["tof_behavior"] = sim_state.simulated_tof_behavior(bed_id)
         state["mmw_latest"] = sim_state.simulated_mmw_latest(bed_id)
-        return state
+        return _attach_fall_risk(state, bed_id)
 
     # The shared hardware stream is wired to the first patient only. The retired
     # /tof/behavior route no longer exists; use current posture and presence APIs.
@@ -131,7 +148,7 @@ def gather_patient_state(bed_id: str) -> dict:
         except (requests.exceptions.RequestException, ValueError):
             state["mmw_latest_error"] = "mmWave 서버 상태를 조회하지 못했습니다."
 
-    return state
+    return _attach_fall_risk(state, bed_id)
 
 
 # ── ② AI Query 자동 생성 (STEP 15-18) ────────────────────────────────────

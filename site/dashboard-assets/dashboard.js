@@ -56,6 +56,11 @@
     return '<span class="pill ' + pair[1] + '">' + pair[0] + '</span>';
   }
 
+  function lostPill(ageMs) {
+    var age = ageMs != null ? ' · ' + Math.round(ageMs / 1000) + '초 전 수신' : '';
+    return '<span class="pill">연결 끊김' + escapeHtml(age) + '</span>';
+  }
+
   function connPill(ok) {
     return ok ? '<span class="pill ok">연결됨</span>' : '<span class="pill">연결 안 됨</span>';
   }
@@ -100,6 +105,7 @@
         state.page = btn.getAttribute('data-page');
         $all('nav button[data-page]').forEach(function (b) { b.setAttribute('aria-selected', String(b === btn)); });
         $all('.screen').forEach(function (s) { s.hidden = s.getAttribute('data-screen') !== state.page; });
+        if (state.page === 'reports') { btn.classList.remove('has-new'); renderReportsData(); }
       });
     });
   }
@@ -206,7 +212,8 @@
     renderRiskBanner();
     renderDevices();
     $('#ovPatientHeader').innerHTML = '<div class="empty-state">불러오는 중…</div>';
-    $('#ovEvents').innerHTML = '<div class="empty-state">불러오는 중…</div>';
+    if ($('#ovEvents')) $('#ovEvents').innerHTML = '<div class="empty-state">불러오는 중…</div>';
+    closeDrawer();
     $('#ovRiskFactors').innerHTML = '<div class="empty-state">불러오는 중…</div>';
     $('#ovMedications').innerHTML = '<div class="empty-state">불러오는 중…</div>';
     $('#medicationsList').innerHTML = '<div class="empty-state">불러오는 중…</div>';
@@ -256,20 +263,18 @@
       return '<div class="card-h"><div class="card-title">ToF · 침상 자세</div></div>' +
         '<div class="sensor-empty">이 환자는 실시간 센서에 연결되어 있지 않습니다.</div>';
     }
-    if (mode === 'live' && (!tof || !tof.connected)) {
-      var age = (tof && tof.ageMs != null) ? Math.round(tof.ageMs / 1000) + '초 전' : '알 수 없음';
-      return '<div class="card-h"><div class="card-title">ToF · 침상 자세</div><span class="pill">센서 연결 끊김</span></div>' +
-        '<div class="sensor-empty">마지막 수신: ' + escapeHtml(age) + '</div>';
-    }
-    var inBedText = tof.inBed === true ? '침상 내' : tof.inBed === false ? '침상 이탈' : '판정 대기';
+    // 연결이 끊겨도 카드 구성은 그대로 두고 값만 '—'로 바꾼다(2026-10-12: 끊김↔연결 반복 시 칸이 사라졌다 나타나 보기 불편)
+    tof = tof || {};
+    var tofLost = mode === 'live' && !tof.connected;
+    var inBedText = tofLost ? '—' : tof.inBed === true ? '침상 내' : tof.inBed === false ? '침상 이탈' : '판정 대기';
     var tag = mode === 'sim' ? SIM_TAG : '';
-    return '<div class="card-h"><div class="card-title">ToF · 침상 자세</div>' + tag + levelPill(tof.riskLevel) + '</div>' +
+    return '<div class="card-h"><div class="card-title">ToF · 침상 자세</div>' + tag + (tofLost ? lostPill(tof.ageMs) : levelPill(tof.riskLevel)) + '</div>' +
       '<div class="sensor-metrics">' +
-      '<div class="metric"><span class="metric-label">자세</span><span class="metric-value">' + escapeHtml(tof.postureLabel || '판정 중') + '</span></div>' +
+      '<div class="metric"><span class="metric-label">자세</span><span class="metric-value">' + escapeHtml(tofLost ? '—' : tof.postureLabel || '판정 중') + '</span></div>' +
       '<div class="metric"><span class="metric-label">재실</span><span class="metric-value">' + escapeHtml(inBedText) + '</span></div>' +
       '<div class="metric"><span class="metric-label">머리맡 센서</span><span class="metric-value">' + (tof.headConnected ? '연결됨' : '연결 안 됨') + '</span></div>' +
       '<div class="metric"><span class="metric-label">발치 센서</span><span class="metric-value">' + (tof.footConnected ? '연결됨' : '연결 안 됨') + '</span></div>' +
-      '</div>' + (tof.reason ? '<div class="sensor-note muted">' + escapeHtml(tof.reason) + '</div>' : '');
+      '</div>' + (!tofLost && tof.reason ? '<div class="sensor-note muted">' + escapeHtml(tof.reason) + '</div>' : '');
   }
 
   function renderMmwCard(mmw, mode) {
@@ -277,21 +282,37 @@
       return '<div class="card-h"><div class="card-title">mmWave · 보행</div></div>' +
         '<div class="sensor-empty">이 환자는 실시간 센서에 연결되어 있지 않습니다.</div>';
     }
-    if (mode === 'live' && (!mmw || !mmw.connected)) {
-      var age = (mmw && mmw.ageMs != null) ? Math.round(mmw.ageMs / 1000) + '초 전' : '알 수 없음';
-      return '<div class="card-h"><div class="card-title">mmWave · 보행</div><span class="pill">센서 연결 끊김</span></div>' +
-        '<div class="sensor-empty">마지막 수신: ' + escapeHtml(age) + '</div>';
-    }
+    mmw = mmw || {};
+    var mmwLost = mode === 'live' && !mmw.connected;
     var tag = mode === 'sim' ? SIM_TAG : '';
     // 잠정: 개인 기준이 생기기 전 입원 기록·문헌 기대 범위와 비교한 판정(정식 알람 아님)
     var provisional = mmw.provisional ? '<span class="pill sm" title="개인 보행 기록 5건 전 — 문헌 기대 범위와 비교한 잠정 판정">잠정</span>' : '';
-    return '<div class="card-h"><div class="card-title">mmWave · 보행</div>' + tag + provisional + levelPill(mmw.riskLevel) + '</div>' +
+    // 판정이 없을 때는 '판정 대기' 대신 이유(사람 없음 · 환자 구분 보류 · 보행 구간 아님)를 보여준다
+    // 10-22 저녁: 실시간 환자는 6초 보행 판정의 대기 이유(보행 구간 아님 등) 대신 환자 지정 여부만 보인다
+    var levelBadge = mmwLost ? lostPill(mmw.ageMs)
+      : mode === 'live' ? (mmw.mainTid == null ? '<span class="pill">환자 지정 필요</span>' : '<span class="pill" title="0.1초마다 갱신">실시간</span>')
+      : (mmw.riskLevel === 'unknown' && mmw.waitReason)
+      ? '<span class="pill" title="보행 판정은 사람이 곧게 걷는 6초 구간에서만 계산됩니다">' + escapeHtml(mmw.waitReason) + '</span>'
+      : levelPill(mmw.riskLevel);
+    return '<div class="card-h"><div class="card-title">mmWave · 보행</div>' + tag + provisional + levelBadge + '</div>' +
       '<div class="sensor-metrics">' +
+      // 10-22 저녁 사용자 결정: 실시간(라이브) 환자는 6초 보행 판정 대신 0.1초마다 들어오는 추적으로 바로 계산한 값만 보인다
+      (mode === 'live' ? (function (g) {
+        g = g || {};
+        var m = function (label, v, unit, tip) {
+          return '<div class="metric" title="' + tip + '"><span class="metric-label">' + label + '</span><span class="num metric-value">' + fmt2(v) +
+            (unit ? '<span class="unit">' + unit + '</span>' : '') + '</span></div>';
+        };
+        return m('속도', g.speed, 'm/s', '최근 1.5초 레이더 추적 속도 평균(실시간)') +
+          m('흔들림', g.sway, 'm', '최근 4초 이동 경로가 직선에서 옆으로 벗어난 정도(실시간)') +
+          m('보폭', g.stride, 'm', '최근 4초 이동 거리 ÷ 걸음 수 × 2 — 2걸음 이상 걸을 때만(실시간)') +
+          m('속도 변동성', g.cv, '', '최근 4초 속도의 표준편차 ÷ 평균 — 움직일 때만(실시간)');
+      })(mmw.live) :
       '<div class="metric"><span class="metric-label">속도</span><span class="num metric-value">' + fmt2(mmw.speed) + '<span class="unit">m/s</span></span></div>' +
       '<div class="metric"><span class="metric-label">흔들림</span><span class="num metric-value">' + fmt2(mmw.sway) + '</span></div>' +
       '<div class="metric"><span class="metric-label">보폭</span><span class="num metric-value">' + fmt2(mmw.stride) + '<span class="unit">m</span></span></div>' +
-      '<div class="metric"><span class="metric-label">속도 변동성</span><span class="num metric-value">' + fmt2(mmw.cv) + '</span></div>' +
-      '</div>' + (mmw.reason ? '<div class="sensor-note muted">' + escapeHtml(mmw.reason) + '</div>' : '');
+      '<div class="metric"><span class="metric-label">속도 변동성</span><span class="num metric-value">' + fmt2(mmw.cv) + '</span></div>') +
+      '</div>' + (!mmwLost && mode !== 'live' && mmw.reason ? '<div class="sensor-note muted">' + escapeHtml(mmw.reason) + '</div>' : '');
   }
 
   /** live snapshot for bed_01, simulated snapshot for a bed_sim_* demo patient, or null. */
@@ -313,6 +334,113 @@
     $('#ovTof').innerHTML = renderTofCard(snap && snap.tof, mode);
     $('#ovMmw').innerHTML = renderMmwCard(snap && snap.mmwave, mode);
     renderFloorplan(mode, snap);
+    renderKpis(mode, snap);
+  }
+
+  /* ---------------- 상단 상태 요약 타일(2026-10-13 디자인 개편) ---------------- */
+  var lastKpiHtml = '';
+  function renderKpis(mode, snap) {
+    var el = $('#ovKpis');
+    if (!el) return;
+    var tof = (snap && snap.tof) || {}, mmw = (snap && snap.mmwave) || {};
+    var fr = state.detail && state.detail.fall_risk;
+    var level = mode === 'none' ? null : dominantOf(tof.riskLevel, mmw.riskLevel, true, true);
+    var tofOk = mode === 'sim' || (mode === 'live' && tof.connected);
+    var mmwOk = mode === 'sim' || (mode === 'live' && mmw.connected);
+    var inBed = !tofOk ? '—' : tof.inBed === true ? '침상 내' : tof.inBed === false ? '침상 이탈' : '판정 대기';
+    var gait = !mmwOk ? '—' : mode === 'live' ? (mmw.live && typeof mmw.live.speed === 'number' ? mmw.live.speed.toFixed(2) + ' m/s'
+        : mmw.mainTid == null ? '환자 지정 필요' : '대기')
+      : (typeof mmw.speed === 'number' && mmw.speed > 0) ? mmw.speed.toFixed(2) + ' m/s' : (mmw.waitReason || '대기');
+    var tile = function (label, value, cls, extra) {
+      return '<div class="kpi ' + (cls || '') + '"' + (extra || '') + '><div class="kpi-label">' + escapeHtml(label) + '</div><div class="kpi-value">' + value + '</div></div>';
+    };
+    var html =
+      tile('종합 상태', mode === 'none' ? '센서 없음' : escapeHtml(({ normal: '정상', caution: '주의', warning: '경고', critical: '위험' })[level] || '판정 대기'),
+        'kpi-level kpi-' + escapeHtml(level || 'none')) +
+      tile('자세', escapeHtml(tofOk ? (tof.postureLabel || '판정 중') : '—')) +
+      tile('재실', escapeHtml(inBed)) +
+      tile('보행', escapeHtml(gait)) +
+      tile('낙상 위험군', fr ? escapeHtml(fr.group_ko) + ' <span class="kpi-sub">' + fr.score + '점</span>' : '—',
+        'kpi-click kpi-risk-' + escapeHtml(fr ? fr.group : 'none'), ' data-drawer="risk" role="button" tabindex="0" title="낙상 위험도 자세히"') +
+      tile('거동 범위', fr ? escapeHtml(fr.mobility_ko) : '—', 'kpi-click', ' data-drawer="risk" role="button" tabindex="0" title="거동 범위 바꾸기"');
+    if (html !== lastKpiHtml) { el.innerHTML = html; lastKpiHtml = html; }
+  }
+
+  /* ---------------- 오른쪽 상세 패널(낙상 위험도·보행 추세·보행 기대 범위) ---------------- */
+  var DRAWER_TITLE = { risk: '낙상 위험도 · 거동 범위', gait: '보행 추세 예측', prior: '보행 기대 범위' };
+  function openDrawer(kind) {
+    state.drawer = kind;
+    $('#drawerTitle').textContent = DRAWER_TITLE[kind] || '';
+    renderDrawerBody();
+    $('#sideDrawer').hidden = false;
+  }
+  function closeDrawer() {
+    state.drawer = null;
+    if ($('#sideDrawer')) $('#sideDrawer').hidden = true;
+  }
+  function renderDrawerBody() {
+    var body = $('#drawerBody');
+    var d = state.detail || {};
+    if (state.drawer === 'risk') {
+      body.innerHTML = renderFallRisk(d.fall_risk);
+      wireFallRisk(state.selectedId);
+    } else if (state.drawer === 'gait') {
+      body.innerHTML = renderGaitForecast(d.gait_trend);
+    } else if (state.drawer === 'prior') {
+      body.innerHTML = '<div class="card-sub" style="margin-bottom:10px">입원 기록과 문헌 기준값으로 계산한 참고 범위 · 낙상 확률 아님</div><div id="ovGaitPrior">' + renderGaitPrior(d.gait_prior) + '</div>';
+      wireGaitPriorButton();
+    }
+  }
+  function wireDrawer() {
+    $('#drawerClose').addEventListener('click', closeDrawer);
+    $('#sideDrawer').addEventListener('click', function (ev) { if (ev.target.id === 'sideDrawer') closeDrawer(); });
+    document.addEventListener('keydown', function (ev) { if (ev.key === 'Escape' && state.drawer) closeDrawer(); });
+    document.addEventListener('click', function (ev) {
+      var t = ev.target.closest && ev.target.closest('[data-drawer]');
+      if (t) openDrawer(t.getAttribute('data-drawer'));
+    });
+    document.addEventListener('keydown', function (ev) {
+      var t = ev.target.closest && ev.target.closest('[data-drawer]');
+      if (t && (ev.key === 'Enter' || ev.key === ' ')) { ev.preventDefault(); openDrawer(t.getAttribute('data-drawer')); }
+    });
+  }
+
+  function renderFallRiskSummary(fr) {
+    if (!fr) return '<div class="card-h"><div class="card-title">낙상 위험도</div></div><div class="empty-state">위험도 정보가 없습니다.</div>';
+    var last = (fr.recent_events || [])[0];
+    return '<div class="card-h"><div class="card-title">낙상 위험도</div><button class="btn sm" data-drawer="risk" type="button">자세히 · 재평가</button></div>' +
+      '<div class="side-big"><span class="pill ' + (FR_GROUP_PILL[fr.group] || '') + '">' + escapeHtml(fr.group_ko) + '</span>' +
+      '<span class="side-score num">' + fr.score + '<span class="unit">점</span></span></div>' +
+      '<div class="side-rows"><div><span>Morse 기본</span><b class="num">' + fr.morse_score + '</b></div>' +
+      '<div><span>변동 점수</span><b class="num">' + fr.dynamic_points +
+      (fr.dynamic_points > 0 ? ' <button class="btn sm" id="frQuickReset" type="button" title="시험·오탐으로 쌓인 변동 점수만 0으로 (Morse·거동 범위 유지)">0으로</button>' : '') +
+      '</b></div>' +
+      '<div><span>거동 범위</span><b>' + escapeHtml(fr.mobility_ko) + '</b></div></div>' +
+      (last ? '<div class="side-note">최근: ' + escapeHtml(String(last.ts || '').replace('T', ' ').slice(5, 16)) + ' ' +
+        escapeHtml(FR_KIND_KO[last.kind] || last.kind) + '</div>' : '');
+  }
+
+  function renderGaitForecastSummary(gt) {
+    var head = '<div class="card-h"><div class="card-title">보행 추세 예측</div><button class="btn sm" data-drawer="gait" type="button">자세히</button></div>';
+    if (!gt) return head + '<div class="empty-state">예측 정보가 없습니다.</div>';
+    if (gt.status !== 'ok') {
+      var msg = gt.message || ('보행 기록 ' + (gt.days_with_data || 0) + '일 / 필요 ' + (gt.min_days || 14) + '일');
+      return head + '<div class="side-big"><span class="pill">예측 대기</span></div><div class="side-note">' + escapeHtml(msg) + '</div>';
+    }
+    var sp = gt.metrics.speed || {};
+    return head + '<div class="side-big"><span class="pill ' + (GT_LEVEL_PILL[gt.level] || '') + '">' + escapeHtml(gt.level_ko || '') + '</span></div>' +
+      (sp.status === 'ok' ? '<div class="side-rows"><div><span>보행 속도(추정)</span><b class="num">' + (sp.current * 100).toFixed(0) + ' cm/s</b></div>' +
+        '<div><span>7일 변화</span><b class="num">' + (sp.change7_cm > 0 ? '+' : '') + sp.change7_cm.toFixed(1) + ' cm/s</b></div>' +
+        '<div><span>7일 뒤 예측</span><b class="num">' + (sp.forecast7.mean * 100).toFixed(0) + ' cm/s</b></div></div>' : '');
+  }
+
+  function renderGaitPriorSummary(summary) {
+    var head = '<div class="card-h"><div class="card-title">보행 기대 범위</div><button class="btn sm" data-drawer="prior" type="button">자세히</button></div>';
+    if (!summary) return head + '<div class="side-note">아직 계산하지 않았습니다.</div>';
+    if (summary.not_applicable) return head + '<div class="side-note">' + escapeHtml(summary.not_applicable) + '</div>';
+    var s = summary.speed_expected_mps;
+    return head + (s ? '<div class="side-rows"><div><span>기대 보행 속도</span><b class="num">' + fmt2(s.p10) + '–' + fmt2(s.p90) + ' m/s</b></div></div>' : '') +
+      '<div class="side-note">입원 기록·문헌 기준 참고 범위</div>';
   }
 
   var LEVEL_COLOR_VAR = { normal: '--ok', caution: '--caution', warning: '--warning', critical: '--critical' };
@@ -324,7 +452,55 @@
    * that was asked to be left out; the room drawing itself, sensor icons and coverage shading
    * are the same). Built once per (mode, patient); the moving parts are separate <g> groups
    * filled in by renderPatientMarkerSvg()/renderTrailSvg() so this never gets rebuilt on tick. */
-  function buildSimRoomSvg(room, PX) {
+  // ── 부스 평면도(10-22 저녁 사용자 요청: 선택한 부스 영역이 평면도 전체) ──
+  // 레이더 좌표의 부스 영역 = send_mmw.py ROI_POLY(사용자가 부스 가장자리를 걸은 경로를 0.3m 넓힘). 네 모서리가 정확한 직사각형이 아니라
+  // 레이더 구석에서 두 변 방향으로 나눠 비율을 구해 직사각형에 펼친다(레이더 거리 오차도 그대로 들어 있음).
+  // 사용자 지정 배치(10-22 저녁): 레이더는 왼쪽 아래 구석, 사람 위치는 위아래 반전, 침대는 가로 — 머리가 레이더 쪽(왼쪽), 발치는 오른쪽.
+  // 침대 세로 위치는 send_mmw BED_CENTER(누운 자리 실측). ROI·침대를 바꾸면 여기도 같게.
+  // 10-29 간호학과 방(사용자 확인 전 잠정): 6각형 ROI_POLY를 침대 방향(걸은 경로 아래 경계, 레이더 좌표 36°)으로 돌린 외접 직사각형.
+  // 사용자 말: 'mmWave 옆이 발치' → 침대 가로, 발치 = 왼쪽(레이더 쪽), 머리(베개) = 오른쪽. 부스 값 origin [0.05,-0.49] back [2.96,2.55] side [-1.83,0.72] bed [-0.15,0.5]
+  var BOOTH = { origin: [-0.34, -1.48], back: [3.81, 1.55], side: [-2.42, 1.37], bed: [1.0, 1.4], bedW: 0.9, bedL: 2.0, headRight: true };
+  (function () {
+    var o = BOOTH.origin;
+    BOOTH.e1 = [BOOTH.back[0] - o[0], BOOTH.back[1] - o[1]];
+    BOOTH.e2 = [BOOTH.side[0] - o[0], BOOTH.side[1] - o[1]];
+    BOOTH.w = Math.hypot(BOOTH.e1[0], BOOTH.e1[1]);   // 그림 가로 m
+    BOOTH.h = Math.hypot(BOOTH.e2[0], BOOTH.e2[1]);   // 그림 세로 m
+  })();
+  function radarToBooth(x, y) {
+    if (typeof x !== 'number' || typeof y !== 'number') return null;
+    var dx = x - BOOTH.origin[0], dy = y - BOOTH.origin[1], e1 = BOOTH.e1, e2 = BOOTH.e2;
+    var det = e1[0] * e2[1] - e1[1] * e2[0];
+    var a = (dx * e2[1] - dy * e2[0]) / det, b = (e1[0] * dy - e1[1] * dx) / det;
+    return { x: a * BOOTH.w, y: (1 - b) * BOOTH.h };   // 위아래 반전 → 레이더(0, 0)가 왼쪽 아래
+  }
+  function boothBed() {
+    // 가로 침대: 세로 가운데는 누운 자리. 부스는 머리(왼쪽)를 레이더 쪽 벽에서 0.1m, 10-29 방은 가로 가운데도 누운 자리
+    var bc = radarToBooth(BOOTH.bed[0], BOOTH.bed[1]);
+    var y = Math.max(0.05, Math.min(BOOTH.h - BOOTH.bedW - 0.05, bc.y - BOOTH.bedW / 2));
+    var x = BOOTH.headRight ? Math.max(0.05, Math.min(BOOTH.w - BOOTH.bedL - 0.05, bc.x - BOOTH.bedL / 2)) : 0.1;
+    return { x: x, y: y, w: BOOTH.bedL, h: BOOTH.bedW };
+  }
+  function buildBoothSvg(PX) {
+    var W = BOOTH.w * PX, H = BOOTH.h * PX, bed = boothBed(), rd = radarToBooth(0, 0);
+    var bx = bed.x * PX, by = bed.y * PX, bw = bed.w * PX, bh = bed.h * PX;
+    return '<svg class="floorplan-svg floorplan-room-svg" viewBox="-14 -16 ' + (W + 28).toFixed(1) + ' ' + (H + 34).toFixed(1) + '" role="img" aria-label="부스 평면도(실측)">' +
+      '<defs><pattern id="fpGrid" width="18" height="18" patternUnits="userSpaceOnUse"><path d="M18 0L0 0 0 18" fill="none" stroke="var(--line-faint)" stroke-width="0.5"/></pattern></defs>' +
+      '<rect x="0" y="0" width="' + W.toFixed(1) + '" height="' + H.toFixed(1) + '" fill="url(#fpGrid)"/>' +
+      '<rect x="0.5" y="0.5" width="' + (W - 1).toFixed(1) + '" height="' + (H - 1).toFixed(1) + '" fill="none" stroke="var(--line-strong)" stroke-width="1.2"/>' +
+      '<rect x="' + bx.toFixed(1) + '" y="' + by.toFixed(1) + '" width="' + bw.toFixed(1) + '" height="' + bh.toFixed(1) + '" rx="5" fill="var(--bg-elev-1)" stroke="var(--line-strong)" stroke-width="1.1"/>' +
+      // 베개(머리): 부스 = 레이더 쪽 왼쪽 끝, 10-29 방 = 오른쪽 끝(발치가 레이더 옆)
+      '<rect x="' + (BOOTH.headRight ? bx + bw - 4 - 0.28 * PX : bx + 4).toFixed(1) + '" y="' + (by + 4).toFixed(1) + '" width="' + (0.28 * PX).toFixed(1) + '" height="' + (bh - 8).toFixed(1) + '" rx="3" fill="var(--bg-inset)" stroke="var(--line)" stroke-width="0.5"/>' +
+      '<text x="' + (bx + bw / 2).toFixed(1) + '" y="' + (by + bh / 2 + 3).toFixed(1) + '" text-anchor="middle" font-size="7.5" fill="var(--fg-faint)" font-family="var(--font-mono)">BED</text>' +
+      '<g transform="translate(' + (rd.x * PX).toFixed(1) + ',' + (rd.y * PX).toFixed(1) + ')"><circle r="6" fill="var(--bg-elev-1)" stroke="var(--info)" stroke-width="1.3"/><circle r="2.3" fill="var(--info)"/></g>' +
+      '<text x="' + (rd.x * PX + 9).toFixed(1) + '" y="' + (rd.y * PX + 13).toFixed(1) + '" font-size="7.5" fill="var(--info)" font-family="var(--font-mono)">mmWave</text>' +
+      '<g id="ovFloorplanTrail"></g>' +
+      '<g id="ovFloorplanOthers"></g>' +
+      '<g id="ovFloorplanMarker" class="floorplan-marker"></g>' +
+      '</svg>';
+  }
+
+  function buildSimRoomSvg(room, PX, ariaLabel) {
     var W = (room.w * PX).toFixed(1), H = (room.h * PX).toFixed(1);
     var bath = room.bath, bed = room.bed, bedside = room.bedside, table = room.table, door = room.door;
     var byKind = function (kind, subtype) {
@@ -334,7 +510,7 @@
       }
       return null;
     };
-    var tofCeil = byKind('ToF', 'ceiling'), tofBed = byKind('ToF', 'under-bed'), mmw = byKind('mmWave');
+    var tofHead = byKind('ToF', 'head'), tofFoot = byKind('ToF', 'foot'), mmw = byKind('mmWave');
 
     function cone(s, fillId) {
       if (!s) return '';
@@ -360,33 +536,39 @@
     var pad = 0.15;
     var fx = (bed.x - pad) * PX, fy = (bed.y - pad) * PX, fw = (bed.w + pad * 2) * PX, fh = (bed.h + pad * 2) * PX;
 
-    return '<svg class="floorplan-svg floorplan-room-svg" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="병실 평면도(시뮬레이션)">' +
+    // 2026-10-12: 평면도를 반시계 방향으로 90도 돌려 보여준다(방 좌표는 그대로, 그림만 회전).
+    // 같은 날 사용자 요청으로 거기서 180° 더 돌려(=시계 방향 90°) 현장에서 보는 장면과 맞췄다.
+    // 회전 그룹 안의 글자·환자 표시는 rotate(-90)으로 되돌려 똑바로 읽히게 한다.
+    var upright = function (x, y) { return ' transform="rotate(-90 ' + x + ' ' + y + ')"'; };
+    return '<svg class="floorplan-svg floorplan-room-svg" viewBox="0 0 ' + H + ' ' + W + '" role="img" aria-label="' + (ariaLabel || '병실 평면도(시뮬레이션)') + '">' +
       '<defs>' +
       '<pattern id="fpGrid" width="18" height="18" patternUnits="userSpaceOnUse"><path d="M18 0L0 0 0 18" fill="none" stroke="var(--line-faint)" stroke-width="0.5"/></pattern>' +
       '<radialGradient id="fpTofCone" cx="50%" cy="0%" r="100%"><stop offset="0%" stop-color="var(--accent)" stop-opacity="0.28"/><stop offset="90%" stop-color="var(--accent)" stop-opacity="0.02"/></radialGradient>' +
       '<radialGradient id="fpMmwCone" cx="50%" cy="0%" r="100%"><stop offset="0%" stop-color="var(--info)" stop-opacity="0.24"/><stop offset="90%" stop-color="var(--info)" stop-opacity="0.02"/></radialGradient>' +
       '</defs>' +
+      '<g transform="translate(' + H + ',0) rotate(90)">' +
       '<rect x="0" y="0" width="' + W + '" height="' + H + '" fill="url(#fpGrid)"/>' +
       '<rect x="0.5" y="0.5" width="' + (W - 1) + '" height="' + (H - 1) + '" fill="none" stroke="var(--line-strong)" stroke-width="1.2"/>' +
       '<rect x="' + (bath.x * PX).toFixed(1) + '" y="' + (bath.y * PX).toFixed(1) + '" width="' + (bath.w * PX).toFixed(1) + '" height="' + (bath.h * PX).toFixed(1) + '" fill="var(--bg-inset)" stroke="var(--line)" stroke-width="1" stroke-dasharray="3 3"/>' +
-      '<text x="' + ((bath.x + bath.w / 2) * PX).toFixed(1) + '" y="' + ((bath.y + bath.h / 2) * PX).toFixed(1) + '" text-anchor="middle" dominant-baseline="middle" font-size="8" fill="var(--fg-faint)" font-family="var(--font-mono)">화장실</text>' +
+      '<text x="' + ((bath.x + bath.w / 2) * PX).toFixed(1) + '" y="' + ((bath.y + bath.h / 2) * PX).toFixed(1) + '"' + upright(((bath.x + bath.w / 2) * PX).toFixed(1), ((bath.y + bath.h / 2) * PX).toFixed(1)) + ' text-anchor="middle" dominant-baseline="middle" font-size="8" fill="var(--fg-faint)" font-family="var(--font-mono)">화장실</text>' +
       '<rect x="' + (door.x * PX).toFixed(1) + '" y="' + (door.y * PX).toFixed(1) + '" width="' + (door.w * PX).toFixed(1) + '" height="3" fill="var(--bg)" stroke="var(--line-strong)"/>' +
       '<path d="M' + (door.x * PX).toFixed(1) + ',' + (door.y * PX).toFixed(1) + ' a' + (door.w * PX).toFixed(1) + ',' + (door.w * PX).toFixed(1) + ' 0 0 0 ' + (door.w * PX).toFixed(1) + ',-' + (door.w * PX).toFixed(1) + '" fill="none" stroke="var(--line)" stroke-width="0.7" stroke-dasharray="2 2"/>' +
-      '<text x="' + (door.x * PX - 10).toFixed(1) + '" y="' + (door.y * PX - 4).toFixed(1) + '" font-size="8" fill="var(--fg-faint)" font-family="var(--font-mono)">문</text>' +
-      cone(tofBed, 'fpTofCone') + cone(mmw, 'fpMmwCone') +
+      '<text x="' + (door.x * PX - 10).toFixed(1) + '" y="' + (door.y * PX - 4).toFixed(1) + '"' + upright((door.x * PX - 10).toFixed(1), (door.y * PX - 4).toFixed(1)) + ' font-size="8" fill="var(--fg-faint)" font-family="var(--font-mono)">문</text>' +
+      cone(tofHead, 'fpTofCone') + cone(tofFoot, 'fpTofCone') + cone(mmw, 'fpMmwCone') +
       '<g>' +
       '<rect x="' + fx.toFixed(1) + '" y="' + fy.toFixed(1) + '" width="' + fw.toFixed(1) + '" height="' + fh.toFixed(1) + '" rx="6" fill="var(--accent)" opacity="0.05"/>' +
       '<rect x="' + fx.toFixed(1) + '" y="' + fy.toFixed(1) + '" width="' + fw.toFixed(1) + '" height="' + fh.toFixed(1) + '" rx="6" fill="none" stroke="var(--accent)" stroke-width="0.8" stroke-dasharray="4 4" opacity="0.4"/>' +
       '</g>' +
       '<rect x="' + (bed.x * PX).toFixed(1) + '" y="' + (bed.y * PX).toFixed(1) + '" width="' + (bed.w * PX).toFixed(1) + '" height="' + (bed.h * PX).toFixed(1) + '" rx="5" fill="var(--bg-elev-1)" stroke="var(--line-strong)" stroke-width="1.1"/>' +
-      '<rect x="' + ((bed.x + 0.1) * PX).toFixed(1) + '" y="' + ((bed.y + 0.1) * PX).toFixed(1) + '" width="' + ((bed.w - 0.2) * PX).toFixed(1) + '" height="' + (0.28 * PX).toFixed(1) + '" rx="3" fill="var(--bg-inset)" stroke="var(--line)" stroke-width="0.5"/>' +
-      '<text x="' + ((bed.x + bed.w / 2) * PX).toFixed(1) + '" y="' + ((bed.y + bed.h) * PX - 4).toFixed(1) + '" text-anchor="middle" font-size="7.5" fill="var(--fg-faint)" font-family="var(--font-mono)">BED</text>' +
+      '<rect x="' + ((bed.x + 0.1) * PX).toFixed(1) + '" y="' + ((bed.headAtEnd ? bed.y + bed.h - 0.38 : bed.y + 0.1) * PX).toFixed(1) + '" width="' + ((bed.w - 0.2) * PX).toFixed(1) + '" height="' + (0.28 * PX).toFixed(1) + '" rx="3" fill="var(--bg-inset)" stroke="var(--line)" stroke-width="0.5"/>' +
+      '<text x="' + ((bed.x + bed.w / 2) * PX).toFixed(1) + '" y="' + ((bed.y + bed.h / 2) * PX).toFixed(1) + '"' + upright(((bed.x + bed.w / 2) * PX).toFixed(1), ((bed.y + bed.h / 2) * PX).toFixed(1)) + ' text-anchor="middle" font-size="7.5" fill="var(--fg-faint)" font-family="var(--font-mono)">BED</text>' +
       '<rect x="' + (bedside.x * PX).toFixed(1) + '" y="' + (bedside.y * PX).toFixed(1) + '" width="' + (bedside.w * PX).toFixed(1) + '" height="' + (bedside.h * PX).toFixed(1) + '" fill="var(--bg-inset)" stroke="var(--line)" stroke-width="0.7"/>' +
       '<rect x="' + (table.x * PX).toFixed(1) + '" y="' + (table.y * PX).toFixed(1) + '" width="' + (table.w * PX).toFixed(1) + '" height="' + (table.h * PX).toFixed(1) + '" rx="3" fill="var(--bg-inset)" stroke="var(--line)" stroke-width="0.7"/>' +
-      marker(tofCeil) + marker(tofBed) + marker(mmw) +
+      marker(tofHead) + marker(tofFoot) + marker(mmw) +
       '<g id="ovFloorplanTrail"></g>' +
+      '<g id="ovFloorplanOthers"></g>' +
       '<g id="ovFloorplanMarker" class="floorplan-marker"></g>' +
-      '</svg>';
+      '</g></svg>';
   }
 
   /** The person indicator: concentric circles while in/near bed, a flattened "fallen" shape with
@@ -430,6 +612,71 @@
   /** Builds the static room/grid once per (mode, patient) and afterwards only moves the dot's
    * cx/cy/fill on the SAME <circle> element, so the CSS transition on .floorplan-dot can
    * actually animate it — replacing an element every tick would just teleport it instead. */
+  // ── 실측 평면도 부드럽게 움직이기 + 점 눌러 환자 지정(2026-10-16) ──
+  var fp = { goal: null, mainTid: null, others: {}, disp: { main: null, others: {} }, last: 0, running: false };
+  var FP_TAU = 0.1;        // 따라가는 시간 상수(초). 레이더가 0.07초마다 새 위치 → 0.15초면 끊김 없이 자연스럽게
+  var FP_SNAP_M = 1.5;    // 이보다 멀리 튀면 따라가지 않고 바로 옮긴다(다른 사람으로 바뀜 등)
+
+  function fpSetGoals(pos, mainTid, others) {
+    if (pos && fp.disp.main && (fp.mainTid !== mainTid || Math.hypot(pos.x - fp.disp.main.x, pos.y - fp.disp.main.y) > FP_SNAP_M)) {
+      fp.disp.main = { x: pos.x, y: pos.y };
+    }
+    fp.goal = pos ? { x: pos.x, y: pos.y } : null;
+    fp.mainTid = mainTid;
+    var next = {};
+    others.forEach(function (o) { next[o.t.tid] = { x: o.p.x, y: o.p.y }; });
+    fp.others = next;
+    if (!fp.running) { fp.running = true; fp.last = performance.now(); requestAnimationFrame(fpAnimate); }
+  }
+
+  function fpAnimate(ts) {
+    var markerEl = document.getElementById('ovFloorplanMarker');
+    var othersEl = document.getElementById('ovFloorplanOthers');
+    if (!markerEl || !othersEl) { fp.running = false; fp.disp = { main: null, others: {} }; return; }
+    var dt = Math.min(0.1, Math.max(0, (ts - fp.last) / 1000)); fp.last = ts;
+    var k = 1 - Math.exp(-dt / FP_TAU);
+    var step = function (d, g) {
+      if (!d || Math.hypot(g.x - d.x, g.y - d.y) > FP_SNAP_M) return { x: g.x, y: g.y };
+      return { x: d.x + (g.x - d.x) * k, y: d.y + (g.y - d.y) * k };
+    };
+    if (fp.goal) {
+      fp.disp.main = step(fp.disp.main, fp.goal);
+      markerEl.style.transform = 'translate(' + (fp.disp.main.x * FLOORPLAN_PX).toFixed(1) + 'px,' + (fp.disp.main.y * FLOORPLAN_PX).toFixed(1) + 'px)';
+    } else { fp.disp.main = null; }
+    var seen = {};
+    Object.keys(fp.others).forEach(function (tid) {
+      var d = fp.disp.others[tid] = step(fp.disp.others[tid], fp.others[tid]);
+      seen[tid] = true;
+      var c = othersEl.querySelector('[data-tid="' + tid + '"]');
+      if (!c) {
+        c = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        c.setAttribute('data-tid', tid);
+        c.setAttribute('class', 'fp-other');
+        c.innerHTML = '<circle r="11" fill="transparent"></circle><circle r="4.5" fill="var(--fg-faint)" opacity="0.8"></circle>' +
+          '<title>다른 사람(추적 ' + escapeHtml(String(tid)) + ') · 눌러서 환자로 지정</title>';
+        othersEl.appendChild(c);
+      }
+      c.setAttribute('transform', 'translate(' + (d.x * FLOORPLAN_PX).toFixed(1) + ',' + (d.y * FLOORPLAN_PX).toFixed(1) + ')');
+    });
+    Array.prototype.slice.call(othersEl.querySelectorAll('[data-tid]')).forEach(function (c) {
+      var tid = c.getAttribute('data-tid');
+      if (!seen[tid]) { c.remove(); delete fp.disp.others[tid]; }
+    });
+    requestAnimationFrame(fpAnimate);
+  }
+
+  function wireFloorplanAssign() {
+    document.addEventListener('click', function (ev) {
+      var g = ev.target.closest ? ev.target.closest('.fp-other') : null;
+      if (!g) return;
+      var tid = Number(g.getAttribute('data-tid'));
+      if (!window.confirm('이 사람(추적 ' + tid + ')을 환자로 지정할까요?\n다른 사람을 다시 누르기 전까지 이 사람만 따라갑니다(자동으로 바뀌지 않음).')) return;
+      api('/mmw/patient', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tid: tid, target_id: state.mmwTargetId || 'room_01' }) })
+        .catch(function () { window.alert('환자 지정을 보내지 못했습니다.'); });
+    });
+  }
+
   function renderFloorplan(mode, snap) {
     var sub = $('#ovFloorplanSub');
     var el = $('#ovFloorplan');
@@ -456,7 +703,7 @@
         var marker = document.getElementById('ovFloorplanMarker');
         if (marker) {
           marker.style.transform = 'translate(' + (snap.roomPos.x * FLOORPLAN_PX).toFixed(1) + 'px,' + (snap.roomPos.y * FLOORPLAN_PX).toFixed(1) + 'px)';
-          marker.innerHTML = renderPatientMarkerSvg(snap);
+          marker.innerHTML = '<g transform="rotate(-90)">' + renderPatientMarkerSvg(snap) + '</g>';
         }
         var trailEl = document.getElementById('ovFloorplanTrail');
         if (trailEl && window.MajuSim) {
@@ -465,45 +712,99 @@
       }
       return;
     }
-    // live: raw mmWave meters on a plain grid — no room/bed drawn, since there's no verified
-    // sensor-to-room calibration yet (see server/site/DASHBOARD_WORK.md) and drawing one would
-    // imply a precision we don't have.
-    sub.textContent = 'mmWave 원시 좌표 (m) · 방 배치 보정 전';
-    var pos = snap && snap.mmwave && snap.mmwave.position;
+    // live(2026-10-12 → 10-22 저녁 부스): 실측 mmWave 추적 위치를 부스 평면도 위에 올린다.
+    // 레이더 좌표 → 부스 평면도 좌표는 radarToBooth(10-22 저녁, 마스킹 영역을 직사각형으로 펼침).
+    // 10-22 저녁: 랩실 1인실 그림 대신 부스 영역(레이더 마스킹 영역) 전체를 평면도로 쓴다(buildBoothSvg)
+    sub.textContent = '부스 평면도 · 실측 위치(mmWave 추적, 마스킹 영역 = 평면도 전체)';
+    var room2 = { w: BOOTH.w, h: BOOTH.h, bed: boothBed() };
     if (el.dataset.base !== wantBase) {
       el.dataset.base = wantBase;
-      var vb = 160;
-      el.innerHTML =
-        '<svg class="floorplan-svg" viewBox="0 0 ' + vb + ' ' + vb + '" role="img" aria-label="mmWave 원시 좌표">' +
-        '<line class="floorplan-grid-line" x1="' + (vb / 2) + '" y1="0" x2="' + (vb / 2) + '" y2="' + vb + '"/>' +
-        '<line class="floorplan-grid-line" x1="0" y1="' + (vb / 2) + '" x2="' + vb + '" y2="' + (vb / 2) + '"/>' +
-        '<text class="floorplan-axis-label" x="4" y="10">+y</text><text class="floorplan-axis-label" x="4" y="' + (vb - 4) + '">-y</text>' +
-        '<text class="floorplan-axis-label" x="' + (vb - 16) + '" y="' + (vb / 2 - 4) + '">+x</text>' +
-        '<circle class="floorplan-dot" id="ovFloorplanDot" cx="-99" cy="-99" r="6"><title id="ovFloorplanDotTitle"></title></circle>' +
-        '</svg>' +
+      state.liveTrail = [];
+      el.innerHTML = buildBoothSvg(FLOORPLAN_PX) +
+        '<div class="floorplan-legend">' +
+        '<span><i class="dot" style="color:var(--info)"></i>mmWave</span>' +
+        '<span><i class="dot" style="color:var(--fg-faint)"></i>다른 추적 대상</span>' +
+        '</div>' +
         '<div class="muted" id="ovFloorplanNote" style="font-size:10.5px;margin-top:6px;min-height:1.2em"></div>';
     }
-    if (!pos || pos.x == null || pos.y == null) return;
-    var span = 4; // +/- meters shown
-    var vb2 = 160;
-    var px = vb2 / 2 + Math.max(-span, Math.min(span, pos.x)) / span * (vb2 / 2 - 10);
-    var py = vb2 / 2 + Math.max(-span, Math.min(span, pos.y)) / span * (vb2 / 2 - 10);
-    var lvl = dominantOf(snap.tof && snap.tof.riskLevel, snap.mmwave && snap.mmwave.riskLevel, true, true);
-    // A locked target sitting still still has a real (x,y) — that's not wrong — but plotting it
-    // exactly like an actively-walking reading was misleading. Speed is the only walking signal
-    // data.js exposes here, so use it to tell the two states apart visually.
-    var walking = typeof snap.mmwave.speed === 'number' && snap.mmwave.speed > 0.05;
-    var dot2 = document.getElementById('ovFloorplanDot');
-    if (dot2) {
-      dot2.setAttribute('cx', px.toFixed(1));
-      dot2.setAttribute('cy', py.toFixed(1));
-      dot2.setAttribute('fill', 'var(' + (LEVEL_COLOR_VAR[lvl] || '--accent') + ')');
-      dot2.setAttribute('opacity', walking ? '1' : '0.45');
-      var title2 = document.getElementById('ovFloorplanDotTitle');
-      if (title2) title2.textContent = (walking ? '실시간 위치' : '정지 상태 추정 위치') + ' · x=' + pos.x + 'm, y=' + pos.y + 'm';
+    var mm = (snap && snap.mmwave) || {};
+    var tofLive = (snap && snap.tof) || {};
+    var now = Date.now();
+    var toRoom = function (t) { return radarToBooth(t.x, t.y); };
+    // 마스킹 영역 = 평면도라 안에 들어온 추적은 모두 그린다(네 모서리가 정확한 직사각형이 아니라 가장자리는 0.3m 여유)
+    var inside = function (p) { return p && p.x >= -0.3 && p.y >= -0.3 && p.x <= room2.w + 0.3 && p.y <= room2.h + 0.3; };
+    var targets = (mm.targets || []).map(function (t) { return { t: t, p: toRoom(t) }; }).filter(function (o) { return inside(o.p); });
+    var main = null;
+    if (mm.mainTid != null) main = targets.filter(function (o) { return String(o.t.tid) === String(mm.mainTid); })[0] || null;
+    // 10-22 저녁: 환자는 레이더 판정기가 따라가는(클릭으로 지정한) 번호만 그린다. 예전엔 환자가 없어도 사람이 1명이면 그 사람,
+    // 여럿이면 침대에 가까운 사람을 환자처럼 그려서 '잡힌 줄 알고' 진행했는데 실제로는 환자 없음(낙상 판정 안 함)이었다
+    if (!main && !mm.connected && targets.length === 1) main = targets[0];
+    if (!main && !mm.connected && targets.length > 1) {
+      var ref = state.liveLastMain && now - state.liveLastMain.at < 10000 ? state.liveLastMain
+        : (tofLive.inBed === true ? { x: room2.bed.x + room2.bed.w / 2, y: room2.bed.y + room2.bed.h / 2 } : null);
+      if (ref) main = targets.slice().sort(function (a, b) {
+        return Math.hypot(a.p.x - ref.x, a.p.y - ref.y) - Math.hypot(b.p.x - ref.x, b.p.y - ref.y);
+      })[0];
     }
-    var noteEl = document.getElementById('ovFloorplanNote');
-    if (noteEl) noteEl.textContent = walking ? '' : '현재 보행 중이 아니며, 마지막으로 잠긴 위치를 정지 상태로 표시하고 있습니다.';
+    if (main) state.liveLastMain = { x: main.p.x, y: main.p.y, z: main.t.z, at: now };
+    var lvl2 = dominantOf(tofLive.riskLevel, mm.riskLevel, true, true);
+    var markerEl = document.getElementById('ovFloorplanMarker');
+    var othersEl = document.getElementById('ovFloorplanOthers');
+    var note = '';
+    var pos2 = null, activity = 'walking';
+    var lastMain = state.liveLastMain;
+    if (main) {
+      pos2 = main.p;
+      var walkingNow = typeof mm.speed === 'number' && mm.speed > 0.05;
+      // ToF가 침상 재실로 보면 바닥 낙상 아님(서버 mmw_logic과 같은 조건): 앉으면 레이더 높이가 0.3m대로 잡힌다
+      // 낙상 표시는 레이더 리더의 프레임 단위 판정(mmWave/fall_detect.py)을 그대로 따른다(2026-10-12):
+      // fallen(급격한 하강 즉시 / 바닥 높이에서 3초 넘게) → 빨간 '낙상'. fast_drop은 예전 호환('?')
+      var fallHere = mm.fall && String(mm.fall.tid) === String(main.t.tid) ? mm.fall : null;
+      activity = tofLive.inBed === true ? 'inBed'
+        : fallHere ? (fallHere.stage === 'fallen' ? 'fallen' : 'checking') : (walkingNow ? 'walking' : 'standing');
+      if (activity === 'fallen') lvl2 = 'critical';
+      else if (activity === 'checking' && lvl2 !== 'critical') lvl2 = 'warning';
+      if (tofLive.inBed === true) note = '레이더 추적 위치 · ToF 침상 재실';
+    } else if (mm.fall) {
+      // 넘어진 뒤 추적 번호가 바뀌어 환자로 못 고른 경우에도 낙상 위치를 보여준다
+      pos2 = toRoom(mm.fall);
+      activity = mm.fall.stage === 'fallen' ? 'fallen' : 'checking';
+      lvl2 = mm.fall.stage === 'fallen' ? 'critical' : 'warning';
+    } else if (lastMain && now - lastMain.at < 10000) {
+      // 가만히 있으면 레이더 추적이 잠깐 끊긴다 → 10초 동안은 마지막 레이더 위치를 그대로 보여준다
+      pos2 = { x: lastMain.x, y: lastMain.y };
+      activity = tofLive.inBed === true ? 'inBed' : 'standing';
+      note = '마지막 레이더 위치(' + Math.round((now - lastMain.at) / 1000) + '초 전)';
+    } else if (tofLive.inBed === true) {
+      // 레이더가 침대 위 사람을 놓쳐도 ToF가 재실을 보면 침대 가운데에 표시한다
+      pos2 = { x: room2.bed.x + room2.bed.w / 2, y: room2.bed.y + room2.bed.h / 2 };
+      activity = 'inBed';
+      note = 'ToF 재실 판정으로 침대 위에 표시 — 레이더 추적 위치 아님';
+    }
+    // 2026-10-16: 위치를 받을 때마다(0.18초) 순간이동시키지 않고 목표만 정해 두고, 화면 주사율로 부드럽게 따라가게 한다(fpAnimate)
+    if (markerEl) {
+      markerEl.style.transition = 'none';
+      if (pos2) {
+        var mk = '<g>' + renderPatientMarkerSvg({ level: lvl2 || 'normal', activity: activity }) + '</g>';   // 부스 그림은 회전하지 않음
+        if (markerEl.dataset.svg !== mk) { markerEl.innerHTML = mk; markerEl.dataset.svg = mk; }
+      } else { markerEl.innerHTML = ''; markerEl.dataset.svg = ''; }
+    }
+    fpSetGoals(pos2, main ? main.t.tid : null, targets.filter(function (o) { return o !== main; }));
+    var lockNote = mm.patientLock === 'manual' ? '환자: 화면에서 지정 — 다른 점을 누르면 바뀝니다'
+      : mm.bedPark ? '환자 침대 위(누우면 레이더가 놓침) — 내려오면 다시 따라갑니다'
+      : (mm.connected && mm.mainTid == null ? '환자 없음 — 회색 점을 눌러 환자를 지정하세요' : '');
+    if (lockNote && !note) note = lockNote;
+    // 최근 2.5초 이동 경로(레이더로 잡힌 환자만)
+    state.liveTrail = (state.liveTrail || []).filter(function (p) { return now - p.at < 2500; });
+    if (main && activity !== 'inBed') state.liveTrail.push({ x: pos2.x, y: pos2.y, at: now, activity: activity });
+    var trailEl2 = document.getElementById('ovFloorplanTrail');
+    if (trailEl2) trailEl2.innerHTML = renderTrailSvg(state.liveTrail.map(function (p) {
+      return { x: p.x, y: p.y, ageMs: now - p.at, activity: p.activity };
+    }), FLOORPLAN_PX);
+    if (!pos2) note = mm.connected ? '방 안에 추적된 사람이 없습니다.' : 'mmWave 수신 대기 중';
+    else if (main && activity === 'standing' && !note) note = '정지 상태(보행 아님)';
+    var noteEl2 = document.getElementById('ovFloorplanNote');
+    if (noteEl2) noteEl2.textContent = note;
   }
 
   function eventRowHtml(e) {
@@ -664,6 +965,162 @@
   var SEVERITY_LABEL = { high: '높음', medium: '중간', low: '낮음' };
   var SEVERITY_CLASS = { high: 'warning', medium: 'caution', low: '' };
 
+  /* ---------------- 낙상 위험도 · 거동 범위 (server/fall_risk.py, 2026-10-12) ---------------- */
+  var FR_OPTION_KO = { no: '아니오', yes: '예', none: '없음·침상 안정·간호사 부축', cane_walker: '지팡이·목발·보행기',
+    furniture: '가구를 짚고 이동', normal: '정상·침상 안정·휠체어', weak: '약함', impaired: '장애',
+    oriented: '자기 능력을 앎', forgets_limitations: '한계를 과대평가·잊음' };
+  var FR_MOBILITY = [['free', '자유 거동'], ['toilet_only', '화장실 정도 단독'], ['assisted', '보조 시에만 거동'], ['bed_rest', '절대 안정']];
+  var FR_GROUP_PILL = { low: 'ok', moderate: 'caution', high: 'warning' };
+  var FR_KIND_KO = { initial: '초기 평가', assessment: '재평가', auto_refresh: '자동 초안 갱신', gait_warning: '보행 이상',
+    floor_critical: '낙상 감지', nurse_fall: '낙상 기록', decay: '안정 감점', reset: '변동 점수 초기화' };
+
+  function renderFallRisk(fr) {
+    if (!fr) return '<div class="card-h"><div class="card-title">낙상 위험도 · 거동 범위</div></div><div class="empty-state">위험도 정보가 없습니다.</div>';
+    var rows = Object.keys(fr.morse).map(function (key) {
+      var item = fr.morse[key];
+      var opts = item.options.map(function (o) {
+        return '<option value="' + o + '"' + (o === item.value ? ' selected' : '') + '>' + escapeHtml(FR_OPTION_KO[o] || o) + '</option>';
+      }).join('');
+      return '<tr><td>' + escapeHtml(item.label) + '</td><td><select data-morse="' + key + '">' + opts + '</select></td>' +
+        '<td class="num">' + item.points + '</td></tr>';
+    }).join('');
+    var mob = FR_MOBILITY.map(function (m) {
+      return '<option value="' + m[0] + '"' + (m[0] === fr.mobility ? ' selected' : '') + '>' + m[1] + '</option>';
+    }).join('');
+    var evs = fr.recent_events || [];
+    var hist = evs.map(function (e) {
+      var d = e.delta ? (e.delta > 0 ? '+' : '') + Math.round(e.delta * 10) / 10 : '';
+      return '<div class="hist-row"><div class="hist-main"><span class="hist-time mono">' + escapeHtml(String(e.ts || '').replace('T', ' ').slice(5, 16)) + '</span>' +
+        '<span class="hist-kind">' + escapeHtml(FR_KIND_KO[e.kind] || e.kind) + '</span>' +
+        (d ? '<span class="hist-delta ' + (e.delta > 0 ? 'up' : 'down') + '">' + d + '</span>' : '') +
+        '<span class="hist-score num">' + Math.round(e.score_after) + '점</span></div>' +
+        (e.reason ? '<div class="hist-reason">' + escapeHtml(e.reason) + '</div>' : '') + '</div>';
+    }).join('');
+    var src = fr.source === 'auto' ? ' · 기록 기반 자동 초안(간호사 확인 필요)' : fr.source === 'live_default_low' ? ' · 실측 환자 기본값(저위험)' : '';
+    return '<div class="card-h"><div><div class="card-title">낙상 위험도 · 거동 범위</div>' +
+      '<div class="card-sub">Morse 낙상 척도 + 센서·간호 기록 변동 점수 · 낙상 확률 아님' + escapeHtml(src) + '</div></div>' +
+      '<span class="pill ' + (FR_GROUP_PILL[fr.group] || '') + '">' + escapeHtml(fr.group_ko) + ' ' + fr.score + '점</span></div>' +
+      '<div class="sensor-metrics">' +
+      '<div class="metric"><span class="metric-label">Morse 기본</span><span class="num metric-value">' + fr.morse_score + '</span></div>' +
+      '<div class="metric"><span class="metric-label">변동 점수</span><span class="num metric-value">' + fr.dynamic_points + '</span></div>' +
+      '<div class="metric"><span class="metric-label">거동 범위</span><span class="metric-value">' + escapeHtml(fr.mobility_ko) + '</span></div>' +
+      '</div>' +
+      (hist ? '<details class="fold"><summary>점수 변동 기록 <span class="fold-count">' + evs.length + '건</span></summary><div class="hist-list">' + hist + '</div></details>' : '') +
+      '<details class="fold fr-edit"><summary>Morse 재평가 · 거동 범위</summary>' +
+      '<table class="fr-table"><thead><tr><th>항목</th><th>평가</th><th>점수</th></tr></thead><tbody>' + rows + '</tbody></table>' +
+      '<label>거동 범위 <select id="frMobility">' + mob + '</select></label> ' +
+      '<button class="btn sm" id="frSave" type="button">재평가 저장</button></details>' +
+      '<details class="fold fr-edit"><summary>낙상 기록 (간호사)</summary>' +
+      '<input id="frFallNote" type="text" maxlength="200" placeholder="상황 메모 (예: 화장실 앞에서 미끄러짐)" style="width:100%">' +
+      '<label><input id="frWorsened" type="checkbox"> 상태 악화 — 거동 범위를 절대 안정으로 낮춤</label> ' +
+      '<button class="btn sm" id="frFall" type="button">낙상 기록 저장</button></details>' +
+      '<details class="fold fr-edit"><summary>변동 점수 초기화</summary>' +
+      '<div class="muted" style="font-size:11px;margin-bottom:6px">센서·간호 기록으로 쌓인 변동 점수(지금 ' + fr.dynamic_points +
+      '점)만 0으로 되돌립니다. Morse 평가와 거동 범위는 그대로입니다. 오탐 정리나 시험 후에 사용하세요.</div>' +
+      '<button class="btn sm" id="frReset" type="button">변동 점수 0으로 초기화</button></details>' +
+      '<div class="muted" id="frMsg" style="font-size:11px;min-height:1.2em"></div>';
+  }
+
+  function wireFallRisk(bedId) {
+    var msg = function (t) { var el = $('#frMsg'); if (el) el.textContent = t; };
+    var after = function (res) {
+      if (!res || !res.success) { msg((res && res.message) || '저장하지 못했습니다.'); return; }
+      loadDetail(bedId).then(function () {
+        if (bedId !== state.selectedId) return;
+        renderOverview();
+        if (state.drawer === 'risk') { renderDrawerBody(); msg('저장했습니다.'); }
+      });
+    };
+    var save = $('#frSave');
+    if (save) save.addEventListener('click', function () {
+      var morse = {};
+      document.querySelectorAll('select[data-morse]').forEach(function (el) { morse[el.getAttribute('data-morse')] = el.value; });
+      api('/api/dashboard/patients/' + encodeURIComponent(bedId) + '/fall-risk', {
+        method: 'PUT', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ morse: morse, mobility: $('#frMobility').value })
+      }).then(after).catch(function () { msg('저장하지 못했습니다.'); });
+    });
+    var reset = $('#frReset');
+    if (reset) reset.addEventListener('click', function () {
+      if (!window.confirm('변동 점수를 0으로 초기화할까요? (Morse 평가·거동 범위는 유지)')) return;
+      api('/api/dashboard/patients/' + encodeURIComponent(bedId) + '/fall-risk/reset', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ by: 'nurse' })
+      }).then(after).catch(function () { msg('초기화하지 못했습니다.'); });
+    });
+    var fall = $('#frFall');
+    if (fall) fall.addEventListener('click', function () {
+      api('/api/dashboard/patients/' + encodeURIComponent(bedId) + '/falls', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ note: $('#frFallNote').value, worsened: $('#frWorsened').checked })
+      }).then(after).catch(function () { msg('저장하지 못했습니다.'); });
+    });
+  }
+
+  /* ---------------- 보행 저하 추세 예측 (server/gait_trend.py, 2026-10-13) ---------------- */
+  var GT_LEVEL_PILL = { normal: 'ok', caution: 'caution', warning: 'warning' };
+
+  function gaitTrendChart(m, unitScale, unit) {
+    // 하루 대표값(점)·칼만 추정 수준(선)·앞으로 14일 예측(띠: 80% 범위)
+    var hist = m.history || [];
+    if (!hist.length) return '';
+    var W = 520, H = 150, P = 28;
+    var t0 = new Date(hist[0].date).getTime(), day = 86400000;
+    var lastX = (new Date(hist[hist.length - 1].date).getTime() - t0) / day;
+    var maxX = lastX + 14;
+    var ys = [];
+    hist.forEach(function (h) { ys.push(h.obs, h.level); });
+    [m.forecast7, m.forecast14].forEach(function (f) { if (f) ys.push(f.lo80, f.hi80); });
+    var lo = Math.min.apply(null, ys), hi = Math.max.apply(null, ys), pad = (hi - lo) * 0.1 || 0.05;
+    lo -= pad; hi += pad;
+    var X = function (d) { return P + (W - 2 * P) * d / maxX; };
+    var Y = function (v) { return H - P + 6 - (H - 2 * P) * (v - lo) / (hi - lo); };
+    var dx = function (h) { return (new Date(h.date).getTime() - t0) / day; };
+    var dots = hist.map(function (h) { return '<circle cx="' + X(dx(h)).toFixed(1) + '" cy="' + Y(h.obs).toFixed(1) + '" r="2.2" fill="var(--fg-faint)"/>'; }).join('');
+    var line = hist.map(function (h, i) { return (i ? 'L' : 'M') + X(dx(h)).toFixed(1) + ',' + Y(h.level).toFixed(1); }).join(' ');
+    var cur = hist[hist.length - 1];
+    var band = 'M' + X(lastX).toFixed(1) + ',' + Y(m.current).toFixed(1) +
+      ' L' + X(lastX + 7).toFixed(1) + ',' + Y(m.forecast7.hi80).toFixed(1) + ' L' + X(lastX + 14).toFixed(1) + ',' + Y(m.forecast14.hi80).toFixed(1) +
+      ' L' + X(lastX + 14).toFixed(1) + ',' + Y(m.forecast14.lo80).toFixed(1) + ' L' + X(lastX + 7).toFixed(1) + ',' + Y(m.forecast7.lo80).toFixed(1) + ' Z';
+    var fline = 'M' + X(lastX).toFixed(1) + ',' + Y(m.current).toFixed(1) + ' L' + X(lastX + 7).toFixed(1) + ',' + Y(m.forecast7.mean).toFixed(1) +
+      ' L' + X(lastX + 14).toFixed(1) + ',' + Y(m.forecast14.mean).toFixed(1);
+    var lab = function (v) { return (v * unitScale).toFixed(0) + unit; };
+    return '<svg viewBox="0 0 ' + W + ' ' + H + '" style="width:100%;max-width:560px" role="img" aria-label="' + escapeHtml(m.ko) + ' 추세와 14일 예측">' +
+      '<path d="' + band + '" fill="var(--info)" opacity="0.15"/>' +
+      '<path d="' + fline + '" fill="none" stroke="var(--info)" stroke-width="1.6" stroke-dasharray="4 3"/>' +
+      dots + '<path d="' + line + '" fill="none" stroke="var(--accent)" stroke-width="1.8"/>' +
+      '<line x1="' + X(lastX) + '" y1="' + (P - 10) + '" x2="' + X(lastX) + '" y2="' + (H - P + 6) + '" stroke="var(--line)" stroke-dasharray="2 2"/>' +
+      '<text x="' + X(lastX) + '" y="' + (P - 14) + '" font-size="9" text-anchor="middle" fill="var(--fg-faint)">오늘</text>' +
+      '<text x="4" y="' + Y(hi - pad).toFixed(1) + '" font-size="9" fill="var(--fg-faint)">' + lab(hi - pad) + '</text>' +
+      '<text x="4" y="' + Y(lo + pad).toFixed(1) + '" font-size="9" fill="var(--fg-faint)">' + lab(lo + pad) + '</text>' +
+      '<text x="' + (W - P) + '" y="' + (H - 4) + '" font-size="9" text-anchor="end" fill="var(--fg-faint)">+14일</text></svg>';
+  }
+
+  function renderGaitForecast(gt) {
+    var head = '<div class="card-h"><div><div class="card-title">보행 추세 예측</div>' +
+      '<div class="card-sub">하루 보행 대표값 → 칼만 필터 추세 → 7·14일 예측 · 기준: Phillips 2017(7일 누적 감소) · 낙상 확률 아님</div></div>';
+    if (!gt) return head + '</div><div class="empty-state">예측 정보가 없습니다.</div>';
+    if (gt.status !== 'ok') {
+      var msg = gt.message || ('보행 기록 ' + (gt.days_with_data || 0) + '일 / 필요 ' + (gt.min_days || 14) + '일 — 기록이 쌓이면 예측합니다.');
+      return head + '<span class="pill sm">예측 대기</span></div><div class="empty-state">' + escapeHtml(msg) + '</div>';
+    }
+    var body = Object.keys(gt.metrics).map(function (k) {
+      var m = gt.metrics[k];
+      var cm = k === 'speed' ? ' cm/s' : ' cm';
+      if (m.status !== 'ok') return '<div class="muted" style="font-size:12px">' + escapeHtml(m.message || '') + '</div>';
+      var scale = 100, unit = k === 'speed' ? 'cm/s' : 'cm';
+      return '<div style="margin:10px 0 4px"><b>' + escapeHtml(m.ko) + '</b> ' +
+        '<span class="pill sm ' + (GT_LEVEL_PILL[m.level] || '') + '">' + ({ normal: '정상', caution: '주의', warning: '경고' }[m.level]) + '</span></div>' +
+        '<div class="sensor-metrics">' +
+        '<div class="metric"><span class="metric-label">지금 추정</span><span class="num metric-value">' + (m.current * scale).toFixed(1) + '<span class="unit">' + unit + '</span></span></div>' +
+        '<div class="metric"><span class="metric-label">7일 변화</span><span class="num metric-value">' + (m.change7_cm > 0 ? '+' : '') + m.change7_cm.toFixed(1) + '<span class="unit">±' + m.change7_sd_cm.toFixed(1) + cm + '</span></span></div>' +
+        '<div class="metric"><span class="metric-label">7일 뒤 예측</span><span class="num metric-value">' + (m.forecast7.mean * scale).toFixed(1) + '<span class="unit">(' + (m.forecast7.lo80 * scale).toFixed(0) + '~' + (m.forecast7.hi80 * scale).toFixed(0) + ')</span></span></div>' +
+        '<div class="metric"><span class="metric-label">경고 기준(−' + m.warn_cm + cm + ') 넘을 확률</span><span class="num metric-value">' + Math.round(m.p_decline_warning * 100) + '%</span></div>' +
+        '</div>' + gaitTrendChart(m, scale, unit);
+    }).join('');
+    return head + '<span class="pill ' + (GT_LEVEL_PILL[gt.level] || '') + '">' + escapeHtml(gt.level_ko || '') + '</span></div>' + body +
+      '<div class="muted" style="font-size:11px;margin-top:6px">점: 하루 대표값 · 실선: 추정 수준 · 점선과 띠: 예측과 80% 범위. ' + escapeHtml(gt.caveat || '') + '</div>';
+  }
+
   function renderRiskFactors(list) {
     if (!list || !list.length) return '<div class="empty-state">등록된 위험 인자가 없습니다.</div>';
     return '<div class="factor-list">' + list.map(function (f) {
@@ -732,7 +1189,7 @@
         });
         if (!res || !res.success) throw new Error((res && res.message) || '계산하지 못했습니다.');
         await loadDetail(bedId);
-        if (bedId === state.selectedId) renderOverview();
+        if (bedId === state.selectedId) { renderOverview(); if (state.drawer === 'prior') renderDrawerBody(); }
       } catch (e) {
         btn.disabled = false;
         btn.textContent = '다시 시도';
@@ -847,13 +1304,25 @@
     renderOverviewHeader();
     renderOverviewSensors();
     renderTimeline24h();
+    // 2026-10-13 디자인 개편: 오른쪽에는 요약만, 전체 내용은 '자세히'를 누르면 오른쪽 패널에서 연다
+    $('#ovFallRisk').innerHTML = renderFallRiskSummary(state.detail && state.detail.fall_risk);
+    var quickReset = $('#frQuickReset');
+    if (quickReset) quickReset.addEventListener('click', function () {
+      var bedId = state.selectedId;
+      if (!window.confirm('변동 점수를 0으로 초기화할까요? (시험·오탐 정리용 · Morse 평가·거동 범위는 유지)')) return;
+      quickReset.disabled = true;
+      api('/api/dashboard/patients/' + encodeURIComponent(bedId) + '/fall-risk/reset', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ by: 'nurse' })
+      }).then(function () { return loadDetail(bedId); }).then(function () {
+        if (bedId === state.selectedId) renderOverview();
+      }).catch(function () { quickReset.disabled = false; window.alert('초기화하지 못했습니다.'); });
+    });
+    $('#ovGaitTrend').innerHTML = renderGaitForecastSummary(state.detail && state.detail.gait_trend);
+    $('#ovGaitPriorCard').innerHTML = renderGaitPriorSummary(state.detail && state.detail.gait_prior);
     $('#ovRiskFactors').innerHTML = renderRiskFactors(state.detail && state.detail.risk_factors);
     $('#ovMedications').innerHTML = renderMedications(state.detail && state.detail.medications);
-    $('#ovGaitPrior').innerHTML = renderGaitPrior(state.detail && state.detail.gait_prior);
-    wireGaitPriorButton();
-    var ovEventsEl = $('#ovEvents');
-    ovEventsEl.innerHTML = renderEvents(state.detail && state.detail.events);
-    scrollEventLogToBottom(ovEventsEl);
+    lastKpiHtml = '';
+    renderKpis(currentSensorMode(), currentSnapshot(currentSensorMode()));
   }
 
   /* ---------------- Sparklines ---------------- */
@@ -1002,10 +1471,132 @@
       }).join('') + '</div></div>';
   }
 
+
+  /* ---------------- 리포트 그래프(2026-10-13): 서버 report_charts.py가 준 숫자를 SVG로 그린다 ---------------- */
+  var CHART_COLORS = ['#e11d48', '#f59e0b', '#0ea5e9', '#10b981', '#8b5cf6', '#64748b', '#ec4899', '#14b8a6', '#a3a3a3'];
+  var PIE_COLOR = { '낙상': '#e11d48', '낙상 후 일어남': '#10b981', '쪼그림·주의': '#f59e0b', '침상 알림': '#0ea5e9', '침상 이탈': '#f97316',
+    '침상 가장자리': '#eab308', '위험 자세': '#dc2626', '이탈 후 확인(정상)': '#22c55e', '이탈 후 확인(이상)': '#b91c1c',
+    '뒤척임': '#a78bfa', '수면': '#6366f1', '보행': '#14b8a6', '보행 변화': '#0d9488', '기타': '#94a3b8' };
+
+  function chartCard(title, body, note) {
+    return '<div class="rchart"><div class="rchart-title">' + escapeHtml(title) + '</div>' + body +
+      (note ? '<div class="rchart-note">' + escapeHtml(note) + '</div>' : '') + '</div>';
+  }
+
+  function donutChart(spec) {
+    var items = (spec && spec.items || []).filter(function (it) { return it.value > 0; });
+    if (!items.length) return chartCard(spec ? spec.title : '사건 종류', '<div class="empty-state">기록된 사건이 없습니다.</div>');
+    var total = items.reduce(function (a, it) { return a + it.value; }, 0);
+    var R = 52, r = 32, cx = 64, cy = 64, ang = -Math.PI / 2, paths = '';
+    items.forEach(function (it, i) {
+      var frac = it.value / total, a2 = ang + frac * Math.PI * 2;
+      var col = PIE_COLOR[it.label] || CHART_COLORS[i % CHART_COLORS.length];
+      if (frac >= 0.9999) {
+        paths += '<circle cx="' + cx + '" cy="' + cy + '" r="' + ((R + r) / 2) + '" fill="none" stroke="' + col + '" stroke-width="' + (R - r) + '"/>';
+      } else {
+        var large = frac > 0.5 ? 1 : 0;
+        var p = function (rad, a) { return (cx + rad * Math.cos(a)).toFixed(2) + ' ' + (cy + rad * Math.sin(a)).toFixed(2); };
+        paths += '<path d="M' + p(R, ang) + ' A' + R + ' ' + R + ' 0 ' + large + ' 1 ' + p(R, a2) + ' L' + p(r, a2) + ' A' + r + ' ' + r + ' 0 ' + large + ' 0 ' + p(r, ang) + 'Z" fill="' + col + '"><title>' +
+          escapeHtml(it.label + ' ' + it.value + spec.unit) + '</title></path>';
+      }
+      it._col = col; ang = a2;
+    });
+    var svg = '<svg viewBox="0 0 128 128" class="rchart-donut" role="img">' + paths +
+      '<text x="64" y="62" text-anchor="middle" class="rchart-donut-n">' + total + '</text><text x="64" y="78" text-anchor="middle" class="rchart-donut-u">' + escapeHtml(spec.unit) + '</text></svg>';
+    var legend = '<div class="rchart-legend">' + items.map(function (it) {
+      return '<div><i style="background:' + it._col + '"></i><span>' + escapeHtml(it.label) + '</span><b class="num">' + Math.round(it.value / total * 100) + '%</b><span class="faint">' + it.value + '</span></div>';
+    }).join('') + '</div>';
+    return chartCard(spec.title, '<div class="rchart-pie">' + svg + legend + '</div>');
+  }
+
+  function lineChart(spec, opts) {
+    opts = opts || {};
+    var pts = (spec && spec.points || []).filter(function (p) { return typeof p.y === 'number'; });
+    if (pts.length < (opts.minPoints || 2)) {
+      return chartCard(spec ? spec.title : '', '<div class="empty-state">' + escapeHtml(opts.empty || '그래프를 그릴 만큼 기록이 쌓이지 않았습니다.') + '</div>');
+    }
+    var W = 320, H = 150, L = 36, Rm = 8, T = 10, B = 26;
+    var numericX = pts.every(function (p) { return typeof p.x === 'number'; });
+    var xs = numericX ? pts.map(function (p) { return p.x; }) : pts.map(function (p, i) { return i; });
+    var ys = pts.map(function (p) { return p.y; }).concat((spec.marks || []).map(function (m) { return m.y; }));
+    var x0 = Math.min.apply(null, xs), x1 = Math.max.apply(null, xs), y0 = Math.min.apply(null, ys), y1 = Math.max.apply(null, ys);
+    if (opts.zeroBase) y0 = Math.min(0, y0);
+    if (y1 - y0 < 1e-6) { y1 += 1; y0 -= 1; }
+    var pad = (y1 - y0) * 0.08; y0 -= pad; y1 += pad;
+    var X = function (v) { return L + (x1 === x0 ? 0.5 : (v - x0) / (x1 - x0)) * (W - L - Rm); };
+    var Y = function (v) { return T + (1 - (v - y0) / (y1 - y0)) * (H - T - B); };
+    var grid = '';
+    for (var g = 0; g <= 3; g++) {
+      var gv = y0 + (y1 - y0) * g / 3;
+      grid += '<line x1="' + L + '" x2="' + (W - Rm) + '" y1="' + Y(gv).toFixed(1) + '" y2="' + Y(gv).toFixed(1) + '" class="rchart-grid"/>' +
+        '<text x="' + (L - 4) + '" y="' + (Y(gv) + 3).toFixed(1) + '" text-anchor="end" class="rchart-ax">' + (Math.abs(gv) >= 10 ? Math.round(gv) : gv.toFixed(2)) + '</text>';
+    }
+    var marks = (spec.marks || []).map(function (m) {
+      return '<line x1="' + L + '" x2="' + (W - Rm) + '" y1="' + Y(m.y).toFixed(1) + '" y2="' + Y(m.y).toFixed(1) + '" class="rchart-mark"/>' +
+        '<text x="' + (W - Rm) + '" y="' + (Y(m.y) - 3).toFixed(1) + '" text-anchor="end" class="rchart-mark-t">' + escapeHtml(m.label) + '</text>';
+    }).join('');
+    var d = pts.map(function (p, i) { return (i ? 'L' : 'M') + X(xs[i]).toFixed(1) + ' ' + Y(p.y).toFixed(1); }).join(' ');
+    var area = d + ' L' + X(xs[xs.length - 1]).toFixed(1) + ' ' + (H - B) + ' L' + X(xs[0]).toFixed(1) + ' ' + (H - B) + 'Z';
+    var dots = pts.length <= 40 ? pts.map(function (p, i) {
+      return '<circle cx="' + X(xs[i]).toFixed(1) + '" cy="' + Y(p.y).toFixed(1) + '" r="2.6" class="rchart-dot"><title>' + escapeHtml(p.x + ' · ' + p.y + ' ' + spec.unit) + '</title></circle>';
+    }).join('') : '';
+    var zeroLine = numericX && x0 < 0 && x1 > 0 ? '<line x1="' + X(0).toFixed(1) + '" x2="' + X(0).toFixed(1) + '" y1="' + T + '" y2="' + (H - B) + '" class="rchart-now"/>' +
+      '<text x="' + (X(0) + 3).toFixed(1) + '" y="' + (H - B - 4) + '" class="rchart-ax">낙상 판정</text>' : '';
+    var xl = numericX ? [x0, (x0 + x1) / 2, x1].map(function (v) { return '<text x="' + X(v).toFixed(1) + '" y="' + (H - 8) + '" text-anchor="middle" class="rchart-ax">' + (Math.round(v * 10) / 10) + '</text>'; }).join('') :
+      [0, Math.floor((pts.length - 1) / 2), pts.length - 1].filter(function (v, i, a) { return a.indexOf(v) === i; }).map(function (i) {
+        return '<text x="' + X(xs[i]).toFixed(1) + '" y="' + (H - 8) + '" text-anchor="middle" class="rchart-ax">' + escapeHtml(String(pts[i].x)) + '</text>'; }).join('');
+    var svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" class="rchart-line" role="img">' + grid + marks + zeroLine +
+      '<path d="' + area + '" class="rchart-area"/><path d="' + d + '" class="rchart-path"/>' + dots + xl + '</svg>';
+    var last = pts[pts.length - 1].y;
+    return chartCard(spec.title + ' (' + spec.unit + ')', svg, opts.note || (spec.x_label ? '가로축: ' + spec.x_label : '최근 값 ' + last + ' ' + spec.unit));
+  }
+
+  function renderReportCharts(charts, isFall) {
+    if (!charts) return '';
+    var parts = [];
+    if (isFall && charts.fall_trace) parts.push(lineChart(charts.fall_trace, { note: '0초 = 낙상 판정 시각. 점선 = 서 있음·바닥 높이 기준' }));
+    parts.push(donutChart(charts.activity_pie));
+    parts.push(lineChart(charts.gait_line, { minPoints: 2, empty: '하루 보행 기록이 2일 이상 쌓이면 그려집니다.' }));
+    parts.push(lineChart(charts.risk_line, { zeroBase: true, empty: '위험도 점수 변동 기록이 부족합니다.' }));
+    return '<div class="report-section"><div class="uppercase-label">한눈에 보기</div><div class="rchart-grid-wrap">' + parts.join('') + '</div></div>';
+  }
+
+  var FALL_FIELDS = [['요약', '요약', true], ['낙상_양상', '낙상 양상'], ['추정_원인', '가능성 있는 원인'], ['직전_상황', '직전 30분 상황'],
+    ['즉시_확인할_것', '지금 확인할 것', true], ['재발_방지_제안', '재발 방지 제안'], ['데이터_한계', '데이터 한계']];
+
+  function renderFallIncident(report) {
+    var ev = report['사건_수치'] || {};
+    var chips = [['양상', ev['양상']], ['하강 시간', ev['하강_시간_초'] != null ? ev['하강_시간_초'] + '초' : null],
+      ['세로 속도', ev['세로_속도_최저_m_s'] != null ? ev['세로_속도_최저_m_s'] + ' m/s' : null],
+      ['바닥에 머묾', ev['바닥에_머문_초'] != null ? ev['바닥에_머문_초'] + '초' : null],
+      ['몸 중심 / 평소', ev['몸_중심_높이_m'] != null ? ev['몸_중심_높이_m'] + ' / ' + ev['평소_높이_m'] + ' m' : null]]
+      .filter(function (c) { return c[1] != null && c[1] !== ''; })
+      .map(function (c) { return '<div class="fall-chip"><span>' + escapeHtml(c[0]) + '</span><b>' + escapeHtml(c[1]) + '</b></div>'; }).join('');
+    var html = '<div class="fall-incident-head"><span class="pill critical">낙상 사건 리포트</span><span class="mono muted">' +
+      escapeHtml(String(report['발생_시각'] || '').replace('T', ' ')) + '</span></div>' +
+      (chips ? '<div class="fall-chips">' + chips + '</div>' : '');
+    var causes = report['원인_후보'] || [];
+    html += renderReportCharts(report.charts, true);
+    FALL_FIELDS.forEach(function (f) {
+      var v = report[f[0]];
+      if (!v) return;
+      v = String(v).replace(/\s+(?=\d{1,2}\.\s)/g, '\n');   // '1. … 2. …' 한 줄 목록을 줄마다
+      html += '<div class="report-field' + (f[2] ? ' report-field-highlight' : '') + '"><div class="report-field-label">' + escapeHtml(f[1]) + '</div>' +
+        '<div class="report-field-body" style="white-space:pre-line">' + escapeHtml(v) + '</div></div>';
+    });
+    if (causes.length) {
+      html += '<details class="fold"><summary>원인 후보와 근거(규칙으로 뽑은 것) <span class="fold-count">' + causes.length + '개</span></summary>' +
+        causes.map(function (c) { return '<div class="hist-row"><div class="hist-main"><span class="hist-kind">' + escapeHtml(c['원인']) + '</span></div><div class="hist-reason">' + escapeHtml(c['근거']) + '</div></div>'; }).join('') + '</details>';
+    }
+    html += '<div class="muted" style="font-size:11.5px;margin-top:10px">레이더 낙상 감지와 원인 후보는 기록에서 뽑은 가능성이며 진단이 아닙니다. 낙상 확률도 아닙니다.</div>';
+    return html;
+  }
+
   function renderReportResult(report, meta, targetSel) {
     var el = $(targetSel || '#reportModalBody');
     if (!el) return;
     if (!report || typeof report !== 'object') { el.innerHTML = '<div class="empty-state">리포트 내용이 없습니다.</div>'; return; }
+    if (report['리포트_종류'] === '낙상 사건') { el.innerHTML = renderFallIncident(report); return; }
     var metaRow = '';
     var source = meta && meta.report_source;
     if (!source && meta && meta.model_version === 'demo-history-seed') source = 'demo_seed';
@@ -1028,6 +1619,7 @@
         '<div class="report-field-label" style="color:var(--fg-muted)">현재 상태</div>' +
         '<div class="report-field-body">' + escapeHtml(report['현재_상태']) + '</div></div>';
     }
+    html += renderReportCharts(report.charts, false);
     REPORT_SECTIONS.forEach(function (sec) {
       var parts = sec.keys.map(function (k) {
         var val = report[k];
@@ -1035,7 +1627,7 @@
         var label = FIELD_LABELS[k] || k;
         var cls = sec.highlight === k ? ' report-field-highlight' : '';
         return '<div class="report-field' + cls + '"><div class="report-field-label">' + escapeHtml(label) + '</div>' +
-          '<div class="report-field-body">' + escapeHtml(val) + '</div></div>';
+          '<div class="report-field-body" style="white-space:pre-line">' + escapeHtml(val) + '</div></div>';
       }).join('');
       if (!parts) return;
       html += '<div class="report-section"><div class="uppercase-label">' + escapeHtml(sec.title) + '</div>' + parts + '</div>';
@@ -1045,21 +1637,22 @@
   }
 
   function analysisRowHtml(a) {
-    var score = a.risk_score != null ? Math.round(a.risk_score * 100) + '%' : '—';
-    return '<button class="analysis-row" data-analysis-id="' + a.id + '" type="button">' +
+    var isFall = a.analysis_type === 'fall_incident';
+    var score = isFall ? '<span class="pill critical sm">낙상</span>' : a.risk_score != null ? Math.round(a.risk_score * 100) + '%' : '—';
+    return '<button class="analysis-row' + (isFall ? ' analysis-row-fall' : '') + '" data-analysis-id="' + a.id + '" type="button">' +
       '<span class="mono" style="font-size:11px">' + escapeHtml(fmtTime(a.created_at)) + '</span>' +
       '<span class="num">' + score + '</span>' +
-      '<span class="analysis-summary">' + window.MajubomReportReview.badge(a.review_summary) +
+      '<span class="analysis-summary">' + (isFall ? '' : window.MajubomReportReview.badge(a.review_summary)) +
       '<span class="muted"> ' + escapeHtml((a.summary || '').slice(0, 80)) + '</span></span>' +
       '</button>';
   }
 
   function renderReportsData() {
     var analyses = (state.detail && state.detail.analyses) || [];
-    $('#reportRiskTrend').innerHTML = renderRiskTrend(analyses.slice().reverse());
+    $('#reportRiskTrend').innerHTML = renderRiskTrend(analyses.filter(function (a) { return a.analysis_type !== 'fall_incident'; }).slice().reverse());
     $('#reportHistory').innerHTML = analyses.length ?
       analyses.map(analysisRowHtml).join('') :
-      '<div class="empty-state">아직 생성된 리포트가 없습니다 — 매주 자동으로 생성됩니다.</div>';
+      '<div class="empty-state">아직 생성된 리포트가 없습니다 — 매주 자동으로 생성되고, 낙상이 감지되면 낙상 사건 리포트가 바로 만들어집니다. 위의 \'지금 리포트 만들기\'로 바로 만들 수도 있습니다.</div>';
   }
 
   function closeReportModal() { $('#reportModal').hidden = true; }
@@ -1074,9 +1667,11 @@
     var when = fmtTime(analysis.created_at);
     var score = analysis.risk_score != null ? ' · 위험점수 ' + Math.round(analysis.risk_score * 100) + '%' : '';
     $('#reportModalSub').textContent = when + score;
+    if ($('#reportModalTitle')) $('#reportModalTitle').textContent = analysis.analysis_type === 'fall_incident' ? '낙상 사건 리포트' : 'AI 종합 리포트';
     renderReportResult(analysis.report, analysis, '#reportModalBody');
     $('#reportModalEvidence').innerHTML = '';
     $('#reportModal').hidden = false;
+    if (analysis.analysis_type === 'fall_incident') { reviewBox.innerHTML = ''; return; }
     reviewBox.innerHTML = '<div class="empty-state">작성 근거와 검토 결과를 불러오는 중…</div>';
     api('/api/dashboard/analyses/' + encodeURIComponent(analysis.id) + '/review?bed_id=' + encodeURIComponent(patientId))
       .then(function (res) {
@@ -1093,7 +1688,56 @@
       .catch(function () { /* best-effort */ });
   }
 
+  function wireReportGenerate() {
+    var btn = $('#reportGenerate'), msg = $('#reportGenerateMsg');
+    if (!btn) return;
+    btn.addEventListener('click', function () {
+      var bedId = state.selectedId;
+      btn.disabled = true; msg.textContent = 'AI가 리포트를 쓰는 중입니다(보통 20~60초)…';
+      api('/api/dashboard/analyses', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ bed_id: bedId }) })
+        .then(function (res) {
+          if (!res || !res.job_id) { btn.disabled = false; msg.textContent = (res && res.message) || '리포트를 시작하지 못했습니다.'; return; }
+          var poll = function () {
+            api('/api/dashboard/analyses/' + encodeURIComponent(res.job_id)).then(function (job) {
+              if (job && (job.status === 'completed' || job.status === 'failed')) {
+                btn.disabled = false;
+                msg.textContent = job.status === 'completed' ? '새 리포트를 저장했습니다.' : '실패: ' + ((job.error && job.error.message) || '');
+                loadDetail(bedId).then(function () { if (bedId === state.selectedId && state.page === 'reports') renderReportsData(); });
+                return;
+              }
+              setTimeout(poll, 2500);
+            }).catch(function () { btn.disabled = false; msg.textContent = '상태를 확인하지 못했습니다.'; });
+          };
+          setTimeout(poll, 2500);
+        }).catch(function () { btn.disabled = false; msg.textContent = '리포트를 시작하지 못했습니다.'; });
+    });
+  }
+
+  // 10-22: 새 AI 리포트(낙상 사건 리포트 등)를 새로고침 없이 보여준다 — 4초마다 리포트 목록의 맨 위 번호만 비교해서,
+  // 바뀌었으면 환자 정보를 다시 읽고 리포트 화면을 다시 그린다. 다른 탭에 있으면 'AI 리포트' 탭에 점을 찍는다.
+  var reportWatch = { bed: null, top: null, busy: false };
+  function watchReports() {
+    var bedId = state.selectedId;
+    if (!bedId || reportWatch.busy || document.hidden) return;
+    reportWatch.busy = true;
+    api('/api/dashboard/analyses?bed_id=' + encodeURIComponent(bedId)).then(function (res) {
+      if (!res || !res.success || bedId !== state.selectedId) return;
+      var top = res.analyses && res.analyses.length ? res.analyses[0].id : null;
+      var known = state.detail && state.detail.analyses && state.detail.analyses.length ? state.detail.analyses[0].id : null;
+      if (reportWatch.bed !== bedId) { reportWatch.bed = bedId; reportWatch.top = known; }
+      if (top !== null && top !== known) {
+        if (state.detail) state.detail.analyses = res.analyses;
+        if (state.detailCache && state.detailCache[bedId]) state.detailCache[bedId].analyses = res.analyses;
+        if (state.page === 'reports') renderReportsData();
+        else { var tab = $('nav button[data-page="reports"]'); if (tab) tab.classList.add('has-new'); }
+      }
+      reportWatch.top = top;
+    }).catch(function () { /* 다음 주기에 다시 */ }).finally(function () { reportWatch.busy = false; });
+  }
+
   function wireReports() {
+    setInterval(watchReports, 4000);
+    wireReportGenerate();
     $('#reportHistory').addEventListener('click', function (ev) {
       var row = ev.target.closest ? ev.target.closest('[data-analysis-id]') : null;
       if (!row) return;
@@ -1109,6 +1753,7 @@
 
   /* ---------------- Devices ---------------- */
   function renderDevices() {
+    if (!$('#devTof') || !$('#devMmw')) return;   // 2026-10-13: 기기 탭은 개발 대시보드(/dev)로 옮겼다
     var mode = currentSensorMode();
     var snap = currentSnapshot(mode);
     var tof = snap && snap.tof;
@@ -1161,7 +1806,8 @@
   }
 
   function wireConnectionForm() {
-    $('#connApply').addEventListener('click', function () {
+    // 서버 연결 설정은 개발 대시보드(/dev)로 옮겼다. 같은 localStorage 키를 쓰므로 거기서 바꾸면 여기에도 적용된다.
+    if ($('#connApply')) $('#connApply').addEventListener('click', function () {
       var base = $('#connBaseUrl').value.trim();
       var target = $('#connTargetId').value.trim() || 'room_01';
       try { localStorage.setItem(CONN_BASE_KEY, base); localStorage.setItem(CONN_TARGET_KEY, target); } catch (e) { /* ignore */ }
@@ -1220,6 +1866,7 @@
   /* ---------------- Live sensor stream ---------------- */
   function onLiveUpdate(snapshot) {
     state.live = snapshot;
+    checkLiveFall(snapshot);
     if (state.selectedId === state.liveBedId) { renderRiskBanner(); renderDevices(); }
     renderPatientList($('#patientSearch').value);
   }
@@ -1239,40 +1886,51 @@
   var AUTO_REPORT_COOLDOWN_MS = 30 * 60 * 1000; // don't re-trigger for the same repeating demo fall
   var lastAutoReportAt = {};                    // within this session more than once per 30 min
 
-  function triggerAutoReport(bedId) {
-    var last = lastAutoReportAt[bedId];
+  // 10-13: 낙상이 뜨면 '낙상 사건 리포트'(원인 후보·그래프). 실측은 mmw_server가 판정 직후 서버에서 요청하고(브라우저가 꺼져 있어도),
+  // 시뮬레이션은 여기서 요청한다. 어느 쪽이든 40초 뒤 리포트 목록을 새로 읽는다.
+  function triggerAutoReport(bedId, snap, source) {
+    var refresh = function () {
+      if (bedId === state.selectedId) loadDetail(bedId).then(function () { if (state.page === 'reports') renderReportsData(); });
+    };
+    if (source === 'live') { setTimeout(refresh, 40000); return; }
+    var last = lastAutoReportAt[bedId];   // 시뮬레이션 낙상은 몇 분마다 반복되므로 30분에 한 번만
     if (last && Date.now() - last < AUTO_REPORT_COOLDOWN_MS) return;
     lastAutoReportAt[bedId] = Date.now();
-    api('/api/dashboard/analyses', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ bed_id: bedId })
-    }).then(function (res) {
-      if (!res || !res.job_id) return;
-      var poll = function () {
-        api('/api/dashboard/analyses/' + encodeURIComponent(res.job_id)).then(function (job) {
-          if (!job) return;
-          if (job.status === 'completed' || job.status === 'failed') {
-            if (bedId === state.selectedId) { loadDetail(bedId).then(function () { if (state.page === 'reports') renderReportsData(); }); }
-            return;
-          }
-          setTimeout(poll, 2000);
-        }).catch(function () { /* best-effort */ });
-      };
-      setTimeout(poll, 2000);
-    }).catch(function () { /* fall was still logged/alerted even if the report couldn't start */ });
+    var ev = { at: Date.now() / 1000, label: (snap && snap.phaseName) || '낙상(시뮬레이션)',
+               note: (snap && ((snap.mmwave && snap.mmwave.reason) || (snap.tof && snap.tof.reason))) || null };
+    api('/api/dashboard/patients/' + encodeURIComponent(bedId) + '/fall-report', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ source: 'sim', event: ev })
+    }).then(function () { setTimeout(refresh, 40000); }).catch(function () { /* 알림은 이미 떴다 */ });
   }
 
-  function showFallAlert(bedId, snap) {
+  function showFallAlert(bedId, snap, source) {
     var patient = null;
     for (var i = 0; i < state.patients.length; i++) { if (state.patients[i].bed_id === bedId) { patient = state.patients[i]; break; } }
     var name = (patient && patient.name) || bedId;
     var room = patient && patient.room;
     $('#fallAlertBody').innerHTML =
       '<div class="fall-alert-line">' + (room ? escapeHtml(room) + '호 · ' : '') + escapeHtml(name) + ' 환자</div>' +
-      '<div class="muted">낙상이 감지되었습니다 — 즉시 확인이 필요합니다. (시뮬레이션 데이터)</div>' +
+      '<div class="muted">낙상이 감지되었습니다 — 즉시 확인이 필요합니다. (' +
+      (source === 'live' ? '실측 · mmWave 바닥 높이에 3초 넘게 머묾' : '시뮬레이션 데이터') + ' · AI 낙상 사건 리포트를 작성합니다' + ')</div>' +
+      (source === 'live' && snap && snap.fall ? '<div class="faint" style="font-size:11px;margin-top:4px">' + escapeHtml((snap.fall.kind === 'fast' ? '급격한 하강' : '바닥에서 못 일어남') + ' · 몸 중심 ' +
+        (snap.fall.z != null ? snap.fall.z.toFixed(2) + 'm' : '-') + ' (평소 ' + (snap.fall.ref != null ? snap.fall.ref.toFixed(2) + 'm' : '-') + ') · mmWave') + '</div>' : '') +
       '<div class="faint mono" style="font-size:11px;margin-top:6px">' + escapeHtml(fmtTime(Date.now())) + '</div>';
     $('#fallAlertModal').dataset.bedId = bedId;
     $('#fallAlertModal').hidden = false;
-    triggerAutoReport(bedId);
+    triggerAutoReport(bedId, snap, source);
+  }
+
+  // 실측 낙상 의심(2026-10-12): mmWave 판정이 '바닥 근처'(몸 높이 0.4m 미만) critical로 바뀌는 순간 팝업. 1분에 한 번까지.
+  var lastLiveFallAt = 0;
+  function checkLiveFall(snapshot) {
+    var mm = snapshot && snapshot.mmwave;
+    // 실측 낙상(2026-10-12): 레이더 프레임 판정 fallen(1초 안에 바닥 높이로 / 바닥 높이에서 3초 넘게)이면 팝업. ToF 침상 재실이면 서버가 제외.
+    var isFall = !!(mm && mm.fall && mm.fall.stage === 'fallen');
+    if (isFall && !state.liveFallActive && Date.now() - lastLiveFallAt > 60000) {
+      lastLiveFallAt = Date.now();
+      showFallAlert(state.liveBedId, mm, 'live');
+    }
+    state.liveFallActive = isFall;
   }
 
   function wireFallAlert() {
@@ -1310,7 +1968,9 @@
     wireMedicationsPage();
     wireConnectionForm();
     wireReports();
+    wireFloorplanAssign();
     wireFallAlert();
+    wireDrawer();
 
     try {
       var status = await api('/api/dashboard/status');
@@ -1336,11 +1996,12 @@
       storedBase = localStorage.getItem(CONN_BASE_KEY) || '';
       storedTarget = localStorage.getItem(CONN_TARGET_KEY) || storedTarget;
     } catch (e) { /* ignore */ }
-    $('#connBaseUrl').value = storedBase;
-    $('#connTargetId').value = storedTarget;
+    if ($('#connBaseUrl')) $('#connBaseUrl').value = storedBase;
+    if ($('#connTargetId')) $('#connTargetId').value = storedTarget;
 
     if (window.MajuData) {
-      sensorClient = window.MajuData.createClient({ baseUrl: storedBase, targetId: storedTarget, onUpdate: onLiveUpdate });
+      sensorClient = window.MajuData.createClient({ baseUrl: storedBase, targetId: storedTarget, onUpdate: onLiveUpdate,
+        onLive: function (snapshot) { state.live = snapshot; checkLiveFall(snapshot); } });
       sensorClient.start();
     }
     if (window.MajuSim) {
@@ -1351,7 +2012,7 @@
     // renderOverviewSensors() call sharing one snapshot), so instead of animating the floor
     // plan dot on its own timer, everything redraws together, fast enough (~180ms) to read as
     // continuous motion rather than the 2s sim-tick jump this replaces.
-    setInterval(renderOverviewSensors, 180);
+    setInterval(renderOverviewSensors, 100);   // 10-22 시연: 0.18 → 0.1초
   }
 
   document.addEventListener('DOMContentLoaded', boot);

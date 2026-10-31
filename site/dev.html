@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>마주봄 · 개발·센서 테스트</title>
+<script>
+(function () {
+  try {
+    var stored = localStorage.getItem('majubom-theme');
+    var theme = (stored === 'light' || stored === 'dark') ? stored :
+      (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    document.documentElement.setAttribute('data-theme', theme);
+  } catch (e) { document.documentElement.setAttribute('data-theme', 'light'); }
+})();
+</script>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="dashboard-assets/dashboard.css">
+<style>
+  /* 개발·센서 테스트 대시보드 전용(2026-10-13 디자인 개편: 간호사 화면과 같은 톤, 자주 안 쓰는 것은 접기) */
+  html, body { height: auto; overflow: auto; }
+  body { background: var(--bg); }
+  .dev-wrap { max-width: 1440px; margin: 0 auto; padding: 18px 16px 60px; display: flex; flex-direction: column; gap: 14px; }
+  .dev-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; }
+  .dev-top h1 { font-size: 20px; margin: 0; color: var(--fg-strong); }
+  .dev-note { font-size: 12px; color: var(--fg-muted); margin-top: 4px; }
+  .dev-actions { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .dev-actions .btn { text-decoration: none; }
+  .dev-cols { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 14px; align-items: start; }
+  @media (max-width: 1100px) { .dev-cols { grid-template-columns: 1fr; } }
+  .dev-col { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+  .kpi-strip.dev-status { grid-template-columns: repeat(6, minmax(0, 1fr)); margin-top: 0; }
+  @media (max-width: 1100px) { .kpi-strip.dev-status { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+  @media (max-width: 560px) { .kpi-strip.dev-status { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  .kpi .kpi-value { font-size: 15px; }
+  .kpi-foot { font-size: 11px; color: var(--fg-muted); margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .kpi.kpi-bad { border-left: 4px solid var(--critical); background: var(--critical-bg); }
+  .kpi.kpi-good { border-left: 4px solid var(--ok); }
+  .kpi.kpi-wait { border-left: 4px solid var(--line-strong); }
+  .zone-wrap { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 560px) { .zone-wrap { grid-template-columns: 1fr; } }
+  .zone-title { font-size: 12px; font-weight: 700; color: var(--fg-strong); margin-bottom: 6px; }
+  .zone-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 3px; font: 11px/1.2 "JetBrains Mono", monospace; }
+  .zone-grid div { text-align: center; padding: 8px 0; border-radius: 4px; border: 1px solid var(--line-faint); color: var(--fg-strong); }
+  .zone-grid div.fail { color: var(--fg-faint); background: repeating-linear-gradient(45deg, transparent 0 4px, var(--line-faint) 4px 5px); }
+  .legend { display: flex; flex-wrap: wrap; gap: 12px; font-size: 11.5px; color: var(--fg-muted); margin-top: 10px; }
+  .legend i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; vertical-align: -2px; margin-right: 5px; }
+  .kv { display: grid; grid-template-columns: 150px 1fr; gap: 8px 12px; font-size: 13px; align-items: baseline; }
+  .kv > span:nth-child(odd) { color: var(--fg-muted); font-size: 12px; }
+  @media (max-width: 560px) { .kv { grid-template-columns: 1fr; gap: 2px; } .kv > span:nth-child(even) { margin-bottom: 6px; } }
+  .section-gap { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); }
+  .dev-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  .dev-table th { text-align: left; font-size: 11px; color: var(--fg-muted); font-weight: 600; padding: 6px; border-bottom: 1px solid var(--line); }
+  .dev-table td { padding: 7px 6px; border-bottom: 1px solid var(--line-faint); }
+  .dev-table td.num, .dev-table th.num { text-align: right; font-family: "JetBrains Mono", monospace; }
+  .table-scroll { overflow-x: auto; }
+  .viewer-box { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media (max-width: 900px) { .viewer-box { grid-template-columns: 1fr; } }
+  .viewer-box iframe { width: 100%; height: 520px; border: 1px solid var(--line); border-radius: 10px; background: #000; }
+  pre.json { font: 11.5px/1.45 "JetBrains Mono", monospace; max-height: 320px; overflow: auto; background: var(--bg-inset); padding: 10px; border-radius: 8px; margin: 0; white-space: pre-wrap; word-break: break-all; }
+  .conn-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; }
+  .conn-row label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--fg-muted); flex: 1 1 220px; }
+</style>
+</head>
+<body>
+<div class="dev-wrap">
+  <div class="dev-top">
+    <div>
+      <h1>개발·센서 테스트 대시보드</h1>
+      <div class="dev-note">간호사 화면이 아닙니다 · 센서 원시값과 서버 상태를 1초마다 갱신 · <span id="devUpdated"></span></div>
+    </div>
+    <div class="dev-actions">
+      <a class="btn sm" href="/dashboard">간호사 화면</a>
+      <a class="btn sm" href="/raw-data" target="_blank" rel="noopener">로우데이터 진단 ↗</a>
+      <a class="btn sm" href="/system-architecture" target="_blank" rel="noopener">시스템 구성도 ↗</a>
+      <a class="btn sm" href="/emr" target="_blank" rel="noopener">EMR · DB 구조 ↗</a>
+      <a class="btn sm" href="https://majubom-code-guide.minhyuk6512.workers.dev/" target="_blank" rel="noopener">코드 가이드 ↗</a>
+      <button class="btn sm" id="devTheme" type="button">밝게/어둡게</button>
+    </div>
+  </div>
+
+  <div class="kpi-strip dev-status" id="devStatus"><div class="empty-state">확인 중…</div></div>
+
+  <div class="dev-cols">
+    <div class="dev-col">
+      <div class="card">
+        <div class="card-h"><div><div class="card-title">ToF 원시 거리 (mm)</div><div class="card-sub">8×8 칸 · 색이 진할수록 가까움 · 칸에 마우스를 올리면 기준값</div></div></div>
+        <div class="zone-wrap" id="devTofGrids"></div>
+        <div class="legend">
+          <span><i style="background:rgba(234,88,12,.6)"></i>사람 칸(빈 침대 기준보다 15cm 이상 가까움)</span>
+          <span><i style="background:rgba(15,118,110,.45)"></i>측정값</span>
+          <span><i style="background:repeating-linear-gradient(45deg,transparent 0 3px,var(--line) 3px 4px);border:1px solid var(--line)"></i>측정 실패(-1)</span>
+        </div>
+        <div class="kv section-gap" id="devTofInfo"></div>
+      </div>
+      <div class="card">
+        <div class="card-h"><div><div class="card-title">레이더 낙상 사건 기록</div><div class="card-sub">판정 6초 전~3초 뒤 기록은 mmWave/fall_traces/ 에 저장 · 'ToF 침대'는 침대 위라 알림에서 제외</div></div></div>
+        <div class="table-scroll" id="devFalls"></div>
+      </div>
+    </div>
+    <div class="dev-col">
+      <div class="card">
+        <div class="card-h"><div><div class="card-title">레이더 추적 (실시간)</div><div class="card-sub">바닥 기준 좌표(m) · 0.1초마다 서버에 올라오는 값</div></div></div>
+        <div class="table-scroll" id="devTargets"></div>
+        <div class="kv section-gap" id="devFallState"></div>
+      </div>
+      <div class="card">
+        <div class="card-h"><div><div class="card-title">최근 6초 보행 판정</div><div class="card-sub">/mmw/latest (room_01)</div></div></div>
+        <div class="kv" id="devGait"></div>
+      </div>
+      <div class="card">
+        <div class="card-h"><div><div class="card-title">빈 침대 기준값</div><div class="card-sub">이탈 10초 뒤 레이더로 0.3m 이동이 확인되면 자동 갱신</div></div></div>
+        <div class="kv" id="devAutocal"></div>
+        <div class="section-gap">
+          <button class="btn sm" id="devCalibrate" type="button">지금 빈 침대 기준 다시 잡기 (수동)</button>
+          <div class="card-sub" id="devCalibrateMsg" style="margin-top:6px">침대가 비어 있고 침구를 정리한 상태에서만 누르세요.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <details class="fold card" id="devViewerFold" style="padding:0">
+    <summary>3D · 포인트클라우드 뷰어 <span class="fold-count">열면 불러옴</span></summary>
+    <div class="viewer-box" id="devViewers"></div>
+  </details>
+
+  <details class="fold card" style="padding:0">
+    <summary>간호사 대시보드 센서 서버 연결</summary>
+    <div>
+      <div class="conn-row">
+        <label>서버 주소 <input id="connBaseUrl" class="mono" placeholder="비워두면 이 대시보드와 동일 서버"></label>
+        <label>mmWave 타겟 ID <input id="connTargetId" class="mono" placeholder="room_01"></label>
+        <button class="btn primary sm" id="connApply" type="button">저장</button>
+      </div>
+      <div class="card-sub" id="connMsg" style="margin-top:8px">이 브라우저에 저장되며 간호사 대시보드를 새로고침하면 적용됩니다.</div>
+    </div>
+  </details>
+
+  <details class="fold card" style="padding:0">
+    <summary>원본 응답 보기 <span class="fold-count">JSON</span></summary>
+    <div class="viewer-box"><pre class="json" id="devRawTof"></pre><pre class="json" id="devRawMmw"></pre></div>
+    <div class="dev-actions" style="margin-top:10px">
+      <a class="btn sm" href="/tof/latest" target="_blank" rel="noopener">/tof/latest</a>
+      <a class="btn sm" href="/tof/presence" target="_blank" rel="noopener">/tof/presence</a>
+      <a class="btn sm" href="/mmw/live" target="_blank" rel="noopener">/mmw/live</a>
+      <a class="btn sm" href="/mmw/fall?target=room_01" target="_blank" rel="noopener">/mmw/fall</a>
+      <a class="btn sm" href="/" target="_blank" rel="noopener">예전 ToF 상태 페이지</a>
+    </div>
+  </details>
+</div>
+<script src="dashboard-assets/dev.js"></script>
+</body>
+</html>

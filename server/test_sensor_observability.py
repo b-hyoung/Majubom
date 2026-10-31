@@ -111,7 +111,8 @@ class IngestTests(unittest.TestCase):
         self.assertEqual(snap['storage']['operations'][0]['status'],'committed')
         self.assertEqual(before,json.dumps(self.store,sort_keys=True))
 
-    def test_no_person_gate_excludes_baseline_but_actual_row_still_saved(self):
+    def test_no_person_gate_excludes_baseline_and_skips_storage(self):
+        # 2026-10-11: 방에 사람이 없으면(n_targets=0) mmw_readings에 저장하지 않는다.
         data=self.payload(walking=False)
         data['presence']={'n_targets':0,'patient_locked':False}
         self.client.post('/mmw',json=data)
@@ -119,7 +120,7 @@ class IngestTests(unittest.TestCase):
         self.assertEqual(self.store,{})
         self.assertFalse(snap['latest']['evaluation']['baseline_updated'])
         self.assertTrue(snap['current_result']['measuring_held'])
-        self.assertEqual(len(snap['storage']['rows']['mmw_readings']),1)
+        self.assertEqual(len(snap['storage']['rows']['mmw_readings']),0)
         self.assertIsNone(snap['current_result']['zscore'])
 
     def test_mismatched_bed_target_does_not_mix_patient_rows(self):
@@ -141,9 +142,10 @@ class IngestTests(unittest.TestCase):
             self.assertIsNone(row['comparison_mean'])
             self.assertNotIn('provisional_k', row)
 
+    @patch.object(M.L, "FLOOR_FALL_ENABLED", True)  # 2026-10-12부터 기본 꺼짐(fall_detect.py로 대체)
     def test_urgent_fall_does_not_invent_persistent_event(self):
         data=self.payload(walking=False)
-        data['raw']['height_drop']=1.3
+        data['raw']['low_z']=0.2  # 2026-10-12 낙상 규칙: 몸 높이 < 0.4m
         self.client.post('/mmw',json=data)
         snap=self.client.get('/api/diagnostics/mmwave').get_json()
         self.assertTrue(snap['current_result']['alarm'])

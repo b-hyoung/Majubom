@@ -20,6 +20,7 @@ from flask import Blueprint, jsonify, request
 
 import db
 import gait_prior
+import fall_risk
 
 LIVE_BED_ID = "bed_01"
 DEFAULT_TARGET = "room_01"  # mmWave/send_mmw.py --target default
@@ -61,6 +62,8 @@ def init_dashboard_schema():
                     conn.execute(f"ALTER TABLE {table} ADD COLUMN {name} TEXT")
         # EMR 원문 기록과 문헌 기반 보행 기대값(gait_prior.py) 테이블
         gait_prior.init_schema(conn)
+        # 환자별 낙상 위험도(Morse + 변동 점수)와 거동 범위(fall_risk.py)
+        fall_risk.init_schema(conn)
         conn.execute("INSERT OR IGNORE INTO beds (bed_id) VALUES (?)", (LIVE_BED_ID,))
         conn.execute("""INSERT OR IGNORE INTO patients (bed_id, name, mmw_target_id)
                         VALUES (?, ?, ?)""", (LIVE_BED_ID, "연결 환자", DEFAULT_TARGET))
@@ -192,6 +195,13 @@ def _decode_rows(rows):
                 except (TypeError, json.JSONDecodeError):
                     row[key[:-5]] = None
                 del row[key]
+        ca = row.get("created_at")
+        if isinstance(ca, str) and len(ca) == 19 and ca[10] == " ":
+            # SQLite datetime('now')는 UTC — 화면이 현지 시각으로 읽어 9시간 어긋났다(10-13) → 현지 시각 ISO로
+            try:
+                row["created_at"] = datetime.strptime(ca, "%Y-%m-%d %H:%M:%S").replace(tzinfo=timezone.utc).astimezone().isoformat(timespec="seconds")
+            except ValueError:
+                pass
         if "report" in row:
             import report_review
             saved = report_review.saved_review(original)
@@ -351,6 +361,7 @@ def create_blueprint(analysis_runner=None, status_provider=None):
                 samples_count, total_abs, alert_level FROM mmw_readings
                 WHERE target_id = ? ORDER BY id DESC LIMIT 60""", (target,)).fetchall() if target else []
             prior = gait_prior.get_active_prior(conn, bed_id)
+            fall_risk_profile = fall_risk.get_profile(conn, bed_id)
         analyses = _decode_rows(db.list_ai_analysis(bed_id, limit=30))
         return jsonify(success=True, patient=_patient(profile), profile=_patient(profile),
                        medications=db.list_medications(bed_id), risk_factors=db.list_risk_factors(bed_id),
@@ -359,7 +370,8 @@ def create_blueprint(analysis_runner=None, status_provider=None):
                        history={"tof": [dict(row) for row in reversed(tof)],
                                 "mmwave": [dict(row) for row in reversed(mmw)]},
                        analyses=analyses, summary=db.get_patient_timeseries_summary(bed_id),
-                       gait_prior=gait_prior.summarize(prior))
+                       gait_prior=gait_prior.summarize(prior), fall_risk=fall_risk_profile,
+                       gait_trend=_gait_trend_for(bed_id))
 
     @api.get("/patients/<bed_id>/emr-storage")
     def emr_storage(bed_id):
@@ -455,6 +467,97 @@ def create_blueprint(analysis_runner=None, status_provider=None):
         import emr_kb
         vector_result = emr_kb.build_index(bed_id) if ids else None
         return jsonify(success=True, updated_fields=sorted(updates), record_ids=ids, vector_index=vector_result), 201
+
+    @api.get("/patients/<bed_id>/fall-risk")
+    def get_fall_risk(bed_id):
+        if db.get_patient(bed_id) is None:
+            return failure("환자를 찾을 수 없습니다.", "not_found", 404)
+        with db.get_conn() as conn:
+            fall_risk.ensure_profile(conn, bed_id)
+            profile = fall_risk.get_profile(conn, bed_id, events=30)
+        return jsonify(success=True, fall_risk=profile, morse_items=fall_risk.MORSE_ITEMS,
+                       option_ko=fall_risk.OPTION_KO, mobility_ko=fall_risk.MOBILITY_KO)
+
+    @api.put("/patients/<bed_id>/fall-risk")
+    def put_fall_risk(bed_id):
+        """간호사 재평가: {"morse": {항목: 값}, "mobility": "free|toilet_only|assisted|bed_rest"}"""
+        if db.get_patient(bed_id) is None:
+            return failure("환자를 찾을 수 없습니다.", "not_found", 404)
+        body = request.get_json(silent=True)
+        if not isinstance(body, dict):
+            return failure("JSON 본문은 객체여야 합니다.", "bad_request")
+        try:
+            with db.get_conn() as conn:
+                profile = fall_risk.set_assessment(conn, bed_id, body.get("morse"), body.get("mobility"),
+                                                   by=str(body.get("by") or "nurse")[:40])
+        except ValueError as e:
+            return failure(str(e), "bad_request")
+        return jsonify(success=True, fall_risk=profile)
+
+    @api.get("/patients/<bed_id>/gait-trend")
+    def get_gait_trend(bed_id):
+        """보행 저하 추세 예측(gait_trend.py): 하루 대표값·칼만 추정 수준·7/14일 예측·7일 누적 감소 확률."""
+        if db.get_patient(bed_id) is None:
+            return failure("환자를 찾을 수 없습니다.", "not_found", 404)
+        import gait_trend
+        return jsonify(success=True, gait_trend=gait_trend.summary_for_bed(bed_id, include_history=True))
+
+    @api.post("/patients/<bed_id>/fall-risk/reset")
+    def reset_fall_risk(bed_id):
+        """변동 점수(센서·간호 신호 누적)만 0으로. Morse 평가와 거동 범위는 유지한다."""
+        if db.get_patient(bed_id) is None:
+            return failure("환자를 찾을 수 없습니다.", "not_found", 404)
+        body = request.get_json(silent=True) or {}
+        by = str(body.get("by") or "nurse")[:40] if isinstance(body, dict) else "nurse"
+        with db.get_conn() as conn:
+            profile = fall_risk.reset_dynamic(conn, bed_id, by=by)
+        return jsonify(success=True, fall_risk=profile)
+
+    fall_report_last = {}
+
+    @api.post("/patients/<bed_id>/fall-report")
+    def start_fall_report(bed_id):
+        """낙상 사건 리포트(fall_report.py)를 백그라운드로 만든다. 실측은 mmw_server가 낙상 판정 직후 부르고,
+        시뮬레이션은 대시보드가 부른다. 같은 환자는 60초에 한 번만(같은 낙상의 중복 요청 방지)."""
+        if db.get_patient(bed_id) is None:
+            return failure("환자를 찾을 수 없습니다.", "not_found", 404)
+        body = request.get_json(silent=True) or {}
+        event = body.get("event") if isinstance(body.get("event"), dict) else {}
+        source = "sim" if body.get("source") == "sim" else "live"
+        now = time.time()
+        with lock:
+            if now - fall_report_last.get(bed_id, 0) < 60:
+                return jsonify(success=True, skipped=True, message="최근 60초 안에 이미 작성 중입니다."), 202
+            fall_report_last[bed_id] = now
+
+        def run():
+            try:
+                import fall_report
+                fall_report.generate(bed_id, event, source)
+            except Exception as e:
+                print(f"[fall_report] 실패: {type(e).__name__}: {e}")
+        threading.Thread(target=run, daemon=True, name=f"fall-report-{bed_id}").start()
+        return jsonify(success=True, started=True), 202
+
+    @api.post("/patients/<bed_id>/falls")
+    def post_fall(bed_id):
+        """간호사 낙상 기록: {"note": "...", "worsened": true/false, "mobility": 선택}.
+        Morse 낙상 이력=예, 변동 점수 +15. worsened면 거동 범위를 낮춘다(기본 절대 안정)."""
+        if db.get_patient(bed_id) is None:
+            return failure("환자를 찾을 수 없습니다.", "not_found", 404)
+        body = request.get_json(silent=True) or {}
+        if not isinstance(body, dict):
+            return failure("JSON 본문은 객체여야 합니다.", "bad_request")
+        note = str(body.get("note") or "")[:500]
+        try:
+            with db.get_conn() as conn:
+                profile = fall_risk.record_fall(conn, bed_id, note=note, mobility=body.get("mobility"),
+                                                worsened=bool(body.get("worsened")), by=str(body.get("by") or "nurse")[:40])
+        except ValueError as e:
+            return failure(str(e), "bad_request")
+        db.insert_sensor_event(bed_id, "nurse_fall_report", level="critical", title="간호사 낙상 기록",
+                               note=note or None, source_table="fall_risk_events")
+        return jsonify(success=True, fall_risk=profile), 201
 
     @api.get("/patients/<bed_id>/gait-prior")
     def get_gait_prior(bed_id):
@@ -668,6 +771,34 @@ def _run_due_weekly_reports():
             print(f"[scheduler] 주간 리포트 생성 중 오류({bed_id}): {type(e).__name__}: {e}")
 
 
+def _gait_trend_for(bed_id):
+    """환자 상세 화면용 보행 추세 예측(하루 값 이력 포함). 시뮬레이션 환자는 실측 보행 기록이 없다."""
+    import sim_state
+    if sim_state.is_simulated(bed_id):
+        return {"status": "simulated", "message": "시뮬레이션 환자는 실측 보행 기록이 없어 예측하지 않습니다."}
+    try:
+        import gait_trend
+        return gait_trend.summary_for_bed(bed_id, include_history=True)
+    except Exception as e:
+        return {"status": "error", "message": f"보행 추세 예측 실패: {type(e).__name__}"}
+
+
+def _run_gait_trend_signals():
+    """보행 저하 예측이 '경고'인 환자의 위험도 변동 점수에 +5(하루 한 번, fall_risk 쿨다운). 2026-10-13"""
+    import gait_trend
+    import sim_state   # 시뮬레이션 환자는 실측 기록이 없으므로 건너뛴다
+    with db.get_conn() as conn:
+        beds = [r["bed_id"] for r in conn.execute("SELECT bed_id FROM patients WHERE mmw_target_id IS NOT NULL")]
+    for bed_id in beds:
+        if sim_state.is_simulated(bed_id):
+            continue
+        result = gait_trend.summary_for_bed(bed_id)
+        if result.get("level") == "warning":
+            with db.get_conn() as conn:
+                if fall_risk.add_signal(conn, bed_id, "gait_decline", {"reasons": result.get("reasons")}):
+                    print(f"[scheduler] 보행 저하 예측 경고 → 위험도 +5: {bed_id}")
+
+
 def _weekly_scheduler_loop():
     time.sleep(SCHEDULER_INITIAL_DELAY_SECONDS)
     while True:
@@ -675,6 +806,10 @@ def _weekly_scheduler_loop():
             _run_due_weekly_reports()
         except Exception as e:
             print(f"[scheduler] 주간 리포트 확인 중 오류: {type(e).__name__}: {e}")
+        try:
+            _run_gait_trend_signals()
+        except Exception as e:
+            print(f"[scheduler] 보행 추세 확인 중 오류: {type(e).__name__}: {e}")
         time.sleep(SCHEDULER_CHECK_INTERVAL_SECONDS)
 
 
@@ -687,9 +822,26 @@ def start_weekly_scheduler():
     threading.Thread(target=_weekly_scheduler_loop, daemon=True, name="weekly-ai-report-scheduler").start()
 
 
+def ensure_fall_risk_profiles():
+    """위험도 프로필이 없는 환자에게 초기 평가를 만든다. 이미 있으면 건드리지 않는다.
+    실측 연결 환자(bed_01)는 사용자 결정(2026-10-12)대로 저위험군(Morse 0점)·자유 거동으로 시작한다.
+    시뮬레이션 환자는 기록에서 단어 규칙으로 채운 초안(source=auto)이다."""
+    with db.get_conn() as conn:
+        for row in conn.execute("SELECT * FROM patients").fetchall():
+            p = dict(row)
+            if p["bed_id"] == LIVE_BED_ID:
+                fall_risk.ensure_profile(conn, LIVE_BED_ID, mobility="free", source="live_default_low")
+                continue
+            items, source = fall_risk.prefill_from_records(p, db.list_risk_factors(p["bed_id"]))
+            text = " ".join(str(r.get("factor") or "") for r in db.list_risk_factors(p["bed_id"]))
+            mobility = "bed_rest" if "와상" in text else "assisted" if ("보행 보조" in text or "편마비" in text) else "toilet_only"
+            fall_risk.ensure_profile(conn, p["bed_id"], items, mobility=mobility, source=source)
+
+
 def register_dashboard(app):
     init_dashboard_schema()
     ensure_demo_patients()
+    ensure_fall_risk_profiles()
     import demo_emr
     demo_emr.seed_records()
     demo_emr.seed_vectors()

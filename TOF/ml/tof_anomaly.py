@@ -90,9 +90,13 @@ class Detector:
 
     def score(self):
         """버퍼가 SEQ 만큼 차면 {err,threshold,ratio,status} 반환, 아니면 None."""
-        if len(self.buf) < self.seq:
+        return self.score_window(list(self.buf))
+
+    def score_window(self, window):
+        """주어진 SEQ개 특징 묶음의 재구성오차. 서버는 버퍼 복사본을 다른 스레드에서 넘긴다."""
+        if len(window) < self.seq:
             return None
-        X = np.asarray(self.buf, dtype=np.float32)
+        X = np.asarray(window[-self.seq:], dtype=np.float32)
         Xn = (X - self.mu) / self.sd
         with torch.no_grad():
             x = torch.tensor(Xn[None]).float()
@@ -106,4 +110,4 @@ class Detector:
             status = "normal"
         return {"err": round(err, 4), "threshold": round(self.thr, 4),
                 "ratio": round(ratio, 3), "status": status,
-                "filled": len(self.buf), "seq": self.seq}
+                "filled": len(window), "seq": self.seq}
