@@ -101,6 +101,24 @@ def parse_frame_header(data):
     }
 
 
+MOUNT_UPSIDE_DOWN = True   # 레이더가 칩 면 안에서 180° 뒤집혀 설치된 경우
+
+
+def track_to_world(t, height=2.5, tilt=90.0, upside_down=None):
+    """레이더 기준 track 좌표 → 바닥 기준 좌표(x 오른쪽, y 수평거리, z 바닥 높이)."""
+    a = math.radians(tilt)
+    c, s = math.cos(a), math.sin(a)
+    flip = -1.0 if (MOUNT_UPSIDE_DOWN if upside_down is None else upside_down) else 1.0
+    y, z, vy, vz = t["posY"], flip * t["posZ"], t["velY"], flip * t["velZ"]
+    w = dict(t)
+    w["posX"], w["velX"] = flip * t["posX"], flip * t["velX"]
+    w["posY"] = y * c + z * s
+    w["posZ"] = height - y * s + z * c
+    w["velY"] = vy * c + vz * s
+    w["velZ"] = -vy * s + vz * c
+    return w
+
+
 def parse_target_list(payload):
     """
     Target List TLV payload → track 리스트.
@@ -444,7 +462,7 @@ def send_config(cli_port, cfg_path, baud=115200):
         print(f"[cfg] sent: {cfg_path}  —  모든 줄 적용 OK")
 
 
-def run(cli_port, data_port, cfg_path, do_send=True, target_id="room_01"):
+def run(cli_port, data_port, cfg_path, do_send=True, target_id="room_01", height=2.5, tilt=90.0):
     if serial is None:
         raise RuntimeError("pyserial 미설치: pip install pyserial")
     if do_send and requests is None:
@@ -469,7 +487,7 @@ def run(cli_port, data_port, cfg_path, do_send=True, target_id="room_01"):
                 frames, buf = iter_frames(buf)
                 now = time.time()
                 for hdr, fb in frames:
-                    targets = extract_targets(hdr, fb)
+                    targets = [track_to_world(t, height, tilt) for t in extract_targets(hdr, fb)]
                     latest_targets = targets  # 매 프레임 갱신
                     for t in targets:
                         history[t["tid"]].append(
@@ -539,7 +557,7 @@ def run(cli_port, data_port, cfg_path, do_send=True, target_id="room_01"):
 
 
 # ── 존 캡처 (측정 도구) ────────────────────────────────────────────────
-def capture_zone(data_port, seconds, label="zone", margin=0.2):
+def capture_zone(data_port, seconds, label="zone", margin=0.2, height=2.5, tilt=90.0):
     """SECONDS 초 동안 프레임을 읽어 감지된 target들의 (x,y,z)를 모아
     존(zone) 사각형을 추정해 출력한다. baseline/서버와 무관한 순수 측정 도구.
 
@@ -565,7 +583,7 @@ def capture_zone(data_port, seconds, label="zone", margin=0.2):
             frames, buf = iter_frames(buf)
             for hdr, fb in frames:
                 frames_seen += 1
-                for t in extract_targets(hdr, fb):
+                for t in (track_to_world(x, height, tilt) for x in extract_targets(hdr, fb)):
                     xs.append(t["posX"])
                     ys.append(t["posY"])
                     zs.append(t["posZ"])
@@ -601,11 +619,16 @@ if __name__ == "__main__":
     ap.add_argument("--capture-zone", type=float, default=0.0, metavar="SEC",
                     help="측정 모드: SEC초 동안 target x,y,z를 모아 존 사각형 추정 후 종료")
     ap.add_argument("--capture-label", default="zone", help="캡처 라벨 (bed/door/walk 등)")
+    ap.add_argument("--height", type=float, default=2.5, help="레이더 설치 높이(m)")
+    ap.add_argument("--tilt", type=float, default=90.0, help="수평에서 아래로 기운 각도")
+    ap.add_argument("--upright", action="store_true", help="레이더를 바로 달았을 때")
     args = ap.parse_args()
+    MOUNT_UPSIDE_DOWN = not args.upright
     if args.capture_zone > 0:
         # 측정 모드: (cfg 있으면 먼저 적용 후) 존만 캡처하고 종료 — 서버 불필요
         if args.cfg:
             send_config(args.cli, args.cfg)
-        capture_zone(args.data, args.capture_zone, args.capture_label)
+        capture_zone(args.data, args.capture_zone, args.capture_label, height=args.height, tilt=args.tilt)
     else:
-        run(args.cli, args.data, args.cfg, do_send=not args.no_send, target_id=args.target)
+        run(args.cli, args.data, args.cfg, do_send=not args.no_send, target_id=args.target,
+            height=args.height, tilt=args.tilt)
