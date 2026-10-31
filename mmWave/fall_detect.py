@@ -107,6 +107,13 @@ HEIGHT_REF_DIST = 2.0
 HEIGHT_DIST_RANGE = (0.5, 5.0)
 
 
+def bed_dist(x, y):
+    """침대 가운데까지 수평 거리. 침대 위치를 아직 안 쟀으면(BED_CENTER None, 2026-10-31 천장 이전) 무한대 → 침대 규칙이 안 맞는다."""
+    if BED_CENTER is None:
+        return float("inf")
+    return ((x - BED_CENTER[0]) ** 2 + (y - BED_CENTER[1]) ** 2) ** 0.5
+
+
 def dist_corrected_z(x, y, z):
     d = min(HEIGHT_DIST_RANGE[1], max(HEIGHT_DIST_RANGE[0], (x * x + y * y) ** 0.5))
     a, b = HEIGHT_FIT
@@ -258,7 +265,7 @@ class FallDetector:
         t0, lx, ly, tids = self.patient_lost
         limit = CONTINUITY_SEC if self.manual_only else (REACQUIRE_SEC if self.tof_seen else HANDOVER_SEC)
         if now - t0 > limit:
-            if self.manual_only and ((lx - BED_CENTER[0]) ** 2 + (ly - BED_CENTER[1]) ** 2) ** 0.5 <= BED_PARK_M:
+            if self.manual_only and bed_dist(lx, ly) <= BED_PARK_M:
                 self.bed_park = {"t0": t0, "t": now, "tids": set(tids)}   # 침대에 누워 레이더가 놓침 → 그 사람을 기억
             self.locked = None              # 놓침 → 고정 풀고 가까운 사람 규칙으로
             self.patient_lost = None
@@ -404,7 +411,7 @@ class FallDetector:
     def _choose_patient(self, now, targets):
         people = [t for t in targets if not self.tracks[t["tid"]].is_shadow() and not self.tracks[t["tid"]].is_ghost()]
         alive_ids = {t["tid"] for t in people}
-        dist = lambda t: ((t["posX"] - BED_CENTER[0]) ** 2 + (t["posY"] - BED_CENTER[1]) ** 2) ** 0.5
+        dist = lambda t: bed_dist(t["posX"], t["posY"])
         if self.patient_tid is not None and self.patient_tid in self.alive:
             self.patient_lost = None        # 다시 보이면 '놓친 위치'를 지운다(10-22: 남아 있다가 다음에 놓칠 때 옛 위치 근처 사람으로 튐)
         # 환자 추적이 사라졌으면(겹침·번호 바뀜) 3초 안에 그 자리 1m 안 추적이 이어받는다 — 고정 여부와 상관없이 같은 사람
@@ -498,7 +505,7 @@ class FallDetector:
                     and now - bp["t"] > BED_PARK_EMPTY_SEC)):
             self.bed_park = None
             return
-        dist = lambda t: ((t["posX"] - BED_CENTER[0]) ** 2 + (t["posY"] - BED_CENTER[1]) ** 2) ** 0.5
+        dist = lambda t: bed_dist(t["posX"], t["posY"])
         new = lambda t: (self.tracks[t["tid"]].born is not None
                          and self.tracks[t["tid"]].born >= bp["t0"] - NEW_TRACK_SLACK_SEC)
         cand = [t for t in people if new(t) and dist(t) <= BED_LOCK_RADIUS_M
@@ -744,7 +751,7 @@ class FallDetector:
         while tr.hist and now - tr.hist[0][0] > REF_WINDOW_SEC:
             tr.hist.popleft()
         x, y = tr.pos
-        if (((x - BED_CENTER[0]) ** 2 + (y - BED_CENTER[1]) ** 2) ** 0.5 <= EXIT_FROM_BED_M
+        if (bed_dist(x, y) <= EXIT_FROM_BED_M
                 and BED_LOCK_MIN_Z <= zs <= BED_LOCK_MAX_Z):
             tr.last_on_bed = now
         if tr.stage is None and zs >= HIGH_FRAC * ref and fresh and not tr.is_shadow() and not tr.is_ghost():

@@ -111,7 +111,7 @@ TOF_PRESENCE_URL = "http://127.0.0.1:5001/tof/presence"
 LIVE_TOF_BED = "bed_01"
 
 
-BED_CENTER_XY = (1.0, 1.4)    # 10-29 30° 누운 자리 실측 · 레이더 바닥 좌표의 침대 가운데(mmWave/send_mmw.py BED_CENTER와 같게 — 10-22 부스 실측, 랩실 (0.1, 1.2))
+from bed_position import bed_center   # 2026-10-31: 침대 가운데는 mmWave/bed_center.json 한 곳. 예전 값 (1.0, 1.4) — 10-29 30° 누운 자리 실측 · 레이더 바닥 좌표의 침대 가운데(mmWave/send_mmw.py BED_CENTER와 같게 — 10-22 부스 실측, 랩실 (0.1, 1.2))
 ON_BED_RADIUS_M = 1.2        # 이 안에서 난 사건만 'ToF 침대 위'로 제외
 
 
@@ -364,7 +364,8 @@ def receive_fall():
     # 2026-10-22: ToF가 '침대 위'여도 레이더가 본 낙상 위치가 침대에서 1.2m 넘게 떨어져 있으면 제외하지 않는다
     # (라이브: 발쪽 센서가 꺼지고 빈 침대 기준이 어긋나 ToF가 계속 '침대 위' → 침대 앞 실제 낙상이 '침대 위라 제외'됨)
     try:
-        bed_dist = math.hypot(float(data.get("x")) - BED_CENTER_XY[0], float(data.get("y")) - BED_CENTER_XY[1])
+        bc = bed_center()   # 안 쟀으면 None → 거리 모름 → ToF 침상 재실만으로 판단(10-22 이전 방식)
+        bed_dist = math.hypot(float(data.get("x")) - bc[0], float(data.get("y")) - bc[1]) if bc else None
     except (TypeError, ValueError):
         bed_dist = None
     on_bed = in_bed is True and (bed_dist is None or bed_dist <= ON_BED_RADIUS_M)

@@ -50,6 +50,21 @@ if __name__ == "__main__":
 class BedClear20261022(unittest.TestCase):
     def test_bed_must_be_clear_of_radar_tracks(self):
         import tof_autocal as A
+        from unittest import mock
+        with mock.patch.object(A, 'bed_center', return_value=(0.0, 1.4)):
+            self._check(A)
+
+    def test_unmeasured_bed_is_never_clear(self):
+        # 2026-10-31 천장 이전: 침대 위치를 안 쟀으면(bed_center.json 없음) 비었는지 모른다 → 갱신하지 않음
+        import tof_autocal as A
+        from unittest import mock
+        far = [(t * 0.5, [(2, 2.5, 3.0)]) for t in range(12)]
+        with mock.patch.object(A, 'bed_center', return_value=None):
+            r = A.bed_clear(far, 5.5)
+        self.assertFalse(r["clear"])
+        self.assertIn("미측정", r["reason"])
+
+    def _check(self, A):
         near = [(t * 0.5, [(1, 0.2, 1.4), (2, 2.5, 3.0)]) for t in range(12)]     # 침대 옆 0.22m에 사람
         far = [(t * 0.5, [(2, 2.5, 3.0)]) for t in range(12)]
         self.assertFalse(A.bed_clear(near, 5.5)["clear"])

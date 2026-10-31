@@ -661,3 +661,19 @@ class AutoBedPatient20261029(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class UnmeasuredBed20261031(unittest.TestCase):
+    """천장 이전 뒤 침대 위치를 아직 안 쟀으면(BED_CENTER None) 침대 규칙이 아무도 '침대 위'로 보지 않는다."""
+
+    def test_bed_dist_is_infinite_without_bed_center(self):
+        import fall_detect as F
+        from unittest import mock
+        with mock.patch.object(F, 'BED_CENTER', None):
+            self.assertEqual(F.bed_dist(0.0, 0.0), float('inf'))
+            det = F.FallDetector(manual_only=True, auto_bed=True)
+            for i in range(40):   # 침대 높이로 누운 사람이 있어도 자동 환자 지정 안 됨(침대 위치 모름)
+                det.update(i * 0.1, [{"tid": 1, "posX": 0.0, "posY": 0.0, "posZ": 0.5, "velX": 0.0, "velY": 0.0, "velZ": 0.0, "npts": 20}])
+            self.assertIsNone(det.patient_tid)
+        with mock.patch.object(F, 'BED_CENTER', (1.0, 1.0)):
+            self.assertAlmostEqual(F.bed_dist(1.0, 2.0), 1.0)

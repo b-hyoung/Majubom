@@ -20,7 +20,7 @@ from diagnostic_decode import decode_frame, finite_json
 SITE = Path(__file__).resolve().parents[1] / 'site'
 
 class LiveState:
-    def __init__(self, height=2.5, tilt=50.0):
+    def __init__(self, height=2.5, tilt=90.0):
         self.lock = threading.Lock()
         self.started = time.monotonic()
         self.data = {'status': 'starting', 'error': None, 'bytes': 0, 'frames': 0,
@@ -268,7 +268,7 @@ def main():
     ap.add_argument('--cli')
     ap.add_argument('--cfg')
     ap.add_argument('--height', type=float, default=2.5)
-    ap.add_argument('--tilt', type=float, default=50.0)
+    ap.add_argument('--tilt', type=float, default=90.0)
     ap.add_argument('--min-snr', type=float, default=0.0)
     ap.add_argument('--port', type=int, default=5012)
     args = ap.parse_args()

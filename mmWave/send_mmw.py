@@ -34,6 +34,10 @@ from collections import defaultdict, deque
 
 import numpy as np
 
+import sys as _sys
+_sys.path.append(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "server"))
+from bed_position import bed_center   # noqa: E402  침대 가운데는 mmWave/bed_center.json 한 곳(2026-10-31)
+
 try:
     import serial  # pyserial
 except ImportError:
@@ -70,12 +74,15 @@ FALL_CONFIRM_SEC = 1.0   # 10-22 시연용 사용자 결정: 바닥에 1초 머�
 # 부스 값: [(2.96, 2.55), (0.63, 4.11), (-1.83, 0.72), (0.05, -0.49)]
 # 10-29 간호학과 방: 사용자가 방 가장자리를 약 80초 걸은 경로(레이더 30° 좌표) + 누운 자리(침대, 걷지 않은 오른쪽 아래)를
 # 합친 6각형 (-0.9,-0.1)(-1.4,1.65)(1.5,3.85)(1.75,2.0)(1.8,0.5)(0.3,-0.15)을 바깥으로 0.3m 넓힘
-ROI_POLY = [(-1.13, -0.39), (-1.74, 1.76), (1.73, 4.4), (2.05, 2.03), (2.11, 0.31), (0.36, -0.45)]
+# 2026-10-31 천장 이전(2.5m, 바닥을 봄): 아래 다각형은 예전 벽 30° 좌표라 끈다. 새 방 가장자리를 걸어 다시 잡으면 넣는다.
+# 예전 값: [(-1.13, -0.39), (-1.74, 1.76), (1.73, 4.4), (2.05, 2.03), (2.11, 0.31), (0.36, -0.45)]
+ROI_POLY = None
 REC_MAX_BYTES = 3 * 1024 ** 3        # 녹화 파일 하나 최대 3GB(넘으면 자동 중지, 10-28)
 REC_MIN_FREE_BYTES = 2 * 1024 ** 3   # 디스크 남은 공간이 이보다 적으면 녹화 자동 중지
 # 부스 침대 가운데(레이더 바닥 좌표): 18:1x 사용자가 침대에 누운 자리 실측(-0.15, 0.5), ToF 침대 위 확인.
 # 랩실은 (0.1, 1.2). server/mmw_server.py BED_CENTER_XY·server/tof_autocal.py BED_CENTER와 같게 둔다
-BED_CENTER = (1.0, 1.4)    # 10-29 레이더 30°에서 누운 자리 실측(0.98, 1.42) — 계산값 (0.5, 2.2)은 0.9m 어긋남(부스 (-0.15, 0.5), 랩실 (0.1, 1.2))
+# 침대 가운데는 2026-10-31부터 mmWave/bed_center.json(tools/set_bed_center.py)에서 읽는다 — server/bed_position.py.
+# 아래 예전 기록: # 10-29 레이더 30°에서 누운 자리 실측(0.98, 1.42) — 계산값 (0.5, 2.2)은 0.9m 어긋남(부스 (-0.15, 0.5), 랩실 (0.1, 1.2))
 
 
 def in_poly(x, y, poly):
@@ -139,7 +146,8 @@ class ClutterMask:
             x, y, z = xs[len(xs) // 2], ys[len(ys) // 2], zs[len(zs) // 2]
             if max(math.hypot(v[0] - x, v[1] - y) for v in ps) > CLUTTER_MOVE_M:
                 continue   # 움직이는 추적(사람)은 기준에 넣지 않는다
-            if math.hypot(x - BED_CENTER[0], y - BED_CENTER[1]) <= CLUTTER_BED_M:
+            bc = bed_center()
+            if bc and math.hypot(x - bc[0], y - bc[1]) <= CLUTTER_BED_M:
                 continue
             spots.append({"x": round(x, 2), "y": round(y, 2), "z": round(z, 2)})
         with open(CLUTTER_FILE, "w", encoding="utf-8") as fh:
@@ -780,7 +788,10 @@ def run(cli_port, data_port, cfg_path, do_send=True, target_id="room_01", diagno
     latest_targets = []  # 최신 프레임의 target 목록
     from fall_detect import FallDetector
     import fall_detect as _fd
-    _fd.BED_CENTER = BED_CENTER       # 부스 침대 위치(판정기 기본값은 랩실 — 예전 기록 재생·테스트용)
+    _fd.BED_CENTER = bed_center()     # 침대 위치(bed_center.json, 없으면 None → 침대 위치 규칙 끔). 판정기 기본값은 랩실 — 예전 기록 재생·테스트용
+    if tilt >= 80:
+        # 2026-10-31 천장 설치(바닥을 봄): 거리별 높이 보정(HEIGHT_FIT)은 벽 50° 설치에서 잰 오차라 끈다. 천장에서 다시 재면 넣는다.
+        _fd.HEIGHT_FIT = (1.0, 0.0)
     fall_detector = FallDetector(manual_only=True, confirm_sec=fall_confirm_sec, auto_bed=True)   # 10-22: 환자는 화면 클릭으로만(10-29: 클릭 전엔 침대에 있던 사람 자동). 2026-10-12: 본인 평소 높이 대비 하강으로 프레임마다 낙상 판정
     # 2026-10-16: 환자 고정에 쓰는 바깥 정보 — ToF 침상 재실(침대에서 내려온 사람 = 환자)과 화면에서 누른 환자 지정.
     # 0.5초마다 별도 스레드가 받아 둔다(레이더 수신 루프를 HTTP 대기로 막지 않게).
@@ -828,6 +839,7 @@ def run(cli_port, data_port, cfg_path, do_send=True, target_id="room_01", diagno
                 buf += chunk
                 frames, buf = iter_frames(buf)
                 now = time.time()
+                _fd.BED_CENTER = bed_center()   # 파일이 바뀌면 재시작 없이 반영(2초 캐시)
                 for hdr, fb in frames:
                     diagnostic_frames += 1
                     diagnostic_at = now
@@ -1093,7 +1105,7 @@ if __name__ == "__main__":
     ap.add_argument("--target", default="room_01", help="target_id")
     ap.add_argument("--diagnostics-url", default="http://127.0.0.1:5012/api/ingest", help="latest-only raw dashboard relay; empty disables")
     ap.add_argument("--height", type=float, default=2.5)
-    ap.add_argument("--tilt", type=float, default=50.0)
+    ap.add_argument("--tilt", type=float, default=90.0, help="수평에서 아래로 기운 각도. 2026-10-31 천장에서 바닥을 봄 = 90")
     ap.add_argument("--fall-confirm-sec", type=float, default=FALL_CONFIRM_SEC, help="바닥 높이에 이만큼 머물면 낙상(초)")
     ap.add_argument("--roi", default=None, help='부스 다각형 "x,y x,y ..."(레이더 바닥 좌표 m). 기본은 ROI_POLY, "none"이면 끄고 --max-range 사용')
     ap.add_argument("--max-range", type=float, default=MAX_RANGE_M, help="레이더에서 수평 이 거리(m) 밖 추적은 버림. 0이면 제한 없음")

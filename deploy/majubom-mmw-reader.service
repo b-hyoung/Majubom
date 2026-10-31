@@ -3,6 +3,7 @@
 # 설치: sudo cp deploy/majubom-mmw-reader.service /etc/systemd/system/ && sudo systemctl daemon-reload
 #       sudo systemctl enable --now majubom-mmw-reader
 # 로그: journalctl -u majubom-mmw-reader -f
+# 2026-10-31 천장 설치(2.5m, 바닥을 봄): AOP_ceiling_2m5.cfg, --tilt 90. 예전 벽 설치는 AOP_diag_2m5_d50.cfg --tilt 30.
 [Unit]
 Description=Majubom mmWave reader (send_mmw.py)
 After=network-online.target
@@ -14,7 +15,7 @@ WorkingDirectory=/home/pi/Documents/Github/Majubom
 ExecStart=/home/pi/Documents/Github/Majubom/.venv/bin/python -u mmWave/send_mmw.py \
   --cli /dev/serial/by-id/usb-Silicon_Labs_CP2105_Dual_USB_to_UART_Bridge_Controller_011D1AD6-if00-port0 \
   --data /dev/serial/by-id/usb-Silicon_Labs_CP2105_Dual_USB_to_UART_Bridge_Controller_011D1AD6-if01-port0 \
-  --cfg mmWave/AOP_diag_2m5_d50.cfg --target room_01 --height 2.5 --tilt 30
+  --cfg mmWave/AOP_ceiling_2m5.cfg --target room_01 --height 2.5 --tilt 90
 Restart=always
 RestartSec=5
 

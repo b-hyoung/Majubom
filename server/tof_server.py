@@ -870,7 +870,10 @@ def _nobody_by_bed():
     r = _radar_last
     if r["targets"] is None or _time.time() - r["at"] > 2.0:
         return False
-    bx, by = _autocal.BED_CENTER
+    bc = _autocal.bed_center()
+    if bc is None:   # 2026-10-31: 침대 위치를 안 쟀으면 레이더로 침대 근처를 판단하지 않는다(틀린 좌표면 누운 환자가 '이탈'이 됨)
+        return False
+    bx, by = bc
     return not any(((x - bx) ** 2 + (y - by) ** 2) ** 0.5 <= _autocal.BED_CLEAR_M for x, y, _ in r["targets"])
 
 
@@ -880,7 +883,10 @@ def _standing_by_bed():
     r = _radar_last
     if r["targets"] is None or _time.time() - r["at"] > 2.0:
         return False
-    bx, by = _autocal.BED_CENTER
+    bc = _autocal.bed_center()
+    if bc is None:   # 2026-10-31: 침대 위치를 안 쟀으면 레이더로 침대 근처를 판단하지 않는다(틀린 좌표면 누운 환자가 '이탈'이 됨)
+        return False
+    bx, by = bc
     near = [z for x, y, z in r["targets"] if ((x - bx) ** 2 + (y - by) ** 2) ** 0.5 <= _autocal.BED_CLEAR_M]
     return bool(near) and all(isinstance(z, (int, float)) and z >= STANDING_Z_M for z in near)
 

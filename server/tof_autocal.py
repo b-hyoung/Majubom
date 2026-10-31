@@ -11,6 +11,8 @@ from __future__ import annotations
 
 import statistics as st
 
+from bed_position import bed_center
+
 WAIT_AFTER_EXIT_SEC = 10.0     # 사용자 결정: 이탈 확정 후 10초
 COLLECT_SEC = 5.0              # 그 뒤 5초 동안의 프레임 중앙값(한 프레임 저장 시 측정 잡음이 기준에 들어갔다)
 RADAR_MOVE_M = 0.3             # 레이더 추적이 이탈 후 이만큼 움직였어야 '사람이 침대를 떠났다'고 본다
@@ -37,7 +39,7 @@ def radar_moved(history: list[tuple[float, list[tuple]]], since: float) -> dict:
             "seen_targets": len(first)}
 
 
-BED_CENTER = (1.0, 1.4)       # 10-29 30° 누운 자리 실측 · 레이더 바닥 좌표의 침대 가운데(mmWave/send_mmw.py BED_CENTER와 같게 — 10-22 부스 실측, 랩실 (0.1, 1.2))
+# 침대 가운데: 2026-10-31부터 bed_position.bed_center()(mmWave/bed_center.json). 예전 값 (1.0, 1.4) — 10-29 30° 누운 자리 실측 · 레이더 바닥 좌표의 침대 가운데(mmWave/send_mmw.py BED_CENTER와 같게 — 10-22 부스 실측, 랩실 (0.1, 1.2))
 BED_CLEAR_M = 1.5              # 2026-10-22: 이 안에(1.0m는 침대 옆 1m에 서 있던 사람을 못 막음) 레이더 추적이 하나라도 있으면 갱신하지 않는다
 BED_CLEAR_SEC = 5.0            # 수집 직전 이 시간 동안 계속 비어 있어야 한다
 # 10-22 라이브: 걸터앉은 사람을 ToF가 '이탈'로 깜빡일 때마다, 랩실의 다른 사람이 0.3m 움직이면 조건이 맞아
@@ -50,7 +52,10 @@ def bed_clear(history: list[tuple[float, list[tuple]]], now: float, window: floa
     recent = [(t, tg) for t, tg in history if now - t <= window]
     if len(recent) < max(3, int(window / 0.5) - 2):
         return {"clear": False, "reason": "레이더 기록 부족", "nearest_m": None}
-    nearest = min((((x - BED_CENTER[0]) ** 2 + (y - BED_CENTER[1]) ** 2) ** 0.5 for _, tg in recent for _, x, y in tg),
+    bc = bed_center()
+    if bc is None:   # 2026-10-31: 이 설치에서 침대 위치를 안 쟀으면 '비었는지' 알 수 없다 → 갱신하지 않음
+        return {"clear": False, "reason": "침대 위치 미측정(tools/set_bed_center.py)", "nearest_m": None}
+    nearest = min((((x - bc[0]) ** 2 + (y - bc[1]) ** 2) ** 0.5 for _, tg in recent for _, x, y in tg),
                   default=None)
     clear = nearest is None or nearest > BED_CLEAR_M
     return {"clear": clear, "nearest_m": round(nearest, 2) if nearest is not None else None,

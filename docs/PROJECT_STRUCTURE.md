@@ -15,7 +15,7 @@ PlatformIO 빌드, node_modules, 로그, LanceDB 저장 엔진 내부 파일은 
 | TOF/ml/ | 자세 Random Forest 학습·추론(운영 v2: train_posture_v2.py, 이전 모델은 archive/), ROI/침대 좌표, LSTM-AE 참고 이상탐지, 특징 로깅, 후보 모델 비교 |
 | TOF/dataset*/ | 라벨별 ToF 거리 CSV/JSONL, 기존 4×4 및 빈 침대 데이터 보관 |
 | TOF/의 Python/HTML | 수집(capture_dataset; 2026-10 새 설치용 세션 녹화 record_posture → dataset_v2/), 전처리(preprocess_dataset), viewer_proxy 및 자세/3D 실험 화면 |
-| mmWave/ | TI IWR6843AOP cfg, USB TLV 리더 send_mmw, 설정 quick_cfg, record, 자세 probe/통합 리더 실험 |
+| mmWave/ | TI IWR6843AOP cfg(현재 천장 AOP_ceiling_2m5.cfg), USB TLV 리더 send_mmw, 침대 가운데 bed_center.json(tools/set_bed_center.py, server/bed_position.py), 설정 quick_cfg, record, 자세 probe/통합 리더 실험 |
 | mmWave/exit_seq/ | 이탈 시퀀스 기록·공동 로깅·증강·시계열/속도 분석 및 실험 인수인계 |
 | server/ | ToF(:5001)/mmWave(:5002) HTTP 서버, SQLite, 센서 판정, 통합 위험, 대시보드 API, AI 리포트/검색 |
 | server/reports/ | 저장된 보고서 예시/산출물 |
@@ -216,7 +216,8 @@ Majubom/
 │   │   ├── 20261023_143427_tid27.json
 │   │   ├── 20261031_140702_tid21.json
 │   │   ├── 20261031_140910_tid21.json
-│   │   └── 20261031_141023_tid21.json
+│   │   ├── 20261031_141023_tid21.json
+│   │   └── 20261031_154356_tid28.json
 │   ├── recordings/
 │   │   ├── 20261013_195537_실측세션.jsonl
 │   │   ├── 20261022_173750_시연테스트.jsonl.gz
@@ -231,13 +232,14 @@ Majubom/
 │   │   ├── test_diagnostics.py
 │   │   └── test_fall_detect.py
 │   ├── AOP_bed_2m7_d15.cfg
+│   ├── AOP_ceiling_2m5.cfg
 │   ├── AOP_diag_2m5_d50.before_20261022_static.cfg
 │   ├── AOP_diag_2m5_d50.cfg
 │   ├── AOP_diag_wideopen.cfg
 │   ├── AOP_v_C_legs_safe.cfg
 │   ├── AOP_wall_chest.cfg
 │   ├── bed_roi_tilted.json
-│   ├── clutter_baseline.json
+│   ├── clutter_baseline.before_20261031_ceiling.json
 │   ├── diagnostic_decode.py
 │   ├── diagnostic_server.py
 │   ├── fall_detect.py
@@ -345,6 +347,7 @@ Majubom/
 │   ├── ai_agent.py
 │   ├── ai_report.py
 │   ├── analysis_kb.py
+│   ├── bed_position.py
 │   ├── behavior_fsm.py
 │   ├── dashboard_api.py
 │   ├── data_integrity.py
@@ -783,6 +786,7 @@ Majubom/
 │   ├── guide_lib.py
 │   ├── laptop_stream_client.py
 │   ├── seed_demo_emr.py
+│   ├── set_bed_center.py
 │   └── update_project_structure.py
 ├── .env
 ├── .gitignore
