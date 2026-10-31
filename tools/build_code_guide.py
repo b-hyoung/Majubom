@@ -65,7 +65,7 @@ def facts():
                 evs += det.update(tt, [{"tid": a, "posX": x, "posY": y, "posZ": z} for a, x, y, z in trs])
             res[n] = [(round(e["at"], 2), e["stage"], e.get("kind"), e.get("drop_sec"), e.get("low_sec"), e["z"], e["ref"]) for e in evs]
         f["fall_replay"] = res
-        f["fall_consts"] = {k: getattr(F, k) for k in ("REF_DEFAULT", "REF_MIN", "REF_WINDOW_SEC", "SMOOTH_SEC", "FAST_SEC", 
+        f["fall_consts"] = {k: getattr(F, k) for k in ("REF_DEFAULT", "REF_MIN", "REF_WINDOW_SEC", "SMOOTH_SEC", "FAST_SEC",
                                                         "HIGH_FRAC", "LOW_FRAC", "RECOVER_FRAC", "CONFIRM_SEC",
                                                         "UPRIGHT_LOOKBACK_SEC", "NEAR_UPRIGHT_M")}
     except Exception as e:
