@@ -435,9 +435,16 @@ def calibrate():
     2026-10-22: 예전엔 프레임 1장만 저장해 그 순간의 잡음·측정 실패(-1)가 기준에 들어갔다(기준 없는 칸·빈 침대에서 '걸터앉음' 깜빡임)."""
     # 10-22 저녁: 20:23 누군가 침대 근처에 사람이 있을 때 수동 저장 → 그 사람이 '빈 침대'로 들어가 빈 침대가 계속 걸터앉음·재실.
     # 자동 보정처럼 지금 레이더에 침대 1.5m 안 사람이 있으면 거절한다(?force=1이면 강제, 레이더 꺼짐이면 그대로 저장)
+    radar_check = "skipped(force)"
     if request.args.get("force") != "1":
         tg = _radar_targets()
-        clr = _autocal.bed_clear([(_time.time(), tg)] * 20, _time.time()) if tg else {"clear": True}
+        if tg and _autocal.bed_center() is None:
+            # 2026-10-31 천장 이전: 침대 위치를 아직 안 재 레이더로 '침대 주변 비었나'를 볼 수 없다.
+            # 수동 저장은 사람이 빈 침대를 확인하고 누르는 것이므로 막지 않고 응답에 남긴다(자동 보정은 계속 꺼짐).
+            clr, radar_check = {"clear": True}, "skipped(bed_center 미측정)"
+        else:
+            clr = _autocal.bed_clear([(_time.time(), tg)] * 20, _time.time()) if tg else {"clear": True}
+            radar_check = "radar off" if tg is None else ("clear" if tg else "clear(추적 없음)")
         if not clr["clear"]:
             return jsonify({"ok": False, "error": f"빈 침대 기준 저장 거절: {clr['reason']} — 침대 주변을 비우고 다시"}), 409
     before = deepcopy(baseline)
@@ -470,7 +477,7 @@ def calibrate():
     observer.record('tof', 'calibration', {'before': before, 'after': deepcopy(baseline),
                                         'captured_valid_zones': captured})
     print(f"[calibrate] 베이스라인 저장: {captured}")
-    return jsonify({"ok": True, "captured_valid_zones": captured}), 200
+    return jsonify({"ok": True, "captured_valid_zones": captured, "radar_check": radar_check}), 200
 
 
 @app.route("/tof/baseline", methods=["GET"])
