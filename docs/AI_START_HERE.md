@@ -1,5 +1,7 @@
 # AI 작업 시작 안내
 
+> **2026-10-31:** `main`의 `mmWave/`는 새 작업을 위해 비워졌습니다. 기존 수집기·설정·실험 데이터는 `backup/mmwave-before-reset` 브랜치에 보관되어 있으며, 아래 mmWave 실행 경로는 복원 전까지 사용할 수 없습니다. 서버의 mmWave 수신 코드는 남아 있지만 해당 수집기가 없어 독립적으로 실측을 수집하지 않습니다.
+
 이 문서는 루트 AGENTS.md에서 필독으로 지정한다. 먼저 이 문서, PROJECT_STRUCTURE.md,
 SYSTEM_ARCHITECTURE.md를 읽고, 대상 코드와 호출 경로를 확인한 다음 수정한다.
 AGENTS.md를 지원하는 에이전트가 자동으로 규칙을 발견하도록 루트에 배치했다.
