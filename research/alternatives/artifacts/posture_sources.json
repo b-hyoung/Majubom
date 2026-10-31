@@ -1,0 +1,164 @@
+[
+  {
+    "path": "TOF/dataset/tof_edge_sit_20260707_145011.jsonl",
+    "sha256": "9feafb0d4715185002a39ca9a53a2ce8998d1acc73890114ed47bf78bfc6aab8",
+    "raw_frames": 300,
+    "paired_frames": 129,
+    "labels": {
+      "edge_sit": 300
+    }
+  },
+  {
+    "path": "TOF/dataset/tof_edge_sit_20260707_172105.jsonl",
+    "sha256": "9af4679ab488b83268c2202b2dbe5fbc77da16fe1f7e6ebf77765f68cc53338d",
+    "raw_frames": 301,
+    "paired_frames": 146,
+    "labels": {
+      "edge_sit": 301
+    }
+  },
+  {
+    "path": "TOF/dataset/tof_edge_sit_20260707_172337.jsonl",
+    "sha256": "cc3e5f1a080936e2df6fc3a1e0ce1191e1912c1ef37419379bbaa73c357ee7b5",
+    "raw_frames": 300,
+    "paired_frames": 143,
+    "labels": {
+      "edge_sit": 300
+    }
+  },
+  {
+    "path": "TOF/dataset/tof_edge_sit_20260707_172439.jsonl",
+    "sha256": "82f086325ef3ca1bb902896bcc5efba50e5c9557ed77e4d3c0464a20562f26bb",
+    "raw_frames": 300,
+    "paired_frames": 142,
+    "labels": {
+      "edge_sit": 300
+    }
+  },
+  {
+    "path": "TOF/dataset/tof_edge_sit_20260707_193015.jsonl",
+    "sha256": "d212bd3826c6df3e7f2637064494cf8dbd2dec1657c34f56e9323196cbe60060",
+    "raw_frames": 300,
+    "paired_frames": 148,
+    "labels": {
+      "edge_sit": 300
+    }
+  },
+  {
+    "path": "TOF/dataset/tof_empty_20260707_175731.jsonl",
+    "sha256": "6bb5984c393ea1a1b1a405e5452b2e07174c3d67daae8e0a2e879a8b3fd84dbf",
+    "raw_frames": 1001,
+    "paired_frames": 151,
+    "labels": {
+      "empty": 1001
+    }
+  },
+  {
+    "path": "TOF/dataset/tof_side_left_20260707_143411.jsonl",
+    "sha256": "75d724d5bccfdde17a7d19c66ef61496671b44fab9e990ce0df1bee103c10f2c",
+    "raw_frames": 400,
+    "paired_frames": 135,
+    "labels": {
+      "side_left": 400
+    }
+  },
+  {
+    "path": "TOF/dataset/tof_side_left_20260707_171608.jsonl",
+    "sha256": "a56b4ec436998c48ed4e02b52a2999fcb5625be58ac252a24f1816174c3426fc",
+    "raw_frames": 400,
+    "paired_frames": 182,
+    "labels": {
+      "side_left": 400
+    }
+  },
+  {
+    "path": "TOF/dataset/tof_side_right_20260707_144545.jsonl",
+    "sha256": "bac325f3e48d69dab4e4c6c79fd2999816e6e7b0ec12c959d1f2ec56dbd15749",
+    "raw_frames": 300,
+    "paired_frames": 129,
+    "labels": {
+      "side_right": 300
+    }
+  },
+  {
+    "path": "TOF/dataset/tof_side_right_20260707_144651_fromEdge.jsonl",
+    "sha256": "e8ef1a7c94abfff084e44841b6aac86cc944033a5f9e659b3dd4a3fe75518be4",
+    "raw_frames": 300,
+    "paired_frames": 140,
+    "labels": {
+      "side_right": 300
+    }
+  },
+  {
+    "path": "TOF/dataset/tof_side_right_20260707_171744.jsonl",
+    "sha256": "4dc3a2b13a7bcc6f99315e287531b1c451c223a1910c73a2c300fc498cec1066",
+    "raw_frames": 400,
+    "paired_frames": 153,
+    "labels": {
+      "side_right": 400
+    }
+  },
+  {
+    "path": "TOF/dataset/tof_side_right_20260707_194753.jsonl",
+    "sha256": "c6f1742ba3f262a2eff3920298e2312bc8e5f845636d3aa30d405ade8da6699b",
+    "raw_frames": 400,
+    "paired_frames": 190,
+    "labels": {
+      "side_right": 400
+    }
+  },
+  {
+    "path": "TOF/dataset/tof_sitting_20260707_145148.jsonl",
+    "sha256": "fb7602b5d880e97b25d7cb089d50d79ac6bc5b91270baf28462d56bf4b522db1",
+    "raw_frames": 301,
+    "paired_frames": 137,
+    "labels": {
+      "sitting": 301
+    }
+  },
+  {
+    "path": "TOF/dataset/tof_sitting_20260707_171946.jsonl",
+    "sha256": "87c5bd55fadc262aa4c09e6cfe23aa616f31e76bff4c2325d9059ac1e84b5d23",
+    "raw_frames": 400,
+    "paired_frames": 173,
+    "labels": {
+      "sitting": 400
+    }
+  },
+  {
+    "path": "TOF/dataset/tof_supine_20260707_143006.jsonl",
+    "sha256": "8c637623e8673b9df969846d3869fd2d980be303a6a632e8d844c969ce1c4adf",
+    "raw_frames": 600,
+    "paired_frames": 277,
+    "labels": {
+      "supine": 600
+    }
+  },
+  {
+    "path": "TOF/dataset/tof_supine_20260707_162613.jsonl",
+    "sha256": "0dad71d7c64e45e996c61941780023dbe6bdb2756821c4f120d63eaf1ebe3c3d",
+    "raw_frames": 2,
+    "paired_frames": 1,
+    "labels": {
+      "supine": 2
+    }
+  },
+  {
+    "path": "TOF/dataset/tof_supine_20260707_171450.jsonl",
+    "sha256": "ced8b52220aab93998f38017b8543be361a6524a5bf75a0d9c63d46e7860bc7c",
+    "raw_frames": 400,
+    "paired_frames": 161,
+    "labels": {
+      "supine": 400
+    }
+  },
+  {
+    "path": "TOF/dataset/tof_supine_20260707_194150.jsonl",
+    "sha256": "7cabe19e4eb8ed6ed87038c51b39fb69ea09174d126adcc9ef49220ad4bfb106",
+    "raw_frames": 401,
+    "paired_frames": 189,
+    "labels": {
+      "supine": 401
+    }
+  }
+]

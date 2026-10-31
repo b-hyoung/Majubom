@@ -17,8 +17,18 @@ TOF_ZONES     = 64   # ToF 8x8 존 개수 (distances_mm 를 d0..d63 컬럼으로
 
 
 # ── 연결 ──────────────────────────────────────────────────────────────
+class _ClosingConnection(sqlite3.Connection):
+    def __exit__(self, *args):
+        # sqlite3's default context manager commits but leaves the handle open.
+        # Dashboard polling creates many short-lived reads; close after each one.
+        try:
+            return super().__exit__(*args)
+        finally:
+            self.close()
+
+
 def get_conn() -> sqlite3.Connection:
-    conn = sqlite3.connect(DB_PATH)
+    conn = sqlite3.connect(DB_PATH, factory=_ClosingConnection)
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA foreign_keys = ON")
     return conn
@@ -87,6 +97,19 @@ def init_db():
             CREATE INDEX IF NOT EXISTS idx_ai_analysis_patient
                 ON ai_analysis(patient_id, analysis_type, created_at);
         """)
+        # risk_json(센서별 component_levels/dominant_signal 전체) — 대시보드가 과거 분석
+        # 기록에서도 "센서별 판정 · AI 교차검증" 블록을 그대로 재현할 수 있게 함.
+        ai_cols = {row["name"] for row in conn.execute("PRAGMA table_info(ai_analysis)")}
+        if "risk_json" not in ai_cols:
+            conn.execute("ALTER TABLE ai_analysis ADD COLUMN risk_json TEXT")
+        if "input_snapshot_json" not in ai_cols:
+            conn.execute("ALTER TABLE ai_analysis ADD COLUMN input_snapshot_json TEXT")
+        conn.execute("""CREATE TABLE IF NOT EXISTS ai_report_reviews (
+            analysis_id INTEGER PRIMARY KEY REFERENCES ai_analysis(id) ON DELETE CASCADE,
+            content_hash TEXT NOT NULL,
+            review_json TEXT NOT NULL,
+            reviewed_at TEXT NOT NULL
+        )""")
 
         # activity_log에 confidence/source_table/source_id 컬럼 추가 — CREATE TABLE IF NOT
         # EXISTS는 이미 있는 테이블에 컬럼을 못 더하므로 PRAGMA로 확인 후 없는 것만 ALTER.
@@ -247,6 +270,26 @@ def get_patient(bed_id: str) -> dict | None:
         return dict(row) if row else None
 
 
+def _list_patient_records(table: str, bed_id: str, limit: int) -> list[dict]:
+    """Read optional clinical-record tables; an older DB can legitimately lack them."""
+    if table not in {"emr_records", "nurse_reports"}:
+        raise ValueError("Unsupported patient record table")
+    with get_conn() as conn:
+        if not conn.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name=?", (table,)).fetchone():
+            return []
+        rows = conn.execute(f"SELECT * FROM {table} WHERE bed_id=? ORDER BY id DESC LIMIT ?",
+                            (bed_id, limit)).fetchall()
+        return [dict(row) for row in rows]
+
+
+def list_emr_records(bed_id: str, limit: int = 50) -> list[dict]:
+    return _list_patient_records("emr_records", bed_id, limit)
+
+
+def list_nursing_records(bed_id: str, limit: int = 20) -> list[dict]:
+    return _list_patient_records("nurse_reports", bed_id, limit)
+
+
 def list_medications(bed_id: str, active_only: bool = True) -> list[dict]:
     with get_conn() as conn:
         q = "SELECT * FROM medications WHERE bed_id = ?"
@@ -255,6 +298,42 @@ def list_medications(bed_id: str, active_only: bool = True) -> list[dict]:
             q += " AND active = 1"
         rows = conn.execute(q + " ORDER BY id", params).fetchall()
         return [dict(r) for r in rows]
+
+
+def get_medication(med_id: int) -> dict | None:
+    with get_conn() as conn:
+        row = conn.execute("SELECT * FROM medications WHERE id = ?", (med_id,)).fetchone()
+        return dict(row) if row else None
+
+
+def insert_medication(bed_id: str, name: str, dose: str | None = None, frequency: str | None = None,
+                       notes: str | None = None, start_date: str | None = None,
+                       end_date: str | None = None) -> int:
+    with get_conn() as conn:
+        cur = conn.execute("""INSERT INTO medications (bed_id, name, dose, frequency, start_date, end_date, notes)
+                              VALUES (?, ?, ?, ?, ?, ?, ?)""",
+                           (bed_id, name, dose, frequency, start_date, end_date, notes))
+        return cur.lastrowid
+
+
+def update_medication(med_id: int, **fields) -> None:
+    """fields: any of name/dose/frequency/notes/start_date/end_date/active. Nurse-editable —
+    unknown keys are ignored rather than raising, so a stray field in a request body can't
+    error out an otherwise-valid edit."""
+    allowed = {"name", "dose", "frequency", "notes", "start_date", "end_date", "active"}
+    cols = [k for k in fields if k in allowed]
+    if not cols:
+        return
+    with get_conn() as conn:
+        conn.execute(f"UPDATE medications SET {', '.join(c + ' = ?' for c in cols)} WHERE id = ?",
+                     [fields[c] for c in cols] + [med_id])
+
+
+def delete_medication(med_id: int) -> None:
+    """Soft delete (active=0) rather than removing the row — keeps a record of what a
+    patient was once on, consistent with list_medications(active_only=True) hiding it."""
+    with get_conn() as conn:
+        conn.execute("UPDATE medications SET active = 0 WHERE id = ?", (med_id,))
 
 
 def list_risk_factors(bed_id: str, active_only: bool = True) -> list[dict]:
@@ -359,13 +438,22 @@ def insert_sensor_event(bed_id: str, event_type: str, ts: str | None = None, lev
         return cur.lastrowid
 
 
-def get_activity_log(bed_id: str, event_type: str | None = None, limit: int = 50) -> list[dict]:
+def get_activity_log(bed_id: str, event_type: str | None = None, limit: int = 50,
+                      since: str | None = None, until: str | None = None) -> list[dict]:
+    """since/until: "YYYY-MM-DD HH:MM:SS" 형태 문자열 경계(since 이상, until 미만).
+    대시보드 "이전 이벤트" 날짜 필터(dashboard_api.py의 /events)가 사용."""
     with get_conn() as conn:
         q = "SELECT * FROM activity_log WHERE bed_id = ?"
         params: list = [bed_id]
         if event_type:
             q += " AND event_type = ?"
             params.append(event_type)
+        if since:
+            q += " AND ts >= ?"
+            params.append(since)
+        if until:
+            q += " AND ts < ?"
+            params.append(until)
         q += " ORDER BY ts DESC LIMIT ?"
         params.append(limit)
         rows = conn.execute(q, params).fetchall()
@@ -376,22 +464,54 @@ def get_activity_log(bed_id: str, event_type: str | None = None, limit: int = 50
 def insert_ai_analysis(patient_id: str, analysis_type: str, risk_score: float | None,
                         summary: str, detected_patterns: list | None, predicted_risks: list | None,
                         evidence_ids: list | None, model_version: str, prompt_version: str,
-                        confidence: float | None, report: dict) -> int:
+                        confidence: float | None, report: dict, risk: dict | None = None,
+                        created_at: str | None = None, input_snapshot: dict | None = None) -> int:
+    """created_at: normally left None (defaults to now). The weekly backfill script passes an
+    explicit past timestamp so historical demo-patient reports land on their real report week
+    instead of all being stamped with today's date."""
     import json as _json
     with get_conn() as conn:
-        cur = conn.execute("""
-            INSERT INTO ai_analysis
-                (patient_id, analysis_type, risk_score, summary, detected_patterns_json,
-                 predicted_risks_json, evidence_ids_json, model_version, prompt_version,
-                 confidence, report_json)
-            VALUES (?,?,?,?,?,?,?,?,?,?,?)
-        """, (patient_id, analysis_type, risk_score, summary,
-              _json.dumps(detected_patterns or [], ensure_ascii=False, default=str),
-              _json.dumps(predicted_risks or [], ensure_ascii=False, default=str),
-              _json.dumps(evidence_ids or [], ensure_ascii=False, default=str),
-              model_version, prompt_version, confidence,
-              _json.dumps(report, ensure_ascii=False, default=str)))
+        if created_at is not None:
+            cur = conn.execute("""
+                INSERT INTO ai_analysis
+                    (patient_id, created_at, analysis_type, risk_score, summary, detected_patterns_json,
+                     predicted_risks_json, evidence_ids_json, model_version, prompt_version,
+                     confidence, report_json, risk_json, input_snapshot_json)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+            """, (patient_id, created_at, analysis_type, risk_score, summary,
+                  _json.dumps(detected_patterns or [], ensure_ascii=False, default=str),
+                  _json.dumps(predicted_risks or [], ensure_ascii=False, default=str),
+                  _json.dumps(evidence_ids or [], ensure_ascii=False, default=str),
+                  model_version, prompt_version, confidence,
+                  _json.dumps(report, ensure_ascii=False, default=str),
+                  _json.dumps(risk, ensure_ascii=False, default=str) if risk is not None else None,
+                  _json.dumps(input_snapshot, ensure_ascii=False, default=str) if input_snapshot is not None else None))
+        else:
+            cur = conn.execute("""
+                INSERT INTO ai_analysis
+                    (patient_id, analysis_type, risk_score, summary, detected_patterns_json,
+                     predicted_risks_json, evidence_ids_json, model_version, prompt_version,
+                     confidence, report_json, risk_json, input_snapshot_json)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)
+            """, (patient_id, analysis_type, risk_score, summary,
+                  _json.dumps(detected_patterns or [], ensure_ascii=False, default=str),
+                  _json.dumps(predicted_risks or [], ensure_ascii=False, default=str),
+                  _json.dumps(evidence_ids or [], ensure_ascii=False, default=str),
+                  model_version, prompt_version, confidence,
+                  _json.dumps(report, ensure_ascii=False, default=str),
+                  _json.dumps(risk, ensure_ascii=False, default=str) if risk is not None else None,
+                  _json.dumps(input_snapshot, ensure_ascii=False, default=str) if input_snapshot is not None else None))
         return cur.lastrowid
+
+
+def get_analysis_count(patient_id: str, analysis_type: str | None = None) -> int:
+    with get_conn() as conn:
+        q = "SELECT COUNT(*) AS n FROM ai_analysis WHERE patient_id = ?"
+        params: list = [patient_id]
+        if analysis_type:
+            q += " AND analysis_type = ?"
+            params.append(analysis_type)
+        return conn.execute(q, params).fetchone()["n"]
 
 
 def get_latest_ai_analysis(patient_id: str, analysis_type: str | None = None) -> dict | None:
@@ -429,17 +549,19 @@ def list_ai_analysis(patient_id: str, analysis_type: str | None = None, limit: i
 _WINDOW_HOURS = {"1h": 1, "24h": 24, "7d": 24 * 7, "30d": 24 * 30}
 
 
-def get_patient_timeseries_summary(patient_id: str, window: str = "24h") -> dict:
+def get_patient_timeseries_summary(patient_id: str, window: str = "24h", exclude_types: tuple = ()) -> dict:
     """환자의 최근 window 기간 활동 요약 — activity_log 이벤트 레벨 분포 + 개수.
     실서버가 안 떠있거나 이벤트가 없으면 빈 요약을 정직하게 반환(추측으로 채우지 않음)."""
     hours = _WINDOW_HOURS.get(window, 24)
     cutoff = (datetime.now(timezone.utc) - timedelta(hours=hours)).isoformat()
+    exclusion = " AND COALESCE(event_type, '') NOT IN (" + ",".join("?" for _ in exclude_types) + ")" if exclude_types else ""
     with get_conn() as conn:
         rows = conn.execute("""
             SELECT event_type, level, COUNT(*) n FROM activity_log
-            WHERE bed_id = ? AND ts >= ?
+            WHERE bed_id = ? AND datetime(ts) >= datetime(?) AND datetime(ts) <= datetime('now')
+        """ + exclusion + """
             GROUP BY event_type, level
-        """, (patient_id, cutoff)).fetchall()
+        """, (patient_id, cutoff, *exclude_types)).fetchall()
     if not rows:
         return {"window": window, "n_events": 0, "by_event_type": {}, "note": "해당 기간 이벤트 없음"}
     by_type: dict[str, dict] = {}

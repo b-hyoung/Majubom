@@ -332,6 +332,44 @@ def _gait_from_samples(samples):
     }
 
 
+def gait_diagnostic_inputs(track_history, presence, now):
+    """Explain the exact selected 6-second window; metadata is never DB input."""
+    samples = [s for s in track_history.get(presence.get('main_tid'), ())
+               if now - s[0] <= WINDOW_SEC]
+    out = {'window_sec': WINDOW_SEC, 'main_tid': presence.get('main_tid'),
+           'n_samples': len(samples), 'minimum_samples': 10,
+           'sample_columns': ['timestamp_s', 'x_m', 'y_m', 'z_m', 'vx_m_s', 'vy_m_s'],
+           'sample_preview': [list(s) for s in samples[-10:]],
+           'preview_note': '최신 10개만 표시; 통계는 선택 트랙의 전체 6초 표본 사용',
+           'storage': 'latest RAM only; DB insert arguments exclude this metadata'}
+    if not samples:
+        out['status'] = 'no_samples'
+        return out
+    arr = np.asarray(samples)
+    speed = np.hypot(arr[:, 4], arr[:, 5])
+    mean = float(np.mean(speed))
+    std = float(np.std(speed))
+    out.update(status='computed' if len(samples) >= 10 else 'insufficient_samples',
+               speed={'n': len(speed), 'sum': float(np.sum(speed)),
+                      'sumsq': float(np.sum(speed**2)), 'mean': mean, 'std_population': std,
+                      'cv': std / mean if mean > 1e-6 else 0.0,
+                      'stored_speed_if_ready': round(mean, 3) if len(samples) >= 10 else None},
+               freeze={'threshold_m_s': FREEZE_SPEED_THRESH,
+                       'count': int(np.count_nonzero(speed < FREEZE_SPEED_THRESH)),
+                       'ratio': float(np.mean(speed < FREEZE_SPEED_THRESH))},
+               height={'min_z': float(np.min(arr[:, 3])), 'max_z': float(np.max(arr[:, 3])),
+                       'range_m': float(np.ptp(arr[:, 3])),
+                       'note': '현재 height_drop은 max(z)−min(z); 시간 순서의 하강만 구분하지 않음'},
+               gates={'walk_speed_min': WALK_SPEED_MIN, 'walk_displacement_min': WALK_DISP_MIN,
+                      'straightness_min': STRAIGHT_MIN, 'patient_locked': presence.get('patient_locked')})
+    dt = np.diff(arr[:, 0]); dt = dt[dt > 0]
+    out['stride'] = {'minimum_samples': 20, 'minimum_speed': 0.1,
+                     'sampling_hz': float(1/np.median(dt)) if len(dt) else None,
+                     'frequency_band_hz': [0.5, 3.0], 'peak_to_mean_min': 2,
+                     'note': '실제 기존 FFT 결과 stride_length/stride_cv는 raw에 표시; 추정 실패 0은 보행 실측 0과 구분'}
+    return out
+
+
 def select_patient(track_history, now):
     """롤링 track 이력에서 환자(메인 타겟)를 '침대 소속도'로 특정하고 gait 계산.
 
@@ -444,7 +482,7 @@ def send_config(cli_port, cfg_path, baud=115200):
         print(f"[cfg] sent: {cfg_path}  —  모든 줄 적용 OK")
 
 
-def run(cli_port, data_port, cfg_path, do_send=True, target_id="room_01"):
+def run(cli_port, data_port, cfg_path, do_send=True, target_id="room_01", diagnostics_url="http://127.0.0.1:5012/api/ingest", height=2.5, tilt=50.0, min_snr=0.0):
     if serial is None:
         raise RuntimeError("pyserial 미설치: pip install pyserial")
     if do_send and requests is None:
@@ -453,7 +491,24 @@ def run(cli_port, data_port, cfg_path, do_send=True, target_id="room_01"):
     if cfg_path:
         send_config(cli_port, cfg_path)
 
-    data = serial.Serial(data_port, 921600, timeout=0.1)
+    import sys
+    from pathlib import Path
+    diagnostics = None
+    if diagnostics_url:
+        try:
+            sys.path.append(str(Path(__file__).resolve().parents[1] / 'server'))
+            from live_diagnostics import LatestPublisher
+            from diagnostic_decode import decode_frame
+            diagnostics = LatestPublisher(diagnostics_url)
+        except Exception as exc:
+            print(f'[diagnostics] unavailable: {type(exc).__name__}')
+    data = serial.Serial(data_port, 921600, timeout=0.1, exclusive=True)
+    diagnostic_bytes = diagnostic_frames = 0
+    diagnostic_frame = None
+    diagnostic_pending = None
+    diagnostic_error = None
+    diagnostic_at = None
+    diagnostic_sent = 0.0
     buf = b""
     history = defaultdict(lambda: deque(maxlen=2000))
     window_start = time.time()
@@ -465,10 +520,14 @@ def run(cli_port, data_port, cfg_path, do_send=True, target_id="room_01"):
         while True:
             chunk = data.read(4096)
             if chunk:
+                diagnostic_bytes += len(chunk)
                 buf += chunk
                 frames, buf = iter_frames(buf)
                 now = time.time()
                 for hdr, fb in frames:
+                    diagnostic_frames += 1
+                    diagnostic_at = now
+                    diagnostic_pending = (hdr, fb)
                     targets = extract_targets(hdr, fb)
                     latest_targets = targets  # 매 프레임 갱신
                     for t in targets:
@@ -477,9 +536,28 @@ def run(cli_port, data_port, cfg_path, do_send=True, target_id="room_01"):
                              t["velX"], t["velY"])
                         )
 
+            if diagnostics and time.monotonic() - diagnostic_sent >= 0.2:
+                if diagnostic_pending is not None:
+                    try:
+                        diagnostic_frame = decode_frame(*diagnostic_pending, height, tilt, min_snr)
+                        diagnostic_error = None
+                    except Exception as exc:
+                        diagnostic_frame = None
+                        diagnostic_error = f'diagnostic decode failed: {type(exc).__name__}'
+                    diagnostic_pending = None
+                diagnostics.publish('mmwave', {
+                    'status': 'streaming' if diagnostic_at else 'waiting', 'error': diagnostic_error,
+                    'bytes': diagnostic_bytes, 'frames': diagnostic_frames,
+                    'last_frame_at': diagnostic_at, 'frame': diagnostic_frame,
+                    'mount': {'height_m': height, 'down_tilt_deg': tilt},
+                })
+                diagnostic_sent = time.monotonic()
+
             # 실시간 snapshot 전송 (LIVE_INTERVAL 마다)
             now = time.time()
-            if do_send and now - last_live >= LIVE_INTERVAL and latest_targets:
+            if do_send and now - last_live >= LIVE_INTERVAL:
+                if diagnostic_at is None or now - diagnostic_at > 2:
+                    latest_targets = []
                 try:
                     snap = [{"tid": t["tid"],
                              "x": round(t["posX"], 3),
@@ -514,6 +592,10 @@ def run(cli_port, data_port, cfg_path, do_send=True, target_id="room_01"):
                     "quality": quality,
                     "presence": presence,
                 }
+                try:
+                    payload['diagnostic_inputs'] = gait_diagnostic_inputs(history, presence, now)
+                except Exception:
+                    pass  # Observability cannot interrupt the original sensor delivery.
                 if raw:
                     print(f"[{time.strftime('%H:%M:%S')}] raw={raw} | "
                           f"tid={presence['main_tid']} aff={presence['bed_affinity']} "
@@ -597,6 +679,10 @@ if __name__ == "__main__":
     ap.add_argument("--data", required=True, help="DATA 포트 (예: /dev/ttyACM1, COM3)")
     ap.add_argument("--cfg", default=None, help="전송할 .cfg 경로 (생략 시 cfg 전송 안 함)")
     ap.add_argument("--target", default="room_01", help="target_id")
+    ap.add_argument("--diagnostics-url", default="http://127.0.0.1:5012/api/ingest", help="latest-only raw dashboard relay; empty disables")
+    ap.add_argument("--height", type=float, default=2.5)
+    ap.add_argument("--tilt", type=float, default=50.0)
+    ap.add_argument("--min-snr", type=float, default=0.0, help="diagnostic point filter only")
     ap.add_argument("--no-send", action="store_true", help="POST 없이 콘솔 출력만")
     ap.add_argument("--capture-zone", type=float, default=0.0, metavar="SEC",
                     help="측정 모드: SEC초 동안 target x,y,z를 모아 존 사각형 추정 후 종료")
@@ -608,4 +694,4 @@ if __name__ == "__main__":
             send_config(args.cli, args.cfg)
         capture_zone(args.data, args.capture_zone, args.capture_label)
     else:
-        run(args.cli, args.data, args.cfg, do_send=not args.no_send, target_id=args.target)
+        run(args.cli, args.data, args.cfg, do_send=not args.no_send, target_id=args.target, diagnostics_url=args.diagnostics_url, height=args.height, tilt=args.tilt, min_snr=args.min_snr)

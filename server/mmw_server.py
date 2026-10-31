@@ -18,6 +18,9 @@ mmWave가 보내는 것 : raw(speed/speed_cv/sway/freeze_ratio/height_drop) + qu
 주의: Windows 콘솔(cp949)에서 한글 print 시 깨질 수 있어 콘솔 출력은 ASCII만.
       한글은 JSON/HTML 응답(UTF-8)으로만 내보낸다.
 """
+import math
+from copy import deepcopy
+from diagnostic_observer import observer, mmwave_snapshot, patient_target
 import os
 import time
 from datetime import datetime
@@ -28,6 +31,7 @@ from flask_cors import CORS
 
 import mmw_logic as L
 import db
+import sim_state
 
 try:
     import data_integrity as _data_integrity
@@ -49,12 +53,41 @@ mmw_log: list[dict] = []
 # 실시간 포인트 클라우드 snapshot (send_mmw가 0.3초마다 갱신)
 live_snapshot: dict = {"targets": [], "ts": 0}
 
+# 대상별 EMR 기반 보행 사전분포(gait_prior.py) — DB 조회를 줄이려고 30초 동안 재사용
+_PRIOR_TTL_SEC = 30.0
+_prior_cache: dict = {}
+
+
+def _prior_for(target_id: str):
+    now = time.time()
+    hit = _prior_cache.get(target_id)
+    if hit and now - hit[0] < _PRIOR_TTL_SEC:
+        return hit[1]
+    prior = None
+    try:
+        import gait_prior
+        with db.get_conn() as conn:
+            prior = gait_prior.get_active_prior_for_target(conn, target_id)
+    except Exception as e:   # 사전분포가 없거나 테이블이 없어도 기존 판정은 그대로 진행
+        print(f"[gait_prior] load failed for {target_id}: {e}")
+    _prior_cache[target_id] = (now, prior)
+    return prior
+
+
+def _bad_metric(v) -> bool:
+    """숫자가 아니거나 NaN·무한대·비정상 크기(|v| > MAX_ABS_METRIC)면 True. 아주 큰 정수도 float 변환 전에 거른다."""
+    if isinstance(v, bool) or not isinstance(v, (int, float)):
+        return True
+    if isinstance(v, int):
+        return abs(v) > L.MAX_ABS_METRIC
+    return not math.isfinite(v) or abs(v) > L.MAX_ABS_METRIC
+
 
 # ── 수신 ───────────────────────────────────────────────────────────────
 @app.route("/mmw", methods=["POST"])
 def receive_mmw():
     data = request.get_json(silent=True)
-    if not data:
+    if not isinstance(data, dict) or not data:
         return jsonify({"error": "JSON body required"}), 400
 
     raw = data.get("raw")
@@ -68,9 +101,46 @@ def receive_mmw():
     raw.setdefault("stride_length", 0.0)
     raw.setdefault("stride_cv", 0.0)
     data.setdefault("target_id", "room_01")
+    if not isinstance(data["target_id"], str) or not data["target_id"].strip():
+        return jsonify({"error": "target_id는 비어 있지 않은 문자열이어야 합니다"}), 400
+    for key in ("quality", "presence"):     # 객체가 아니면 없는 것과 같게(구 payload 호환 기본값)
+        if not isinstance(data.get(key), dict):
+            data[key] = {}
+    # 숫자가 아니거나 NaN·무한대·비정상 크기인 지표는 누적 통계를 망가뜨린다. 패킷 전체를 거절하면
+    # 같은 패킷의 높이 급강하(낙상) 판정까지 막히므로, 그 지표만 0.0으로 바꾸고 이번 구간을 보행 기준선에서 뺀다.
+    invalid = [key for key in ("speed", "speed_cv", "sway", "freeze_ratio", "height_drop", "stride_length", "stride_cv")
+               if _bad_metric(raw.get(key))]
+    for key in invalid:
+        raw[key] = 0.0
+    if invalid:
+        data["quality"] = {**data["quality"], "walking": False, "invalid_fields": invalid}
 
-    # baseline 갱신 + z-score/alert 계산 (mmw_logic)
-    result = L.evaluate(data, baseline_store, persist=True)
+    # baseline 갱신 + z-score/alert 계산 (mmw_logic). EMR 기반 문헌 사전분포가 있으면 함께 넘긴다.
+    before = deepcopy(baseline_store.get(data["target_id"]))
+    prior = _prior_for(data["target_id"])
+    try:
+        result = L.evaluate(data, baseline_store, persist=True, prior=prior)
+    except Exception as exc:
+        observer.record('mmwave:' + data['target_id'], 'evaluation',
+                        {'status': 'failed', 'error': str(exc)}, event=True)
+        raise
+    after = deepcopy(baseline_store.get(data["target_id"]))
+    observer.record('mmwave:' + data['target_id'], 'evaluation', {
+        'status': 'evaluated', 'before': before, 'after': after,
+        'baseline_updated': before != after,
+        'baseline_used': (None if result.get('zscore') is None or (prior and (prior.get('metrics') or {}).get('speed'))
+                          else result.get('baseline')),
+        'comparison_order': ('not_executed' if result.get('zscore') is None else
+                             'before_update_prior' if prior and (prior.get('metrics') or {}).get('speed')
+                             else 'after_update_legacy'),
+        'prior': prior, 'inputs': {'raw': deepcopy(raw), 'quality': deepcopy(data['quality']),
+                                  'presence': deepcopy(data['presence'])},
+        'zscore': result.get('zscore'), 'level': result.get('alert_level'),
+        'alarm': result.get('alarm'), 'reason': result.get('reasons'),
+        'invalid_fields': invalid,
+        'diagnostic_inputs': deepcopy(data.get('diagnostic_inputs')),
+    }, event=bool(result.get('alarm') or result.get('measuring_held')))
+
 
     latest_by_target[result["target_id"]] = result
     mmw_log.append(result)
@@ -81,12 +151,14 @@ def receive_mmw():
     z = result.get("zscore") or {}
     raw_id = None
     try:
-        raw_id = db.insert_mmw(
+        raw_id = observer.write('mmwave:' + result['target_id'], 'mmw_readings', db.insert_mmw,
             result["target_id"],
             result.get("received_at") or datetime.now().isoformat(),
             raw, data.get("quality") or {}, data.get("presence") or {},
             total_abs=z.get("total_abs"),
             alert_level=result.get("alert_level"),
+            labels={'target_id': result['target_id'], 'alert_level': result.get('alert_level'),
+                    'total_abs': z.get('total_abs'), 'note': '각 지표 z/보행 라벨 전체는 이 테이블에 저장하지 않음'},
         )
     except Exception as e:
         print(f"[DB] MMW insert failed: {e}")
@@ -99,16 +171,21 @@ def receive_mmw():
             quality = data.get("quality") or {}
             diag = _data_integrity.check_mmw_consistency(
                 int(quality.get("samples_count") or 0), bool(quality.get("walking")))
+            observer.record('mmwave:' + result['target_id'], 'integrity', diag)
             if diag.get("consistent") is False:
                 now_iso = result.get("received_at") or datetime.now().isoformat()
-                db.insert_clean_data(
+                observer.write('mmwave:' + result['target_id'], 'sensor_clean_data', db.insert_clean_data,
                     patient_id="bed_01", sensor_type="mmwave", timestamp=now_iso,
                     cleaned_value={"diagnosis": diag}, preprocessing_method="mmw_walking_sample_check",
                     confidence=None, removed_outlier=False, raw_table="mmw_readings", raw_id=raw_id,
+                    labels={'preprocessing_method': 'mmw_walking_sample_check', 'patient_id': 'bed_01',
+                            'sensor_type': 'mmwave', 'raw_id': raw_id},
                 )
-                db.insert_sensor_event("bed_01", "data_integrity_flag", ts=now_iso, level="caution",
+                observer.write('mmwave:' + result['target_id'], 'activity_log', db.insert_sensor_event,
+                                        "bed_01", "data_integrity_flag", ts=now_iso, level="caution",
                                         title="mmWave 일관성 불일치", note=diag.get("note"),
-                                        source_table="mmw_readings", source_id=raw_id)
+                                        source_table="mmw_readings", source_id=raw_id,
+                                        labels={'event_type': 'data_integrity_flag', 'level': 'caution', 'source_id': raw_id})
         except Exception as e:
             print(f"[data_integrity] mmWave 진단 실패: {e}")
 
@@ -124,6 +201,20 @@ def receive_mmw():
           f"level={lvl}{' ALARM' if result.get('alarm') else ''}")
     return jsonify({"ok": True, "alert_level": result.get("alert_level"),
                     "alarm": result.get("alarm")}), 200
+
+
+@app.route('/api/diagnostics/mmwave', methods=['GET'])
+def diagnostic_mmwave():
+    bed_id = request.args.get('bed_id', 'bed_01')
+    assigned = patient_target(db.DB_PATH, bed_id)
+    target = request.args.get('target', assigned or 'room_01')
+    if bed_id != 'bed_01' or target != assigned:
+        response = jsonify(scope_error='실측 관측은 연결 환자 bed_01과 실제 배정된 mmWave 대상만 조회합니다.',
+                           bed_id=bed_id, requested_target=target, assigned_target=assigned)
+    else:
+        response = jsonify(mmwave_snapshot(L, baseline_store, latest_by_target, db.DB_PATH, target, bed_id))
+    response.headers['Cache-Control'] = 'no-store'
+    return response
 
 
 # ── 조회 ───────────────────────────────────────────────────────────────
@@ -174,6 +265,9 @@ def receive_live():
 
 @app.route("/mmw/live", methods=["GET"])
 def get_live():
+    bed_id = request.args.get("bed_id")
+    if bed_id and sim_state.is_simulated(bed_id):
+        return jsonify(sim_state.synthetic_mmw_live(bed_id))
     return jsonify(live_snapshot)
 
 
@@ -183,6 +277,7 @@ def viz():
 <title>mmWave Point Cloud</title>
 <style>
  *{margin:0;padding:0;box-sizing:border-box}
+ html,body{overscroll-behavior:none}
  body{background:#0d0b1a;color:#e8e6f5;font-family:system-ui,sans-serif;
       display:flex;flex-direction:column;align-items:center;padding:16px}
  h2{margin-bottom:8px;font-size:18px;font-weight:700}
@@ -280,7 +375,7 @@ function render(data){
 
 async function poll(){
   try{
-    let r=await fetch('/mmw/live');
+    let r=await fetch('/mmw/live'+location.search);
     let d=await r.json();
     if(d.ts!==lastTs){render(d);lastTs=d.ts}
   }catch(e){}

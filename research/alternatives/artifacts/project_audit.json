@@ -1,0 +1,885 @@
+{
+  "date": "2026-09-18",
+  "timezone": "Asia/Seoul",
+  "files": [
+    {
+      "path": "0704할일.md",
+      "sha256": "69d8a7ae0326fd5892102cf4f1a30ea92eaa68685d184e6f1276c476f596f987",
+      "lines": 85,
+      "label_mentions": 1
+    },
+    {
+      "path": "0707_TOF_진행상황_인수인계.md",
+      "sha256": "4c04223972f8c14814902ff1cdb15e4150aff2fcf282e9108cf3310f5ff2e3eb",
+      "lines": 71,
+      "label_mentions": 1
+    },
+    {
+      "path": "ai_progress_presentation.html",
+      "sha256": "7b7f0b1b9c7b4d245fde1bb58d75214d6c37d27f9dd1461181b71ca67722c141",
+      "lines": 630,
+      "label_mentions": 62
+    },
+    {
+      "path": "cloud_dashboard.py",
+      "sha256": "ba507a52cc9f52a9e4b494d4da25d9b56434d61a03738046bf73bb2f65516b3b",
+      "lines": 86,
+      "label_mentions": 0
+    },
+    {
+      "path": "docs/ai_plan.html",
+      "sha256": "ea1c463350cdab0dfe9c9c62a04d68a1e17eb01d8a37c09145eaa9f58fb37aad",
+      "lines": 3287,
+      "label_mentions": 123
+    },
+    {
+      "path": "docs/algorithm_papers_explainer.html",
+      "sha256": "dc7bab77eb3ab672fd16f209a558af04cd963a4525c83ee9e243a8b39f8154e5",
+      "lines": 394,
+      "label_mentions": 23
+    },
+    {
+      "path": "docs/deck_capstone.html",
+      "sha256": "608a7c427462b6fe5a18a4adfbe6a3edb82b631e5ef41484f49f6b028a863f90",
+      "lines": 397,
+      "label_mentions": 3
+    },
+    {
+      "path": "docs/operating_concept_day_night.md",
+      "sha256": "3c13d97002fc97ef08ab5f101b0530e058136b3f5dfd2b17ef3fbbf006078b5e",
+      "lines": 55,
+      "label_mentions": 0
+    },
+    {
+      "path": "docs/panel_a1.html",
+      "sha256": "878a48abc22b4ff600a990b7fc284de70f93f45f47cea027de4bd85040129d05",
+      "lines": 404,
+      "label_mentions": 2
+    },
+    {
+      "path": "docs/papers/_registry.md",
+      "sha256": "abe2e17f4a7701fc095fd348f7c16b701396d5cc4c6d3e3a0cd2b453de551fd8",
+      "lines": 74,
+      "label_mentions": 0
+    },
+    {
+      "path": "docs/papers/paper-01.html",
+      "sha256": "b109b9464b8a344a3dd6c8a3d51f0dd4fd9df60a90d373091a22b255e21c05e7",
+      "lines": 117,
+      "label_mentions": 3
+    },
+    {
+      "path": "docs/papers/paper-02.html",
+      "sha256": "5c50947c1e2f679544ca0080bfde88cb26ed588537d22dbb41a90bc2e83535e9",
+      "lines": 120,
+      "label_mentions": 4
+    },
+    {
+      "path": "docs/papers/paper-03.html",
+      "sha256": "b6ad2fc0162b240434e17988c8b23164b24be54be17556c99e1636ab88d6c3a4",
+      "lines": 126,
+      "label_mentions": 3
+    },
+    {
+      "path": "docs/papers/paper-04.html",
+      "sha256": "102c5ddb1bdde64b1a07d3915e33ceaaae91481c3ca8870bef5d5c1e9fbc66d7",
+      "lines": 141,
+      "label_mentions": 3
+    },
+    {
+      "path": "docs/papers/paper-05.html",
+      "sha256": "732d323146feae8ce8c1b8d16791ba6cc13f93674ed1634cfc7c39d3f8f56dc3",
+      "lines": 141,
+      "label_mentions": 3
+    },
+    {
+      "path": "docs/papers/paper-06.html",
+      "sha256": "be17f592cec7d9deb717c9edf657fbd1e044106c7bfa19cbda15b32718b236c0",
+      "lines": 136,
+      "label_mentions": 3
+    },
+    {
+      "path": "docs/papers/paper-07.html",
+      "sha256": "6318f70426d502de2a486807e0ba22f4ff9b97cf835c0c16b8594d695aff64be",
+      "lines": 140,
+      "label_mentions": 3
+    },
+    {
+      "path": "docs/papers/paper-08.html",
+      "sha256": "2455f094cf138d7b985cc2a47f6a2c715fe49facf874549383812e1a433b8af5",
+      "lines": 136,
+      "label_mentions": 3
+    },
+    {
+      "path": "docs/papers/paper-09.html",
+      "sha256": "c9264c8e7761e5f43a62916258e1d006cc9e16ffc1f86bd6c6d55cecafad444c",
+      "lines": 133,
+      "label_mentions": 3
+    },
+    {
+      "path": "docs/papers/paper-10.html",
+      "sha256": "95a8dcd4072de472139e72fd9b6fb56d6ba4943e4eddf46d344ae18d5deb411c",
+      "lines": 128,
+      "label_mentions": 3
+    },
+    {
+      "path": "docs/papers/paper-11.html",
+      "sha256": "0a11925742258812a891af8bcb356f6b38ffb30adf0c823fdec6f3eaa2d9ce89",
+      "lines": 140,
+      "label_mentions": 3
+    },
+    {
+      "path": "docs/papers/paper-12.html",
+      "sha256": "d5c230c313a1bf36a628d383600e1730baea66305ae74314854bb991f9b57981",
+      "lines": 124,
+      "label_mentions": 4
+    },
+    {
+      "path": "docs/papers/paper-13.html",
+      "sha256": "ac4bf4b2ab1b61ef0f4b6cd7cf4080b071e0fe52528738e76a39c5451030f44d",
+      "lines": 133,
+      "label_mentions": 3
+    },
+    {
+      "path": "docs/papers/paper-14.html",
+      "sha256": "fb923b007be30cf3c69d24ae8fc807d7a401376b9065c78a66183b4ae4429554",
+      "lines": 118,
+      "label_mentions": 3
+    },
+    {
+      "path": "docs/papers/paper-15.html",
+      "sha256": "8e4b8b2e3524323d08e9a62d0ec7cc589e42f24c4a5998df51d1aa7b63d6891d",
+      "lines": 119,
+      "label_mentions": 3
+    },
+    {
+      "path": "docs/papers/paper-16.html",
+      "sha256": "1c75340c93c692348b36663e92342b0dbb890e923cc5e8256a8524048859ae33",
+      "lines": 148,
+      "label_mentions": 4
+    },
+    {
+      "path": "docs/papers/paper-17.html",
+      "sha256": "16d621d9eab2a6e5d15ed56018e288cf45c560225d7c4b403661b3b6316fa3d4",
+      "lines": 130,
+      "label_mentions": 3
+    },
+    {
+      "path": "docs/papers/paper-18.html",
+      "sha256": "76db8da2c0be3fda8b184dbdadce889b6e4c536c4b94084c0a69bb53b60dbd69",
+      "lines": 134,
+      "label_mentions": 3
+    },
+    {
+      "path": "docs/papers/paper-19.html",
+      "sha256": "d99e9afd1f43390a760b802b351abd31eb0f81d345106a47405e04422ea0e3a1",
+      "lines": 129,
+      "label_mentions": 3
+    },
+    {
+      "path": "docs/papers/paper-20.html",
+      "sha256": "3dc80e8819480b9c08647759cb5d6d81a3c1340ac813a5696d388e4c4ae08a04",
+      "lines": 131,
+      "label_mentions": 3
+    },
+    {
+      "path": "docs/papers/paper-21.html",
+      "sha256": "a8af7567ef1aa543a7a3c77feb827c7ae2dcd02a833d2a2857a84a2d6845a966",
+      "lines": 144,
+      "label_mentions": 4
+    },
+    {
+      "path": "docs/papers/paper-22.html",
+      "sha256": "30d7c96cecd74c8ac51a0bdf8c29525cd5a064d2108f50475b71b9703e728323",
+      "lines": 139,
+      "label_mentions": 6
+    },
+    {
+      "path": "docs/papers/paper-23.html",
+      "sha256": "8a5127d823ef67fc8259a6bc39b2124395d52f436002a0794d902b5008e7e954",
+      "lines": 154,
+      "label_mentions": 6
+    },
+    {
+      "path": "docs/papers/paper-24.html",
+      "sha256": "bc976e01e22f16fcbe2686027e314dcaf4dffa451a058420cb4fd5d5dfbcc76a",
+      "lines": 126,
+      "label_mentions": 3
+    },
+    {
+      "path": "docs/papers/paper-25.html",
+      "sha256": "aeb3f34840612edd734f01db72c635c5e02820624d1cab4f39459efb79ae6952",
+      "lines": 139,
+      "label_mentions": 3
+    },
+    {
+      "path": "docs/papers/paper-26.html",
+      "sha256": "e75a2221bdf9a47f74435bd3a1e20d3c9c207b0a5b8d9e3629f8ae047a665fd5",
+      "lines": 127,
+      "label_mentions": 3
+    },
+    {
+      "path": "docs/papers/paper.css",
+      "sha256": "a4c80a3bd22f0cd7977eb75c7c2550e292fef3676b5482503210bb984a5b12b1",
+      "lines": 104,
+      "label_mentions": 2
+    },
+    {
+      "path": "docs/papers/paper.js",
+      "sha256": "a17e519d498343039c1c6de344a0d45b4b9aac33b6316240e72eb10f321a085f",
+      "lines": 21,
+      "label_mentions": 0
+    },
+    {
+      "path": "docs/related_work_gait_fall.md",
+      "sha256": "d28c96c74a713dc76f05c16f4aadf4774ac66bde84c8a159f305acb6b73acd3e",
+      "lines": 48,
+      "label_mentions": 3
+    },
+    {
+      "path": "docs/server_briefing.html",
+      "sha256": "027f527514692e0dbaccc05a947f811d6b25d8f170c93d0143621eb276b0f722",
+      "lines": 459,
+      "label_mentions": 0
+    },
+    {
+      "path": "docs/superpowers/specs/2026-06-15-csi-server-integration-design.md",
+      "sha256": "660d9e96c2e7bacd353ef2dc8177f7056ad8fabe457a8b5caf275c2f5803dab7",
+      "lines": 72,
+      "label_mentions": 0
+    },
+    {
+      "path": "docs/superpowers/specs/2026-06-23-majubom-interactive-presentation-design.md",
+      "sha256": "15d07f009015e18a4c6791b08e2fd357cc286a4b6db3031a855a8203c0aebf84",
+      "lines": 39,
+      "label_mentions": 2
+    },
+    {
+      "path": "docs/superpowers/specs/2026-06-24-csi-mmwave-fusion-honest-direction.md",
+      "sha256": "44494de93cafd17ec1acbf023b27cbf67b03ba93be577fa7fb55ecd41380adb0",
+      "lines": 84,
+      "label_mentions": 2
+    },
+    {
+      "path": "mmWave/AOP_bed_2m7_d15.cfg",
+      "sha256": "3a416b0c035f274b1def146e2bddd2ef4407a7d785a05825c22f36e2cec9ae71",
+      "lines": 52,
+      "label_mentions": 0
+    },
+    {
+      "path": "mmWave/AOP_diag_wideopen.cfg",
+      "sha256": "55f9571b7246d674184ce82fb991e8518b1b6ad97d4c2f2e0bca8866ce495208",
+      "lines": 46,
+      "label_mentions": 0
+    },
+    {
+      "path": "mmWave/AOP_v_C_legs_safe.cfg",
+      "sha256": "7573019f86047e3251e2775ce3ddb1fb627ddf33550d09d296cd1c31df6ff96f",
+      "lines": 37,
+      "label_mentions": 0
+    },
+    {
+      "path": "mmWave/AOP_wall_chest.cfg",
+      "sha256": "d83aeb554565b578ea0c20c9e126f292a22d6050b7045dffeedaa9fcc013be83",
+      "lines": 37,
+      "label_mentions": 0
+    },
+    {
+      "path": "mmWave/exit_seq/analyze_aug.py",
+      "sha256": "77b363ea55d0a8afa3fe5efa3dc3ca875e29b5ac4902a7092e93967eb0cf59cb",
+      "lines": 129,
+      "label_mentions": 0
+    },
+    {
+      "path": "mmWave/exit_seq/analyze_timeseries.py",
+      "sha256": "0b4012ddd933e8ce69bf46f515158a838fd8bf949e86118887f9ac53d8f0bdac",
+      "lines": 46,
+      "label_mentions": 0
+    },
+    {
+      "path": "mmWave/exit_seq/analyze_v2.py",
+      "sha256": "dfd3abdd58e472859d4b9d27258e307285e5dad11ad512f7f603afb8acd94441",
+      "lines": 204,
+      "label_mentions": 0
+    },
+    {
+      "path": "mmWave/exit_seq/analyze_velocity.py",
+      "sha256": "7569f0ffca562e75648144ddb1f63ab8a6ee46ce7af83d3887901528d6491ff2",
+      "lines": 53,
+      "label_mentions": 1
+    },
+    {
+      "path": "mmWave/exit_seq/augment_seq.py",
+      "sha256": "4780eb0d765299fe2eac0416e09b432a8f19bddb41569bf26b6473a1bfd04831",
+      "lines": 124,
+      "label_mentions": 6
+    },
+    {
+      "path": "mmWave/exit_seq/AUGMENTATION_NOTES.md",
+      "sha256": "d9a9e3b1ef8c0de1398ebb425f25696d881f64fef1ae79fe17410acde29353e6",
+      "lines": 82,
+      "label_mentions": 1
+    },
+    {
+      "path": "mmWave/exit_seq/co_log.py",
+      "sha256": "6373dceeec5fff7dee34912681768d6a627dcfd5692a3f8f5b79796a369357ec",
+      "lines": 119,
+      "label_mentions": 13
+    },
+    {
+      "path": "mmWave/exit_seq/HANDOFF.md",
+      "sha256": "b37c9d28ff96cbcf82419f0edd8d3f30b135a55db878bb0b062cd4108905dee4",
+      "lines": 158,
+      "label_mentions": 17
+    },
+    {
+      "path": "mmWave/exit_seq/mPCT-LSTM_검증_전략.md",
+      "sha256": "4d12fa17592d0600be3d58c86a30093b04862216585751eb132b74a4939567bf",
+      "lines": 75,
+      "label_mentions": 0
+    },
+    {
+      "path": "mmWave/exit_seq/record_seq.py",
+      "sha256": "8f5374d0914c3ca16ba6635c36771ab6ec23e54d6cbf86dcb2e5a9f0bdd368d2",
+      "lines": 120,
+      "label_mentions": 10
+    },
+    {
+      "path": "mmWave/exit_seq/TODO_2026-07-05.md",
+      "sha256": "a6b00fefd383db548f0526a0abc0c360baaffc9e76fa13ad0976eb9931d1e59c",
+      "lines": 32,
+      "label_mentions": 4
+    },
+    {
+      "path": "mmWave/POSTURE_NOTES.md",
+      "sha256": "4bdbf4b39b1bdf7457deff9d4331fedaf5e9419114437cc11bc6b4fef3529913",
+      "lines": 64,
+      "label_mentions": 2
+    },
+    {
+      "path": "mmWave/posture_probe.py",
+      "sha256": "03ce88e8d6551344fb01b1393447f29602af7627cad665bb032ceb0c6196d78c",
+      "lines": 380,
+      "label_mentions": 23
+    },
+    {
+      "path": "mmWave/quick_cfg.py",
+      "sha256": "4b2f846a50696278cad79fe37c7a70f886b49bdfd920e9aa67dd255bb44fe922",
+      "lines": 27,
+      "label_mentions": 0
+    },
+    {
+      "path": "mmWave/record.py",
+      "sha256": "133841217cd5237281d60b1a80fe0d8ec31fa9e4f92d4ea597b6ccdfd108b157",
+      "lines": 122,
+      "label_mentions": 13
+    },
+    {
+      "path": "mmWave/RISK_NOTES.md",
+      "sha256": "982c2a79a29580d1f1983c0faf015f5e958c48908a29d58c94327782ad734fc1",
+      "lines": 140,
+      "label_mentions": 0
+    },
+    {
+      "path": "mmWave/RUN.md",
+      "sha256": "dd3e02b3df8b2d63039dba58afb4ae9566b167dd9aef0bf11442d8c44c0f5f8e",
+      "lines": 110,
+      "label_mentions": 1
+    },
+    {
+      "path": "mmWave/send_mmw.py",
+      "sha256": "58d172b8c859e1f7e3f6bedda256868d4fce55e835d800546562af897be52132",
+      "lines": 611,
+      "label_mentions": 8
+    },
+    {
+      "path": "mmWave/unified_reader.py",
+      "sha256": "07f40d2a9eed53235a92d26399868ebec829965f99e92c27727694ba0a87cb85",
+      "lines": 180,
+      "label_mentions": 5
+    },
+    {
+      "path": "README.md",
+      "sha256": "2abbc4a7335327f904f70a90d416d365cf175c3783287250392c887ba4022bfe",
+      "lines": 35,
+      "label_mentions": 0
+    },
+    {
+      "path": "server/ai_agent.py",
+      "sha256": "d67483f887b503d67b2f72c073bb1a74303d2aeaa164b5b328541a18bd3c47f5",
+      "lines": 263,
+      "label_mentions": 0
+    },
+    {
+      "path": "server/ai_report.py",
+      "sha256": "075bcd23d8020b95e6aa1dfae6f70e20edd1a76e51408584d9e4e888e7ccdfe1",
+      "lines": 178,
+      "label_mentions": 0
+    },
+    {
+      "path": "server/analysis_kb.py",
+      "sha256": "708b3f3147a31324c06778ea7636ff95e2da875fdd9e9bd5fa836d7e08158d4e",
+      "lines": 174,
+      "label_mentions": 0
+    },
+    {
+      "path": "server/behavior_fsm.py",
+      "sha256": "ae3952df55b868832879079f3e8014d57e4cfd57985cced7f6722e69ca1ef6fe",
+      "lines": 139,
+      "label_mentions": 0
+    },
+    {
+      "path": "server/dashboard_api.py",
+      "sha256": "3aec9ce964b46ce2fe5cc18f5c5b4cea3209dec872e3eecfc2031b4b50aefda1",
+      "lines": 527,
+      "label_mentions": 1
+    },
+    {
+      "path": "server/data_integrity.py",
+      "sha256": "15db2586dee9e57d51dbb938e9a0d2f28b89094c414982cf35fa05042ce3bcfb",
+      "lines": 50,
+      "label_mentions": 13
+    },
+    {
+      "path": "server/db.py",
+      "sha256": "849c1daf8fb59341cc8adfe6836eeb10b477ab21cca5d8855f12d41a15ad6d37",
+      "lines": 540,
+      "label_mentions": 0
+    },
+    {
+      "path": "server/integrated_analysis.py",
+      "sha256": "65cf11f85c89e184ee1e70f74c73cb10997f2e6883c051f3d83cc546fdc21ab7",
+      "lines": 189,
+      "label_mentions": 0
+    },
+    {
+      "path": "server/mmw_logic.py",
+      "sha256": "4ff2bb9bb7ad1fef82a806d140df910fbff1ecc1ed68ab7e0454307c180d9073",
+      "lines": 289,
+      "label_mentions": 0
+    },
+    {
+      "path": "server/mmw_server.py",
+      "sha256": "5f89424485bed465959b846529a3f51e106e782d6a9fe63731403c6b7d14b1c8",
+      "lines": 357,
+      "label_mentions": 1
+    },
+    {
+      "path": "server/paper_kb.py",
+      "sha256": "51cc535cc840bfdfed7727c8abc0b03e46b14eb0de0bdbad16adfcce738f64cf",
+      "lines": 1356,
+      "label_mentions": 4
+    },
+    {
+      "path": "server/run_all.py",
+      "sha256": "9f777a7d7c70077e296889caec0e37c849daa7a3fda7aca3c818b561cd112e06",
+      "lines": 104,
+      "label_mentions": 0
+    },
+    {
+      "path": "server/server.md",
+      "sha256": "e0e379d2d73d97e27d610fc835af55f61f3bc98acfe1e565d8be448757bbb530",
+      "lines": 69,
+      "label_mentions": 0
+    },
+    {
+      "path": "server/sim_state.py",
+      "sha256": "893b99f94200d24bdd8c8c45b83e6e75d9229b17275c846965b1d26f1277ded8",
+      "lines": 251,
+      "label_mentions": 0
+    },
+    {
+      "path": "server/test_dashboard_api.py",
+      "sha256": "6fdd17996c1a0a129cba7c7b5d6d06c31a4c07b9c731226ffaa7f31981baa099",
+      "lines": 220,
+      "label_mentions": 0
+    },
+    {
+      "path": "server/test_e2e_pipeline.py",
+      "sha256": "55505fa9ca0e600f77445a31c86255a73860fe291006f61a559f55579c1b6e80",
+      "lines": 149,
+      "label_mentions": 3
+    },
+    {
+      "path": "server/tof_3d.html",
+      "sha256": "605c700364821d70b73d36cc23ce4ab7c66da41decca0229f3cfe0c02e4c1576",
+      "lines": 757,
+      "label_mentions": 24
+    },
+    {
+      "path": "server/tof_logic.py",
+      "sha256": "2b80fa7e7ef7221cf5dac7145b12561a7df0ac7908fb1a9251eb8939af2f26f6",
+      "lines": 187,
+      "label_mentions": 0
+    },
+    {
+      "path": "server/tof_server.py",
+      "sha256": "3aeefc3b16cf03a6e00def69444182507863f9345749aa4619a98cfc87289f5f",
+      "lines": 672,
+      "label_mentions": 18
+    },
+    {
+      "path": "site/dashboard-assets/dashboard.css",
+      "sha256": "c065887616f4325619a7906acfe8d37702de4d8c7620446bc11a8987bf744e37",
+      "lines": 385,
+      "label_mentions": 11
+    },
+    {
+      "path": "site/dashboard-assets/dashboard.js",
+      "sha256": "279e35231e074af64898e87037c71455164755d5c4d74012ba51d095038b3299",
+      "lines": 1271,
+      "label_mentions": 45
+    },
+    {
+      "path": "site/dashboard-assets/data.js",
+      "sha256": "2ba15b014751f01517014d2759db97a98fbd859b2d35e43deb5137a96226e90b",
+      "lines": 280,
+      "label_mentions": 5
+    },
+    {
+      "path": "site/dashboard-assets/simulation.js",
+      "sha256": "c387449691d4337756e406754d84fb86246e14f8ac5bc6e24a94a16cbfa16b55",
+      "lines": 286,
+      "label_mentions": 20
+    },
+    {
+      "path": "site/dashboard_design.html",
+      "sha256": "fa1757bea64ddb543188c5e948683a17b6219fae185b64b389ca1e3ed245014d",
+      "lines": 785,
+      "label_mentions": 15
+    },
+    {
+      "path": "site/DASHBOARD_WORK.md",
+      "sha256": "77464f6ed77c47e9727280a359c20b8ccc9727d561004a46abc1428ac4b425df",
+      "lines": 92,
+      "label_mentions": 0
+    },
+    {
+      "path": "site/index.html",
+      "sha256": "1c48c63bd45b089d7dd9bfb30a1a566f19bf990a81d717b9dbaaa68d7366a66c",
+      "lines": 221,
+      "label_mentions": 8
+    },
+    {
+      "path": "site/tests/dashboard.spec.cjs",
+      "sha256": "7fdabfd6e82d20db4476c517b7d079dff93013f8b70d7f2004c7d92d08088efc",
+      "lines": 257,
+      "label_mentions": 0
+    },
+    {
+      "path": "site/tests/data.test.cjs",
+      "sha256": "da806f60b7ea6489103061edc3c20ea7f11656cf95f9659b68fa8d27746c9705",
+      "lines": 299,
+      "label_mentions": 2
+    },
+    {
+      "path": "site/tests/playwright.config.cjs",
+      "sha256": "2be8e97866bed46315e4df5aca480a4bf5cc08003816c6c040f7c119f063c992",
+      "lines": 28,
+      "label_mentions": 0
+    },
+    {
+      "path": "test_8x8/firmware/main.ino",
+      "sha256": "187646dcb9e802604dc268420603e4facec860f723755e8e4eff2af101fbf328",
+      "lines": 217,
+      "label_mentions": 0
+    },
+    {
+      "path": "test_8x8/firmware/platformio.ini",
+      "sha256": "c48df638c2a20023b6fc5f22b14a6a7e3016b599c9998dae17132d5b68487b4a",
+      "lines": 14,
+      "label_mentions": 0
+    },
+    {
+      "path": "test_8x8/README.md",
+      "sha256": "862c4589f6261e62f9874f9e4676581058612159a4d8caca37b2226c2a9e33a7",
+      "lines": 44,
+      "label_mentions": 0
+    },
+    {
+      "path": "test_8x8/server/test_tof_server.py",
+      "sha256": "7f9e38655b0d6f6bec6faa34e585788da092fda95e9401be613b424483671bcc",
+      "lines": 151,
+      "label_mentions": 0
+    },
+    {
+      "path": "TOF/capture_dataset.py",
+      "sha256": "593247af6e21b5f4539c16a7fccaef1a6ec0b0d490cd643114597115b14b0f2b",
+      "lines": 67,
+      "label_mentions": 13
+    },
+    {
+      "path": "TOF/dataset/README.md",
+      "sha256": "201df8315f7f8db27f105c5958f1bcc2577dea14eb847aed97dc26eed39ecaad",
+      "lines": 46,
+      "label_mentions": 8
+    },
+    {
+      "path": "TOF/ml/analyze_4x4_backup.py",
+      "sha256": "443409241325ab0a71db60e85a72ecb2dc2f67a71752afe9e9328eaec350efa6",
+      "lines": 185,
+      "label_mentions": 5
+    },
+    {
+      "path": "TOF/ml/augment_tof.py",
+      "sha256": "1b0c5f5c850ba1fdb5516843f0f1783702ffb5592d2706160fafabc08cf39e6b",
+      "lines": 87,
+      "label_mentions": 11
+    },
+    {
+      "path": "TOF/ml/bed_scan_preview.html",
+      "sha256": "a19e37ce92221fba635a20bbbda28e44644cf53c374ae81fbf3180c58da7b6da",
+      "lines": 72,
+      "label_mentions": 0
+    },
+    {
+      "path": "TOF/ml/calibrate_roi.py",
+      "sha256": "935e5d85a143a46dd768152f518622ac8fe248564da21ae2de9b0724b5d93a09",
+      "lines": 53,
+      "label_mentions": 0
+    },
+    {
+      "path": "TOF/ml/compare_rf_tabpfn.py",
+      "sha256": "5495ee20a7aa5e31262c0de83001bdac08aa3721dafddbfc74f947c0278081e5",
+      "lines": 76,
+      "label_mentions": 0
+    },
+    {
+      "path": "TOF/ml/feature_logger.py",
+      "sha256": "05109600c1f40e9ef028920fe251cb486a6bb3100b8936dc91701686bf709a4f",
+      "lines": 158,
+      "label_mentions": 0
+    },
+    {
+      "path": "TOF/ml/lstm_anomaly.py",
+      "sha256": "fa1a9ed148407892e69b632e329809d548ef5d1d68af07a0736706fd91907967",
+      "lines": 140,
+      "label_mentions": 1
+    },
+    {
+      "path": "TOF/ml/lstm_infer.py",
+      "sha256": "9cd5b6de42fc43de6b86762da8084eb3289a3d68cb08ea6cbac18d39b90312c3",
+      "lines": 56,
+      "label_mentions": 0
+    },
+    {
+      "path": "TOF/ml/posture_stats.py",
+      "sha256": "50a30dd72dc4f7387584c7cac80b525c1d9051ab5882b74381c3f84ba7b82787",
+      "lines": 70,
+      "label_mentions": 0
+    },
+    {
+      "path": "TOF/ml/predict_posture.py",
+      "sha256": "55adce2852d78fbc1265ed6cc7f46a21f0af30fdeb1f6578e982dbc85a7f4088",
+      "lines": 82,
+      "label_mentions": 2
+    },
+    {
+      "path": "TOF/ml/README.md",
+      "sha256": "b5bfc0e33c6613b2daf3e0f03cf7ad2f1c4e7bdfb4bc0c01a6ac85bbf22f3f89",
+      "lines": 124,
+      "label_mentions": 4
+    },
+    {
+      "path": "TOF/ml/roi.py",
+      "sha256": "7fa9c49e18bdb703f02cfe0f9a9cc8a43f865297173b3bf081d346e0af929d40",
+      "lines": 81,
+      "label_mentions": 0
+    },
+    {
+      "path": "TOF/ml/tof_anomaly.py",
+      "sha256": "649db1c6963822811efd07c0193cb393f36a97655bd7050980fd9e631fa2e870",
+      "lines": 109,
+      "label_mentions": 0
+    },
+    {
+      "path": "TOF/ml/train_posture.py",
+      "sha256": "e32d5bc09cd7095b4a72bb2f46aea567efd142e861966c525ab31bf68d40201a",
+      "lines": 119,
+      "label_mentions": 11
+    },
+    {
+      "path": "TOF/ml/zone_probe.py",
+      "sha256": "a7a9a74d8e8bd0e12feee9a148c2e66d5df9f81aabed39446483fa2b1ba917ae",
+      "lines": 67,
+      "label_mentions": 0
+    },
+    {
+      "path": "TOF/preprocess_dataset.py",
+      "sha256": "89d1f8fb21516083c09d0787a4f2cb69695985dfebf1236b7496afcaf8249c70",
+      "lines": 75,
+      "label_mentions": 2
+    },
+    {
+      "path": "TOF/src/main.ino",
+      "sha256": "04d537fb7918336fb6103b9164f642a1fa2934ac1ad5ace66dfd7dffeeb5efd5",
+      "lines": 211,
+      "label_mentions": 0
+    },
+    {
+      "path": "TOF/src/main.ino.cpp",
+      "sha256": "a667214bfe94a4328c6ae055cc8f099fe3f2f2bda4e2606d9282368541fd5d53",
+      "lines": 218,
+      "label_mentions": 0
+    },
+    {
+      "path": "TOF/src/platformio.ini",
+      "sha256": "3d37d71fbc40da74e11d445b237b9009782bc33ca1cc83698f5d86eee7505096",
+      "lines": 13,
+      "label_mentions": 0
+    },
+    {
+      "path": "TOF/tof.md",
+      "sha256": "5e251173da64e0e4c13e321df405363df0d14fa20733b5b88024d2d28705bed9",
+      "lines": 134,
+      "label_mentions": 0
+    },
+    {
+      "path": "TOF/tof_3d_posture.html",
+      "sha256": "2f8db705f9f7e27a9df2bd8855a6506b4328ab378cd6c07520168d0ff9f84e0b",
+      "lines": 721,
+      "label_mentions": 23
+    },
+    {
+      "path": "TOF/TROUBLESHOOTING.md",
+      "sha256": "5cdc3cff51c0b08ee1a77218b44d10138476635c359a91600d2abbfa1e82743c",
+      "lines": 154,
+      "label_mentions": 0
+    },
+    {
+      "path": "TOF/viewer_proxy.py",
+      "sha256": "1e27475a3e3e6fada63361549bf77953df1027082b91d82c6887f102e19dacd6",
+      "lines": 41,
+      "label_mentions": 0
+    }
+  ],
+  "databases": {
+    "majubom.db": {
+      "activity_log": 2466,
+      "ai_analysis": 64,
+      "alerts": 0,
+      "baseline_history": 0,
+      "baselines": 0,
+      "beds": 6,
+      "csi_readings": 0,
+      "incident_reports": 0,
+      "medications": 16,
+      "mmw_readings": 0,
+      "next_actions": 0,
+      "nurse_reports": 0,
+      "patients": 6,
+      "report_classifications": 0,
+      "risk_factors": 24,
+      "sensor_clean_data": 0,
+      "sqlite_sequence": 8,
+      "tof_readings": 0,
+      "activity_log_by_source": [
+        [
+          "hardware",
+          "ai_analysis_completed",
+          11
+        ],
+        [
+          "simulation",
+          "ai_analysis_completed",
+          23
+        ],
+        [
+          "simulation",
+          "sim_checkingAbnormal",
+          64
+        ],
+        [
+          "simulation",
+          "sim_checkingNormal",
+          63
+        ],
+        [
+          "simulation",
+          "sim_edge",
+          133
+        ],
+        [
+          "simulation",
+          "sim_exit",
+          252
+        ],
+        [
+          "simulation",
+          "sim_fall",
+          103
+        ],
+        [
+          "simulation",
+          "sim_risk",
+          153
+        ],
+        [
+          "simulation",
+          "sim_sleep",
+          794
+        ],
+        [
+          "simulation",
+          "sim_toss",
+          695
+        ],
+        [
+          "simulation",
+          "sim_walk",
+          175
+        ]
+      ]
+    },
+    "majubom_4x4bak.db": {
+      "baselines": 0,
+      "beds": 0,
+      "csi_readings": 0,
+      "mmw_readings": 1417,
+      "sqlite_sequence": 2,
+      "tof_readings": 866594
+    }
+  },
+  "protected_sha256": {
+    "TOF/ml/compare_rf_tabpfn.py": "5495ee20a7aa5e31262c0de83001bdac08aa3721dafddbfc74f947c0278081e5",
+    "TOF/ml/in_bed_model_tof1.joblib": "915a888c59cbca058818cb7e4d49fb71c14b633e4a31c256bed792167a4f413d",
+    "TOF/ml/in_bed_model_tof2.joblib": "b2361f86c9d3f89aeb9b502c23c2d5f7c583442b3989a6cfb659e529ba7254af",
+    "TOF/ml/posture_model.joblib": "b078dd490780d04c9771f92fb5587ba3b6e80efd2b9937ec9a9652836dad42be",
+    "TOF/ml/lstm_ae.pt": "d289823d890678181fe52bfac8d72a5a29a8fcb45440aefc8539e44aa24ff2ea",
+    "TOF/dataset/tof_edge_sit_20260707_145011.jsonl": "9feafb0d4715185002a39ca9a53a2ce8998d1acc73890114ed47bf78bfc6aab8",
+    "TOF/dataset/tof_edge_sit_20260707_172105.jsonl": "9af4679ab488b83268c2202b2dbe5fbc77da16fe1f7e6ebf77765f68cc53338d",
+    "TOF/dataset/tof_edge_sit_20260707_172337.jsonl": "cc3e5f1a080936e2df6fc3a1e0ce1191e1912c1ef37419379bbaa73c357ee7b5",
+    "TOF/dataset/tof_edge_sit_20260707_172439.jsonl": "82f086325ef3ca1bb902896bcc5efba50e5c9557ed77e4d3c0464a20562f26bb",
+    "TOF/dataset/tof_edge_sit_20260707_193015.jsonl": "d212bd3826c6df3e7f2637064494cf8dbd2dec1657c34f56e9323196cbe60060",
+    "TOF/dataset/tof_empty_20260707_175731.jsonl": "6bb5984c393ea1a1b1a405e5452b2e07174c3d67daae8e0a2e879a8b3fd84dbf",
+    "TOF/dataset/tof_side_left_20260707_143411.jsonl": "75d724d5bccfdde17a7d19c66ef61496671b44fab9e990ce0df1bee103c10f2c",
+    "TOF/dataset/tof_side_left_20260707_171608.jsonl": "a56b4ec436998c48ed4e02b52a2999fcb5625be58ac252a24f1816174c3426fc",
+    "TOF/dataset/tof_side_right_20260707_144545.jsonl": "bac325f3e48d69dab4e4c6c79fd2999816e6e7b0ec12c959d1f2ec56dbd15749",
+    "TOF/dataset/tof_side_right_20260707_144651_fromEdge.jsonl": "e8ef1a7c94abfff084e44841b6aac86cc944033a5f9e659b3dd4a3fe75518be4",
+    "TOF/dataset/tof_side_right_20260707_171744.jsonl": "4dc3a2b13a7bcc6f99315e287531b1c451c223a1910c73a2c300fc498cec1066",
+    "TOF/dataset/tof_side_right_20260707_194753.jsonl": "c6f1742ba3f262a2eff3920298e2312bc8e5f845636d3aa30d405ade8da6699b",
+    "TOF/dataset/tof_sitting_20260707_145148.jsonl": "fb7602b5d880e97b25d7cb089d50d79ac6bc5b91270baf28462d56bf4b522db1",
+    "TOF/dataset/tof_sitting_20260707_171946.jsonl": "87c5bd55fadc262aa4c09e6cfe23aa616f31e76bff4c2325d9059ac1e84b5d23",
+    "TOF/dataset/tof_supine_20260707_143006.jsonl": "8c637623e8673b9df969846d3869fd2d980be303a6a632e8d844c969ce1c4adf",
+    "TOF/dataset/tof_supine_20260707_162613.jsonl": "0dad71d7c64e45e996c61941780023dbe6bdb2756821c4f120d63eaf1ebe3c3d",
+    "TOF/dataset/tof_supine_20260707_171450.jsonl": "ced8b52220aab93998f38017b8543be361a6524a5bf75a0d9c63d46e7860bc7c",
+    "TOF/dataset/tof_supine_20260707_194150.jsonl": "7cabe19e4eb8ed6ed87038c51b39fb69ea09174d126adcc9ef49220ad4bfb106",
+    "mmWave/exit_seq/seq_dataset.jsonl.gz": "751c81cd50b37d1c41a9428fedf6a86ef0401d84d150d5b1d82d9b87ec125c74"
+  },
+  "clinical_fall_labels": 0,
+  "excluded_as_truth": [
+    "simulation events",
+    "LLM analysis",
+    "risk alerts",
+    "unlabelled backup rows"
+  ],
+  "reviewed_flow": [
+    "firmware -> capture -> raw data",
+    "ToF ROI/RF/presence/edge rules",
+    "mmWave UART/tracking/gait/sequences",
+    "SQLite/baselines/quality/FSM",
+    "risk fusion/LLM/RAG",
+    "dashboard/simulation/tests",
+    "all project documents"
+  ]
+}

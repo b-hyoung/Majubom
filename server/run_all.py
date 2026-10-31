@@ -23,6 +23,11 @@ import signal
 import subprocess
 import time
 
+# Windows 콘솔(cp949)이 ⚠ 같은 유니코드를 못 그리면 print()가 UnicodeEncodeError로
+# 죽어 런처 전체가 내려가므로, 그런 문자는 죽는 대신 대체 문자로 바꿔 출력만 깨지게 함.
+sys.stdout.reconfigure(errors="replace")
+sys.stderr.reconfigure(errors="replace")
+
 HERE = os.path.dirname(os.path.abspath(__file__))
 POSIX = os.name == "posix"
 

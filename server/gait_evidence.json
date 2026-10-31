@@ -1,0 +1,439 @@
+{
+  "version": "gait_evidence_v1",
+  "compiled_at": "2026-09-28",
+  "rule": "이 파일의 숫자만 보행 사전분포 계산에 쓴다. 각 값은 원문 표 또는 PubMed 초록에서 확인한 값이며, 파생값은 derived로 표시한다.",
+  "sources": {
+    "KIM2025_KR": {
+      "citation": "Kim H-K, Kim S-W, Hong JY, Baek MS. Gait Parameters in Healthy Older Adults in Korea. J Mov Disord. 2025;18(1):55-64.",
+      "doi": "10.14802/jmd.24181",
+      "url": "https://www.e-jmd.org/journal/view.php?number=542",
+      "population": "건강한 한국 성인 184명(남 90·여 94), 50세 이상, 인지·신경학적 정상, 평균 72.2세",
+      "protocol": "GAITRite 6 m 보행판, 평소 속도, 4회 이상 반복",
+      "verified_via": "학술지 HTML 표를 직접 파싱(2026-09-28)",
+      "caveat": "표 1의 여성 열이 전체 열과 같은 값으로 인쇄된 편집 오류가 있어(HTML·PDF 모두, Codex 독립 확인) 성별 표는 쓰지 않는다. 나이·키·신발 보정 후 성별 차이는 base width와 CV base width에서만 유의했고 보행속도·보폭은 차이가 없었다. 참가자 74명은 신발, 110명은 맨발로 걸었다."
+    },
+    "SEINO2014_JP": {
+      "citation": "Seino S, et al. Reference Values and Age and Sex Differences in Physical Performance Measures for Community-Dwelling Older Japanese: A Pooled Analysis of Six Cohort Studies. PLoS ONE. 2014;9(6):e99487.",
+      "doi": "10.1371/journal.pone.0099487",
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC4055685/",
+      "population": "장애 없는 일본 지역사회 노인 4,683명(65세 이상)",
+      "protocol": "가속·감속 구간 각 3 m, 시간 측정 구간 5 m(ITABASHI11 코호트만 10 m), 평소 속도 1회",
+      "verified_via": "PMC·PLoS 표 3·4 (Codex 독립 확인: 평균·SD 전부 일치)",
+      "use": "계산에 쓰지 않는 교차 참고값. 같은 나이에서 KIM2025보다 약 0.3 m/s 빨라 측정 방식에 따라 절대값이 크게 달라진다는 근거로만 쓴다.",
+      "caveat": "n은 보행속도 표본 수다. 보폭은 6개 중 4개 코호트에서만 측정해 표본 수가 더 적다(85세 이상 제외). 값은 가중치 없는 기술통계다."
+    },
+    "PEEL2019": {
+      "citation": "Peel NM, Alapatt LJ, Jones LV, Hubbard RE. The Association Between Gait Speed and Cognitive Status in Community-Dwelling Older People: A Systematic Review and Meta-analysis. J Gerontol A Biol Sci Med Sci. 2019;74(6):943-948.",
+      "doi": "10.1093/gerona/gly140",
+      "pmid": "29917045",
+      "verified_via": "PubMed 초록 (NCBI E-utilities)",
+      "quote": "compared to normal controls, clinically meaningful reductions in gait speed ranged from 0.11 m/s in those with cognitive impairment, to 0.20 m/s in those with mild dementia, and to 0.41 m/s in those with moderate dementia."
+    },
+    "ZANARDI2021": {
+      "citation": "Zanardi APJ, et al. Gait parameters of Parkinson's disease compared with healthy controls: a systematic review and meta-analysis. Sci Rep. 2021;11:752.",
+      "doi": "10.1038/s41598-020-80768-2",
+      "pmid": "33436993",
+      "verified_via": "PubMed 초록 (NCBI E-utilities)",
+      "quote": "walking speed is reduced both on treadmill (.13 m s-1) and on overground (.17 m s-1) in PD."
+    },
+    "KUYS2014": {
+      "citation": "Kuys SS, Peel NM, Klein K, Slater A, Hubbard RE. Gait speed in ambulant older people in long term care: a systematic review and meta-analysis. J Am Med Dir Assoc. 2014;15(3):194-200.",
+      "doi": "10.1016/j.jamda.2013.10.015",
+      "pmid": "24388775",
+      "verified_via": "PubMed 초록 (NCBI E-utilities)",
+      "quote": "Usual pace gait speed was 0.475 m/s (95% confidence interval 0.396-0.554) ... No association between gait speed and covariates was found.",
+      "caveat": "보행 가능한 입소자만 포함했다. 보행 불가로 제외된 비율은 1개 연구만 보고했다."
+    },
+    "PEEL2013": {
+      "citation": "Peel NM, Kuys SS, Klein K. Gait speed as a measure in geriatric assessment in clinical settings: a systematic review. J Gerontol A Biol Sci Med Sci. 2013;68(1):39-46.",
+      "doi": "10.1093/gerona/gls174",
+      "pmid": "22923430",
+      "verified_via": "PubMed 초록 (NCBI E-utilities)",
+      "quote": "the gait speed estimate for usual pace was 0.58 m/s (95% CI: 0.49-0.67) ... Gait speed at usual pace in acute care settings was 0.46 m/s (95% CI: 0.34-0.57) ... 0.74 m/s (95% CI: 0.65-0.83) recorded in outpatient settings."
+    },
+    "THIMYLIEN2026": {
+      "citation": "Thi My Lien N, Cheung RTH, Hsieh MK, Lai PL, Cheng CH. From laboratory to daily life assessment: A systematic review and meta-analysis of gait speed discrepancies in healthy older adults. Gait Posture. 2026;130:110254.",
+      "doi": "10.1016/j.gaitpost.2026.110254",
+      "pmid": "42296946",
+      "verified_via": "PubMed 초록 (NCBI E-utilities)",
+      "quote": "The pooled mean difference between laboratory and real-world gait speed was 0.22 m/s (95% CI: 0.09-0.35, p < 0.001)"
+    },
+    "PERERA2006": {
+      "citation": "Perera S, Mody SH, Woodman RC, Studenski SA. Meaningful change and responsiveness in common physical performance measures in older adults. J Am Geriatr Soc. 2006;54(5):743-9.",
+      "doi": "10.1111/j.1532-5415.2006.00701.x",
+      "pmid": "16696738",
+      "verified_via": "PubMed 초록 (NCBI E-utilities)",
+      "quote": "Best initial estimates of small meaningful change are near 0.05 m/s for gait speed ... and of substantial change are near 0.10 m/s for gait speed",
+      "caveat": "0.05·0.10 m/s는 개인 변화에 대한 초기 추정치이며 연구별 범위는 각각 0.04–0.06, 0.08–0.14 m/s였다."
+    },
+    "ROBINOVITCH2013": {
+      "citation": "Robinovitch SN, et al. Video capture of the circumstances of falls in elderly people residing in long-term care: an observational study. Lancet. 2013;381(9860):47-54.",
+      "doi": "10.1016/S0140-6736(12)61263-X",
+      "pmid": "23083889",
+      "verified_via": "PubMed 초록 (NCBI E-utilities)",
+      "caveat": "카메라는 식당·라운지·복도 같은 공용 공간에만 있었다. 침실 낙상 비율은 다를 수 있다."
+    },
+    "MOL2019": {
+      "citation": "Mol A, et al. Orthostatic Hypotension and Falls in Older Adults: A Systematic Review and Meta-analysis. J Am Med Dir Assoc. 2019;20(5):589-597.e5.",
+      "doi": "10.1016/j.jamda.2018.11.003",
+      "pmid": "30583909",
+      "verified_via": "PubMed 초록 (NCBI E-utilities)",
+      "quote": "Orthostatic hypotension was positively associated with falls (odds ratio 1.73, 95% confidence interval 1.50-1.99).",
+      "caveat": "보정하지 않은(unadjusted) 오즈비를 합친 값이다."
+    },
+    "RADAR_DEV_BASELINE": {
+      "citation": "마주봄 저장소 server/mmw_baseline.json, bed_01 개발 환경 보행 75구간(2026-09-03부터 누적)",
+      "verified_via": "sum·sumsq에서 직접 계산(2026-09-28)",
+      "caveat": "환자 데이터가 아니며 대상자 1명(식별 정보 없음)이다. 레이더 6초 구간 사이의 흔들림 크기를 처음 추정할 때만 쓰고, 개인 기록이 2건 이상 쌓이면 개인 값으로 바꾼다."
+    }
+  },
+  "kim2025_table2_by_decade": {
+    "note": "성별 통합 평균±SD. velocity cm/s, step_length cm, cadence steps/min",
+    "50s": {
+      "n": 11,
+      "age_mean": 56.49,
+      "velocity": [
+        104.74,
+        12.68
+      ],
+      "step_length": [
+        58.02,
+        6.34
+      ],
+      "cadence": [
+        108.61,
+        10.17
+      ]
+    },
+    "60s": {
+      "n": 70,
+      "age_mean": 65.81,
+      "velocity": [
+        97.78,
+        15.95
+      ],
+      "step_length": [
+        55.15,
+        6.97
+      ],
+      "cadence": [
+        106.31,
+        10.76
+      ]
+    },
+    "70s": {
+      "n": 66,
+      "age_mean": 75.61,
+      "velocity": [
+        90.05,
+        17.37
+      ],
+      "step_length": [
+        51.69,
+        8.72
+      ],
+      "cadence": [
+        104.47,
+        8.45
+      ]
+    },
+    "80s": {
+      "n": 37,
+      "age_mean": 83.01,
+      "velocity": [
+        77.99,
+        20.21
+      ],
+      "step_length": [
+        45.68,
+        9.69
+      ],
+      "cadence": [
+        102.01,
+        12.81
+      ]
+    }
+  },
+  "kim2025_table3_quantile_regression": {
+    "note": "value = a + b*AGE(yr) + c*HEIGHT(cm). velocity cm/s, step_length cm, cadence steps/min",
+    "applicable_age": [
+      53,
+      90
+    ],
+    "applicable_height_cm": [
+      137.1,
+      182.0
+    ],
+    "velocity": {
+      "p10": [
+        136.6765,
+        -1.0527,
+        0.063
+      ],
+      "p90": [
+        55.1924,
+        -0.566,
+        0.6131
+      ]
+    },
+    "step_length": {
+      "p10": [
+        53.1216,
+        -0.586,
+        0.1978
+      ],
+      "p90": [
+        12.891,
+        -0.2355,
+        0.4105
+      ]
+    },
+    "cadence": {
+      "p10": [
+        181.797,
+        -0.2544,
+        -0.4495
+      ],
+      "p90": [
+        166.1065,
+        -0.1223,
+        -0.2436
+      ]
+    }
+  },
+  "seino2014_usual_by_age_sex": {
+    "note": "평균, SD. gait_speed m/s, step_length cm. n은 보행속도 표본 수(보폭 표본 수는 더 적음)",
+    "M": {
+      "65-69": {
+        "n": 479,
+        "gait_speed": [
+          1.39,
+          0.22
+        ],
+        "step_length": [
+          71.4,
+          8.1
+        ]
+      },
+      "70-74": {
+        "n": 722,
+        "gait_speed": [
+          1.33,
+          0.23
+        ],
+        "step_length": [
+          69.6,
+          9.2
+        ]
+      },
+      "75-79": {
+        "n": 612,
+        "gait_speed": [
+          1.26,
+          0.24
+        ],
+        "step_length": [
+          65.4,
+          9.8
+        ]
+      },
+      "80-84": {
+        "n": 293,
+        "gait_speed": [
+          1.16,
+          0.25
+        ],
+        "step_length": [
+          60.7,
+          9.9
+        ]
+      },
+      "85+": {
+        "n": 48,
+        "gait_speed": [
+          1.11,
+          0.28
+        ],
+        "step_length": [
+          57.3,
+          11.3
+        ]
+      }
+    },
+    "F": {
+      "65-69": {
+        "n": 588,
+        "gait_speed": [
+          1.39,
+          0.22
+        ],
+        "step_length": [
+          65.4,
+          7.4
+        ]
+      },
+      "70-74": {
+        "n": 845,
+        "gait_speed": [
+          1.31,
+          0.23
+        ],
+        "step_length": [
+          63.3,
+          8.4
+        ]
+      },
+      "75-79": {
+        "n": 653,
+        "gait_speed": [
+          1.18,
+          0.25
+        ],
+        "step_length": [
+          58.1,
+          9.9
+        ]
+      },
+      "80-84": {
+        "n": 352,
+        "gait_speed": [
+          1.05,
+          0.28
+        ],
+        "step_length": [
+          54.1,
+          10.1
+        ]
+      },
+      "85+": {
+        "n": 68,
+        "gait_speed": [
+          0.92,
+          0.25
+        ],
+        "step_length": [
+          48.1,
+          9.9
+        ]
+      }
+    }
+  },
+  "cognition_speed_reduction_mps": {
+    "source": "PEEL2019",
+    "cognitive_impairment": 0.11,
+    "mild": 0.2,
+    "moderate": 0.41,
+    "severe_note": "메타분석에 중증 범주가 없다. 중증은 moderate 값을 쓰고 외삽으로 표시한다."
+  },
+  "parkinsonism_speed_reduction_mps": {
+    "source": "ZANARDI2021",
+    "overground": 0.17
+  },
+  "setting_speed_mps": {
+    "ltc": {
+      "source": "KUYS2014",
+      "mean": 0.475,
+      "ci95": [
+        0.396,
+        0.554
+      ]
+    },
+    "acute_hospital": {
+      "source": "PEEL2013",
+      "mean": 0.46,
+      "ci95": [
+        0.34,
+        0.57
+      ]
+    },
+    "outpatient": {
+      "source": "PEEL2013",
+      "mean": 0.74,
+      "ci95": [
+        0.65,
+        0.83
+      ]
+    }
+  },
+  "lab_to_real_world_difference_mps": {
+    "source": "THIMYLIEN2026",
+    "mean": 0.22,
+    "ci95": [
+      0.09,
+      0.35
+    ]
+  },
+  "meaningful_change_mps": {
+    "source": "PERERA2006",
+    "small": 0.05,
+    "substantial": 0.1
+  },
+  "fall_mechanisms_ltc": {
+    "source": "ROBINOVITCH2013",
+    "n_falls": 227,
+    "n_people": 130,
+    "causes": {
+      "incorrect_weight_shifting": {
+        "n": 93,
+        "share": 0.41
+      },
+      "trip_or_stumble": {
+        "n": 48,
+        "share": 0.21
+      },
+      "hit_or_bump": {
+        "n": 25,
+        "share": 0.11
+      },
+      "loss_of_support": {
+        "n": 25,
+        "share": 0.11
+      },
+      "collapse": {
+        "n": 24,
+        "share": 0.11
+      },
+      "slip": {
+        "n": 6,
+        "share": 0.03
+      }
+    },
+    "activities": {
+      "forward_walking": {
+        "n": 54,
+        "share": 0.24
+      },
+      "standing_quietly": {
+        "n": 29,
+        "share": 0.13
+      },
+      "sitting_down": {
+        "n": 28,
+        "share": 0.12
+      }
+    }
+  },
+  "orthostatic_hypotension_falls_or": {
+    "source": "MOL2019",
+    "or": 1.73,
+    "ci95": [
+      1.5,
+      1.99
+    ]
+  },
+  "radar_within_person_window_sd": {
+    "source": "RADAR_DEV_BASELINE",
+    "n_windows": 75,
+    "speed": 0.3363,
+    "stride_length": 0.0411
+  },
+  "verification": {
+    "method": "Codex(gpt-6-astra, xhigh) 독립 교차검증 — 학술지 HTML·PDF, PLoS 표, NCBI E-utilities 초록을 직접 열어 대조",
+    "date": "2026-09-28",
+    "numeric_mismatches": 0,
+    "text_corrections": [
+      "KIM2025 성별 차이 설명(base width + CV base width)",
+      "SEINO2014 측정 구간(한 코호트 10 m)"
+    ]
+  }
+}
