@@ -444,7 +444,7 @@ def calibrate():
             clr, radar_check = {"clear": True}, "skipped(bed_center 미측정)"
         else:
             clr = _autocal.bed_clear([(_time.time(), tg)] * 20, _time.time()) if tg else {"clear": True}
-            radar_check = "radar off" if tg is None else ("clear" if tg else "clear(추적 없음)")
+            radar_check = ("radar off" if USE_RADAR else "레이더 안 씀(ToF만)") if tg is None else ("clear" if tg else "clear(추적 없음)")
         if not clr["clear"]:
             return jsonify({"ok": False, "error": f"빈 침대 기준 저장 거절: {clr['reason']} — 침대 주변을 비우고 다시"}), 409
     before = deepcopy(baseline)
@@ -833,9 +833,17 @@ baseline_auto = {"status": "idle", "at": None, "reason": None}
 BASELINE_HISTORY_FILE = os.path.join(HERE, "tof_baseline_history.jsonl")
 
 
+# 2026-10-31 사용자 결정: ToF만으로 판정한다(레이더는 다른 작업으로 분리). False면 _radar_targets가 늘 None이라
+# 레이더 보정(침대 근처 서 있음·아무도 없음), 빈 침대 자동 재캘리브레이션(레이더로 이탈 확인 필요)이 꺼지고
+# 수동 빈 침대 저장은 레이더 확인 없이 된다. 다시 쓰려면 MAJUBOM_TOF_USE_RADAR=1로 켠다.
+USE_RADAR = os.environ.get("MAJUBOM_TOF_USE_RADAR") == "1"
+
+
 def _radar_targets():
     """mmw_server 실시간 위치 [(tid, x, y)]. 2초 넘게 갱신이 없거나 못 읽으면 None(레이더 꺼짐).
     높이까지 담은 최근 값은 _radar_last에 남긴다(침대 옆에 선 사람 구분용, 10-22 저녁)."""
+    if not USE_RADAR:
+        return None
     try:
         with _urlreq.urlopen("http://127.0.0.1:5002/mmw/live", timeout=0.5) as r:
             d = json.load(r)
