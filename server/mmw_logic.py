@@ -46,10 +46,16 @@ SIGMA_FLOOR = {
 # 지표 4개→6개로 늘어나 total_abs가 자연히 커지므로 비례 조정 (×1.5)
 TH_CAUTION, TH_WARNING, TH_CRITICAL = 3.0, 6.0, 9.0
 
-# 절대 임계 (baseline 무관 즉시 위험)
-#  height_drop: track 높이(머리/몸통)가 한 윈도우에서 이만큼(m) 이상 급강하 →
-#               주저앉음/낙상으로 간주하고 즉시 critical.
-HEIGHT_DROP_FALL = 1.2
+# 절대 임계 (baseline 무관 즉시 위험) — 2026-10-12 변경
+#  low_z: 추적 중인 사람의 최근 1초 몸 높이(z, 바닥 기준 m) 중앙값(send_mmw가 계산).
+#         FLOOR_FALL_Z보다 낮으면 바닥 근처에 있다고 보고 즉시 critical. 침대 매트리스 윗면은 37cm(현장 실측).
+#  이전 규칙(6초 창의 max(z)-min(z) > 1.2m)은 시간 순서를 보지 않고, 몸통 높이 기준으로는 실제 낙상에서도
+#  넘기 어려워 폐기했다. height_drop 값은 기록용으로 계속 받는다.
+#  주의: 침대 위에 누운 사람의 몸 중심이 0.4m 아래로 잡히면 오탐이 된다(실측 확인 필요, docs/나중에_할일.md 3장).
+FLOOR_FALL_Z = 0.4
+# 2026-10-12 실측: 레이더는 바닥을 못 보고 거리·설치각 오차로 절대 높이가 0.3~0.5m씩 틀어져 고정 0.4m 규칙을 끈다.
+# 낙상은 mmWave/fall_detect.py(본인 평소 높이 대비 1초 안에 25% 이하 = 급격한 하강, 25% 이하 3초 넘게 = 못 일어남)가 프레임 단위로 판정해 /mmw/fall로 보낸다.
+FLOOR_FALL_ENABLED = False
 
 LEVELS = ("normal", "caution", "warning", "critical")
 LEVEL_KO = {"normal": "정상", "caution": "주의", "warning": "경고", "critical": "위험"}
@@ -202,7 +208,7 @@ def evaluate(payload: dict, store: dict, persist: bool = True, prior: dict | Non
       - reliable=false          → 측정 무시 (baseline 갱신 X, 알람 X)
       - patient_locked=false    → 환자 특정 실패(2명+인데 소속도로 못 가림/0명) → 보류
       - walking=false           → 환자 정지·휴식(누움 등) → gait baseline 미반영 (낙상만 감시)
-      - height_drop > 임계       → baseline 무관 즉시 critical (낙상 순간)
+      - low_z < FLOOR_FALL_Z     → baseline 무관 즉시 critical (바닥 근처 = 낙상 의심)
       - age_days<14 / n<MIN     → 학습 중, z는 보여주되 정식 알람 보류
 
     환자 특정은 송신부(send_mmw.select_patient)가 '침대 소속도'로 수행하고,
@@ -221,7 +227,7 @@ def evaluate(payload: dict, store: dict, persist: bool = True, prior: dict | Non
     straightness = quality.get("straightness")
     bed_affinity = presence.get("bed_affinity")
     bed_candidates = presence.get("bed_candidates")
-    height_drop = raw.get("height_drop", 0.0)
+    low_z = raw.get("low_z")
 
     reasons: list[str] = []
     alarm = False
@@ -237,7 +243,13 @@ def evaluate(payload: dict, store: dict, persist: bool = True, prior: dict | Non
                        reasons=reasons, measuring_held=True)
 
     # 2) 절대 임계: 높이 급강하 = 낙상 순간 (baseline 무관)
-    abs_critical = isinstance(height_drop, (int, float)) and height_drop > HEIGHT_DROP_FALL
+    abs_critical = (FLOOR_FALL_ENABLED and isinstance(low_z, (int, float)) and not isinstance(low_z, bool)
+                    and math.isfinite(low_z) and low_z < FLOOR_FALL_Z)
+    # ToF가 지금 침상 위에 사람이 있다고 보면 바닥 판정을 하지 않는다(2026-10-12 실측: 침대 걸터앉음 z≈0.32m가
+    # 0.4m 미만으로 잡혀 낙상 오탐). 레이더 track 높이는 반사점 평균이라 앉으면 허벅지·무릎 높이로 낮아진다.
+    if abs_critical and presence.get("tof_in_bed") is True:
+        abs_critical = False
+        reasons.append(f"몸 높이 z={low_z}m < {FLOOR_FALL_Z}m지만 ToF 침상 재실 중 → 바닥 낙상 판정 제외")
 
     # 3) 환자 특정 실패 → 측정 보류 (누구의 보행인지 귀속 불가). 낙상 절대임계만 감시.
     #    (0명, 또는 2명+인데 소속도로 환자를 못 가린 경우)
@@ -253,7 +265,7 @@ def evaluate(payload: dict, store: dict, persist: bool = True, prior: dict | Non
         stats = baseline_stats(store.get(target_id))
         level = "critical" if abs_critical else "normal"
         if abs_critical:
-            reasons.append(f"단, 높이 급강하(drop={height_drop}m) → 즉시 위험")
+            reasons.append(f"단, 바닥 근처 몸 높이(z={low_z}m < {FLOOR_FALL_Z}m) → 즉시 위험")
             alarm, alarm_urgent = True, True
         return _result(payload, raw, quality, presence, stats, None,
                        alert_level=level, alarm=alarm, alarm_urgent=alarm_urgent,
@@ -278,7 +290,7 @@ def evaluate(payload: dict, store: dict, persist: bool = True, prior: dict | Non
         if abs_critical:
             level = "critical"
             alarm, alarm_urgent = True, True
-            reasons.append(f"높이 급강하(drop={height_drop}m) → 즉시 위험")
+            reasons.append(f"바닥 근처 몸 높이(z={low_z}m < {FLOOR_FALL_Z}m) → 즉시 위험")
         return _result(payload, raw, quality, presence, stats, None,
                        alert_level=level, alarm=alarm, alarm_urgent=alarm_urgent,
                        reasons=reasons, measuring_held=not abs_critical)
@@ -290,7 +302,7 @@ def evaluate(payload: dict, store: dict, persist: bool = True, prior: dict | Non
     extra: dict = {}
     if prior and (prior.get("metrics") or {}).get("speed"):
         return _evaluate_with_prior(payload, raw, quality, presence, store, target_id, prior,
-                                    abs_critical, height_drop, reasons, persist)
+                                    abs_critical, low_z, reasons, persist)
     if prior and prior.get("not_applicable") and "보행 불가" in str(prior.get("not_applicable")):
         note = "보행 불가(와상 등) 기록 환자인데 보행이 감지됨 — 환자 본인이 아닐 가능성 또는 기록 갱신 필요"
         reasons.append(note)
@@ -326,7 +338,7 @@ def evaluate(payload: dict, store: dict, persist: bool = True, prior: dict | Non
     if abs_critical:
         level = "critical"
         alarm, alarm_urgent = True, True
-        reasons.append(f"높이 급강하(drop={height_drop}m) → 즉시 위험(베이스라인 무관)")
+        reasons.append(f"바닥 근처 몸 높이(z={low_z}m < {FLOOR_FALL_Z}m) → 즉시 위험(베이스라인 무관)")
 
     if persist and update_done:
         save_baseline(store)
@@ -404,7 +416,7 @@ def _within_sd(n: int, sd: float | None, prior_sd: float, floor: float) -> float
 
 
 def _evaluate_with_prior(payload, raw, quality, presence, store, target_id, prior,
-                         abs_critical, height_drop, reasons, persist) -> dict:
+                         abs_critical, low_z, reasons, persist) -> dict:
     metrics_prior = prior.get("metrics") or {}
     bed = store.get(target_id)
     if bed and bed.get("n") and not _valid_ready(bed):
@@ -489,7 +501,7 @@ def _evaluate_with_prior(payload, raw, quality, presence, store, target_id, prio
     if abs_critical:
         level = "critical"
         alarm = alarm_urgent = True
-        reasons.append(f"높이 급강하(drop={height_drop}m) → 즉시 위험(베이스라인 무관)")
+        reasons.append(f"바닥 근처 몸 높이(z={low_z}m < {FLOOR_FALL_Z}m) → 즉시 위험(베이스라인 무관)")
 
     # 비교가 끝난 뒤 현재 구간을 기준선에 넣는다.
     #  기존 합계: 이전 버전과 같은 방식(보폭 실패 0.0 포함)  ·  유효값 전용 합계: 결측은 건너뜀

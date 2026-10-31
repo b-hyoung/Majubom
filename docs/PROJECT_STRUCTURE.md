@@ -21,10 +21,10 @@ PlatformIO 빌드, node_modules, 로그, LanceDB 저장 엔진 내부 파일은 
 | server/reports/ | 저장된 보고서 예시/산출물 |
 | server/lancedb_store/ | 논문 검색용 벡터 저장소, 재생성 내부 파일 |
 | site/ | 실제 웹 대시보드 index.html, 디자인 참고 dashboard_design.html, assets와 JS/브라우저 테스트 |
-| docs/ | AI 시작 안내·전체 구조·현장 점검·운영 개념·관련 연구·원격 제어·연구 검토 질문(질문.md)·나중에 할 일(나중에_할일.md) 및 역사 specs |
+| docs/ | 실측 경로 코드 가이드(CODE_GUIDE_LIVE.html)·AI 시작 안내·전체 구조·현장 점검·운영 개념·관련 연구·원격 제어·연구 검토 질문(질문.md)·나중에 할 일(나중에_할일.md) 및 역사 specs |
 | research/alternatives/ | 후보 알고리즘 실험, 평가 데이터와 산출물; 운영 코드와 구분 |
 | test_8x8/ | 8×8 검증용 firmware와 :5011 실험 서버. 운영 TOF/src와 별개 |
-| tools/ | 구조 문서 자동 갱신/검사 도구, 원시 기록 날짜별 압축 보관 archive_raw.py(cron 매일 03:30) |
+| tools/ | 구조 문서 자동 갱신/검사 도구, 원시 기록 날짜별 압축 보관 archive_raw.py(cron 매일 03:30), 코드 가이드 생성 build_code_guide.py(+코드 조각 도구 guide_lib.py), 노트북에서 :5012/api/stream 프레임을 받아 저장하는 laptop_stream_client.py |
 | cloud_dashboard.py | Pi ToF 대시보드를 별도 포트로 프록시하는 보조 Flask 앱(설정 확인 후 사용) |
 | README.md / SYSTEM_ARCHITECTURE.md | 프로젝트 소개 / 센서·판정·DB·UI·AI 데이터 흐름 설명 |
 | 0704*, 0707*, ai_progress_presentation.html | 과거 작업/인수인계 및 발표 자료; 현재 운영 설정의 기준으로 사용하지 않음 |
@@ -32,6 +32,7 @@ PlatformIO 빌드, node_modules, 로그, LanceDB 저장 엔진 내부 파일은 
 ## 서버의 주요 연결
 
 - 로우데이터 분기: tof_server.py와 send_mmw.py → server/live_diagnostics.py → :5012 mmWave/diagnostic_server.py → site/sensor-diagnostics.html/js. 기존 운영 경로와 병렬로 최신값만 메모리에 유지한다.
+- 노트북 스트림: tof_server.py·send_mmw.py → live_diagnostics.FrameStreamPublisher → :5012/api/stream-ingest → GET /api/stream(NDJSON) → tools/laptop_stream_client.py(노트북 저장). Pi에는 저장하지 않는다.
 - 계산 관측: server/diagnostic_observer.py → 기존 ToF/mmWave 관측 API → :5012/api/operations → 센서별 수식·기준선·저장 결과 탭. 추가 DB 저장/재평가 없음.
 - 환자 EMR: demo_emr.json → demo_emr.py → SQLite emr_records → emr_kb.py → 환자별 LanceDB emr_chunks → /emr 화면. API 의미 임베딩은 별도 emr_semantic_chunks이며 로컬 어휘 벡터와 구분한다. docs/EMR_DATA_MODEL.md 필독.
 - AI 관측: server/report_trace.py → 실제 ai_agent/ai_report/paper_kb/integrated_analysis 호출 → 환자별 메모리 타임라인 → AI 리포트 탭.
@@ -52,6 +53,12 @@ PlatformIO 빌드, node_modules, 로그, LanceDB 저장 엔진 내부 파일은 
 <!-- BEGIN GENERATED TREE -->
 ```text
 Majubom/
+├── deploy/
+│   ├── cloudflare/
+│   │   ├── code-guide-worker.js
+│   │   ├── majubom-ai-guide-worker.js
+│   │   └── publish_code_guide.sh
+│   └── majubom-mmw-reader.service
 ├── docs/
 │   ├── captures/
 │   │   └── 2026-10-11/
@@ -69,8 +76,11 @@ Majubom/
 │   │       ├── 2026-06-15-csi-server-integration-design.md
 │   │       ├── 2026-06-23-majubom-interactive-presentation-design.md
 │   │       └── 2026-06-24-csi-mmwave-fusion-honest-direction.md
+│   ├── AI_GUIDE.html
 │   ├── AI_START_HERE.md
+│   ├── CODE_GUIDE_LIVE.html
 │   ├── codex_remote-control.md
+│   ├── DEEP_LEARNING_PLAN.md
 │   ├── EMR_DATA_MODEL.md
 │   ├── operating_concept_day_night.md
 │   ├── PROJECT_STRUCTURE.md
@@ -79,6 +89,7 @@ Majubom/
 │   ├── SENSOR_DIAGNOSTICS.md
 │   ├── SYSTEM_ARCHITECTURE.html
 │   ├── 나중에_할일.md
+│   ├── 진행상황_및_예측연구계획.md
 │   └── 질문.md
 ├── mmWave/
 │   ├── exit_seq/
@@ -95,16 +106,141 @@ Majubom/
 │   │   ├── record_seq.py
 │   │   ├── seq_dataset.jsonl.gz
 │   │   └── TODO_2026-07-05.md
+│   ├── fall_traces/
+│   │   ├── 20261013_180033_tid29.json
+│   │   ├── 20261013_180512_tid20.json
+│   │   ├── 20261013_181134_tid24.json
+│   │   ├── 20261013_181451_tid21.json
+│   │   ├── 20261013_181821_tid27.json
+│   │   ├── 20261013_183854_tid24.json
+│   │   ├── 20261013_185546_tid27.json
+│   │   ├── 20261013_191955_tid13.json
+│   │   ├── 20261013_194712_tid27.json
+│   │   ├── 20261013_203306_tid0.json
+│   │   ├── 20261013_211724_tid25.json
+│   │   ├── 20261013_220257_tid21.json
+│   │   ├── 20261013_220829_tid21.json
+│   │   ├── 20261013_223630_tid29.json
+│   │   ├── 20261013_223734_tid29.json
+│   │   ├── 20261013_225121_tid25.json
+│   │   ├── 20261013_234109_tid4.json
+│   │   ├── 20261014_003556_tid20.json
+│   │   ├── 20261014_023259_tid10.json
+│   │   ├── 20261014_122343_tid20.json
+│   │   ├── 20261014_123941_tid10.json
+│   │   ├── 20261014_134538_tid24.json
+│   │   ├── 20261014_143735_tid0.json
+│   │   ├── 20261014_151040_tid28.json
+│   │   ├── 20261014_151625_tid26.json
+│   │   ├── 20261014_184830_tid19.json
+│   │   ├── 20261014_194756_tid3.json
+│   │   ├── 20261014_195722_tid28.json
+│   │   ├── 20261014_195741_tid2.json
+│   │   ├── 20261015_112214_tid0.json
+│   │   ├── 20261015_171314_tid4.json
+│   │   ├── 20261015_173452_tid23.json
+│   │   ├── 20261015_180718_tid24.json
+│   │   ├── 20261015_181109_tid29.json
+│   │   ├── 20261015_223332_tid10.json
+│   │   ├── 20261016_135415_tid5.json
+│   │   ├── 20261016_135937_tid29.json
+│   │   ├── 20261016_162809_tid19.json
+│   │   ├── 20261016_181210_tid2.json
+│   │   ├── 20261016_184022_tid23.json
+│   │   ├── 20261017_120939_tid9.json
+│   │   ├── 20261017_122129_tid11.json
+│   │   ├── 20261017_135811_tid3.json
+│   │   ├── 20261018_081341_tid9.json
+│   │   ├── 20261018_081647_tid9.json
+│   │   ├── 20261018_092635_tid7.json
+│   │   ├── 20261018_093939_tid13.json
+│   │   ├── 20261018_212509_tid5.json
+│   │   ├── 20261019_123806_tid29.json
+│   │   ├── 20261019_165908_tid4.json
+│   │   ├── 20261019_204135_tid18.json
+│   │   ├── 20261019_224813_tid27.json
+│   │   ├── 20261020_130403_tid9.json
+│   │   ├── 20261020_133150_tid4.json
+│   │   ├── 20261020_165818_tid0.json
+│   │   ├── 20261020_170658_tid4.json
+│   │   ├── 20261020_172218_tid21.json
+│   │   ├── 20261021_130531_tid20.json
+│   │   ├── 20261021_133838_tid20.json
+│   │   ├── 20261021_133854_tid11.json
+│   │   ├── 20261022_104418_tid8.json
+│   │   ├── 20261022_104812_tid28.json
+│   │   ├── 20261022_105128_tid10.json
+│   │   ├── 20261022_111623_tid29.json
+│   │   ├── 20261022_111801_tid29.json
+│   │   ├── 20261022_111955_tid8.json
+│   │   ├── 20261022_112237_tid18.json
+│   │   ├── 20261022_112504_tid22.json
+│   │   ├── 20261022_112614_tid1.json
+│   │   ├── 20261022_113237_tid29.json
+│   │   ├── 20261022_113925_tid1.json
+│   │   ├── 20261022_114413_tid13.json
+│   │   ├── 20261022_130846_tid18.json
+│   │   ├── 20261022_131132_tid16.json
+│   │   ├── 20261022_132423_tid16.json
+│   │   ├── 20261022_132727_tid9.json
+│   │   ├── 20261022_133432_tid24.json
+│   │   ├── 20261022_133552_tid6.json
+│   │   ├── 20261022_143043_tid14.json
+│   │   ├── 20261022_143308_tid0.json
+│   │   ├── 20261022_143357_tid26.json
+│   │   ├── 20261022_143641_tid26.json
+│   │   ├── 20261022_143801_tid14.json
+│   │   ├── 20261022_144511_tid14.json
+│   │   ├── 20261022_150637_tid19.json
+│   │   ├── 20261022_151354_tid13.json
+│   │   ├── 20261022_151740_tid8.json
+│   │   ├── 20261022_163716_tid9.json
+│   │   ├── 20261022_164726_tid12.json
+│   │   ├── 20261022_172229_tid8.json
+│   │   ├── 20261022_181311_tid6.json
+│   │   ├── 20261022_181724_tid6.json
+│   │   ├── 20261022_181926_tid9.json
+│   │   ├── 20261022_183302_tid1.json
+│   │   ├── 20261022_183534_tid1.json
+│   │   ├── 20261022_202928_tid25.json
+│   │   ├── 20261022_203157_tid13.json
+│   │   ├── 20261022_203322_tid13.json
+│   │   ├── 20261022_204317_tid29.json
+│   │   ├── 20261023_084545_tid3.json
+│   │   ├── 20261023_085143_tid9.json
+│   │   ├── 20261023_085456_tid14.json
+│   │   ├── 20261023_091613_tid22.json
+│   │   ├── 20261023_092003_tid22.json
+│   │   ├── 20261023_093258_tid3.json
+│   │   ├── 20261023_112958_tid17.json
+│   │   ├── 20261023_143427_tid27.json
+│   │   ├── 20261031_140702_tid21.json
+│   │   ├── 20261031_140910_tid21.json
+│   │   └── 20261031_141023_tid21.json
+│   ├── recordings/
+│   │   ├── 20261013_195537_실측세션.jsonl
+│   │   ├── 20261022_173750_시연테스트.jsonl.gz
+│   │   ├── 20261023_시연시간대_0834-1900.jsonl.gz
+│   │   └── rec.py
 │   ├── tests/
-│   │   └── test_diagnostics.py
+│   │   ├── data/
+│   │   │   ├── crouch_walk_20261022.json
+│   │   │   ├── fall_split_20261022.json
+│   │   │   ├── fall_trials_20261012.json
+│   │   │   └── rec_session_20261013.json
+│   │   ├── test_diagnostics.py
+│   │   └── test_fall_detect.py
 │   ├── AOP_bed_2m7_d15.cfg
+│   ├── AOP_diag_2m5_d50.before_20261022_static.cfg
 │   ├── AOP_diag_2m5_d50.cfg
 │   ├── AOP_diag_wideopen.cfg
 │   ├── AOP_v_C_legs_safe.cfg
 │   ├── AOP_wall_chest.cfg
 │   ├── bed_roi_tilted.json
+│   ├── clutter_baseline.json
 │   ├── diagnostic_decode.py
 │   ├── diagnostic_server.py
+│   ├── fall_detect.py
 │   ├── posture_dataset.jsonl
 │   ├── posture_dataset_tilted.jsonl
 │   ├── POSTURE_NOTES.md
@@ -139,6 +275,15 @@ Majubom/
 │       ├── README.md
 │       └── test_alternatives.py
 ├── server/
+│   ├── backups/
+│   │   ├── ai_analysis_bed01_20261022.json
+│   │   ├── tof_baseline_before_20261022_1125.json
+│   │   ├── tof_baseline_before_20261022_2026.json
+│   │   ├── tof_baseline_before_20261023_0835.json
+│   │   ├── tof_baseline_before_20261023_1424.json
+│   │   ├── tof_baseline_before_20261029_115451.json
+│   │   ├── tof_baseline_before_20261029_161246.json
+│   │   └── tof_baseline_before_20261029_161619.json
 │   ├── lancedb_store/
 │   │   ├── analysis_chunks.lance/
 │   │   │   └── [LanceDB 자동 생성 내부 파일 생략]
@@ -147,6 +292,50 @@ Majubom/
 │   │   └── paper_chunks.lance/
 │   │       └── [LanceDB 자동 생성 내부 파일 생략]
 │   ├── raw_archive/
+│   │   ├── 2026-10-08/
+│   │   │   ├── mmw_readings.jsonl.gz
+│   │   │   └── tof_readings.jsonl.gz
+│   │   ├── 2026-10-09/
+│   │   │   └── mmw_readings.jsonl.gz
+│   │   ├── 2026-10-11/
+│   │   │   ├── mmw_readings.jsonl.gz
+│   │   │   └── tof_readings.jsonl.gz
+│   │   ├── 2026-10-12/
+│   │   │   ├── mmw_readings.jsonl.gz
+│   │   │   └── tof_readings.jsonl.gz
+│   │   ├── 2026-10-13/
+│   │   │   ├── mmw_readings.jsonl.gz
+│   │   │   └── tof_readings.jsonl.gz
+│   │   ├── 2026-10-14/
+│   │   │   ├── mmw_readings.jsonl.gz
+│   │   │   └── tof_readings.jsonl.gz
+│   │   ├── 2026-10-15/
+│   │   │   ├── mmw_readings.jsonl.gz
+│   │   │   └── tof_readings.jsonl.gz
+│   │   ├── 2026-10-16/
+│   │   │   ├── mmw_readings.jsonl.gz
+│   │   │   └── tof_readings.jsonl.gz
+│   │   ├── 2026-10-17/
+│   │   │   ├── mmw_readings.jsonl.gz
+│   │   │   └── tof_readings.jsonl.gz
+│   │   ├── 2026-10-18/
+│   │   │   ├── mmw_readings.jsonl.gz
+│   │   │   └── tof_readings.jsonl.gz
+│   │   ├── 2026-10-19/
+│   │   │   ├── mmw_readings.jsonl.gz
+│   │   │   └── tof_readings.jsonl.gz
+│   │   ├── 2026-10-20/
+│   │   │   ├── mmw_readings.jsonl.gz
+│   │   │   └── tof_readings.jsonl.gz
+│   │   ├── 2026-10-21/
+│   │   │   ├── mmw_readings.jsonl.gz
+│   │   │   └── tof_readings.jsonl.gz
+│   │   ├── 2026-10-22/
+│   │   │   ├── mmw_readings.jsonl.gz
+│   │   │   └── tof_readings.jsonl.gz
+│   │   └── 2026-10-23/
+│   │       ├── mmw_readings.jsonl.gz
+│   │       └── tof_readings.jsonl.gz
 │   ├── reports/
 │   │   ├── 2026-08-08.json
 │   │   ├── 2026-08-15.json
@@ -165,20 +354,22 @@ Majubom/
 │   ├── diagnostic_observer.py
 │   ├── emr_kb.py
 │   ├── export_report_reviews.py
+│   ├── fall_report.py
+│   ├── fall_risk.py
 │   ├── gait_evidence.json
 │   ├── gait_prior.md
 │   ├── gait_prior.py
+│   ├── gait_trend.py
 │   ├── integrated_analysis.py
 │   ├── live_diagnostics.py
 │   ├── maintenance_ai.py
 │   ├── majubom.db
-│   ├── majubom.db-shm
-│   ├── majubom.db-wal
 │   ├── majubom.db.4x4bak.gz
 │   ├── mmw_baseline.json
 │   ├── mmw_logic.py
 │   ├── mmw_server.py
 │   ├── paper_kb.py
+│   ├── report_charts.py
 │   ├── report_review.py
 │   ├── report_trace.py
 │   ├── retrieval.py
@@ -189,22 +380,31 @@ Majubom/
 │   ├── test_dashboard_api.py
 │   ├── test_e2e_pipeline.py
 │   ├── test_emr_kb.py
+│   ├── test_fall_report.py
+│   ├── test_fall_risk.py
 │   ├── test_gait_prior.py
+│   ├── test_gait_trend.py
 │   ├── test_patient_report_context.py
 │   ├── test_report_review.py
 │   ├── test_report_trace.py
 │   ├── test_sensor_observability.py
+│   ├── test_tof_autocal.py
 │   ├── test_tof_diagnostics.py
+│   ├── test_tof_toss.py
 │   ├── tof_3d.html
+│   ├── tof_autocal.py
 │   ├── tof_baseline.json
+│   ├── tof_baseline_history.jsonl
 │   ├── tof_baseline_tilt20_20261008.json
 │   ├── tof_logic.py
-│   └── tof_server.py
+│   ├── tof_server.py
+│   └── tof_toss.py
 ├── site/
 │   ├── dashboard-assets/
 │   │   ├── dashboard.css
 │   │   ├── dashboard.js
 │   │   ├── data.js
+│   │   ├── dev.js
 │   │   ├── report-review.js
 │   │   └── simulation.js
 │   ├── tests/
@@ -215,6 +415,7 @@ Majubom/
 │   │   └── report-review.test.cjs
 │   ├── dashboard_design.html
 │   ├── DASHBOARD_WORK.md
+│   ├── dev.html
 │   ├── emr-dashboard.html
 │   ├── index.html
 │   ├── sensor-diagnostics.html
@@ -377,12 +578,116 @@ Majubom/
 │   │   ├── tof_S01_supine_이불없음_폰_r7_20261008_185257.jsonl
 │   │   ├── tof_S01_supine_이불없음_폰_r8_20261008_185724.jsonl
 │   │   ├── tof_S01_supine_이불없음_폰_r9_20261008_185804.jsonl
+│   │   ├── tof_S02_edge_sit_이불없음_옆쪽_r1_20261013_220255.jsonl
+│   │   ├── tof_S02_edge_sit_이불없음_옆쪽_r2_20261013_220330.jsonl
+│   │   ├── tof_S02_edge_sit_이불없음_옆쪽_r3_20261013_220405.jsonl
+│   │   ├── tof_S02_edge_sit_이불없음_옆쪽_r4_20261013_220441.jsonl
+│   │   ├── tof_S02_edge_sit_이불없음_옆쪽_r5_20261013_220516.jsonl
+│   │   ├── tof_S02_edge_sit_이불없음_옆쪽_머리가까이_r1_20261013_221148.jsonl
+│   │   ├── tof_S02_edge_sit_이불없음_옆쪽_머리가까이_r2_20261013_221223.jsonl
+│   │   ├── tof_S02_edge_sit_이불없음_옆쪽_머리가까이_r3_20261013_221258.jsonl
+│   │   ├── tof_S02_edge_sit_이불없음_옆쪽_머리가까이_r4_20261013_221333.jsonl
+│   │   ├── tof_S02_edge_sit_이불없음_옆쪽_머리가까이_r5_20261013_221408.jsonl
+│   │   ├── tof_S02_edge_sit_이불없음_옆쪽_발가까이_r1_20261013_220819.jsonl
+│   │   ├── tof_S02_edge_sit_이불없음_옆쪽_발가까이_r2_20261013_220854.jsonl
+│   │   ├── tof_S02_edge_sit_이불없음_옆쪽_발가까이_r3_20261013_220929.jsonl
+│   │   ├── tof_S02_edge_sit_이불없음_옆쪽_발가까이_r4_20261013_221004.jsonl
+│   │   ├── tof_S02_edge_sit_이불없음_옆쪽_발가까이_r5_20261013_221039.jsonl
+│   │   ├── tof_S02_side_left_이불덮음_r1_20261013_224344.jsonl
+│   │   ├── tof_S02_side_left_이불덮음_r2_20261013_224419.jsonl
+│   │   ├── tof_S02_side_left_이불덮음_r3_20261013_224455.jsonl
+│   │   ├── tof_S02_side_left_이불덮음_r4_20261013_224530.jsonl
+│   │   ├── tof_S02_side_left_이불덮음_r5_20261013_224605.jsonl
+│   │   ├── tof_S02_side_left_이불없음_r10_20261013_211204.jsonl
+│   │   ├── tof_S02_side_left_이불없음_r11_20261013_211239.jsonl
+│   │   ├── tof_S02_side_left_이불없음_r12_20261013_211314.jsonl
+│   │   ├── tof_S02_side_left_이불없음_r13_20261013_211349.jsonl
+│   │   ├── tof_S02_side_left_이불없음_r14_20261013_211424.jsonl
+│   │   ├── tof_S02_side_left_이불없음_r15_20261013_211459.jsonl
+│   │   ├── tof_S02_side_left_이불없음_r1_20261013_210648.jsonl
+│   │   ├── tof_S02_side_left_이불없음_r2_20261013_210723.jsonl
+│   │   ├── tof_S02_side_left_이불없음_r3_20261013_210758.jsonl
+│   │   ├── tof_S02_side_left_이불없음_r4_20261013_210833.jsonl
+│   │   ├── tof_S02_side_left_이불없음_r5_20261013_210908.jsonl
+│   │   ├── tof_S02_side_left_이불없음_r6_20261013_210943.jsonl
+│   │   ├── tof_S02_side_left_이불없음_r7_20261013_211018.jsonl
+│   │   ├── tof_S02_side_left_이불없음_r8_20261013_211054.jsonl
+│   │   ├── tof_S02_side_left_이불없음_r9_20261013_211129.jsonl
+│   │   ├── tof_S02_side_right_이불덮음_r1_20261013_224744.jsonl
+│   │   ├── tof_S02_side_right_이불덮음_r2_20261013_224819.jsonl
+│   │   ├── tof_S02_side_right_이불덮음_r3_20261013_224854.jsonl
+│   │   ├── tof_S02_side_right_이불덮음_r4_20261013_224929.jsonl
+│   │   ├── tof_S02_side_right_이불덮음_r5_20261013_225005.jsonl
+│   │   ├── tof_S02_side_right_이불없음_r10_20261013_212236.jsonl
+│   │   ├── tof_S02_side_right_이불없음_r11_20261013_212311.jsonl
+│   │   ├── tof_S02_side_right_이불없음_r12_20261013_212347.jsonl
+│   │   ├── tof_S02_side_right_이불없음_r13_20261013_212422.jsonl
+│   │   ├── tof_S02_side_right_이불없음_r14_20261013_212457.jsonl
+│   │   ├── tof_S02_side_right_이불없음_r15_20261013_212532.jsonl
+│   │   ├── tof_S02_side_right_이불없음_r1_20261013_211720.jsonl
+│   │   ├── tof_S02_side_right_이불없음_r2_20261013_211756.jsonl
+│   │   ├── tof_S02_side_right_이불없음_r3_20261013_211831.jsonl
+│   │   ├── tof_S02_side_right_이불없음_r4_20261013_211906.jsonl
+│   │   ├── tof_S02_side_right_이불없음_r5_20261013_211941.jsonl
+│   │   ├── tof_S02_side_right_이불없음_r6_20261013_212016.jsonl
+│   │   ├── tof_S02_side_right_이불없음_r7_20261013_212051.jsonl
+│   │   ├── tof_S02_side_right_이불없음_r8_20261013_212126.jsonl
+│   │   ├── tof_S02_side_right_이불없음_r9_20261013_212201.jsonl
+│   │   ├── tof_S02_sitting_이불없음_r10_20261013_215747.jsonl
+│   │   ├── tof_S02_sitting_이불없음_r11_20261013_215822.jsonl
+│   │   ├── tof_S02_sitting_이불없음_r12_20261013_215857.jsonl
+│   │   ├── tof_S02_sitting_이불없음_r13_20261013_215932.jsonl
+│   │   ├── tof_S02_sitting_이불없음_r14_20261013_220007.jsonl
+│   │   ├── tof_S02_sitting_이불없음_r15_20261013_220042.jsonl
+│   │   ├── tof_S02_sitting_이불없음_r1_20261013_215231.jsonl
+│   │   ├── tof_S02_sitting_이불없음_r2_20261013_215306.jsonl
+│   │   ├── tof_S02_sitting_이불없음_r3_20261013_215341.jsonl
+│   │   ├── tof_S02_sitting_이불없음_r4_20261013_215416.jsonl
+│   │   ├── tof_S02_sitting_이불없음_r5_20261013_215451.jsonl
+│   │   ├── tof_S02_sitting_이불없음_r6_20261013_215526.jsonl
+│   │   ├── tof_S02_sitting_이불없음_r7_20261013_215601.jsonl
+│   │   ├── tof_S02_sitting_이불없음_r8_20261013_215636.jsonl
+│   │   ├── tof_S02_sitting_이불없음_r9_20261013_215712.jsonl
+│   │   ├── tof_S02_supine_이불덮음_r1_20261013_223801.jsonl
+│   │   ├── tof_S02_supine_이불덮음_r2_20261013_223836.jsonl
+│   │   ├── tof_S02_supine_이불덮음_r3_20261013_223911.jsonl
+│   │   ├── tof_S02_supine_이불덮음_r4_20261013_223946.jsonl
+│   │   ├── tof_S02_supine_이불덮음_r5_20261013_224021.jsonl
+│   │   ├── tof_S02_supine_이불없음_r10_20261013_210058.jsonl
+│   │   ├── tof_S02_supine_이불없음_r11_20261013_210134.jsonl
+│   │   ├── tof_S02_supine_이불없음_r12_20261013_210209.jsonl
+│   │   ├── tof_S02_supine_이불없음_r13_20261013_210244.jsonl
+│   │   ├── tof_S02_supine_이불없음_r14_20261013_210319.jsonl
+│   │   ├── tof_S02_supine_이불없음_r15_20261013_210354.jsonl
+│   │   ├── tof_S02_supine_이불없음_r1_20261013_205543.jsonl
+│   │   ├── tof_S02_supine_이불없음_r2_20261013_205618.jsonl
+│   │   ├── tof_S02_supine_이불없음_r3_20261013_205653.jsonl
+│   │   ├── tof_S02_supine_이불없음_r4_20261013_205728.jsonl
+│   │   ├── tof_S02_supine_이불없음_r5_20261013_205803.jsonl
+│   │   ├── tof_S02_supine_이불없음_r6_20261013_205838.jsonl
+│   │   ├── tof_S02_supine_이불없음_r7_20261013_205913.jsonl
+│   │   ├── tof_S02_supine_이불없음_r8_20261013_205948.jsonl
+│   │   ├── tof_S02_supine_이불없음_r9_20261013_210023.jsonl
+│   │   ├── tof_S02_supine_이불없음_무릎_r1_20261013_222420.jsonl
+│   │   ├── tof_S02_supine_이불없음_무릎_r2_20261013_222455.jsonl
+│   │   ├── tof_S02_supine_이불없음_무릎_r3_20261013_222530.jsonl
+│   │   ├── tof_S02_supine_이불없음_무릎_폰_r1_20261013_222641.jsonl
+│   │   ├── tof_S02_supine_이불없음_무릎_폰_r2_20261013_222716.jsonl
+│   │   ├── tof_S02_supine_이불없음_폰_r1_20261013_221900.jsonl
+│   │   ├── tof_S02_supine_이불없음_폰_r2_20261013_221935.jsonl
+│   │   ├── tof_S02_supine_이불없음_폰_r3_20261013_222010.jsonl
+│   │   ├── tof_S02_supine_이불없음_폰_r4_20261013_222046.jsonl
+│   │   ├── tof_S02_supine_이불없음_폰_r5_20261013_222121.jsonl
+│   │   ├── tof_S02_supine_이불없음_폰_r6_20261013_222156.jsonl
+│   │   ├── tof_S02_supine_이불없음_폰_r7_20261013_222231.jsonl
 │   │   ├── tof_없음_empty_이불없음_r10_20261008_171257.jsonl
 │   │   ├── tof_없음_empty_이불없음_r11_20261008_171332.jsonl
 │   │   ├── tof_없음_empty_이불없음_r12_20261008_171407.jsonl
 │   │   ├── tof_없음_empty_이불없음_r13_20261008_171442.jsonl
 │   │   ├── tof_없음_empty_이불없음_r14_20261008_171517.jsonl
 │   │   ├── tof_없음_empty_이불없음_r15_20261008_171552.jsonl
+│   │   ├── tof_없음_empty_이불없음_r16_20261012_133457.jsonl
+│   │   ├── tof_없음_empty_이불없음_r17_20261012_133530.jsonl
 │   │   ├── tof_없음_empty_이불없음_r1_20261008_170741.jsonl
 │   │   ├── tof_없음_empty_이불없음_r2_20261008_170816.jsonl
 │   │   ├── tof_없음_empty_이불없음_r3_20261008_170851.jsonl
@@ -430,16 +735,20 @@ Majubom/
 │   │   ├── archive/
 │   │   │   ├── lstm_ae_oldmount_20260707.pt
 │   │   │   ├── posture_model_8x8_oldmount_20260707.joblib
+│   │   │   ├── posture_model_v2_S01only_20261008.joblib
+│   │   │   ├── posture_model_v2_S01only_20261008_report.json
 │   │   │   └── README.md
 │   │   ├── analyze_4x4_backup.py
 │   │   ├── augment_tof.py
 │   │   ├── backup_4x4_analysis.json
+│   │   ├── bed_geometry.py
 │   │   ├── bed_scan_preview.html
 │   │   ├── bed_scan_result.json
 │   │   ├── calibrate_roi.py
 │   │   ├── compare_rf_tabpfn.py
 │   │   ├── feature_logger.py
 │   │   ├── lstm_ae.pt
+│   │   ├── lstm_ae_v2_report.json
 │   │   ├── lstm_anomaly.py
 │   │   ├── lstm_infer.py
 │   │   ├── posture_model.joblib
@@ -450,6 +759,7 @@ Majubom/
 │   │   ├── retrain_with_tabpfn.py
 │   │   ├── roi.py
 │   │   ├── tof_anomaly.py
+│   │   ├── train_lstm_ae_v2.py
 │   │   ├── train_posture.py
 │   │   ├── train_posture_v2.py
 │   │   └── zone_probe.py
@@ -466,9 +776,15 @@ Majubom/
 │   ├── TROUBLESHOOTING.md
 │   └── viewer_proxy.py
 ├── tools/
+│   ├── ai_guide_parts.py
 │   ├── archive_raw.py
+│   ├── build_ai_guide.py
+│   ├── build_code_guide.py
+│   ├── guide_lib.py
+│   ├── laptop_stream_client.py
 │   ├── seed_demo_emr.py
 │   └── update_project_structure.py
+├── .env
 ├── .gitignore
 ├── 0704할일.md
 ├── 0707_TOF_진행상황_인수인계.md

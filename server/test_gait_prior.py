@@ -409,9 +409,9 @@ class MmwPriorPathTests(unittest.TestCase):
         "speed": {"mean": 0.45, "tau": 0.28, "sigma_within_prior": S0, "use_for_provisional": True},
         "stride_length": {"mean": 0.47, "tau": 0.23, "sigma_within_prior": 0.0411, "use_for_provisional": False}}}
 
-    def payload(self, speed=0.45, stride=0.45, drop=0.0):
+    def payload(self, speed=0.45, stride=0.45, low_z=1.0):
         return {"target_id": "room_x", "raw": {"speed": speed, "speed_cv": 0.15, "sway": 0.05, "freeze_ratio": 0.1,
-                                               "stride_length": stride, "stride_cv": 0.09, "height_drop": drop},
+                                               "stride_length": stride, "stride_cv": 0.09, "low_z": low_z},
                 "quality": {"reliable": True, "walking": True}, "presence": {"n_targets": 1}}
 
     def test_provisional_judgement_from_first_window(self):
@@ -441,8 +441,10 @@ class MmwPriorPathTests(unittest.TestCase):
         self.assertEqual(L._within_sd(5, 0.2, S0, 0.05), 0.2)
         self.assertEqual(L._within_sd(1, None, S0, 0.05), S0)
 
-    def test_height_drop_is_critical_even_before_personal_baseline(self):
-        r = L.evaluate(self.payload(drop=1.5), {}, persist=False, prior=self.PRIOR)
+    @patch.object(L, "FLOOR_FALL_ENABLED", True)  # 2026-10-12부터 기본 꺼짐(fall_detect.py로 대체); 규칙 자체는 유지
+    def test_floor_height_is_critical_even_before_personal_baseline(self):
+        # 2026-10-12: 낙상 절대 규칙 = 최근 1초 몸 높이(low_z) < 0.4m
+        r = L.evaluate(self.payload(low_z=0.2), {}, persist=False, prior=self.PRIOR)
         self.assertEqual(r["alert_level"], "critical")
         self.assertTrue(r["alarm"])
 
@@ -616,8 +618,9 @@ class MmwServerInputTests(unittest.TestCase):
         db.init_db()
         self.client = mmw_server.app.test_client()
 
+    @patch.object(L, "FLOOR_FALL_ENABLED", True)  # 2026-10-12부터 기본 꺼짐(fall_detect.py로 대체); 규칙 자체는 유지
     def test_invalid_gait_fields_do_not_block_the_fall_rule(self):   # Codex2 P1
-        body = ('{"target_id": "t", "raw": {"speed": Infinity, "stride_cv": null, "height_drop": 1.5},'
+        body = ('{"target_id": "t", "raw": {"speed": Infinity, "stride_cv": null, "low_z": 0.2},'
                 ' "quality": {"reliable": true, "walking": true}, "presence": {"n_targets": 1}}')
         r = self.client.post("/mmw", data=body, content_type="application/json")
         self.assertEqual(r.status_code, 200)
@@ -626,17 +629,29 @@ class MmwServerInputTests(unittest.TestCase):
         self.assertEqual(latest["quality"]["invalid_fields"], ["speed", "stride_cv"])
         self.assertEqual(self.server.baseline_store, {})         # 보행 기준선에는 넣지 않음
 
+    def test_frame_fall_event_is_suppressed_while_tof_sees_person_in_bed(self):
+        ev = {"target_id": "t", "stage": "fallen", "tid": 3, "z": 0.1, "ref": 1.5}
+        with patch.object(self.server, "_tof_in_bed", lambda target: True):
+            r = self.client.post("/mmw/fall", json=ev).get_json()
+        self.assertEqual((r["ok"], r["suppressed"]), (True, True))
+        with patch.object(self.server, "_tof_in_bed", lambda target: False):
+            r = self.client.post("/mmw/fall", json=ev).get_json()
+        self.assertEqual(r["suppressed"], False)
+        self.assertEqual([e["suppressed"] for e in self.client.get("/mmw/fall?target=t").get_json()], [True, False])
+        self.assertEqual(self.client.post("/mmw/fall", json={"stage": "nope"}).status_code, 400)
+
     def test_missing_raw_is_still_rejected(self):
         self.assertEqual(self.client.post("/mmw", json={"raw": {}}).status_code, 400)
 
+    @patch.object(L, "FLOOR_FALL_ENABLED", True)  # 2026-10-12부터 기본 꺼짐(fall_detect.py로 대체); 규칙 자체는 유지
     def test_malformed_envelopes_get_400_or_safe_defaults_instead_of_500(self):
         post = lambda body: self.client.post("/mmw", data=body, content_type="application/json")
         self.assertEqual(post("[1, 2]").status_code, 400)
         self.assertEqual(post('{"target_id": 5, "raw": {"speed": 0.5}}').status_code, 400)
         self.assertEqual(post('{"target_id": ["a"], "raw": {"speed": 0.5}}').status_code, 400)
-        r = post('{"raw": {"speed": 0.5, "height_drop": 1.5}, "quality": "ok", "presence": 3}')
+        r = post('{"raw": {"speed": 0.5, "low_z": 0.2}, "quality": "ok", "presence": 3}')
         self.assertEqual((r.status_code, r.get_json()["alert_level"]), (200, "critical"))
-        huge = post('{"target_id": "h", "raw": {"speed": 1' + "0" * 400 + ', "height_drop": 1.5}}')
+        huge = post('{"target_id": "h", "raw": {"speed": 1' + "0" * 400 + ', "low_z": 0.2}}')
         self.assertEqual((huge.status_code, huge.get_json()["alert_level"]), (200, "critical"))
         self.assertEqual(self.server.latest_by_target["h"]["quality"]["invalid_fields"], ["speed"])
 

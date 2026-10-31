@@ -45,7 +45,11 @@ class DiagnosticsTests(unittest.TestCase):
         h, f = frame([(1010, struct.pack('<I27f', 7, *values))])
         d = D.decode_frame(h, f)
         self.assertEqual(d['points'], [])
-        self.assertEqual(d['tracks'][0]['world'], [1., 2., 1.5])
+        # 2026-10-12: track도 레이더 기준 좌표라 장착 높이·하향각으로 바닥 기준 변환(기본 거꾸로 장착 보정: x·z 부호 반전, --upright면 그대로)
+        self.assertEqual(d['tracks'][0]['sensor'], [1., 2., 1.5])
+        a = math.radians(50.0)
+        for got, want in zip(d['tracks'][0]['world'], [-1., 2 * math.cos(a) - 1.5 * math.sin(a), 2.5 - 2 * math.sin(a) - 1.5 * math.cos(a)]):
+            self.assertAlmostEqual(got, want, places=6)
 
     def test_bad_tlv_and_nonfinite_values(self):
         h, f = frame([(1020, struct.pack('<5f', float('nan'), .01, .1, .01, .1) + struct.pack('<bbhHH', 1, 1, 0, 200, 200))])
@@ -110,6 +114,16 @@ class DiagnosticsTests(unittest.TestCase):
         self.assertIsNone(response.json['mmwave'])
         self.assertEqual(response.json['ai']['runs'],[])
 
+    def test_gait_uses_fall_detector_patient(self):
+        # 10-20: 보행 분석은 낙상 판정기가 고른 환자를 쓴다(예전 침대 상자는 새 설치에서 늘 소속도 0)
+        from collections import deque
+        walk = lambda x0: deque((100+i/10, x0+i/30, 2., 1.2, .3, .1) for i in range(30))
+        history = {7: walk(0.0), 9: walk(1.5)}
+        _, _, p = G.select_patient(history, 103, preferred=9, preferred_lock='exit')
+        self.assertEqual((p['main_tid'], p['patient_locked'], p['patient_lock']), (9, True, 'exit'))
+        _, _, p = G.select_patient({7: walk(0.0)}, 103, preferred=None)
+        self.assertFalse(p['patient_locked'])              # 판정기가 환자를 안 골랐으면(침대 3m 밖 혼자 등) 저장하지 않음
+
     def test_window_average_matches_actual_feature_and_empty_is_not_measurement(self):
         from collections import deque
         samples = [(100+i/10, i/30, 2., 1.+i/100, .3+i/100, .1) for i in range(30)]
@@ -149,7 +163,9 @@ class BranchTests(unittest.TestCase):
         response = mock.Mock(status_code=200)
         response.json.return_value = {'ok': True}
         with mock.patch.object(G.serial, 'Serial', return_value=uart), mock.patch.object(G.time, 'time', side_effect=lambda: clock[0]), mock.patch.object(G.requests, 'post', return_value=response) as posts, mock.patch.object(live_diagnostics, 'LatestPublisher', return_value=pub), mock.patch.object(diagnostic_decode, 'decode_frame', side_effect=ValueError('bad TLV')):
-            G.run('cli', 'data', None, target_id='test_bed')
+            import fall_detect   # run()이 판정기 BED_CENTER를 운영 값으로 바꾸므로 다른 테스트를 위해 되돌린다(10-29)
+            with mock.patch.object(fall_detect, 'BED_CENTER', fall_detect.BED_CENTER):
+                G.run('cli', 'data', None, target_id='test_bed')
         urls = [call.args[0] for call in posts.call_args_list]
         self.assertIn(G.SERVER_URL, urls)
         self.assertIn(G.LIVE_URL, urls)

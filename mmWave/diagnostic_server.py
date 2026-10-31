@@ -1,4 +1,4 @@
-"""ToF + mmWave raw dashboard relay. Latest snapshots in RAM only; no DB or files."""
+"""ToF + mmWave raw dashboard relay and laptop frame stream. RAM only; no DB or files."""
 import argparse
 import copy
 import math
@@ -10,8 +10,9 @@ import json
 import urllib.request
 import urllib.parse
 from concurrent.futures import ThreadPoolExecutor
+import queue
 
-from flask import Flask, jsonify, send_from_directory, request
+from flask import Flask, Response, jsonify, send_from_directory, request
 import serial
 import send_mmw as protocol
 
@@ -42,6 +43,46 @@ class LiveState:
             result['status'] = 'disconnected'
         result['age_s'] = None if result['last_frame_at'] is None else round(time.time() - result['last_frame_at'], 2)
         return result
+
+
+class StreamHub:
+    """노트북 스트림(2026-10-31): 들어온 프레임을 구독자마다의 RAM 큐로 나눠 준다. 저장하지 않는다.
+    구독자 큐가 넘치면 그 구독자에게 가는 프레임만 버리고 개수를 heartbeat로 알린다."""
+
+    def __init__(self, max_queue=2000):
+        self.lock = threading.Lock()
+        self.subscribers = []
+        self.max_queue = max_queue
+        self.received = 0
+
+    def subscribe(self, sensors):
+        sub = {'queue': queue.Queue(self.max_queue), 'sensors': sensors, 'dropped': 0}
+        with self.lock:
+            self.subscribers.append(sub)
+        return sub
+
+    def unsubscribe(self, sub):
+        with self.lock:
+            if sub in self.subscribers:
+                self.subscribers.remove(sub)
+
+    def count(self):
+        with self.lock:
+            return len(self.subscribers)
+
+    def publish(self, frames):
+        with self.lock:
+            self.received += len(frames)
+            subs = list(self.subscribers)
+        for sub in subs:
+            for frame in frames:
+                if frame.get('kind') not in sub['sensors']:
+                    continue
+                try:
+                    sub['queue'].put_nowait(frame)
+                except queue.Full:
+                    sub['dropped'] += 1
+        return len(subs)
 
 
 def configure(port, cfg):
@@ -97,7 +138,8 @@ def read_sensor(args, state):
         state.update(status='error', error=str(exc))
 
 
-def create_app(state):
+def create_app(state, hub=None):
+    hub = hub or StreamHub()
     app = Flask(__name__)
     app.config['MAX_CONTENT_LENGTH'] = 2 * 1024 * 1024
 
@@ -172,6 +214,47 @@ def create_app(state):
                 out['errors'][kind] = error
         return jsonify(out)
 
+    @app.post('/api/stream-ingest')
+    def stream_ingest():
+        if request.remote_addr not in ('127.0.0.1', '::1'):
+            return jsonify(error='local collector only'), 403
+        payload = request.get_json(silent=True)
+        frames = payload.get('frames') if isinstance(payload, dict) else None
+        if not isinstance(frames, list) or not all(isinstance(f, dict) and f.get('kind') in ('tof1', 'tof2', 'mmwave') for f in frames):
+            return jsonify(error='frames list required'), 400
+        return jsonify(ok=True, subscribers=hub.publish(frames))
+
+    @app.get('/api/stream')
+    def stream():
+        """NDJSON: 한 줄에 프레임 하나. 1초마다 heartbeat(Pi 시각·이 연결에서 버린 개수). 노트북에서 받아 저장한다."""
+        sensors = set((request.args.get('sensors') or 'tof1,tof2,mmwave').split(',')) & {'tof1', 'tof2', 'mmwave'}
+        if not sensors:
+            return jsonify(error='sensors must be tof1,tof2,mmwave'), 400
+        sub = hub.subscribe(sensors)
+
+        def generate():
+            try:
+                yield json.dumps({'type': 'hello', 'pi_unix': time.time(), 'sensors': sorted(sensors)}) + '\n'
+                last_beat = time.monotonic()
+                while True:
+                    try:
+                        frame = sub['queue'].get(timeout=1.0)
+                        yield json.dumps({'type': 'frame', **finite_json(frame)}, allow_nan=False) + '\n'
+                    except queue.Empty:
+                        pass
+                    if time.monotonic() - last_beat >= 1.0:
+                        last_beat = time.monotonic()
+                        yield json.dumps({'type': 'heartbeat', 'pi_unix': time.time(), 'dropped': sub['dropped'],
+                                          'queued': sub['queue'].qsize()}) + '\n'
+            finally:
+                hub.unsubscribe(sub)
+
+        return Response(generate(), mimetype='application/x-ndjson')
+
+    @app.get('/api/stream/status')
+    def stream_status():
+        return jsonify(subscribers=hub.count(), received=hub.received, pi_unix=time.time())
+
     @app.get('/api/snapshot')
     def snapshot():
         return jsonify(state.snapshot())
@@ -196,7 +279,7 @@ def main():
         threading.Thread(target=read_sensor, args=(args, state), daemon=True).start()
     else:
         state.update(status='waiting')
-    create_app(state).run(host='0.0.0.0', port=args.port, debug=False, use_reloader=False)
+    create_app(state).run(host='0.0.0.0', port=args.port, debug=False, use_reloader=False, threaded=True)
 
 
 if __name__ == '__main__':

@@ -1,0 +1,22 @@
+# 마주봄 mmWave 리더(send_mmw.py) 자동 실행·재시작 (2026-10-12)
+# 레이더 전원이 꺼지면 리더가 '장치 연결 끊김'으로 종료된다 → 5초 뒤 다시 시작하며 .cfg를 보낸다.
+# 설치: sudo cp deploy/majubom-mmw-reader.service /etc/systemd/system/ && sudo systemctl daemon-reload
+#       sudo systemctl enable --now majubom-mmw-reader
+# 로그: journalctl -u majubom-mmw-reader -f
+[Unit]
+Description=Majubom mmWave reader (send_mmw.py)
+After=network-online.target
+StartLimitIntervalSec=0
+
+[Service]
+User=pi
+WorkingDirectory=/home/pi/Documents/Github/Majubom
+ExecStart=/home/pi/Documents/Github/Majubom/.venv/bin/python -u mmWave/send_mmw.py \
+  --cli /dev/serial/by-id/usb-Silicon_Labs_CP2105_Dual_USB_to_UART_Bridge_Controller_011D1AD6-if00-port0 \
+  --data /dev/serial/by-id/usb-Silicon_Labs_CP2105_Dual_USB_to_UART_Bridge_Controller_011D1AD6-if01-port0 \
+  --cfg mmWave/AOP_diag_2m5_d50.cfg --target room_01 --height 2.5 --tilt 30
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

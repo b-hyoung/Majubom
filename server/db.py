@@ -182,6 +182,12 @@ def init_db():
             CREATE INDEX IF NOT EXISTS idx_mmw_target_ts
                 ON mmw_readings(target_id, timestamp);
         """)
+        # 2026-10-13: 보행 추세 예측(gait_trend.py)은 '곧게 걸은 구간 + 환자로 특정된 추적'만 쓴다.
+        # 이전 행에는 값이 없다(NULL) → gait_trend가 속도·보폭으로 대신 거른다.
+        mmw_cols = {row["name"] for row in conn.execute("PRAGMA table_info(mmw_readings)")}
+        for col, decl in (("walking", "INTEGER"), ("patient_locked", "INTEGER"), ("straightness", "REAL")):
+            if col not in mmw_cols:
+                conn.execute(f"ALTER TABLE mmw_readings ADD COLUMN {col} {decl}")
     print(f"[DB] 초기화 완료 → {DB_PATH}")
 
 
@@ -247,8 +253,8 @@ def insert_mmw(target_id, timestamp, raw, quality, presence,
                  stride_length, stride_cv,
                  reliable, samples_count, duration_sec,
                  presence_count, presence_confidence, gate_active,
-                 total_abs, alert_level)
-            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+                 total_abs, alert_level, walking, patient_locked, straightness)
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
         """, (
             timestamp, target_id,
             raw.get("speed"), raw.get("speed_cv"), raw.get("sway"),
@@ -259,6 +265,9 @@ def insert_mmw(target_id, timestamp, raw, quality, presence,
             presence.get("count"), presence.get("confidence"),
             int(bool(presence.get("gate_active", True))),
             total_abs, alert_level,
+            None if quality.get("walking") is None else int(bool(quality.get("walking"))),
+            None if presence.get("patient_locked") is None else int(bool(presence.get("patient_locked"))),
+            quality.get("straightness") if isinstance(quality.get("straightness"), (int, float)) else None,
         ))
         return cur.lastrowid
 

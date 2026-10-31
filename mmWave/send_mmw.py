@@ -24,7 +24,10 @@ TLV 구조 (3D People Counting/Tracking, little-endian):
   --no-send 를 주면 POST 없이 콘솔에만 지표 출력 (디버그)
 """
 import argparse
+import base64
+import json
 import math
+import os
 import struct
 import time
 from collections import defaultdict, deque
@@ -58,7 +61,128 @@ WINDOW_SEC = 6.0         # 보행 지표 계산 윈도우 (좁은 방: 한 직�
 FREEZE_SPEED_THRESH = 0.15
 SERVER_URL = "http://127.0.0.1:5002/mmw"   # 같은 Pi 안의 mmw_server
 LIVE_URL = "http://127.0.0.1:5002/mmw/live" # 실시간 포인트 클라우드
-LIVE_INTERVAL = 0.3      # snapshot POST 주기 (초)
+LIVE_INTERVAL = 0.1      # snapshot POST 주기 (초). 2026-10-12 0.3→0.1: 대시보드 평면도가 0.2초마다 위치를 받는다
+FALL_URL = "http://127.0.0.1:5002/mmw/fall"  # 프레임 단위 낙상 사건(fall_detect.py)
+FALL_CONFIRM_SEC = 1.0   # 10-22 시연용 사용자 결정: 바닥에 1초 머물면 낙상(판정기 기본·테스트는 3초). 되돌리려면 3.0
+# 2026-10-22 부스 마스킹(사용자 결정): 레이더 바닥 좌표의 다각형 밖 추적은 아예 버린다(통로 관객·옆 부스).
+# 18:0x 사용자가 부스 가장자리를 1분 걸은 경로(레이더 좌표, 거리 약 0.6m 멀게 보이는 오차 그대로 포함)의
+# 네 모서리 (0,-0.1)(-1.4,0.8)(0.7,3.7)(2.5,2.5)를 바깥으로 0.3m 넓힌 것. 설정되면 MAX_RANGE_M 원형 제한 대신 쓴다.
+# 부스 값: [(2.96, 2.55), (0.63, 4.11), (-1.83, 0.72), (0.05, -0.49)]
+# 10-29 간호학과 방: 사용자가 방 가장자리를 약 80초 걸은 경로(레이더 30° 좌표) + 누운 자리(침대, 걷지 않은 오른쪽 아래)를
+# 합친 6각형 (-0.9,-0.1)(-1.4,1.65)(1.5,3.85)(1.75,2.0)(1.8,0.5)(0.3,-0.15)을 바깥으로 0.3m 넓힘
+ROI_POLY = [(-1.13, -0.39), (-1.74, 1.76), (1.73, 4.4), (2.05, 2.03), (2.11, 0.31), (0.36, -0.45)]
+REC_MAX_BYTES = 3 * 1024 ** 3        # 녹화 파일 하나 최대 3GB(넘으면 자동 중지, 10-28)
+REC_MIN_FREE_BYTES = 2 * 1024 ** 3   # 디스크 남은 공간이 이보다 적으면 녹화 자동 중지
+# 부스 침대 가운데(레이더 바닥 좌표): 18:1x 사용자가 침대에 누운 자리 실측(-0.15, 0.5), ToF 침대 위 확인.
+# 랩실은 (0.1, 1.2). server/mmw_server.py BED_CENTER_XY·server/tof_autocal.py BED_CENTER와 같게 둔다
+BED_CENTER = (1.0, 1.4)    # 10-29 레이더 30°에서 누운 자리 실측(0.98, 1.42) — 계산값 (0.5, 2.2)은 0.9m 어긋남(부스 (-0.15, 0.5), 랩실 (0.1, 1.2))
+
+
+def in_poly(x, y, poly):
+    """점이 다각형 안에 있나(짝홀 규칙)."""
+    inside = False
+    for i in range(len(poly)):
+        (x1, y1), (x2, y2) = poly[i], poly[i - 1]
+        if (y1 > y) != (y2 > y) and x < x1 + (y - y1) * (x2 - x1) / (y2 - y1):
+            inside = not inside
+    return inside
+MAX_RANGE_M = 0     # 10-29 사용자 결정: 간호학과 방은 거리 제한 없이(현장에서 다시 잼). 0이면 제한 없음.
+                    # 2026-10-21 결정은 3.8m(그날 사용자가 서서 정한 경계 3.68m+여유). 원시 진단 화면(:5012)은 그대로 전부 보여준다.
+
+# 정지 물체 기준(2026-10-29): 정지 반사점(staticRangeAngleCfg)을 켠 뒤 빈 방에서도 키 큰 물건이 추적으로 몇 시간째
+# 같은 자리에 남는다(간호학과 방 레이더 옆 0.9·1.4m, 높이 1.8~1.9m). 빈 방일 때 남아 있는 추적 자리를 기억해 두고,
+# 그 자리 0.5m 안에서 생겨(생긴 뒤 1.5초 위치) 0.3m 넘게 움직인 적이 없는 추적만 버린다. 걸어 들어와 그 자리에 선 사람은 다른 데서
+# 생긴 추적이라 안 숨는다. 클릭한 환자와 침대 가운데 1.2m 안 자리는 기준에 넣지 않는다(누우면 침대에서 새 추적이 생김).
+# 기준 잡기: mmWave/.clutter_capture 파일을 만들면 20초 동안 모아 mmWave/clutter_baseline.json에 저장한다.
+CLUTTER_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "clutter_baseline.json")
+CLUTTER_FLAG = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".clutter_capture")
+CLUTTER_R = 0.5
+CLUTTER_MOVE_M = 0.3
+CLUTTER_CAPTURE_SEC = 20.0
+CLUTTER_BED_M = 1.2
+CLUTTER_FROZEN_M = 0.1
+CLUTTER_FROZEN_SEC = 20.0
+CLUTTER_SETTLE_SEC = 1.5   # 10-29: 유령 추적이 생긴 직후 0.3m 넘게 튀어 '움직인 적 있음'으로 남아 안 숨겨지던 문제
+
+
+class ClutterMask:
+    def __init__(self):
+        self.spots, self.mtime, self.checked = [], None, 0.0
+        self.born = {}        # tid → [태어난 x, y, 움직였나, 마지막으로 본 시각]
+        self.capture = None   # 기준 잡는 중: {"until": 시각, "seen": {tid: [[x, y, z], ...]}}
+
+    def _reload(self, now):
+        if now - self.checked < 1.0:
+            return
+        self.checked = now
+        try:
+            m = os.path.getmtime(CLUTTER_FILE)
+            if m != self.mtime:
+                with open(CLUTTER_FILE, encoding="utf-8") as fh:
+                    self.spots = json.load(fh).get("spots", [])
+                self.mtime = m
+                print(f"[clutter] 정지 물체 기준 {len(self.spots)}곳 읽음")
+        except FileNotFoundError:
+            self.spots, self.mtime = [], None
+        except Exception as e:
+            print(f"[clutter] 기준 읽기 실패: {e}")
+        if self.capture is None and os.path.exists(CLUTTER_FLAG):
+            self.capture = {"until": now + CLUTTER_CAPTURE_SEC, "seen": {}}
+            print(f"[clutter] 정지 물체 기준 잡는 중({CLUTTER_CAPTURE_SEC:.0f}초, 방을 비워 두세요)")
+
+    def _finish_capture(self):
+        spots = []
+        for tid, ps in self.capture["seen"].items():
+            if len(ps) < 10:
+                continue
+            xs, ys, zs = (sorted(v[i] for v in ps) for i in range(3))
+            x, y, z = xs[len(xs) // 2], ys[len(ys) // 2], zs[len(zs) // 2]
+            if max(math.hypot(v[0] - x, v[1] - y) for v in ps) > CLUTTER_MOVE_M:
+                continue   # 움직이는 추적(사람)은 기준에 넣지 않는다
+            if math.hypot(x - BED_CENTER[0], y - BED_CENTER[1]) <= CLUTTER_BED_M:
+                continue
+            spots.append({"x": round(x, 2), "y": round(y, 2), "z": round(z, 2)})
+        with open(CLUTTER_FILE, "w", encoding="utf-8") as fh:
+            json.dump({"at": time.strftime("%Y-%m-%dT%H:%M:%S"), "r": CLUTTER_R, "spots": spots}, fh, ensure_ascii=False, indent=1)
+        try:
+            os.remove(CLUTTER_FLAG)
+        except FileNotFoundError:
+            pass
+        print(f"[clutter] 정지 물체 기준 저장: {spots}")
+        self.capture, self.mtime = None, None
+
+    def filter(self, targets, now, keep_tid=None):
+        self._reload(now)
+        if self.capture is not None:
+            for t in targets:
+                self.capture["seen"].setdefault(t["tid"], []).append([t["posX"], t["posY"], t.get("posZ", 0.0)])
+            if now >= self.capture["until"]:
+                self._finish_capture()
+        out = []
+        for t in targets:
+            b = self.born.get(t["tid"])
+            if b is None or now - b[3] > 2.0:   # 2초 넘게 안 보였던 번호는 새 추적
+                b = self.born[t["tid"]] = [t["posX"], t["posY"], False, now, now, t["posX"], t["posY"], now]
+            b[3] = now
+            if now - b[4] < CLUTTER_SETTLE_SEC:   # 생긴 직후 칩이 위치를 잡는 동안 튀는 건 움직임으로 안 친다
+                b[0], b[1] = t["posX"], t["posY"]
+            elif not b[2] and math.hypot(t["posX"] - b[0], t["posY"] - b[1]) > CLUTTER_MOVE_M:
+                b[2] = True
+            # 10-29: 사람이 옆을 지날 때 유령 추적이 한 번 끌려갔다 돌아오면 '움직인 적 있음'으로 남아 안 숨겨졌다 →
+            # 0.1m 안에 20초 넘게 꼼짝 않으면(사람은 가만히 있어도 이보다 흔들림) 그 자리에서 새로 생긴 것으로 본다
+            if math.hypot(t["posX"] - b[5], t["posY"] - b[6]) > CLUTTER_FROZEN_M:
+                b[5], b[6], b[7] = t["posX"], t["posY"], now
+            elif b[2] and now - b[7] >= CLUTTER_FROZEN_SEC:
+                b[0], b[1], b[2] = t["posX"], t["posY"], False
+            if (not b[2] and t["tid"] != keep_tid and self.spots
+                    and any(math.hypot(b[0] - s["x"], b[1] - s["y"]) <= CLUTTER_R for s in self.spots)):
+                continue
+            out.append(t)
+        for tid in [k for k, v in self.born.items() if now - v[3] > 10.0]:
+            del self.born[tid]
+        return out
+TOF_PRESENCE_URL = "http://127.0.0.1:5001/tof/presence"  # 침상 재실 → 침대에서 내려온 사람을 환자로 고정(2026-10-16)
+PATIENT_URL = "http://127.0.0.1:5002/mmw/patient"        # 화면에서 누른 환자 지정
 
 # ── 침대존 & 환자 소속도(bed affinity) ─────────────────────────────────
 # 여러 사람이 있을 때 "환자(메인 타겟)"를 순간위치가 아니라 track 이력으로 특정한다.
@@ -163,6 +287,33 @@ def iter_frames(buf):
     return frames, buf
 
 
+# 레이더를 거꾸로(칩 면 안에서 180°) 달면 방위각(x)·고도각(z)의 부호만 바뀌므로 회전 전에 둘 다 뒤집는다.
+# 2026-10-12 보정 측정(키 170cm, 바닥 거리 2m·3m에 서기): 사람이 시야 중심보다 위(+11~+32°)에 있어야 하는데
+# 레이더는 −24.6°·−27.5°로 보고했다. 부호를 뒤집으면 몸 중심 1.23m·1.05m로 맞는다 → 기본값 거꾸로 보정.
+# 바로 달면 --upright로 실행한다.
+MOUNT_UPSIDE_DOWN = True
+
+
+def track_to_world(t, height=2.5, tilt=50.0, upside_down=None):
+    """레이더 기준 track 좌표 → 바닥 기준 월드 좌표(x 오른쪽, y 바닥 수평거리, z 바닥 높이).
+
+    2026-10-12 실측: cfg의 sensorPosition 2.5 0 50이 OK로 적용돼도 이 펌웨어의 TLV 1010 track은
+    레이더 시선 기준 좌표로 나온다(침대에 앉은 사람 z≈-0.3, y≈2.5). 포인트 클라우드와 같은 회전을
+    적용하면 y≈1.4, z≈0.4로 포인트 클라우드 월드 좌표와 일치한다. 위치와 속도 모두 회전한다.
+    """
+    a = math.radians(tilt)
+    c, s = math.cos(a), math.sin(a)
+    flip = -1.0 if (MOUNT_UPSIDE_DOWN if upside_down is None else upside_down) else 1.0
+    y, z, vy, vz = t["posY"], flip * t["posZ"], t["velY"], flip * t["velZ"]
+    w = dict(t)
+    w["posX"], w["velX"] = flip * t["posX"], flip * t["velX"]
+    w["posY"] = y * c + z * s
+    w["posZ"] = height - y * s + z * c
+    w["velY"] = vy * c + vz * s
+    w["velZ"] = -vy * s + vz * c
+    return w
+
+
 def extract_targets(hdr, frame_bytes):
     """프레임에서 target list TLV 를 찾아 track 리스트 반환."""
     data = frame_bytes[FRAME_HEADER_LEN:]
@@ -178,6 +329,79 @@ def extract_targets(hdr, frame_bytes):
                 targets = parsed
         data = data[TLV_HEADER_LEN + tlv_len:]
     return targets
+
+
+POINT_TLV, INDEX_TLV, HEIGHT_TLV = 1020, 1011, 1012
+
+
+def extract_extras(hdr, frame_bytes, height=2.5, tilt=50.0):
+    """추적 목록 외 나머지 데이터(2026-10-13, '버리지 말고 다 쓰기'):
+    반사점(1020, 바닥 기준 월드 좌표·도플러·세기), 반사점별 소속 추적 번호(1011), 추적별 높이(1012: tid·maxZ·minZ, 펌웨어 좌표 그대로).
+    반사점 좌표 변환은 diagnostic_decode와 같다(거꾸로 장착이면 방위각·고도각 부호 반전 후 하향각 회전)."""
+    data = frame_bytes[FRAME_HEADER_LEN:]
+    points, index, heights = [], b"", {}
+    a = math.radians(tilt)
+    flip = -1.0 if MOUNT_UPSIDE_DOWN else 1.0
+    for _ in range(hdr["numTLVs"]):
+        if len(data) < TLV_HEADER_LEN:
+            break
+        tlv_type, tlv_len = struct.unpack_from("<2I", data, 0)
+        payload = data[TLV_HEADER_LEN:TLV_HEADER_LEN + tlv_len]
+        if tlv_type == POINT_TLV and len(payload) >= 20:
+            e_u, a_u, d_u, r_u, s_u = struct.unpack_from("<5f", payload)
+            for i in range((len(payload) - 20) // 8):
+                el, az, dop, ran, snr = struct.unpack_from("<bbhHH", payload, 20 + i * 8)
+                r, elev, azim = ran * r_u, flip * el * e_u, flip * az * a_u
+                x = r * math.cos(elev) * math.sin(azim)
+                y = r * math.cos(elev) * math.cos(azim)
+                z = r * math.sin(elev)
+                points.append((x, y * math.cos(a) + z * math.sin(a), height - y * math.sin(a) + z * math.cos(a),
+                               dop * d_u, snr * s_u))
+        elif tlv_type == INDEX_TLV:
+            index = bytes(payload)
+        elif tlv_type == HEIGHT_TLV:
+            for i in range(len(payload) // 12):
+                tid, max_z, min_z = struct.unpack_from("<I2f", payload, i * 12)
+                heights[tid] = (max_z, min_z)
+        data = data[TLV_HEADER_LEN + tlv_len:]
+    return points, index, heights
+
+
+class PointLinker:
+    """반사점 ↔ 추적 연결. TI 사람 추적 데모는 소속 번호(1011)를 '직전 프레임' 반사점 기준으로 낸다고 알려져 있어
+    길이가 맞는 쪽(직전 → 이번 순)으로 연결하고, 어느 쪽이 맞았는지 센다(로그로 확인)."""
+
+    def __init__(self):
+        self.prev = []
+        self.stats = {"prev": 0, "same": 0, "mismatch": 0, "no_index": 0}
+
+    def link(self, points, index, targets):
+        if not index:
+            self.stats["no_index"] += 1
+            pts = None
+        elif len(index) == len(self.prev):
+            self.stats["prev"] += 1
+            pts = self.prev
+        elif len(index) == len(points):
+            self.stats["same"] += 1
+            pts = points
+        else:
+            self.stats["mismatch"] += 1
+            pts = None
+        self.prev = points
+        per = {}
+        if pts is not None:
+            for p, tid in zip(pts, index):
+                if tid < 250:                                # 253·254·255 = 어느 추적에도 속하지 않음
+                    per.setdefault(tid, []).append(p)
+        for t in targets:
+            ps = per.get(t["tid"], [])
+            zs = sorted(p[2] for p in ps)
+            t["npts"] = len(ps)                              # 이 프레임에 이 사람에게 속한 반사점 수(0이면 측정 없음 = 값 고정 의심)
+            t["top_z"] = zs[min(len(zs) - 1, int(len(zs) * 0.9))] if zs else None   # 상위 10% 반사점 높이 ≈ 머리 쪽
+            t["pz_med"] = zs[len(zs) // 2] if zs else None
+            t["dop"] = (sum(abs(p[3]) for p in ps) / len(ps)) if ps else None       # 반사점 평균 속도 크기(움직임 정도)
+        return targets
 
 
 # ── 보폭 추정 (FFT → cadence → stride) ────────────────────────────────
@@ -315,8 +539,10 @@ def _gait_from_samples(samples):
     # freeze: 거의 멈춰 있던 비율
     freeze_ratio = float(np.mean(speed < FREEZE_SPEED_THRESH))
 
-    # height_drop: z 최대 하강폭 (낙상 신호)
+    # height_drop: z 최대 하강폭(기록용, 2026-10-12부터 낙상 판정에 쓰지 않음)
     height_drop = float(np.max(z) - np.min(z)) if np.ptp(z) > 0 else 0.0
+    # low_z: 최근 1초 몸 높이 중앙값 — 서버가 바닥 근처(0.4m 미만)면 낙상 의심으로 판정
+    low_z = float(np.median(z[t >= t[-1] - 1.0]))
 
     # stride_length / stride_cv: 속도 FFT → cadence → 보폭 추정
     stride_length, stride_cv = _estimate_stride(speed, t, speed_mean)
@@ -327,6 +553,7 @@ def _gait_from_samples(samples):
         "sway": round(sway, 3),
         "freeze_ratio": round(freeze_ratio, 3),
         "height_drop": round(height_drop, 3),
+        "low_z": round(low_z, 3),
         "stride_length": round(stride_length, 3),
         "stride_cv": round(stride_cv, 3),
     }
@@ -370,7 +597,10 @@ def gait_diagnostic_inputs(track_history, presence, now):
     return out
 
 
-def select_patient(track_history, now):
+_NO_PREF = object()
+
+
+def select_patient(track_history, now, preferred=_NO_PREF, preferred_lock=None):
     """롤링 track 이력에서 환자(메인 타겟)를 '침대 소속도'로 특정하고 gait 계산.
 
     track_history: dict[tid] -> deque of (t, x, y, z, vx, vy)  (이미 시간 프루닝됨)
@@ -405,7 +635,16 @@ def select_patient(track_history, now):
     clusters = _cluster_candidates(candidates, alive, MERGE_DIST)
     n_bed = len(clusters)   # 침대 위 '사람 수'(병합 후)
 
-    if n_targets == 1:
+    if preferred is not _NO_PREF:
+        # 2026-10-16(10-20 확인): 낙상 판정기(fall_detect)가 고른 환자를 그대로 쓴다 — 침대에서 내려온 사람 고정·화면 지정·
+        # 번호 바뀜 이어받기·침대 3m 안. 예전 BED_X/BED_Y(7월 랩실 좌표)로는 새 설치에서 소속도가 늘 0이라 2명 이상이면
+        # 하루 내내 '환자 구분 보류'였고, 혼자 있으면 멀리 있는 방문객도 환자로 저장됐다.
+        if preferred is not None and preferred in alive:
+            main_tid, locked = preferred, True
+        else:
+            main_tid = preferred if preferred in alive else max(aff, key=aff.get)
+            locked = False
+    elif n_targets == 1:
         main_tid = next(iter(alive))
         locked = True
     elif n_bed == 1:
@@ -419,7 +658,8 @@ def select_patient(track_history, now):
 
     presence = {"n_targets": n_targets, "main_tid": int(main_tid),
                 "bed_affinity": round(aff[main_tid], 2),
-                "bed_candidates": n_bed, "patient_locked": locked}
+                "bed_candidates": n_bed, "patient_locked": locked,
+                "patient_source": "fall_detect" if preferred is not _NO_PREF else "bed_box", "patient_lock": preferred_lock}
 
     # 낙상 안전을 위해 locked 여부와 무관하게 best track raw 는 계산
     recent = [s for s in alive[main_tid] if now - s[0] <= WINDOW_SEC]
@@ -444,6 +684,22 @@ def select_patient(track_history, now):
 
 
 # ── 메인 루프 ──────────────────────────────────────────────────────────
+def stream_active(data_port, seconds=2.0, baud=921600):
+    """DATA 포트에서 seconds 동안 magic word로 시작하는 프레임이 보이면 True."""
+    if serial is None:
+        return False
+    try:
+        with serial.Serial(data_port, baud, timeout=0.1, exclusive=True) as port:
+            buf, end = b"", time.time() + seconds
+            while time.time() < end:
+                buf += port.read(4096)
+                if find_magic(buf) >= 0:
+                    return True
+    except Exception as e:
+        print(f"[cfg] DATA 포트 확인 실패({type(e).__name__}) — 설정을 보낸다")
+    return False
+
+
 def send_config(cli_port, cfg_path, baud=115200):
     """CLI 포트로 .cfg 한 줄씩 전송하고, 각 줄에 대한 센서 응답을 확인한다.
 
@@ -482,24 +738,32 @@ def send_config(cli_port, cfg_path, baud=115200):
         print(f"[cfg] sent: {cfg_path}  —  모든 줄 적용 OK")
 
 
-def run(cli_port, data_port, cfg_path, do_send=True, target_id="room_01", diagnostics_url="http://127.0.0.1:5012/api/ingest", height=2.5, tilt=50.0, min_snr=0.0):
+def run(cli_port, data_port, cfg_path, do_send=True, target_id="room_01", diagnostics_url="http://127.0.0.1:5012/api/ingest", height=2.5, tilt=50.0, min_snr=0.0, max_range=None, fall_confirm_sec=None, roi=None):
+    fall_confirm_sec = FALL_CONFIRM_SEC if fall_confirm_sec is None else fall_confirm_sec
+    max_range = MAX_RANGE_M if max_range is None else max_range
     if serial is None:
         raise RuntimeError("pyserial 미설치: pip install pyserial")
     if do_send and requests is None:
         raise RuntimeError("requests 미설치: pip install requests")
 
     if cfg_path:
-        send_config(cli_port, cfg_path)
+        # 이미 프레임이 나오는 레이더에 설정을 다시 보내면 출력이 멈춘다(2026-10-06, 10-12 재현).
+        # 전원을 새로 켜서 데이터가 없을 때만 보낸다.
+        if stream_active(data_port):
+            print("[cfg] 이미 데이터가 나오고 있어 설정 전송을 건너뜀")
+        else:
+            send_config(cli_port, cfg_path)
 
     import sys
     from pathlib import Path
-    diagnostics = None
+    diagnostics = frame_stream = None
     if diagnostics_url:
         try:
             sys.path.append(str(Path(__file__).resolve().parents[1] / 'server'))
-            from live_diagnostics import LatestPublisher
+            from live_diagnostics import LatestPublisher, FrameStreamPublisher
             from diagnostic_decode import decode_frame
             diagnostics = LatestPublisher(diagnostics_url)
+            frame_stream = FrameStreamPublisher(diagnostics_url.rsplit('/api/', 1)[0] + '/api/stream-ingest')
         except Exception as exc:
             print(f'[diagnostics] unavailable: {type(exc).__name__}')
     data = serial.Serial(data_port, 921600, timeout=0.1, exclusive=True)
@@ -514,6 +778,46 @@ def run(cli_port, data_port, cfg_path, do_send=True, target_id="room_01", diagno
     window_start = time.time()
     last_live = 0  # 마지막 live snapshot 전송 시각
     latest_targets = []  # 최신 프레임의 target 목록
+    from fall_detect import FallDetector
+    import fall_detect as _fd
+    _fd.BED_CENTER = BED_CENTER       # 부스 침대 위치(판정기 기본값은 랩실 — 예전 기록 재생·테스트용)
+    fall_detector = FallDetector(manual_only=True, confirm_sec=fall_confirm_sec, auto_bed=True)   # 10-22: 환자는 화면 클릭으로만(10-29: 클릭 전엔 침대에 있던 사람 자동). 2026-10-12: 본인 평소 높이 대비 하강으로 프레임마다 낙상 판정
+    # 2026-10-16: 환자 고정에 쓰는 바깥 정보 — ToF 침상 재실(침대에서 내려온 사람 = 환자)과 화면에서 누른 환자 지정.
+    # 0.5초마다 별도 스레드가 받아 둔다(레이더 수신 루프를 HTTP 대기로 막지 않게).
+    ctx = {"in_bed": None, "manual_tid": None, "manual_seq": None}
+    ctx_started = time.time()
+
+    def _ctx_worker():
+        while True:
+            try:
+                ctx["in_bed"] = requests.get(TOF_PRESENCE_URL, timeout=0.5).json().get("in_bed")
+            except Exception:
+                ctx["in_bed"] = None
+            try:
+                m = requests.get(PATIENT_URL, params={"target": target_id}, timeout=0.5).json() or {}
+                # 10-22 저녁: 리더가 다시 켜지기 전에 누른 클릭은 쓰지 않는다 — 재시작 뒤 레이더가 번호를 새로 매겨
+                # 같은 번호가 다른 사람일 수 있다(16:42 재시작 직후 예전 '12번'이 다시 적용됨)
+                if m.get("seq") is not None and m["seq"] > ctx_started:
+                    ctx["manual_tid"], ctx["manual_seq"] = m.get("tid"), m.get("seq")
+            except Exception:
+                pass
+            time.sleep(0.5)
+    if do_send:
+        import threading as _threading
+        _threading.Thread(target=_ctx_worker, daemon=True, name="mmw-ctx").start()
+    clutter = ClutterMask()
+    point_linker = PointLinker()     # 2026-10-13: 반사점·소속·추적 높이까지 모두 사용
+    linker_logged = time.time()
+    # 라벨 녹화(2026-10-13): mmWave/recordings/.active 파일({"file":..., "label":...})이 있는 동안 모든 프레임을 저장한다.
+    # 녹화 진행자가 동작을 바꿀 때마다 파일의 label을 바꾼다. 판정·전송에는 영향 없음.
+    import json as _json, os as _os, shutil as _shutil
+    rec_flag = _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), "recordings", ".active")
+    rec = {"checked": 0.0, "cfg": None, "fh": None, "path": None}
+    # 낙상 판정 전후 기록(2026-10-13): 판정 6초 전 ~ 3초 뒤의 모든 추적을 mmWave/fall_traces/에 저장해 오탐 원인을 장면째로 본다.
+    import json as _json, os as _os
+    trace_dir = _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), "fall_traces")
+    trace_buf = deque()              # (시각, [[tid, x, y, z, vx, vy], ...]) 최근 15초
+    trace_pending = []               # 저장 대기: 판정 뒤 3초를 더 모은다
 
     print(f"[run] reading {data_port} ... (window={WINDOW_SEC}s, send={do_send})")
     try:
@@ -528,8 +832,112 @@ def run(cli_port, data_port, cfg_path, do_send=True, target_id="room_01", diagno
                     diagnostic_frames += 1
                     diagnostic_at = now
                     diagnostic_pending = (hdr, fb)
-                    targets = extract_targets(hdr, fb)
+                    targets = [track_to_world(t, height, tilt) for t in extract_targets(hdr, fb)]
+                    pts_now, idx_now, heights_now = extract_extras(hdr, fb, height, tilt)
+                    targets = point_linker.link(pts_now, idx_now, targets)
+                    if roi:   # 부스 다각형 밖 추적은 이 뒤 어디에도 전달하지 않는다(낙상·환자·보행·평면도·녹화 모두에서 없음)
+                        targets = [t for t in targets if in_poly(t["posX"], t["posY"], roi)]
+                    elif max_range and max_range > 0:   # 범위 밖 추적은 이 뒤 어디에도 전달하지 않는다
+                        targets = [t for t in targets if math.hypot(t["posX"], t["posY"]) <= max_range]
+                    targets = clutter.filter(targets, now, keep_tid=fall_detector.patient_tid)   # 정지 물체 추적 버림(10-29)
+                    if frame_stream:   # 노트북 스트림(2026-10-31): 원본 프레임 바이트 전부 + 이 리더가 쓴 바닥 좌표 추적. Pi에는 저장 안 함
+                        frame_stream.publish('mmwave', {
+                            'frame_number': hdr['frameNum'], 'raw_b64': base64.b64encode(fb).decode('ascii'),
+                            'mount': {'height_m': height, 'down_tilt_deg': tilt, 'upside_down': MOUNT_UPSIDE_DOWN},
+                            'patient_tid': fall_detector.patient_tid,
+                            'tracks': [{'tid': t['tid'], 'npts': t.get('npts'),
+                                        **{k: round(t[k], 4) for k in ('posX', 'posY', 'posZ', 'velX', 'velY', 'velZ')
+                                           if isinstance(t.get(k), (int, float)) and math.isfinite(t[k])}}
+                                       for t in targets]})
+                    for t in targets:
+                        t["fw_height"] = heights_now.get(t["tid"])   # 펌웨어 추적 높이(1012, 기록용)
+                    if now - linker_logged > 60:
+                        print(f"[points] 반사점 연결 통계(1분): {point_linker.stats}")
+                        point_linker.stats = {k: 0 for k in point_linker.stats}
+                        linker_logged = now
                     latest_targets = targets  # 매 프레임 갱신
+                    if now - rec["checked"] > 0.3:
+                        rec["checked"] = now
+                        try:
+                            with open(rec_flag, encoding="utf-8") as fh:
+                                rec["cfg"] = _json.load(fh)
+                        except Exception:
+                            rec["cfg"] = None
+                        want = (rec["cfg"] or {}).get("file")
+                        # 10-28: 10-23 시연 녹화를 끄지 않아 5일 동안 9.8GB가 쌓여 디스크가 99% 찼다 →
+                        # 파일 3GB 초과 또는 디스크 남은 공간 2GB 미만이면 녹화를 스스로 끈다(.active 삭제)
+                        if want and rec["path"] == want and rec["fh"]:
+                            try:
+                                too_big = _os.path.getsize(want) > REC_MAX_BYTES
+                                low_disk = _shutil.disk_usage(_os.path.dirname(want)).free < REC_MIN_FREE_BYTES
+                            except OSError:
+                                too_big = low_disk = False
+                            if too_big or low_disk:
+                                print(f"[rec] 녹화 자동 중지: {'파일 3GB 초과' if too_big else '디스크 남은 공간 2GB 미만'} — {want}")
+                                try:
+                                    _os.remove(rec_flag)
+                                except OSError:
+                                    pass
+                                rec["cfg"], want = None, None
+                        if want != rec["path"]:
+                            if rec["fh"]:
+                                rec["fh"].close()
+                            rec["fh"] = open(want, "a", encoding="utf-8") if want else None
+                            rec["path"] = want
+                    if rec["fh"]:
+                        roles_now = fall_detector.roles()
+                        rec["fh"].write(_json.dumps({
+                            "t": round(now, 3), "label": (rec["cfg"] or {}).get("label"),
+                            "tracks": [[t["tid"], round(t["posX"], 3), round(t["posY"], 3), round(t["posZ"], 3), round(t["velX"], 3),
+                                        round(t["velY"], 3), round(t.get("velZ", 0.0), 3), t.get("npts"),
+                                        None if t.get("top_z") is None else round(t["top_z"], 3), roles_now.get(t["tid"]),
+                                        None if t.get("fw_height") is None else [round(v, 3) for v in t["fw_height"]]] for t in targets],
+                            "points": [[round(p[0], 3), round(p[1], 3), round(p[2], 3), round(p[3], 3), round(p[4], 1)] for p in pts_now],
+                            "index": list(idx_now)}, ensure_ascii=False) + "\n")
+                    frame_rec = (round(now, 3), [[t["tid"], round(t["posX"], 3), round(t["posY"], 3), round(t["posZ"], 3),
+                                                  round(t["velX"], 3), round(t["velY"], 3), round(t.get("velZ", 0.0), 3),
+                                                  t.get("npts"), None if t.get("top_z") is None else round(t["top_z"], 3),
+                                                  None if t.get("dop") is None else round(t["dop"], 3)] for t in targets])
+                    trace_buf.append(frame_rec)
+                    while trace_buf and now - trace_buf[0][0] > 15.0:   # 10-22: 6초 → 15초(늦은 판정 분석용)
+                        trace_buf.popleft()
+                    for pend in list(trace_pending):
+                        pend["after"].append(frame_rec)
+                        if now >= pend["until"]:
+                            trace_pending.remove(pend)
+                            try:
+                                _os.makedirs(trace_dir, exist_ok=True)
+                                name = time.strftime("%Y%m%d_%H%M%S", time.localtime(pend["event"]["at"])) + f"_tid{pend['event']['tid']}.json"
+                                with open(_os.path.join(trace_dir, name), "w", encoding="utf-8") as fh:
+                                    _json.dump(pend, fh, ensure_ascii=False)
+                            except Exception as exc:
+                                print(f"[fall] 전후 기록 저장 실패: {exc}")
+                    prev_patient = fall_detector.patient_tid
+                    fall_detector.set_bed(now, ctx["in_bed"])
+                    if ctx["manual_seq"] is not None and ctx["manual_seq"] != fall_detector.manual_seq:
+                        print(f"[click] {time.strftime('%H:%M:%S')} 화면에서 {ctx['manual_tid']}번 지정")   # 클릭과 자동 이어받기 구분(10-22)
+                    fall_detector.set_manual(now, ctx["manual_tid"], ctx["manual_seq"])
+                    if fall_detector.manual_reject:
+                        print(f"[click] {time.strftime('%H:%M:%S')} {ctx['manual_tid']}번 지정 안 됨: {fall_detector.manual_reject}")
+                        fall_detector.manual_reject = None
+                    for ev in fall_detector.update(now, targets):
+                        if ev["stage"] in ("fallen", "caution"):   # 10-22: 주의도 전후 기록(놓친 낙상 분석용)
+                            trace_pending.append({"event": ev, "track": fall_detector.debug(ev["tid"]),
+                                                  "before": list(trace_buf), "after": [], "until": now + 3.0})
+                        print(f"[fall] {time.strftime('%H:%M:%S')} {ev['stage']} tid={ev['tid']} "
+                              f"z={ev['z']} ref={ev['ref']} {ev.get('drop_sec', ev.get('low_sec', ''))}")
+                        if do_send:
+                            try:
+                                requests.post(FALL_URL, json={**ev, "target_id": target_id,
+                                                              "at": time.strftime('%Y-%m-%dT%H:%M:%S', time.localtime(ev['at']))},
+                                              timeout=0.5)
+                            except Exception:
+                                pass  # 서버가 잠시 꺼져 있어도 수신은 계속한다
+                    if fall_detector.patient_tid != prev_patient:   # 10-22: 환자가 바뀐 때를 로그로(놓친 낙상 분석용)
+                        pt = next((t for t in targets if t["tid"] == fall_detector.patient_tid), None)
+                        print(f"[patient] {time.strftime('%H:%M:%S')} {prev_patient} → {fall_detector.patient_tid} "
+                              f"고정={fall_detector.locked} 침대ToF={ctx['in_bed']} 사람={len(targets)}"
+                              + (f" 위치=({pt['posX']:.2f},{pt['posY']:.2f}) z={pt['posZ']:.2f}" if pt else ""))
                     for t in targets:
                         history[t["tid"]].append(
                             (now, t["posX"], t["posY"], t["posZ"],
@@ -555,18 +963,21 @@ def run(cli_port, data_port, cfg_path, do_send=True, target_id="room_01", diagno
 
             # 실시간 snapshot 전송 (LIVE_INTERVAL 마다)
             now = time.time()
-            if do_send and now - last_live >= LIVE_INTERVAL:
-                if diagnostic_at is None or now - diagnostic_at > 2:
-                    latest_targets = []
+            # 레이더 프레임이 2초 넘게 없으면 실시간 위치를 보내지 않는다. 빈 목록을 계속 보내면 대시보드가
+            # '연결됨·사람 없음'으로 보여 출력이 멈춘 것을 숨겼다(2026-10-12).
+            if do_send and now - last_live >= LIVE_INTERVAL and diagnostic_at is not None and now - diagnostic_at <= 2:
                 try:
-                    snap = [{"tid": t["tid"],
+                    roles = fall_detector.roles()
+                    snap = [{"tid": t["tid"], "role": roles.get(t["tid"]), "npts": t.get("npts"),
                              "x": round(t["posX"], 3),
                              "y": round(t["posY"], 3),
                              "z": round(t["posZ"], 3),
                              "vx": round(t["velX"], 3),
                              "vy": round(t["velY"], 3)}
                             for t in latest_targets]
-                    requests.post(LIVE_URL, json={"targets": snap}, timeout=0.5)
+                    requests.post(LIVE_URL, json={"targets": snap, "target_id": target_id, "patient_tid": fall_detector.patient_tid,
+                                                  "patient": fall_detector.patient_info(),
+                                                  "falls": fall_detector.state()}, timeout=0.5)
                 except Exception:
                     pass  # 시각화 실패는 무시
                 last_live = now
@@ -583,7 +994,8 @@ def run(cli_port, data_port, cfg_path, do_send=True, target_id="room_01", diagno
                     if not dq:
                         del history[tid]
 
-                raw, quality, presence = select_patient(history, now)
+                raw, quality, presence = select_patient(history, now, preferred=fall_detector.patient_tid,
+                                                        preferred_lock=fall_detector.locked)
                 payload = {
                     "target_id": target_id,
                     "timestamp": int(time.time() * 1000),
@@ -682,6 +1094,10 @@ if __name__ == "__main__":
     ap.add_argument("--diagnostics-url", default="http://127.0.0.1:5012/api/ingest", help="latest-only raw dashboard relay; empty disables")
     ap.add_argument("--height", type=float, default=2.5)
     ap.add_argument("--tilt", type=float, default=50.0)
+    ap.add_argument("--fall-confirm-sec", type=float, default=FALL_CONFIRM_SEC, help="바닥 높이에 이만큼 머물면 낙상(초)")
+    ap.add_argument("--roi", default=None, help='부스 다각형 "x,y x,y ..."(레이더 바닥 좌표 m). 기본은 ROI_POLY, "none"이면 끄고 --max-range 사용')
+    ap.add_argument("--max-range", type=float, default=MAX_RANGE_M, help="레이더에서 수평 이 거리(m) 밖 추적은 버림. 0이면 제한 없음")
+    ap.add_argument("--upright", action="store_true", help="레이더를 바로 달았을 때(기본은 거꾸로 장착 보정: x·고도각 부호 반전)")
     ap.add_argument("--min-snr", type=float, default=0.0, help="diagnostic point filter only")
     ap.add_argument("--no-send", action="store_true", help="POST 없이 콘솔 출력만")
     ap.add_argument("--capture-zone", type=float, default=0.0, metavar="SEC",
@@ -694,4 +1110,9 @@ if __name__ == "__main__":
             send_config(args.cli, args.cfg)
         capture_zone(args.data, args.capture_zone, args.capture_label)
     else:
-        run(args.cli, args.data, args.cfg, do_send=not args.no_send, target_id=args.target, diagnostics_url=args.diagnostics_url, height=args.height, tilt=args.tilt, min_snr=args.min_snr)
+        MOUNT_UPSIDE_DOWN = not args.upright
+        import diagnostic_decode   # 진단 디코더는 send_mmw를 별도 모듈로 import하므로 같은 장착 방향을 넘긴다
+        diagnostic_decode.protocol.MOUNT_UPSIDE_DOWN = MOUNT_UPSIDE_DOWN
+        run(args.cli, args.data, args.cfg, do_send=not args.no_send, target_id=args.target, diagnostics_url=args.diagnostics_url, height=args.height, tilt=args.tilt, min_snr=args.min_snr, max_range=args.max_range, fall_confirm_sec=args.fall_confirm_sec,
+            roi=None if (args.roi or "").lower() == "none" else
+            ([tuple(float(v) for v in p.split(",")) for p in args.roi.split()] if args.roi else ROI_POLY))

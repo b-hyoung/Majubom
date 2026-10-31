@@ -18,11 +18,14 @@ mmWave가 보내는 것 : raw(speed/speed_cv/sway/freeze_ratio/height_drop) + qu
 주의: Windows 콘솔(cp949)에서 한글 print 시 깨질 수 있어 콘솔 출력은 ASCII만.
       한글은 JSON/HTML 응답(UTF-8)으로만 내보낸다.
 """
+import json
 import logging
 import math
+import urllib.request
 from copy import deepcopy
 from diagnostic_observer import observer, mmwave_snapshot, patient_target
 import os
+import threading
 import time
 from datetime import datetime
 
@@ -54,7 +57,15 @@ latest_by_target: dict[str, dict] = {}
 # 최근 수신 로그 (최대 100건)
 mmw_log: list[dict] = []
 # 실시간 포인트 클라우드 snapshot (send_mmw가 0.3초마다 갱신)
-live_snapshot: dict = {"targets": [], "ts": 0}
+live_snapshot: dict = {"targets": [], "ts": 0, "falls": []}
+# send_mmw.py의 프레임 단위 낙상 판정(fall_detect.py) 사건 최근 기록(메모리, 대상별 최근 50건)
+fall_events: dict = {}
+FALL_LOG = {  # stage → (activity_log event_type, level, 제목)
+    "fast_drop": ("fall_suspected", "warning", "낙상 의심(급격한 하강)"),
+    "fallen": ("fall_detected", "critical", "낙상 감지"),
+    "recovered": ("fall_recovered", "normal", "바닥에서 일어남"),
+    "caution": ("fall_dip", "caution", "바닥 높이까지 내려갔다 일어남(주의)"),   # 2026-10-13: 쪼그렸다 일어남 등
+}
 
 # 대상별 EMR 기반 보행 사전분포(gait_prior.py) — DB 조회를 줄이려고 30초 동안 재사용
 _PRIOR_TTL_SEC = 30.0
@@ -96,6 +107,30 @@ def _person_present(data: dict) -> bool:
     return bool((data.get("quality") or {}).get("reliable"))
 
 
+TOF_PRESENCE_URL = "http://127.0.0.1:5001/tof/presence"
+LIVE_TOF_BED = "bed_01"
+
+
+BED_CENTER_XY = (1.0, 1.4)    # 10-29 30° 누운 자리 실측 · 레이더 바닥 좌표의 침대 가운데(mmWave/send_mmw.py BED_CENTER와 같게 — 10-22 부스 실측, 랩실 (0.1, 1.2))
+ON_BED_RADIUS_M = 1.2        # 이 안에서 난 사건만 'ToF 침대 위'로 제외
+
+
+def _tof_in_bed(target_id):
+    """bed_01에 연결된 mmWave 대상이면 ToF 서버의 침상 재실(True/False), 아니거나 ToF가 3초 넘게 끊겼으면 None."""
+    try:
+        with db.get_conn() as conn:
+            row = conn.execute("SELECT mmw_target_id FROM patients WHERE bed_id = ?", (LIVE_TOF_BED,)).fetchone()
+        if not row or row[0] != target_id:
+            return None
+        with urllib.request.urlopen(TOF_PRESENCE_URL, timeout=0.5) as r:
+            p = json.load(r)
+        ats = [p.get(s, {}).get("at") for s in ("tof1", "tof2")]
+        fresh = any(a and (datetime.now() - datetime.fromisoformat(a)).total_seconds() < 3 for a in ats)
+        return bool(p.get("in_bed")) if fresh else None
+    except Exception:
+        return None
+
+
 @app.route("/mmw", methods=["POST"])
 def receive_mmw():
     data = request.get_json(silent=True)
@@ -126,6 +161,11 @@ def receive_mmw():
         raw[key] = 0.0
     if invalid:
         data["quality"] = {**data["quality"], "walking": False, "invalid_fields": invalid}
+
+    # 실측 ToF가 붙은 환자(bed_01)의 대상이면 ToF 침상 재실 여부를 함께 넘긴다 → 침대 위 사람은 바닥 낙상 판정 제외.
+    tof_in_bed = _tof_in_bed(data["target_id"])
+    if tof_in_bed is not None:
+        data["presence"] = {**data["presence"], "tof_in_bed": tof_in_bed}
 
     # baseline 갱신 + z-score/alert 계산 (mmw_logic). EMR 기반 문헌 사전분포가 있으면 함께 넘긴다.
     before = deepcopy(baseline_store.get(data["target_id"]))
@@ -178,6 +218,24 @@ def receive_mmw():
             )
         except Exception as e:
             print(f"[DB] MMW insert failed: {e}")
+
+    # 환자별 낙상 위험도 변동 점수(server/fall_risk.py, 2026-10-12): 이 대상(target_id)에 연결된 환자에게
+    # 보행 경고(+3, 1시간에 한 번)·바닥 근처 낙상 의심(+10, 10분에 한 번)을 더한다. 잠정 판정·보류 구간은 쓰지 않는다.
+    try:
+        import fall_risk
+        with db.get_conn() as conn:
+            beds = [r[0] for r in conn.execute("SELECT bed_id FROM patients WHERE mmw_target_id = ?",
+                                               (result["target_id"],))]
+            for bed in beds:
+                signal = fall_risk.on_mmw_result(conn, bed, result)
+                if signal == "floor_critical":
+                    # 실측 낙상 의심을 이벤트 기록에 남긴다(같은 신호는 fall_risk 쿨다운 10분에 한 번)
+                    conn.execute("""INSERT INTO activity_log (bed_id, ts, event_type, level, title, note, source_table)
+                                    VALUES (?,?,?,?,?,?,?)""",
+                                 (bed, result.get("received_at"), "fall_suspected", "critical", "낙상 의심(바닥 근처)",
+                                  " · ".join(result.get("reasons") or []), "mmw_readings"))
+    except Exception as e:
+        print(f"[fall_risk] 갱신 실패: {e}")
 
     # 12번 탭 STEP 6-9: raw/clean 일관성 진단 — samples_count는 실제 포인트클라우드
     # 개수가 아니라 이 엔드포인트에서 확인 가능한 근사치(quality.samples_count)라는
@@ -276,7 +334,101 @@ def receive_live():
     if data and "targets" in data:
         live_snapshot["targets"] = data["targets"]
         live_snapshot["ts"] = int(time.time() * 1000)
+        live_snapshot["patient_tid"] = data.get("patient_tid")   # fall_detect가 고른 환자 추적
+        live_snapshot["patient"] = data.get("patient")           # {tid, locked: exit|manual|None, since, bed_in} (2026-10-16)
+        falls = data.get("falls") if isinstance(data.get("falls"), list) else []
+        if falls:   # ToF가 침대 위라고 보면 표시하지 않는다(침대에 눕는 것도 높이가 떨어진다)
+            in_bed = _tof_in_bed_cached(data.get("target_id") or "room_01")
+            falls = [{**f, "suppressed": in_bed is True} for f in falls if isinstance(f, dict)]
+        live_snapshot["falls"] = falls
     return jsonify({"ok": True}), 200
+
+
+_tof_cache = {"at": 0.0, "key": None, "value": None}
+
+
+def _tof_in_bed_cached(target_id):
+    if _tof_cache["key"] != target_id or time.time() - _tof_cache["at"] > 1.0:
+        _tof_cache.update(at=time.time(), key=target_id, value=_tof_in_bed(target_id))
+    return _tof_cache["value"]
+
+
+@app.route("/mmw/fall", methods=["POST"])
+def receive_fall():
+    """send_mmw.py 프레임 단위 낙상 사건(fallen/recovered; fast_drop은 예전 호환). ToF 침상 재실이면 기록만 하고 알리지 않는다."""
+    data = request.get_json(silent=True)
+    if not isinstance(data, dict) or data.get("stage") not in FALL_LOG:
+        return jsonify({"error": "stage는 fallen/recovered/caution(예전 fast_drop) 중 하나"}), 400
+    target = data.get("target_id") if isinstance(data.get("target_id"), str) and data.get("target_id") else "room_01"
+    in_bed = _tof_in_bed(target)
+    # 2026-10-22: ToF가 '침대 위'여도 레이더가 본 낙상 위치가 침대에서 1.2m 넘게 떨어져 있으면 제외하지 않는다
+    # (라이브: 발쪽 센서가 꺼지고 빈 침대 기준이 어긋나 ToF가 계속 '침대 위' → 침대 앞 실제 낙상이 '침대 위라 제외'됨)
+    try:
+        bed_dist = math.hypot(float(data.get("x")) - BED_CENTER_XY[0], float(data.get("y")) - BED_CENTER_XY[1])
+    except (TypeError, ValueError):
+        bed_dist = None
+    on_bed = in_bed is True and (bed_dist is None or bed_dist <= ON_BED_RADIUS_M)
+    event = {**data, "target_id": target, "received_at": datetime.now().isoformat(timespec="milliseconds"),
+             "tof_in_bed": in_bed, "bed_dist_m": round(bed_dist, 2) if bed_dist is not None else None, "suppressed": on_bed}
+    fall_events.setdefault(target, []).append(event)
+    del fall_events[target][:-50]
+    observer.record('mmwave:' + target, 'fall_event', event, event=True)
+    if event["suppressed"]:
+        return jsonify({"ok": True, "suppressed": True}), 200
+    kind, level, title = FALL_LOG[data["stage"]]
+    if data["stage"] == "fallen":   # fall_detect.py: 바닥 높이 3초 이상 = 낙상. fast=1초 이내·초당 1m 이상 하강(급격한 하강), slow=그 외(못 일어남)
+        title += "(급격한 하강)" if data.get("kind") == "fast" else "(바닥에서 못 일어남)"
+    note = f"몸 중심 {data.get('z')}m · 평소 {data.get('ref')}m · 추적 {data.get('tid')}"
+    try:
+        import fall_risk
+        with db.get_conn() as conn:
+            beds = [r[0] for r in conn.execute("SELECT bed_id FROM patients WHERE mmw_target_id = ?", (target,))]
+            for bed in beds:
+                conn.execute("""INSERT INTO activity_log (bed_id, ts, event_type, level, title, note, source_table)
+                                VALUES (?,?,?,?,?,?,?)""", (bed, event["received_at"], kind, level, title, note, "mmw_fall"))
+                if data["stage"] == "fallen":
+                    fall_risk.add_signal(conn, bed, "floor_critical", {"z": data.get("z"), "ref": data.get("ref")})
+    except Exception as e:
+        print(f"[fall] 기록 실패: {e}")
+        beds = []
+    if data["stage"] == "fallen":
+        # 10-13: 낙상이면 AI 낙상 사건 리포트(원인 후보·전후 높이 그래프). 전후 9초 기록 파일이 저장될 때까지 4초 기다린다.
+        def _request_report(bed_ids=list(beds), ev=dict(event)):
+            import time as _t, urllib.request
+            _t.sleep(4)
+            for bed in bed_ids:
+                try:
+                    req = urllib.request.Request(f"http://127.0.0.1:5001/api/dashboard/patients/{bed}/fall-report",
+                                                 data=json.dumps({"event": ev, "source": "live"}).encode(),
+                                                 headers={"Content-Type": "application/json"}, method="POST")
+                    urllib.request.urlopen(req, timeout=5).read()
+                except Exception as e:
+                    print(f"[fall] 리포트 요청 실패: {e}")
+        threading.Thread(target=_request_report, daemon=True).start()
+    return jsonify({"ok": True, "suppressed": False}), 200
+
+
+# 화면에서 점을 눌러 환자 지정(2026-10-16). send_mmw가 0.5초마다 읽어 fall_detect에 넘긴다(seq가 바뀔 때만 적용).
+patient_manual = {}
+
+
+@app.route("/mmw/patient", methods=["GET", "POST"])
+def patient_assign():
+    if request.method == "GET":
+        return jsonify(patient_manual.get(request.args.get("target") or "room_01") or {})
+    data = request.get_json(silent=True) or {}
+    tid = data.get("tid")
+    if not isinstance(tid, int):
+        return jsonify({"error": "tid(정수)가 필요합니다"}), 400
+    target = data.get("target_id") if isinstance(data.get("target_id"), str) else "room_01"
+    patient_manual[target] = {"tid": tid, "seq": time.time(), "at": datetime.now().isoformat(timespec="seconds")}
+    return jsonify({"ok": True, **patient_manual[target]})
+
+
+@app.route("/mmw/fall", methods=["GET"])
+def get_falls():
+    target = request.args.get("target") or "room_01"
+    return jsonify(fall_events.get(target, []))
 
 
 @app.route("/mmw/live", methods=["GET"])

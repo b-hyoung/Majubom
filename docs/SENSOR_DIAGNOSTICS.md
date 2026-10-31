@@ -24,6 +24,23 @@ mmWave DATA UART는 send_mmw.py만 연다. 로우데이터 서버는 기본 모�
 진단 서버가 꺼져 있으면 오래된 복사본은 버리고 기존 수집 요청은 대기시키지 않는다.
 기존 운영 DB 저장과 로우데이터 분기의 비저장은 동시에 적용되는 서로 다른 동작이다.
 
+## 노트북으로 프레임 전부 받기(2026-10-31)
+
+카메라 2대로 자세 정답을 만들어 학습 정확도를 높이는 실험용이다. 운영 판정에는 쓰지 않는다.
+
+```text
+ToF POST :5001/tof ─┐ (FrameStreamPublisher, RAM 큐)
+send_mmw 프레임 ────┴→ :5012/api/stream-ingest → 구독자별 RAM 큐 → GET :5012/api/stream (NDJSON) → 노트북 저장
+```
+
+- 노트북: `python tools/laptop_stream_client.py --pi <Pi-IP>` (표준 라이브러리만). `<out>/<시각>/tof1|tof2|mmwave|heartbeat.jsonl`.
+- 위 latest-only 화면 분기와 달리 **프레임을 거르지 않는다**(ToF 펌웨어 JSON 그대로, mmWave는 원본 프레임 바이트 `raw_b64` + 리더가 쓴 바닥 좌표 추적·`patient_tid`).
+- 모든 줄에 `pi_rx_unix`(Pi 수신 시각), 노트북 쪽 `laptop_rx_unix`. heartbeat의 `offset_min_s` ≈ 노트북−Pi 시계 차이. Pi는 NTP 동기화 상태다.
+- 구독자가 없으면 각 수집기가 1초에 한 번만 확인 요청을 보내고 나머지는 버린다. 연결 직후 첫 1초 안팎은 빠질 수 있다.
+- 큐가 넘치면(노트북이 못 따라오면) 그 노트북에 가는 프레임만 버리고 heartbeat `dropped`로 알린다. Pi에는 아무것도 저장하지 않는다.
+- mmWave 원본 풀기: `python tools/laptop_stream_client.py --decode <세션>/mmwave.jsonl`(저장소·numpy 필요, 줄마다 기록된 장착 높이·각도 사용).
+- 상태: `GET :5012/api/stream/status`. :5012(`mmWave/diagnostic_server.py`)가 켜져 있어야 하며, tof_server·send_mmw는 코드 수정 뒤 재시작해야 반영된다.
+
 ## Pi 실행(프로젝트 루트)
 
 ```bash

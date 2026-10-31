@@ -47,6 +47,16 @@ class ToFBranchTests(unittest.TestCase):
         store, _ = self.post(in_bed=False, store_until=time.time() + 5)
         store.assert_called_once()
 
+    def test_integrity_check_uses_fresh_cached_posture(self):
+        from datetime import datetime, timedelta
+        server = self.server
+        now = datetime.now()
+        server._posture_cache.update(key=((now - timedelta(seconds=0.5)).isoformat(timespec="milliseconds"), None),
+                                     fields={"posture_raw": "supine"})
+        self.assertEqual(server._recent_posture_label(now.isoformat(timespec="milliseconds")), "supine")
+        stale = (now + timedelta(seconds=5)).isoformat(timespec="milliseconds")
+        self.assertIsNone(server._recent_posture_label(stale))
+
 
 if __name__ == '__main__':
     unittest.main()

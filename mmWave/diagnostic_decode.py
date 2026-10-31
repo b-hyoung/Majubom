@@ -17,7 +17,7 @@ def finite_json(value):
 
 
 def decode_frame(header, frame, height=2.5, tilt=50.0, min_snr=0.0):
-    """Raw compressed samples + filtered, mount-corrected cloud. Tracks are already world coords."""
+    """Raw compressed samples + filtered, mount-corrected cloud and tracks (track_to_world; 2026-10-12 tracks were sensor-frame)."""
     offset = protocol.FRAME_HEADER_LEN
     tlvs, samples, points, tracks, units = [], [], [], [], None
     rejected = 0
@@ -48,6 +48,8 @@ def decode_frame(header, frame, height=2.5, tilt=50.0, min_snr=0.0):
                 if not all(math.isfinite(v) for v in [r, snr, elev, azim, velocity]) or not 0 < r <= 20 or snr < min_snr:
                     rejected += 1
                     continue
+                if protocol.MOUNT_UPSIDE_DOWN:   # 거꾸로 장착: 방위각·고도각 부호 반전(send_mmw.track_to_world와 같은 보정)
+                    elev, azim = -elev, -azim
                 x = r * math.cos(elev) * math.sin(azim)
                 y = r * math.cos(elev) * math.cos(azim)
                 z = r * math.sin(elev)
@@ -60,9 +62,15 @@ def decode_frame(header, frame, height=2.5, tilt=50.0, min_snr=0.0):
             for i in range(min(len(payload) // protocol.TARGET_SIZE, MAX_POINTS)):
                 row = struct.unpack_from(protocol.TARGET_STRUCT, payload, i * protocol.TARGET_SIZE)
                 tracks.append({'tid': row[0], 'values': list(row[1:])})
-    clean_tracks = [{'tid': t['tid'], 'world': t['values'][:3], 'velocity': t['values'][3:6]}
-                    for t in tracks if t['tid'] <= 252 and
-                    all(math.isfinite(v) and abs(v) <= 100 for v in t['values'][:6])]
+    clean_tracks = []
+    for t in tracks:
+        if t['tid'] > 252 or not all(math.isfinite(v) and abs(v) <= 100 for v in t['values'][:6]):
+            continue
+        v = t['values']
+        w = protocol.track_to_world({'posX': v[0], 'posY': v[1], 'posZ': v[2],
+                                     'velX': v[3], 'velY': v[4], 'velZ': v[5]}, height, tilt)
+        clean_tracks.append({'tid': t['tid'], 'world': [w['posX'], w['posY'], w['posZ']],
+                             'velocity': [w['velX'], w['velY'], w['velZ']], 'sensor': v[:3]})
     return finite_json({'header': header, 'tlvs': tlvs, 'units': units,
                         'raw_points': samples, 'raw_tracks': tracks, 'points': points,
                         'tracks': clean_tracks, 'rejected_points': rejected,

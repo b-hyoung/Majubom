@@ -110,6 +110,11 @@ INTEGRATED_SYSTEM_PROMPT = (
     "이벤트 0건은 해당 기간에 저장된 이벤트가 없다는 뜻이며, 낙상이 없었다는 증거가 아닙니다. "
     "데이터_신뢰도_비율은 3개 판정 신호 중 확보된 신호의 비율입니다. AI 정확도나 의학적 신뢰도로 해석하지 마세요. "
     "계산된 위험점수는 단계 대응값이지 낙상 발생 확률이 아닙니다. "
+    "'낙상_위험도_프로필'은 Morse 척도 기본 점수와 센서·간호 기록 변동 점수의 합이며 설계값입니다. 낙상 확률로 쓰지 마세요. "
+    "'보행_추세_예측'은 서버가 계산한 값입니다(하루 보행 대표값 → 칼만 필터 추세 → 7·14일 예측, 7일 누적 감소가 "
+    "Phillips 2017 기준(속도 2.54/5.1 cm/s, 보폭 2.54/7.6 cm)을 넘었을 확률). '향후_위험_가능성'은 이 수치와 범위를 그대로 인용해 쓰고, "
+    "숫자를 새로 만들거나 바꾸지 마세요. 논문의 3주 내 낙상 확률(86.3% 등)을 이 환자의 낙상 확률이라고 쓰지 마세요. "
+    "status가 insufficient면 '기록 일수가 부족해 예측하지 않음'이라고 쓰세요. "
     "직전 리포트는 AI가 쓴 과거 해석이며 검증된 환자 사실이 아닙니다. 오류를 그대로 반복하지 마세요. "
     "'최근_이벤트_상세'는 최근 24시간의 최대 20건입니다. 오래된 사건이나 리포트 생성 이력은 제외됩니다. "
     "활동 요약과 개별 이벤트가 없으면 최근 변화는 판단할 수 없습니다. 현재 신호만으로 '변화 없음'이라고 쓰지 마세요. "
@@ -158,6 +163,8 @@ def _build_payload(bed_id: str, investigation: dict, risk: dict, confidence: flo
         "간호_기록_원문": investigation["patient_state"].get("nursing_records", []),
         "데이터_출처": investigation["patient_state"].get("data_source"),
         "검증_조건": investigation["patient_state"].get("evaluation_context"),
+        "낙상_위험도_프로필": investigation["patient_state"].get("fall_risk_profile"),
+        "보행_추세_예측": investigation["patient_state"].get("gait_trend"),
         "ToF_현재_판정": investigation["patient_state"].get("tof_behavior"),
         "mmWave_현재_판정": investigation["patient_state"].get("mmw_latest"),
         "최근_24시간_활동_요약": investigation["patient_state"].get("recent_24h"),
@@ -209,6 +216,19 @@ def generate_integrated_report(bed_id: str, max_rounds: int = 2, top_k: int = 5,
                 "message": f"LLM 응답이 JSON 스키마를 따르지 않음: {type(e).__name__}",
                 "stage": "parse_report", "risk": risk}
 
+    if isinstance(report, dict):
+        # 10-13 실측: 모델이 일부 항목을 목록·객체로 주거나 한두 개 빠뜨려 리포트 전체가 버려졌다 → 목록·객체는 글로 풀고,
+        # 빠진 항목이 3개 이하면 '정보 부족'으로 채운다. 숫자만 온 항목·대부분 빠진 응답은 그대로 거절한다.
+        for key in REPORT_FIELDS:
+            val = report.get(key)
+            if isinstance(val, list):
+                report[key] = "\n".join(v if isinstance(v, str) else json.dumps(v, ensure_ascii=False) for v in val)
+            elif isinstance(val, dict):
+                report[key] = "\n".join(f"{k}: {v if isinstance(v, str) else json.dumps(v, ensure_ascii=False)}" for k, v in val.items())
+        missing = [key for key in REPORT_FIELDS if report.get(key) is None]
+        if len(missing) <= 3:
+            for key in missing:
+                report[key] = "정보 부족"
     if not isinstance(report, dict) or any(not isinstance(report.get(key), str) for key in REPORT_FIELDS):
         invalid = [key for key in REPORT_FIELDS if not isinstance(report, dict) or not isinstance(report.get(key), str)]
         return {"success": False, "error_type": "invalid_report_schema",
@@ -220,6 +240,11 @@ def generate_integrated_report(bed_id: str, max_rounds: int = 2, top_k: int = 5,
     evidence_ids = [r["chunk_id"] for r in investigation.get("final_results", [])]
     analysis_id = None
     review = None
+    try:   # 10-13: 리포트 화면의 원그래프·선그래프용 숫자(report_charts — 계산값만, LLM이 만들지 않음)
+        import report_charts
+        report["charts"] = report_charts.build(bed_id)
+    except Exception as e:
+        print(f"[integrated] 그래프 데이터 실패: {type(e).__name__}")
     if persist:
         analysis_id = db.insert_ai_analysis(
             patient_id=bed_id, analysis_type="integrated_status",

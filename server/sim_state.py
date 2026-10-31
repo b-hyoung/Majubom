@@ -73,7 +73,8 @@ SCENARIOS: dict[str, list[str]] = {
     "bed_sim_bedexit": ["sleep", "edge", "exit", "checkingNormal", "walk"],
     "bed_sim_gaitcaution": ["sleep", "toss", "toss"],
     "bed_sim_risk": ["sleep", "toss", "edge", "risk", "toss"],
-    "bed_sim_fall": ["sleep", "toss", "exit", "checkingAbnormal", "fall"],
+    # 2026-10-12: 낙상(fall) 장면 제거(대시보드 simulation.js와 같게) — 실측 낙상 시험과 섞이지 않게
+    "bed_sim_fall": ["sleep", "toss", "exit", "checkingAbnormal"],
 }
 
 

@@ -142,9 +142,10 @@ class IngestTests(unittest.TestCase):
             self.assertIsNone(row['comparison_mean'])
             self.assertNotIn('provisional_k', row)
 
+    @patch.object(M.L, "FLOOR_FALL_ENABLED", True)  # 2026-10-12부터 기본 꺼짐(fall_detect.py로 대체)
     def test_urgent_fall_does_not_invent_persistent_event(self):
         data=self.payload(walking=False)
-        data['raw']['height_drop']=1.3
+        data['raw']['low_z']=0.2  # 2026-10-12 낙상 규칙: 몸 높이 < 0.4m
         self.client.post('/mmw',json=data)
         snap=self.client.get('/api/diagnostics/mmwave').get_json()
         self.assertTrue(snap['current_result']['alarm'])
