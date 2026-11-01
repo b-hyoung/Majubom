@@ -22,14 +22,20 @@ TLV 구조 (3D People Counting/Tracking, little-endian):
   python3 send_mmw.py --cli /dev/ttyACM0 --data /dev/ttyACM1 --cfg AOP_v_C_legs_safe.cfg
   (윈도우에서 테스트 시: --cli COM4 --data COM3)
   --no-send 를 주면 POST 없이 콘솔에만 지표 출력 (디버그)
+
+사람 판단은 people_pipeline.py가 한다. 대시보드에서 번호를 눌러야 사람 ID가 생기고,
+마지막으로 누른 사람의 보행 지표만 서버로 보낸다. 낙상은 사람 ID마다 프레임 단위로 판정해 /mmw/fall로 보낸다.
 """
 import argparse
 import math
 import struct
+import threading
 import time
 from collections import defaultdict, deque
 
 import numpy as np
+
+from people_pipeline import RoomPipeline
 
 try:
     import serial  # pyserial
@@ -47,10 +53,11 @@ MAGIC = bytes([2, 1, 4, 3, 6, 5, 8, 7])
 FRAME_HEADER_LEN = 40
 TLV_HEADER_LEN = 8
 TARGET_LIST_TLV = 1010   # 3D People Tracking target list (confirmed from parseTLVs.py)
-# TLV 1011 = target INDEX (포인트별 소속 track ID), target list가 아님
+TARGET_INDEX_TLV = 1011  # target INDEX (포인트별 소속 track ID, 직전 프레임의 점을 가리킴), target list가 아님
 # TLV 1012 = track height (I2f, 12 bytes/target)
-# TLV 1020 = compressed point cloud
+POINT_CLOUD_TLV = 1020   # compressed point cloud
 # TLV 1021 = presence/flag
+KNOWN_TLVS = {TARGET_LIST_TLV, TARGET_INDEX_TLV, 1012, POINT_CLOUD_TLV, 1021}
 TARGET_STRUCT = '<I27f'  # tid(uint32) + 27 floats (pos/vel/acc/ec/g/conf) = 112 bytes
 TARGET_SIZE = struct.calcsize(TARGET_STRUCT)  # 112
 
@@ -59,6 +66,10 @@ FREEZE_SPEED_THRESH = 0.15
 SERVER_URL = "http://127.0.0.1:5002/mmw"   # 같은 Pi 안의 mmw_server
 LIVE_URL = "http://127.0.0.1:5002/mmw/live" # 실시간 포인트 클라우드
 LIVE_INTERVAL = 0.3      # snapshot POST 주기 (초)
+FALL_URL = "http://127.0.0.1:5002/mmw/fall"       # 프레임 단위 낙상 사건
+PATIENT_URL = "http://127.0.0.1:5002/mmw/patient" # 화면에서 누른 번호
+PATIENT_POLL_SEC = 0.5
+LIVE_STALE_SEC = 2.0     # 레이더 프레임이 이만큼 없으면 실시간 위치를 보내지 않는다
 
 # ── 침대존 & 환자 소속도(bed affinity) ─────────────────────────────────
 # 여러 사람이 있을 때 "환자(메인 타겟)"를 순간위치가 아니라 track 이력으로 특정한다.
@@ -121,6 +132,8 @@ def track_to_world(t, height=2.7, tilt=90.0, upside_down=None):
 
 # 2026-11-01 사용자가 뷰어에서 확정한 측정 범위(바닥 좌표 x, y m). 레이더나 가구를 옮기면 다시 정해야 한다.
 ROOM_POLYGON = [(-1.79, -1.86), (2.8, -1.9), (2.8, 2.0), (-1.7, 2.0)]
+BED_POLYGON = [(-1.58, -1.46), (-0.05, -1.48), (-0.07, 0.45), (-1.56, 0.45)]
+DOOR_POLYGON = [(-1.83, 1.66), (-0.43, 1.66), (-0.43, 2.49), (-1.83, 2.51)]
 
 
 def in_room(x, y, polygon=ROOM_POLYGON):
@@ -210,6 +223,54 @@ def extract_targets(hdr, frame_bytes):
                 targets = parsed
         data = data[TLV_HEADER_LEN + tlv_len:]
     return targets
+
+
+def frame_is_valid(hdr, frame_bytes):
+    """TLV 타입과 길이가 정상인지 본다. 손상된 프레임의 값은 없는 번호나 튀는 좌표로 나타나 사람 ID를 끊는다."""
+    off = FRAME_HEADER_LEN
+    for _ in range(hdr["numTLVs"]):
+        if off + TLV_HEADER_LEN > len(frame_bytes):
+            return False
+        tlv_type, tlv_len = struct.unpack_from("<2I", frame_bytes, off)
+        off += TLV_HEADER_LEN + tlv_len
+        if tlv_type not in KNOWN_TLVS or off > len(frame_bytes):
+            return False
+    return True
+
+
+def extract_points(hdr, frame_bytes, height=2.7, tilt=90.0):
+    """프레임에서 반사점의 바닥 기준 높이 목록과 점별 소속 번호(bytes)를 꺼낸다."""
+    data = frame_bytes[FRAME_HEADER_LEN:]
+    zs, index = [], b""
+    for _ in range(hdr["numTLVs"]):
+        if len(data) < TLV_HEADER_LEN:
+            break
+        tlv_type, tlv_len = struct.unpack_from("<2I", data, 0)
+        payload = data[TLV_HEADER_LEN:TLV_HEADER_LEN + tlv_len]
+        if tlv_type == TARGET_INDEX_TLV:
+            index = payload
+        elif tlv_type == POINT_CLOUD_TLV and len(payload) >= 20:
+            e_unit, a_unit, _, r_unit, _ = struct.unpack_from("<5f", payload, 0)
+            for i in range((len(payload) - 20) // 8):
+                el_i, az_i, _, rng, _ = struct.unpack_from("<bbhHH", payload, 20 + i * 8)
+                r, el, az = rng * r_unit, el_i * e_unit, az_i * a_unit
+                zs.append(track_to_world({"posX": r * math.cos(el) * math.sin(az), "posY": r * math.cos(el) * math.cos(az),
+                                          "posZ": r * math.sin(el), "velX": 0.0, "velY": 0.0, "velZ": 0.0}, height, tilt)["posZ"])
+        data = data[TLV_HEADER_LEN + tlv_len:]
+    return zs, index
+
+
+def link_points(targets, index, prev_zs):
+    """추적마다 소속 반사점 수와 머리 쪽 높이(상위 90%)를 붙인다. 1011은 직전 프레임의 점을 가리킨다."""
+    linked = defaultdict(list)
+    if prev_zs is not None and len(index) == len(prev_zs):
+        for owner, z in zip(index, prev_zs):
+            linked[owner].append(z)
+    for t in targets:
+        zs = sorted(linked.get(t["tid"], []))
+        t["npts"] = index.count(t["tid"])
+        t["linked_npts"] = len(zs)
+        t["top_z"] = zs[min(len(zs) - 1, int(len(zs) * 0.9))] if zs else None
 
 
 # ── 보폭 추정 (FFT → cadence → stride) ────────────────────────────────
@@ -476,7 +537,42 @@ def send_config(cli_port, cfg_path, baud=115200):
         print(f"[cfg] sent: {cfg_path}  —  모든 줄 적용 OK")
 
 
-def run(cli_port, data_port, cfg_path, do_send=True, target_id="room_01", height=2.7, tilt=90.0, room_filter=True):
+def poll_patient_clicks(target_id, started, click):
+    """화면에서 누른 번호를 주기적으로 읽는다. 리더가 켜지기 전의 클릭은 번호가 달라졌을 수 있어 쓰지 않는다."""
+    while True:
+        try:
+            m = requests.get(PATIENT_URL, params={"target": target_id}, timeout=0.5).json() or {}
+            if m.get("seq") is not None and m["seq"] > started:
+                click["tid"], click["seq"] = m.get("tid"), m["seq"]
+        except Exception:
+            pass  # 서버가 잠시 꺼져 있어도 수신은 계속한다
+        time.sleep(PATIENT_POLL_SEC)
+
+
+def apply_click(now, pipeline, click, applied_seq):
+    """새 클릭이 있으면 사람으로 표시한다. 반환: 적용한 seq"""
+    if click["seq"] is None or click["seq"] == applied_seq:
+        return applied_seq
+    try:
+        pid = pipeline.designate(now, click["tid"])
+        print(f"[click] {time.strftime('%H:%M:%S')} {click['tid']}번 → {pid or '없는 번호라 지정 안 됨'}")
+    except ValueError as exc:
+        print(f"[click] {time.strftime('%H:%M:%S')} {click['tid']}번 지정 안 됨: {exc}")
+    return click["seq"]
+
+
+def send_fall_event(ev, target_id, do_send):
+    print(f"[fall] {time.strftime('%H:%M:%S')} {ev['pid']} {ev['stage']} door_check={ev.get('door_check', False)} "
+          f"tid={ev['tid']} z={ev.get('z')} ref={ev.get('ref')}")
+    if do_send:
+        try:
+            requests.post(FALL_URL, json={**ev, "target_id": target_id,
+                                          "at": time.strftime('%Y-%m-%dT%H:%M:%S', time.localtime(ev["at"]))}, timeout=0.5)
+        except Exception:
+            pass  # 서버가 잠시 꺼져 있어도 수신은 계속한다
+
+
+def run(cli_port, data_port, cfg_path, do_send=True, target_id="room_01", height=2.7, tilt=90.0, room_filter=True, max_people=3):
     if serial is None:
         raise RuntimeError("pyserial 미설치: pip install pyserial")
     if do_send and requests is None:
@@ -490,9 +586,17 @@ def run(cli_port, data_port, cfg_path, do_send=True, target_id="room_01", height
     history = defaultdict(lambda: deque(maxlen=2000))
     window_start = time.time()
     last_live = 0  # 마지막 live snapshot 전송 시각
-    latest_targets = []  # 최신 프레임의 target 목록
+    latest = None  # 최신 프레임의 처리 결과
+    latest_at = 0.0
+    prev_zs = None
+    history_tid = None
+    pipeline = RoomPipeline(ROOM_POLYGON, BED_POLYGON, DOOR_POLYGON, max_people=max_people, room_filter=room_filter, tilt=tilt)
+    click = {"tid": None, "seq": None}
+    applied_seq = None
+    if do_send:
+        threading.Thread(target=poll_patient_clicks, args=(target_id, window_start, click), daemon=True, name="mmw-click").start()
 
-    print(f"[run] reading {data_port} ... (window={WINDOW_SEC}s, send={do_send})")
+    print(f"[run] reading {data_port} ... (window={WINDOW_SEC}s, send={do_send}, max_people={max_people})")
     try:
         while True:
             chunk = data.read(4096)
@@ -501,11 +605,24 @@ def run(cli_port, data_port, cfg_path, do_send=True, target_id="room_01", height
                 frames, buf = iter_frames(buf)
                 now = time.time()
                 for hdr, fb in frames:
+                    if not frame_is_valid(hdr, fb):
+                        prev_zs = None   # 다음 프레임의 1011이 가리킬 점을 알 수 없다
+                        continue
+                    # 사람 ID는 범위 밖으로 나가는 것도 봐야 하므로 범위 필터 전의 추적을 전부 넘긴다
                     targets = [track_to_world(t, height, tilt) for t in extract_targets(hdr, fb)]
-                    if room_filter:   # 범위 밖 추적은 환자 특정·보행 계산·화면 어디에도 전달하지 않는다
-                        targets = [t for t in targets if in_room(t["posX"], t["posY"])]
-                    latest_targets = targets  # 매 프레임 갱신
-                    for t in targets:
+                    zs, index = extract_points(hdr, fb, height, tilt)
+                    link_points(targets, index, prev_zs)
+                    prev_zs = zs
+                    applied_seq = apply_click(now, pipeline, click, applied_seq)
+                    latest = pipeline.update(now, targets)
+                    latest_at = now
+                    for ev in latest["events"]:
+                        send_fall_event(ev, target_id, do_send)
+                    t = latest["patient_target"]
+                    if t:   # 보행 지표는 환자 번호로만 계산한다. 번호가 바뀌면 옛 번호의 이력은 버린다
+                        if t["tid"] != history_tid:
+                            history.clear()
+                            history_tid = t["tid"]
                         history[t["tid"]].append(
                             (now, t["posX"], t["posY"], t["posZ"],
                              t["velX"], t["velY"])
@@ -513,16 +630,11 @@ def run(cli_port, data_port, cfg_path, do_send=True, target_id="room_01", height
 
             # 실시간 snapshot 전송 (LIVE_INTERVAL 마다)
             now = time.time()
-            if do_send and now - last_live >= LIVE_INTERVAL and latest_targets:
+            if do_send and now - last_live >= LIVE_INTERVAL and latest and now - latest_at <= LIVE_STALE_SEC:
                 try:
-                    snap = [{"tid": t["tid"],
-                             "x": round(t["posX"], 3),
-                             "y": round(t["posY"], 3),
-                             "z": round(t["posZ"], 3),
-                             "vx": round(t["velX"], 3),
-                             "vy": round(t["velY"], 3)}
-                            for t in latest_targets]
-                    requests.post(LIVE_URL, json={"targets": snap}, timeout=0.5)
+                    requests.post(LIVE_URL, json={"targets": latest["targets"], "target_id": target_id,
+                                                  "patient_tid": latest["patient_tid"], "patient": latest["patient"],
+                                                  "falls": latest["falls"]}, timeout=0.5)
                 except Exception:
                     pass  # 시각화 실패는 무시
                 last_live = now
@@ -540,6 +652,8 @@ def run(cli_port, data_port, cfg_path, do_send=True, target_id="room_01", height
                         del history[tid]
 
                 raw, quality, presence = select_patient(history, now)
+                if latest:   # history에는 환자만 있으므로 방 안의 인원은 따로 넣는다
+                    presence["n_targets"] = max(presence["n_targets"], latest["n_people"])
                 payload = {
                     "target_id": target_id,
                     "timestamp": int(time.time() * 1000),
@@ -639,6 +753,7 @@ if __name__ == "__main__":
     ap.add_argument("--tilt", type=float, default=90.0, help="수평에서 아래로 기운 각도")
     ap.add_argument("--upright", action="store_true", help="레이더를 바로 달았을 때")
     ap.add_argument("--no-room-filter", action="store_true", help="측정 범위 밖 추적도 전부 사용(범위를 다시 잴 때)")
+    ap.add_argument("--max-people", type=int, default=3, help="사람 ID를 줄 최대 인원")
     args = ap.parse_args()
     MOUNT_UPSIDE_DOWN = not args.upright
     if args.capture_zone > 0:
@@ -648,4 +763,4 @@ if __name__ == "__main__":
         capture_zone(args.data, args.capture_zone, args.capture_label, height=args.height, tilt=args.tilt)
     else:
         run(args.cli, args.data, args.cfg, do_send=not args.no_send, target_id=args.target,
-            height=args.height, tilt=args.tilt, room_filter=not args.no_room_filter)
+            height=args.height, tilt=args.tilt, room_filter=not args.no_room_filter, max_people=args.max_people)
