@@ -119,6 +119,22 @@ def track_to_world(t, height=2.7, tilt=90.0, upside_down=None):
     return w
 
 
+# 2026-11-01 실측 범위: 사람이 걸어 다닌 위치의 볼록 껍질을 0.3m 넓힌 다각형(바닥 좌표 x, y m).
+# y− 쪽은 레이더 한계, 나머지는 벽·문·책상·침상이다. 레이더나 가구를 옮기면 다시 재야 한다.
+ROOM_POLYGON = [(-1.72, 0.07), (-1.19, -1.30), (0.56, -2.99), (1.23, -2.76), (2.17, 0.88),
+                (1.78, 1.26), (1.02, 1.72), (-0.19, 2.16), (-1.30, 1.99), (-1.59, 1.19)]
+
+
+def in_room(x, y, polygon=ROOM_POLYGON):
+    """점이 측정 범위 다각형 안에 있으면 True (짝홀 규칙)."""
+    inside = False
+    for i in range(len(polygon)):
+        (x1, y1), (x2, y2) = polygon[i], polygon[i - 1]
+        if (y1 > y) != (y2 > y) and x < x1 + (y - y1) * (x2 - x1) / (y2 - y1):
+            inside = not inside
+    return inside
+
+
 def parse_target_list(payload):
     """
     Target List TLV payload → track 리스트.
@@ -462,7 +478,7 @@ def send_config(cli_port, cfg_path, baud=115200):
         print(f"[cfg] sent: {cfg_path}  —  모든 줄 적용 OK")
 
 
-def run(cli_port, data_port, cfg_path, do_send=True, target_id="room_01", height=2.7, tilt=90.0):
+def run(cli_port, data_port, cfg_path, do_send=True, target_id="room_01", height=2.7, tilt=90.0, room_filter=True):
     if serial is None:
         raise RuntimeError("pyserial 미설치: pip install pyserial")
     if do_send and requests is None:
@@ -488,6 +504,8 @@ def run(cli_port, data_port, cfg_path, do_send=True, target_id="room_01", height
                 now = time.time()
                 for hdr, fb in frames:
                     targets = [track_to_world(t, height, tilt) for t in extract_targets(hdr, fb)]
+                    if room_filter:   # 범위 밖 추적은 환자 특정·보행 계산·화면 어디에도 전달하지 않는다
+                        targets = [t for t in targets if in_room(t["posX"], t["posY"])]
                     latest_targets = targets  # 매 프레임 갱신
                     for t in targets:
                         history[t["tid"]].append(
@@ -622,6 +640,7 @@ if __name__ == "__main__":
     ap.add_argument("--height", type=float, default=2.7, help="레이더 설치 높이(m)")
     ap.add_argument("--tilt", type=float, default=90.0, help="수평에서 아래로 기운 각도")
     ap.add_argument("--upright", action="store_true", help="레이더를 바로 달았을 때")
+    ap.add_argument("--no-room-filter", action="store_true", help="측정 범위 밖 추적도 전부 사용(범위를 다시 잴 때)")
     args = ap.parse_args()
     MOUNT_UPSIDE_DOWN = not args.upright
     if args.capture_zone > 0:
@@ -631,4 +650,4 @@ if __name__ == "__main__":
         capture_zone(args.data, args.capture_zone, args.capture_label, height=args.height, tilt=args.tilt)
     else:
         run(args.cli, args.data, args.cfg, do_send=not args.no_send, target_id=args.target,
-            height=args.height, tilt=args.tilt)
+            height=args.height, tilt=args.tilt, room_filter=not args.no_room_filter)
