@@ -38,7 +38,14 @@ class GroupTests(unittest.TestCase):
 
     def test_group_partial_start_failure_rolls_back(self):
         ids=self.prepare_pair()
-        def broken(*args,**kwargs):raise ValueError('injected start failure')
+        first=self.workspace.sessions[ids[0]]
+        def broken(*args,**kwargs):
+            # Exercise a partial start, rather than relying on thread scheduling.
+            # If failure happens before the first input starts, zero recordings is valid rollback.
+            deadline=time.monotonic()+3
+            while not first.state['recording'] and time.monotonic()<deadline:time.sleep(.005)
+            if not first.state['recording']:raise RuntimeError('first input did not acknowledge start')
+            raise ValueError('injected start failure')
         self.workspace.sessions[ids[1]].worker.engine.start_measurement=broken
         self.request('/api/group',{'action':'start','inputs':ids})
         state=self.wait(lambda x:x['groups'][0]['phase']=='failed')
