@@ -1,0 +1,6 @@
+{
+  "group_by": "subject_id",
+  "train": ["S01", "S02", "S03"],
+  "validation": ["S04"],
+  "test": ["S05"]
+}

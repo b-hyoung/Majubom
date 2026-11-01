@@ -1,0 +1,35 @@
+# Local environments and secrets
+.env
+.env.*
+!.env.example
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+.DS_Store
+Thumbs.db
+node_modules/
+
+# Experiment data, recordings and model artifacts
+data/
+recordings/
+videos/
+runs/
+outputs/
+checkpoints/
+*.mp4
+*.avi
+*.mov
+*.mkv
+*.pt
+*.pth
+*.onnx
+*.tflite
+*.task
+*.log
+
+# Local Python build artifacts
+*.egg-info/
+build/
+dist/

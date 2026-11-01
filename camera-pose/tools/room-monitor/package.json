@@ -1,0 +1,9 @@
+{
+  "name": "bed-pose-room-monitor",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {"build": "tsc --noEmit && vite build"},
+  "dependencies": {"react": "19.3.1", "react-dom": "19.3.1", "three": "0.187.0"},
+  "devDependencies": {"@types/react": "^19", "@types/react-dom": "^19", "@types/three": "^0.185", "typescript": "^5.9", "vite": "8.3.5"}
+}

@@ -6,14 +6,14 @@ ROOT = Path(__file__).resolve().parents[1]
 OUTPUT = ROOT / 'docs/PROJECT_STRUCTURE.md'
 START = '<!-- BEGIN GENERATED TREE -->'
 END = '<!-- END GENERATED TREE -->'
-SKIP_DIRS = {'.git', '.venv', 'venv', '__pycache__', '.pio', 'node_modules', '.pytest_cache', '.vscode', '.idea'}
+SKIP_DIRS = {'.git', '.venv-training', 'recordings', 'outputs', 'checkpoints', 'build', 'dist', '.venv', 'venv', '__pycache__', '.pio', 'node_modules', '.pytest_cache', '.vscode', '.idea'}
 SKIP_SUFFIXES = {'.pyc', '.pyo', '.log'}
 SKIP_NAME_ENDINGS = ('.db-wal', '.db-shm', '.db-journal')   # SQLite가 쓰는 동안만 생겼다 사라지는 파일(WAL 모드)
 
 
 def tree(directory, prefix=''):
     entries = sorted((p for p in directory.iterdir()
-                      if p.name not in SKIP_DIRS and p.suffix not in SKIP_SUFFIXES and not p.name.endswith(SKIP_NAME_ENDINGS)),
+                      if p.name not in SKIP_DIRS and not p.name.endswith('.egg-info') and p.suffix not in SKIP_SUFFIXES and not p.name.endswith(SKIP_NAME_ENDINGS)),
                      key=lambda p: (not p.is_dir(), p.name.casefold()))
     lines = []
     for i, path in enumerate(entries):

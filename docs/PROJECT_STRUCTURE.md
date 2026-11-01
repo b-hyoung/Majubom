@@ -5,7 +5,7 @@
 AI 작업 진입점은 `AGENTS.md`와 `docs/AI_START_HERE.md`다.
 이 문서는 실제 로컬 파일을 확인해 생성한 목록과 역할 설명을 함께 제공한다.
 목록에는 데이터·모델·역사 문서도 포함한다. `.git`, 가상환경, 캐시, IDE 설정,
-PlatformIO 빌드, node_modules, 로그, LanceDB 저장 엔진 내부 파일은 생략한다.
+PlatformIO/Python 빌드, node_modules, 로그, LanceDB 저장 엔진 내부 파일과 카메라 로컬 recordings/outputs/checkpoints는 생략한다.
 자동 생성 구간은 직접 편집하지 않고 `python3 tools/update_project_structure.py`로 갱신한다.
 코드 역할이 달라지면 아래 역할/경로 설명도 반드시 수정한다.
 
@@ -13,6 +13,7 @@ PlatformIO 빌드, node_modules, 로그, LanceDB 저장 엔진 내부 파일은 
 
 | 경로 | 책임/진입점 |
 |---|---|
+| camera-pose/ | 독립 카메라 자세 연구·MediaPipe/CLIP·Three.js 3D 침상 모니터. 자체 AGENTS.md 적용. src/bed_pose/tof_learning은 읽기 전용 Pi 스트림+카메라 동기 수집·라벨 검토·CNN/CNN+GRU·LightGBM/RF/XGBoost 비교. training/의 PowerShell 도구와 docs/guides/TOF_TRAINING.md가 진입점. 실측 검증 전 운영 모델로 사용하지 않음 |
 | TOF/src/ | ESP32-S3 Arduino 펌웨어와 PlatformIO 프로젝트. main.ino가 원본; 이전 Windows 전처리 생성물 main.ino.cpp는 제거했고 PlatformIO가 빌드 시 임시 생성한다 |
 | TOF/ml/ | 자세 Random Forest 학습·추론(운영 v2: train_posture_v2.py, 이전 모델은 archive/), ROI/침대 좌표, LSTM-AE 참고 이상탐지, 특징 로깅, 후보 모델 비교 |
 | TOF/dataset*/ | 라벨별 ToF 거리 CSV/JSONL, 기존 4×4 및 빈 침대 데이터 보관 |
@@ -35,6 +36,7 @@ PlatformIO 빌드, node_modules, 로그, LanceDB 저장 엔진 내부 파일은 
 
 - 로우데이터 분기: tof_server.py와 send_mmw.py → server/live_diagnostics.py → :5012 mmWave/diagnostic_server.py → site/sensor-diagnostics.html/js. 기존 운영 경로와 병렬로 최신값만 메모리에 유지한다.
 - 노트북 스트림: tof_server.py·send_mmw.py → live_diagnostics.FrameStreamPublisher → :5012/api/stream-ingest → GET /api/stream(NDJSON) → tools/laptop_stream_client.py(노트북 저장). Pi에는 저장하지 않는다.
+- 카메라 학습: :5012/api/stream의 tof1/tof2 + 노트북 /api/room/live → camera-pose의 수집 품질/시차 gate → data/paired/ → 독립 검토 라벨·그룹 분할 → CNN/CNN+GRU 및 고정 특징의 트리 비교. 엄격 모드는 미검증 3D를 차단하며 검증·시험은 검토 정답만 허용한다. .venv-training/과 원시/모델 산출물은 로컬 전용이다.
 - 계산 관측: server/diagnostic_observer.py → 기존 ToF/mmWave 관측 API → :5012/api/operations → 센서별 수식·기준선·저장 결과 탭. 추가 DB 저장/재평가 없음.
 - 환자 EMR: demo_emr.json → demo_emr.py → SQLite emr_records → emr_kb.py → 환자별 LanceDB emr_chunks → /emr 화면. API 의미 임베딩은 별도 emr_semantic_chunks이며 로컬 어휘 벡터와 구분한다. docs/EMR_DATA_MODEL.md 필독.
 - AI 관측: server/report_trace.py → 실제 ai_agent/ai_report/paper_kb/integrated_analysis 호출 → 환자별 메모리 타임라인 → AI 리포트 탭.
@@ -55,6 +57,359 @@ PlatformIO 빌드, node_modules, 로그, LanceDB 저장 엔진 내부 파일은 
 <!-- BEGIN GENERATED TREE -->
 ```text
 Majubom/
+├── .codex-ppt-build/
+│   ├── bed-double-2368D8.png
+│   ├── bed-single-2368D8.png
+│   ├── bell-2368D8.png
+│   ├── build.mjs
+│   ├── camera-2368D8.png
+│   ├── candidate.pptx
+│   ├── candidate.pptx.inspect.ndjson
+│   ├── inspection.ndjson
+│   ├── monitor-BFD8FF.png
+│   ├── radar-2368D8.png
+│   ├── slide-1.png
+│   ├── slide-2.png
+│   ├── slide-3.png
+│   ├── slide-4.png
+│   ├── validation.json
+│   └── watch-2368D8.png
+├── .github/
+│   └── workflows/
+│       └── camera-pose.yml
+├── assets/
+│   └── equipment_layout/
+│       ├── .gitignore
+│       ├── blender_capture.png
+│       ├── build_scene.py
+│       ├── majubom_equipment_clean.png
+│       ├── MajuBom_Equipment_Layout.blend
+│       ├── MajuBom_Equipment_Layout.blend1
+│       ├── majubom_equipment_layout.png
+│       ├── majubom_equipment_top.png
+│       ├── open_scene.py
+│       ├── preview.png
+│       └── README.md
+├── camera-pose/
+│   ├── .github/
+│   │   └── workflows/
+│   │       └── tests.yml
+│   ├── docs/
+│   │   ├── archive/
+│   │   │   ├── IMPLEMENTATION_HISTORY.md
+│   │   │   ├── LYING_ORIENTATION_RULES.md
+│   │   │   ├── README.md
+│   │   │   └── REFERENCE_POSTURE.md
+│   │   ├── assets/
+│   │   │   ├── system-overview.png
+│   │   │   └── system-overview.svg
+│   │   ├── design/
+│   │   │   ├── ARCHITECTURE.md
+│   │   │   ├── AUTOMATIC_POSTURE.md
+│   │   │   ├── CODE_DESIGN.md
+│   │   │   ├── DATA_AND_VALIDATION.md
+│   │   │   ├── MEASUREMENT_PROTOCOL.md
+│   │   │   ├── MULTI_CAMERA_DESIGN.md
+│   │   │   ├── PERSON_CROP.md
+│   │   │   ├── POSTURE_EVIDENCE_COMPARISON.md
+│   │   │   ├── POSTURE_INTERFACE.md
+│   │   │   ├── POSTURE_STABILITY.md
+│   │   │   ├── PREVIEW_CONCURRENCY.md
+│   │   │   ├── README.md
+│   │   │   ├── SILHOUETTE_SUPPORT.md
+│   │   │   ├── TWO_VIEW_INPUTS.md
+│   │   │   └── WEIGHTED_POSTURE.md
+│   │   ├── development/
+│   │   │   ├── AI_TASK_PROMPT.md
+│   │   │   ├── BENCHMARK_DETAIL_SPEC.md
+│   │   │   ├── MEDIAPIPE_ADAPTER.md
+│   │   │   ├── POSTPROCESSING.md
+│   │   │   └── README.md
+│   │   ├── examples/
+│   │   │   └── benchmark-v0.1/
+│   │   │       ├── frame_inference_error.json
+│   │   │       ├── frame_no_detection.json
+│   │   │       ├── frame_not_processed.json
+│   │   │       ├── frame_sequence_inference_error.json
+│   │   │       ├── metric_computed_fps.json
+│   │   │       ├── metric_computed_ratio.json
+│   │   │       ├── metric_unavailable.json
+│   │   │       └── run_config.json
+│   │   ├── guides/
+│   │   │   ├── ACCURACY_IMPROVEMENTS.md
+│   │   │   ├── AUTOMATIC_CALIBRATION.md
+│   │   │   ├── BED_REGION.md
+│   │   │   ├── CAMERA_CAPTURE.md
+│   │   │   ├── EXPERIMENTAL_3D_PREVIEW.md
+│   │   │   ├── LIVE_MEASUREMENT.md
+│   │   │   ├── PREVIEW_EXCEPTION_HANDLING.md
+│   │   │   ├── PREVIEW_QUALITY.md
+│   │   │   ├── README.md
+│   │   │   ├── RECORD_REVIEW.md
+│   │   │   ├── ROOM_MONITOR.md
+│   │   │   ├── SCREEN_CALIBRATION.md
+│   │   │   ├── SINGLE_POSTURE_PLAN.md
+│   │   │   ├── SIX_POSTURE_3D.md
+│   │   │   ├── STEREO_DEPTH.md
+│   │   │   └── TOF_TRAINING.md
+│   │   ├── research/
+│   │   │   ├── BED_POSTURE_PAPERS.md
+│   │   │   ├── LITERATURE_REVIEW.md
+│   │   │   ├── LYING_SHOULDER_FEATURE_REVIEW.md
+│   │   │   ├── MULTI_CAMERA_PAPERS.md
+│   │   │   ├── POSE_BENCHMARK_PLAN.md
+│   │   │   ├── POSE_COMPUTE_AND_RESOURCE_COMPARISON.md
+│   │   │   ├── README.md
+│   │   │   ├── SKELETON_TECHNOLOGY_PAPERS.md
+│   │   │   └── TECHNOLOGY_CANDIDATES.md
+│   │   ├── reviews/
+│   │   │   ├── AUTOMATIC_POSTURE_REVIEW.md
+│   │   │   ├── IMPLEMENTATION_REVIEW.md
+│   │   │   ├── MANNEQUIN_POSTURE_CRITERIA_2026-10-31.md
+│   │   │   ├── POSTURE_CONDITION_AUDIT_2026-10-31.md
+│   │   │   ├── README.md
+│   │   │   └── RECORD_REVIEW_2026-10-31.md
+│   │   ├── schemas/
+│   │   │   └── benchmark-v0.1.schema.json
+│   │   ├── DECISIONS.md
+│   │   ├── PROJECT_STATUS.md
+│   │   ├── README.md
+│   │   └── REQUIREMENTS.md
+│   ├── src/
+│   │   └── bed_pose/
+│   │       ├── pose/
+│   │       │   ├── __init__.py
+│   │       │   ├── base.py
+│   │       │   ├── browser_gpu.py
+│   │       │   ├── fake.py
+│   │       │   ├── mediapipe.py
+│   │       │   └── rotation_rescue.py
+│   │       ├── schemas/
+│   │       │   └── benchmark-v0.1.schema.json
+│   │       ├── static/
+│   │       │   └── monitor/
+│   │       │       ├── checkerboard.html
+│   │       │       ├── index.html
+│   │       │       ├── monitor.css
+│   │       │       └── monitor.js
+│   │       ├── templates/
+│   │       │   ├── live_workspace.html
+│   │       │   └── viewer.html
+│   │       ├── tof_learning/
+│   │       │   ├── __init__.py
+│   │       │   ├── __main__.py
+│   │       │   ├── collect.py
+│   │       │   ├── data.py
+│   │       │   ├── models.py
+│   │       │   └── train.py
+│   │       ├── __init__.py
+│   │       ├── __main__.py
+│   │       ├── automatic_calibration.py
+│   │       ├── automatic_posture.py
+│   │       ├── bed_association.py
+│   │       ├── bed_geometry.py
+│   │       ├── bed_posture_3d.py
+│   │       ├── blackbox_retention.py
+│   │       ├── blackbox_storage.py
+│   │       ├── body_state.py
+│   │       ├── calibration.py
+│   │       ├── calibration_methods.py
+│   │       ├── camera_video.py
+│   │       ├── cli.py
+│   │       ├── clip_assets.py
+│   │       ├── clip_benchmark.py
+│   │       ├── clip_pool.py
+│   │       ├── clip_posture.py
+│   │       ├── config.py
+│   │       ├── contracts.py
+│   │       ├── decision_evidence.py
+│   │       ├── demo.py
+│   │       ├── evaluation.py
+│   │       ├── evidence_report.py
+│   │       ├── experimental_preview.py
+│   │       ├── fusion_inputs.py
+│   │       ├── group_posture.py
+│   │       ├── group_session.py
+│   │       ├── image_quality.py
+│   │       ├── io_utils.py
+│   │       ├── joint_inspection.py
+│   │       ├── latest_camera.py
+│   │       ├── live_app.py
+│   │       ├── live_engine.py
+│   │       ├── live_factory.py
+│   │       ├── live_gui.py
+│   │       ├── live_recording.py
+│   │       ├── live_sources.py
+│   │       ├── live_web.py
+│   │       ├── lying_orientation.py
+│   │       ├── mapping.py
+│   │       ├── measurement_plan.py
+│   │       ├── multiview_posture.py
+│   │       ├── native_pose_cues.py
+│   │       ├── person_crop.py
+│   │       ├── person_detector.py
+│   │       ├── pose_display.py
+│   │       ├── posture.py
+│   │       ├── posture_accuracy.py
+│   │       ├── posture_decision.py
+│   │       ├── posture_diagnostics.py
+│   │       ├── posture_evidence.py
+│   │       ├── posture_stability.py
+│   │       ├── preview_alignment.py
+│   │       ├── preview_quality.py
+│   │       ├── preview_worker.py
+│   │       ├── processing_rate.py
+│   │       ├── record_library.py
+│   │       ├── record_timeline.py
+│   │       ├── recording.py
+│   │       ├── reference_posture.py
+│   │       ├── rendering.py
+│   │       ├── replay_compare.py
+│   │       ├── room_monitor.py
+│   │       ├── runner.py
+│   │       ├── screen_pattern.py
+│   │       ├── separated_posture.py
+│   │       ├── silhouette.py
+│   │       ├── silhouette_overlay.py
+│   │       ├── stereo_depth.py
+│   │       ├── target_tracking.py
+│   │       ├── time_alignment.py
+│   │       ├── validation.py
+│   │       ├── video.py
+│   │       ├── viewer.py
+│   │       ├── viewpoint_posture.py
+│   │       └── weighted_posture.py
+│   ├── tests/
+│   │   ├── browser_body_state.py
+│   │   ├── browser_camera_decoupling.py
+│   │   ├── browser_camera_video.py
+│   │   ├── browser_clip_posture.py
+│   │   ├── browser_multicamera_setup.py
+│   │   ├── browser_multiview_posture.py
+│   │   ├── browser_person_crop.py
+│   │   ├── browser_posture_separation.py
+│   │   ├── browser_posture_stability.py
+│   │   ├── browser_preview_recovery.py
+│   │   ├── browser_record_comparison.py
+│   │   ├── test_automatic_calibration.py
+│   │   ├── test_automatic_posture.py
+│   │   ├── test_automatic_rule_review.py
+│   │   ├── test_bed_association.py
+│   │   ├── test_bed_geometry.py
+│   │   ├── test_bed_posture_3d.py
+│   │   ├── test_blackbox_api.py
+│   │   ├── test_blackbox_retention.py
+│   │   ├── test_blackbox_segments.py
+│   │   ├── test_blackbox_storage.py
+│   │   ├── test_body_state.py
+│   │   ├── test_browser_gpu.py
+│   │   ├── test_calibration_methods.py
+│   │   ├── test_camera_decoupling.py
+│   │   ├── test_camera_settings.py
+│   │   ├── test_camera_video.py
+│   │   ├── test_clip_optimization.py
+│   │   ├── test_clip_pool.py
+│   │   ├── test_clip_posture.py
+│   │   ├── test_clip_runtime.py
+│   │   ├── test_decision_evidence.py
+│   │   ├── test_display_efficiency.py
+│   │   ├── test_evidence_posture.py
+│   │   ├── test_experimental_preview.py
+│   │   ├── test_forced_posture.py
+│   │   ├── test_foundation.py
+│   │   ├── test_fusion_inputs.py
+│   │   ├── test_group_session.py
+│   │   ├── test_input_workspace.py
+│   │   ├── test_joint_inspection.py
+│   │   ├── test_knee_edge.py
+│   │   ├── test_live.py
+│   │   ├── test_lying_orientation.py
+│   │   ├── test_measurement_plan.py
+│   │   ├── test_mediapipe_adapter.py
+│   │   ├── test_multiview_posture.py
+│   │   ├── test_native_pose_cues.py
+│   │   ├── test_person_crop.py
+│   │   ├── test_pi_camera.py
+│   │   ├── test_pose_display.py
+│   │   ├── test_postprocessing.py
+│   │   ├── test_posture.py
+│   │   ├── test_posture_accuracy.py
+│   │   ├── test_posture_audit.py
+│   │   ├── test_posture_diagnostics.py
+│   │   ├── test_posture_evidence.py
+│   │   ├── test_posture_stability.py
+│   │   ├── test_preview_concurrency.py
+│   │   ├── test_preview_edge_cases.py
+│   │   ├── test_preview_quality.py
+│   │   ├── test_record_image.py
+│   │   ├── test_record_library.py
+│   │   ├── test_record_timeline.py
+│   │   ├── test_reference_posture.py
+│   │   ├── test_room_monitor.py
+│   │   ├── test_rotation_rescue.py
+│   │   ├── test_runtime_performance.py
+│   │   ├── test_separated_posture.py
+│   │   ├── test_silhouette.py
+│   │   ├── test_silhouette_overlay.py
+│   │   ├── test_single_camera_preview.py
+│   │   ├── test_standalone_quality.py
+│   │   ├── test_stereo_depth.py
+│   │   ├── test_target_selection.py
+│   │   ├── test_target_tracking.py
+│   │   ├── test_time_alignment.py
+│   │   ├── test_tof_collection.py
+│   │   ├── test_tof_learning.py
+│   │   ├── test_video_pipeline.py
+│   │   ├── test_viewer.py
+│   │   ├── test_viewpoint_posture.py
+│   │   ├── test_web_workspace.py
+│   │   └── test_weighted_posture.py
+│   ├── tools/
+│   │   ├── gpu-preview/
+│   │   │   ├── bridge.cjs
+│   │   │   ├── bridge.html
+│   │   │   ├── bridge.js
+│   │   │   ├── package-lock.json
+│   │   │   ├── package.json
+│   │   │   ├── preview.html
+│   │   │   ├── preview.js
+│   │   │   ├── README.md
+│   │   │   └── server.cjs
+│   │   ├── room-monitor/
+│   │   │   ├── public/
+│   │   │   │   └── checkerboard.html
+│   │   │   ├── src/
+│   │   │   │   ├── AutomaticCalibration.tsx
+│   │   │   │   ├── CalibrationPanel.tsx
+│   │   │   │   ├── main.tsx
+│   │   │   │   ├── monitor.css
+│   │   │   │   ├── poseSmoothing.ts
+│   │   │   │   ├── Posture3D.tsx
+│   │   │   │   ├── RelativeRig.tsx
+│   │   │   │   ├── scene.ts
+│   │   │   │   └── types.ts
+│   │   │   ├── index.html
+│   │   │   ├── package-lock.json
+│   │   │   ├── package.json
+│   │   │   ├── smoothing.test.mjs
+│   │   │   ├── tsconfig.json
+│   │   │   └── vite.config.js
+│   │   ├── bed-pose-camera.service
+│   │   └── pi_camera_stream.py
+│   ├── training/
+│   │   ├── requirements.lock.txt
+│   │   ├── requirements.txt
+│   │   ├── Setup-Training.ps1
+│   │   ├── smoke_training.py
+│   │   ├── split.example.json
+│   │   ├── Start-Collection.ps1
+│   │   └── Start-Training.ps1
+│   ├── .gitattributes
+│   ├── .gitignore
+│   ├── AGENTS.md
+│   ├── pyproject.toml
+│   ├── README.md
+│   └── ROADMAP.md
 ├── deploy/
 │   ├── cloudflare/
 │   │   ├── code-guide-worker.js
@@ -91,6 +446,10 @@ Majubom/
 │   └── 질문.md
 ├── mmWave/
 │   └── .gitkeep
+├── output/
+│   └── presentation/
+│       ├── 마주봄_30초_발표대본.txt
+│       └── 마주봄_발표_4장.pptx
 ├── research/
 │   └── alternatives/
 │       ├── artifacts/
@@ -148,6 +507,7 @@ Majubom/
 │   ├── integrated_analysis.py
 │   ├── live_diagnostics.py
 │   ├── maintenance_ai.py
+│   ├── majubom.db
 │   ├── majubom.db.4x4bak.gz
 │   ├── mmw_logic.py
 │   ├── mmw_server.py
@@ -189,6 +549,13 @@ Majubom/
 │   │   ├── report-review.js
 │   │   └── simulation.js
 │   ├── tests/
+│   │   ├── artifacts/
+│   │   │   ├── test-results/
+│   │   │   │   └── .last-run.json
+│   │   │   ├── dashboard-dark.png
+│   │   │   ├── dashboard-light.png
+│   │   │   ├── dashboard-mobile.png
+│   │   │   └── results.json
 │   │   ├── .gitignore
 │   │   ├── dashboard.spec.cjs
 │   │   ├── data.test.cjs
@@ -565,6 +932,7 @@ Majubom/
 │   ├── seed_demo_emr.py
 │   ├── set_bed_center.py
 │   └── update_project_structure.py
+├── .env
 ├── .gitignore
 ├── 0704할일.md
 ├── 0707_TOF_진행상황_인수인계.md

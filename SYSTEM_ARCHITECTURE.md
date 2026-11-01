@@ -24,6 +24,15 @@
   diagnostic_observer.py와 report_trace.py는 제한된 RAM 기록만 추가하며 조회로 기존 처리를 재실행하지 않습니다.
 - 실행과 좌표/장치 검증 한계는 [진단 안내](docs/SENSOR_DIAGNOSTICS.md)를 읽습니다.
 
+## 노트북 카메라·ToF 학습 실험(2026-11-01)
+
+`camera-pose/`는 기존 MediaPipe·CLIP 및 3D 침상 모니터를 포함한 연구 프로젝트입니다.
+Pi `:5012/api/stream?sensors=tof1,tof2`의 추가 사본과 카메라 `/api/room/live`를 읽어 노트북의 수신 시각 기준으로 연결합니다.
+품질·자세 안정 시간·시차 조건을 통과한 두 8×8 ToF만 로컬에 저장하며, 미검증 3D는 기본 엄격 모드에서 제외합니다.
+명시적 의사 라벨 수집과 사람 검토를 거쳐 그룹별로 분리한 데이터로 CNN/CNN+GRU 및 고정 특징의 LightGBM·Random Forest·XGBoost를 비교합니다.
+CNN·GRU/XGBoost는 이 노트북의 CUDA, 나머지 두 트리는 CPU를 사용합니다. 합성 실행을 확인했으며 실측 수신·정답 기반 성능은 미검증입니다.
+원본 운영 판정/DB/EMR 경로와 별개입니다. [설치·수집·학습 절차](camera-pose/docs/guides/TOF_TRAINING.md).
+
 ## 개인 EMR 저장과 검색
 
 `/emr` 화면은 실제 SQLite 원문과 SQL 열, 환자별 LanceDB 연결을 보여줍니다.

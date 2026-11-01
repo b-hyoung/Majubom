@@ -31,6 +31,8 @@ ESP32와 라즈베리파이가 raw 데이터를 모아 서버로 보내고, 서�
 
 ## 저장소 구조
 
+노트북 카메라 연구 프로젝트는 [camera-pose/](camera-pose/README.md)에 있습니다. 기존 MediaPipe·CLIP·3D 침상 모니터와 함께, 카메라 자세를 두 ToF의 8×8 프레임과 품질·시간 조건으로 연결하는 수집기 및 CNN/CNN+GRU·트리 비교를 제공합니다. [설치·수집·학습 안내](camera-pose/docs/guides/TOF_TRAINING.md). 운영 판정/DB 경로를 대체하지 않습니다. 실측 연동·모델 정확도는 합성 실행 검사와 별도로 검증해야 합니다.
+
 ```
 MajuBom/
 ├── mmWave/       # TI IWR6843AOP 설정(.cfg) + 수신 스크립트

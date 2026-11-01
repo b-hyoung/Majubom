@@ -10,6 +10,8 @@ Claude는 루트 CLAUDE.md에서 같은 필독 문서들을 가져온다.
 
 ## 실제 장치와 데이터 경로
 
+- 카메라 연구/학습(2026-11-01): `camera-pose/`에 기존 침상 카메라 프로젝트를 통합했습니다. `camera-pose/AGENTS.md` 및 `camera-pose/docs/guides/TOF_TRAINING.md` 필독. `bed_pose.tof_learning collect`가 Pi `:5012/api/stream?sensors=tof1,tof2`를 읽기 전용으로 구독하고 로컬 카메라 `/api/room/live`의 수신 시각·자세와 연결합니다. 저장은 노트북 `camera-pose/data/paired/`에만 하며 운영 DB/펌웨어는 변경하지 않습니다. 기본 수집은 검증된 자세만 허용하며 현재 미검증 3D는 제외합니다. 의사 라벨 수집은 별도 명시, 검증·시험은 사람 검토 필수입니다. 전용 학습 환경은 루트 `.venv-training/`, PyTorch/XGBoost CUDA·LightGBM/Random Forest CPU입니다. 실측 ToF 수신 및 실제 모델 정확도는 아직 확인하지 않았습니다. 원시 자료·모델·토큰·환경은 커밋하지 않습니다.
+
 - ToF: VL53L5CX → ESP32-S3 펌웨어 `TOF/src/main.ino` → 공유기 2.4GHz Wi-Fi →
   유선 LAN의 Raspberry Pi 5 → `POST :5001/tof` → DB/자세·재실 판정.
   한 보드당 센서 하나, 왼쪽 `tof1`, 오른쪽 `tof2`, 8×8 거리 64개.
@@ -46,6 +48,7 @@ AI 부분(자세 분류·이상 탐지·보행 기대 범위·보행 저하 예�
 
 | 수정 영역 | 추가로 읽을 파일 |
 |---|---|
+| 카메라 3D·ToF 라벨 수집·GPU 학습 | camera-pose/AGENTS.md, README.md, docs/guides/TOF_TRAINING.md, src/bed_pose/tof_learning/ |
 | ToF 펌웨어/배선 | TOF/src/main.ino, TOF/src/platformio.ini, TOF/tof.md, TOF/TROUBLESHOOTING.md, server/tof_server.py |
 | ToF 분류/학습 | TOF/ml/README.md, TOF/dataset/README.md, predict_posture.py, roi.py, 해당 학습 스크립트 |
 | mmWave 수집/보행 | mmWave/RUN.md, RISK_NOTES.md, send_mmw.py, server/mmw_logic.py |

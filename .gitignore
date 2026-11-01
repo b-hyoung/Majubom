@@ -101,3 +101,8 @@ mmWave/recordings/
 server/backups/
 
 .codex-ppt-build/*
+
+# Local GPU training environment
+.venv-training/
+!camera-pose/training/requirements.txt
+!camera-pose/training/requirements.lock.txt

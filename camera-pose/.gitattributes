@@ -1,0 +1,2 @@
+# Vite's bundled third-party shaders contain intentional whitespace.
+src/bed_pose/static/monitor/monitor.js -whitespace
