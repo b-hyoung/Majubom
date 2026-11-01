@@ -120,7 +120,7 @@ def track_to_world(t, height=2.7, tilt=90.0, upside_down=None):
 
 
 # 2026-11-01 사용자가 뷰어에서 확정한 측정 범위(바닥 좌표 x, y m). 레이더나 가구를 옮기면 다시 정해야 한다.
-ROOM_POLYGON = [(-1.7, -1.3), (1.7, -1.3), (1.7, 2.0), (-1.7, 2.0)]
+ROOM_POLYGON = [(-1.79, -1.86), (2.8, -1.9), (2.8, 2.0), (-1.7, 2.0)]
 
 
 def in_room(x, y, polygon=ROOM_POLYGON):

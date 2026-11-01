@@ -9,11 +9,11 @@ from send_mmw import ROOM_POLYGON, in_room  # noqa: E402
 
 class InRoomTest(unittest.TestCase):
     def test_measured_positions_are_inside(self):
-        for x, y in [(0.0, 0.0), (-0.82, -0.38), (-1.03, 1.63), (1.47, 0.67), (-0.73, 1.61)]:
+        for x, y in [(0.0, 0.0), (-0.82, -0.38), (-1.03, 1.63), (1.47, 0.67), (-0.73, 1.61), (2.59, -1.0)]:
             self.assertTrue(in_room(x, y), (x, y))
 
     def test_tracks_seen_outside_the_room_are_outside(self):
-        for x, y in [(-1.38, -3.41), (-1.38, 3.50), (-1.37, 2.98), (-0.29, 3.13), (2.67, -0.41), (0.64, -2.65)]:
+        for x, y in [(-1.38, -3.41), (-1.38, 3.50), (-1.37, 2.98), (-0.29, 3.13), (3.10, -1.16), (0.64, -2.65)]:
             self.assertFalse(in_room(x, y), (x, y))
 
     def test_bed_corners_are_inside(self):
