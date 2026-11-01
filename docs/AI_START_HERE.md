@@ -11,6 +11,7 @@ Claude는 루트 CLAUDE.md에서 같은 필독 문서들을 가져온다.
 ## 실제 장치와 데이터 경로
 
 - 카메라 연구/학습(2026-11-01): `camera-pose/`에 기존 침상 카메라 프로젝트를 통합했습니다. `camera-pose/AGENTS.md` 및 `camera-pose/docs/guides/TOF_TRAINING.md` 필독. `bed_pose.tof_learning collect`가 Pi `:5012/api/stream?sensors=tof1,tof2`를 읽기 전용으로 구독하고 로컬 카메라 `/api/room/live`의 수신 시각·자세와 연결합니다. 저장은 노트북 `camera-pose/data/paired/`에만 하며 운영 DB/펌웨어는 변경하지 않습니다. 기본 수집은 검증된 자세만 허용하며 현재 미검증 3D는 제외합니다. 의사 라벨 수집은 별도 명시, 검증·시험은 사람 검토 필수입니다. 전용 학습 환경은 루트 `.venv-training/`, PyTorch/XGBoost CUDA·LightGBM/Random Forest CPU입니다. 실측 ToF 수신 및 실제 모델 정확도는 아직 확인하지 않았습니다. 원시 자료·모델·토큰·환경은 커밋하지 않습니다.
+- `bed_pose.tof_learning check`/`camera-pose/training/Check-Connection.ps1`은 같은 연결을 읽기 전용으로 점검합니다. Pi 시각 기준 프레임 신선도·시차·실제 NDJSON과 거리 안정 후보를 확인하고 진단용 임시 라벨 비교를 별도로 기록합니다. 주입 입력은 카메라 예측/학습 정답에 넣지 않고 이 도구는 baseline을 저장하지 않습니다. 실제 Pi에 접근해 문서·변경 사항을 확인하기 전 `raspi`를 Pi 백업이라고 보고하지 않습니다.
 
 - ToF: VL53L5CX → ESP32-S3 펌웨어 `TOF/src/main.ino` → 공유기 2.4GHz Wi-Fi →
   유선 LAN의 Raspberry Pi 5 → `POST :5001/tof` → DB/자세·재실 판정.

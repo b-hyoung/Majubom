@@ -1,7 +1,10 @@
 $ErrorActionPreference = 'Stop'
 $projectRoot = Split-Path $PSScriptRoot -Parent
 $repositoryRoot = Split-Path $projectRoot -Parent
-$environmentRoot = Join-Path $repositoryRoot '.venv-training'
+$environmentRoot = Join-Path $projectRoot '.venv-training'
+if (Test-Path -LiteralPath (Join-Path $repositoryRoot 'server/tof_server.py')) {
+    $environmentRoot = Join-Path $repositoryRoot '.venv-training'
+}
 if (-not (Test-Path -LiteralPath (Join-Path $environmentRoot 'Scripts/python.exe'))) {
     python -m venv $environmentRoot
     if ($LASTEXITCODE -ne 0) { throw 'venv creation failed' }

@@ -8,7 +8,11 @@ param(
 )
 $ErrorActionPreference = 'Stop'
 $projectRoot = Split-Path $PSScriptRoot -Parent
-$trainingPython = Join-Path (Split-Path $projectRoot -Parent) '.venv-training/Scripts/python.exe'
+$environmentRoot = Join-Path $projectRoot '.venv-training'
+$repositoryRoot = Split-Path $projectRoot -Parent
+if (Test-Path -LiteralPath (Join-Path $repositoryRoot 'server/tof_server.py')) { $environmentRoot = Join-Path $repositoryRoot '.venv-training' }
+$trainingPython = Join-Path $environmentRoot 'Scripts/python.exe'
+if (-not (Test-Path -LiteralPath $trainingPython)) { throw 'Run training/Setup-Training.ps1 first' }
 if (-not $CameraUrl) {
     $connectionPath = Join-Path $projectRoot 'outputs/live-connection.json'
     if (-not (Test-Path -LiteralPath $connectionPath)) { throw 'Open camera dashboard then provide -CameraUrl with the full localhost URL' }

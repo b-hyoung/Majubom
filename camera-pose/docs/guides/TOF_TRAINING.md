@@ -6,6 +6,7 @@
 
 - 프로젝트: `Majubom/camera-pose/`
 - 전용 학습 환경: `Majubom/.venv-training/` (Git 제외)
+- 기존 카메라 저장소를 단독으로 받으면 학습 환경은 프로젝트 내부 `.venv-training/`에 만듭니다. 스크립트가 두 배치를 지원합니다. 아래 `..\.venv-training` 명령 예시는 Majubom 통합 배치 기준이며 단독 배치는 `.\.venv-training`을 사용합니다.
 - 이전 독립 프로젝트 원본은 `camera-pose/outputs/original-project/`에 로컬 보존했으며, 기존 위치의 README에서 새 위치를 안내합니다.
 - 확인 장비: RTX 5070 Laptop GPU 8GB, compute capability 12.0
 - CUDA PyTorch `2.11.0+cu128`에서 CNN·CNN+GRU 역전파 실행 확인
@@ -31,6 +32,17 @@
 5. 적어도 학습/검증/시험 그룹 각각에 6개 자세와 충분히 긴 연속 프레임을 확보합니다. 가능하면 최소 3명 이상을 분리하고 예시는 5명을 씁니다. 한 사람만 있으면 세션 단위 분리는 가능하지만 사람 간 일반화 성능이라고 보고하면 안 됩니다.
 
 ## 5단계 수집
+
+먼저 읽기 전용 연결 검사를 실행할 수 있습니다.
+
+```powershell
+.\training\Check-Connection.ps1 -Pi 192.168.0.4 -Seconds 10
+.\training\Check-Connection.ps1 -Pi 192.168.0.4 -Seconds 10 -TemporaryCameraLabel supine
+```
+
+실제 두 ToF NDJSON의 중복/유효칸/heartbeat 시계·지연, 서버 기준 센서 시각과 두 센서 간 시차, 카메라 관절 품질을 확인합니다. 결과는 `outputs/connection-check-*.json`에만 저장합니다. `TemporaryCameraLabel`은 진단 비교 입력에만 적용하며 실시간 카메라 상태나 학습 파일을 바꾸지 않습니다. 임시 입력 검사와 독립 카메라 예측 일치는 별도 필드이고 둘 다 정답 정확도를 뜻하지 않습니다. 오래된 프레임·모델/라벨 없음·낮은 신뢰도·카메라 보류는 일치율에서 제외합니다.
+
+거리 변동이 작아도 가만히 누운 사람일 수 있습니다. 이 검사는 안정 구간의 중앙값 후보만 계산하고 **빈 침대를 인증하거나 운영 baseline을 저장하지 않습니다.** 실제 적용 전 Pi 문서·현재 설치·침상 비어 있음과 레이더/카메라 근거를 확인하고 기존 baseline을 별도 보존해야 합니다. 연결 실패는 실패로 남기며 실제 장비 검증이나 학습 성공으로 기록하지 않습니다.
 
 프로젝트 루트 `camera-pose`에서:
 

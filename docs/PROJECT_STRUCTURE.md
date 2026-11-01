@@ -37,6 +37,7 @@ PlatformIO/Python 빌드, node_modules, 로그, LanceDB 저장 엔진 내부 파
 - 로우데이터 분기: tof_server.py와 send_mmw.py → server/live_diagnostics.py → :5012 mmWave/diagnostic_server.py → site/sensor-diagnostics.html/js. 기존 운영 경로와 병렬로 최신값만 메모리에 유지한다.
 - 노트북 스트림: tof_server.py·send_mmw.py → live_diagnostics.FrameStreamPublisher → :5012/api/stream-ingest → GET /api/stream(NDJSON) → tools/laptop_stream_client.py(노트북 저장). Pi에는 저장하지 않는다.
 - 카메라 학습: :5012/api/stream의 tof1/tof2 + 노트북 /api/room/live → camera-pose의 수집 품질/시차 gate → data/paired/ → 독립 검토 라벨·그룹 분할 → CNN/CNN+GRU 및 고정 특징의 트리 비교. 엄격 모드는 미검증 3D를 차단하며 검증·시험은 검토 정답만 허용한다. .venv-training/과 원시/모델 산출물은 로컬 전용이다.
+- 연결 점검: camera-pose/training/Check-Connection.ps1 → tof_learning check가 ToF API/NDJSON·카메라 API를 읽고 로컬 outputs에 진단만 저장한다. 임시 입력 검사·독립 예측 일치·정답 정확도는 서로 구분하며, 거리 안정만으로 빈 침대 기준을 적용하지 않는다.
 - 계산 관측: server/diagnostic_observer.py → 기존 ToF/mmWave 관측 API → :5012/api/operations → 센서별 수식·기준선·저장 결과 탭. 추가 DB 저장/재평가 없음.
 - 환자 EMR: demo_emr.json → demo_emr.py → SQLite emr_records → emr_kb.py → 환자별 LanceDB emr_chunks → /emr 화면. API 의미 임베딩은 별도 emr_semantic_chunks이며 로컬 어휘 벡터와 구분한다. docs/EMR_DATA_MODEL.md 필독.
 - AI 관측: server/report_trace.py → 실제 ai_agent/ai_report/paper_kb/integrated_analysis 호출 → 환자별 메모리 타임라인 → AI 리포트 탭.
@@ -198,6 +199,7 @@ Majubom/
 │   │       ├── tof_learning/
 │   │       │   ├── __init__.py
 │   │       │   ├── __main__.py
+│   │       │   ├── check.py
 │   │       │   ├── collect.py
 │   │       │   ├── data.py
 │   │       │   ├── models.py
@@ -358,6 +360,7 @@ Majubom/
 │   │   ├── test_target_tracking.py
 │   │   ├── test_time_alignment.py
 │   │   ├── test_tof_collection.py
+│   │   ├── test_tof_connection_check.py
 │   │   ├── test_tof_learning.py
 │   │   ├── test_video_pipeline.py
 │   │   ├── test_viewer.py
@@ -397,6 +400,7 @@ Majubom/
 │   │   ├── bed-pose-camera.service
 │   │   └── pi_camera_stream.py
 │   ├── training/
+│   │   ├── Check-Connection.ps1
 │   │   ├── requirements.lock.txt
 │   │   ├── requirements.txt
 │   │   ├── Setup-Training.ps1

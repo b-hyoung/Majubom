@@ -7,7 +7,10 @@ param(
 )
 $ErrorActionPreference = 'Stop'
 $projectRoot = Split-Path $PSScriptRoot -Parent
-$trainingPython = Join-Path (Split-Path $projectRoot -Parent) '.venv-training/Scripts/python.exe'
+$environmentRoot = Join-Path $projectRoot '.venv-training'
+$repositoryRoot = Split-Path $projectRoot -Parent
+if (Test-Path -LiteralPath (Join-Path $repositoryRoot 'server/tof_server.py')) { $environmentRoot = Join-Path $repositoryRoot '.venv-training' }
+$trainingPython = Join-Path $environmentRoot 'Scripts/python.exe'
 if (-not (Test-Path -LiteralPath $trainingPython)) { throw 'Run training/Setup-Training.ps1 first' }
 & $trainingPython -m bed_pose.tof_learning train @Inputs --reviews $Reviews --split $Split --out $Out --epochs $Epochs
 if ($LASTEXITCODE -ne 0) { throw 'Training failed; inspect error above' }

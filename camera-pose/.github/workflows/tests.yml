@@ -21,7 +21,7 @@ jobs:
           cache: pip
           cache-dependency-path: pyproject.toml
       - name: Install development check dependencies
-        run: python -m pip install -e . opencv-python==5.0.0.93 "Pillow>=10,<13"
+        run: python -m pip install -e . "opencv-contrib-python>=4.10,<5" "Pillow>=10,<13"
       - name: Run generated-input and SDK-boundary tests
         run: python -m unittest discover -s tests -v
       - name: Build distributable
@@ -58,3 +58,30 @@ jobs:
           python tests/browser_multicamera_setup.py
           python tests/browser_person_crop.py
           python tests/browser_posture_stability.py
+  room-monitor:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: tools/room-monitor
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci
+      - run: npm run build
+      - run: node --test smoothing.test.mjs
+  tof-training:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install torch==2.11.0 --index-url https://download.pytorch.org/whl/cpu
+      - run: python -m pip install -e . -r training/requirements.txt
+      - run: python -m unittest discover -s tests -p 'test_tof*.py'
+      - run: python training/smoke_training.py --out outputs/ci-smoke
+      - run: python -m bed_pose.tof_learning train outputs/ci-smoke/samples.jsonl --reviews outputs/ci-smoke/reviews.jsonl --split outputs/ci-smoke/split.json --out outputs/ci-smoke/run --device cpu --epochs 1 --trees 3 --window 8 --stride 8 --batch 24

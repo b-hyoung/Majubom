@@ -64,6 +64,11 @@ def main():
     p.add_argument('--label-policy',choices=['verified','pseudo'],default='verified');p.add_argument('--seconds',type=float,default=0)
     from .collect import collect
     p.set_defaults(func=collect)
+    p=sub.add_parser('check');p.add_argument('--pi',default='192.168.0.4');p.add_argument('--camera-url',required=True)
+    p.add_argument('--seconds',type=float,default=10);p.add_argument('--temporary-camera-label',choices=[*LABELS,'empty'])
+    p.add_argument('--out',required=True)
+    from .check import run as check
+    p.set_defaults(func=check)
     p=sub.add_parser('review-template');p.add_argument('inputs',nargs='+');p.add_argument('--out',required=True);p.set_defaults(func=review_template)
     p=sub.add_parser('review-confirm');p.add_argument('inputs',nargs='+');p.add_argument('--session',required=True)
     p.add_argument('--start',type=float,required=True);p.add_argument('--end',type=float,required=True)
@@ -85,6 +90,7 @@ def main():
         if any(not math.isfinite(v) or v<=0 for v in (args.epochs,args.patience,args.batch,args.trees,args.lr,args.max_gap,args.window,args.stride)):ap.error('finite positive hyperparameters required')
         if len(set(args.models.split(',')))!=len(args.models.split(',')):ap.error('duplicate model names')
     if args.command=='collect' and (not math.isfinite(args.seconds) or args.seconds<0):ap.error('seconds must be finite and nonnegative')
+    if args.command=='check' and (not math.isfinite(args.seconds) or not 1<=args.seconds<=120):ap.error('check seconds must be between 1 and 120')
     if args.command=='review-confirm' and (not math.isfinite(args.start) or not math.isfinite(args.end) or args.start>args.end):ap.error('finite ordered review times required')
     args.func(args)
 
