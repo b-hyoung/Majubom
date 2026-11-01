@@ -69,6 +69,27 @@ def check(args):
                 external_timestamp_ms=out.model_timestamp_ms,source_frame_id=adapter.diagnostics['source_frame_id'],
                 transport_errors_added=adapter.transport_errors-errors,fallbacks_added=adapter.transport_fallbacks-fallbacks,
                 same_gpu_private_pipe_used=adapter.rpc_until>20,diagnostics=adapter.diagnostics)
+            if args.transition_negative_image:
+                empty,empty_sha=image(args.transition_negative_image)
+                if empty.shape!=rgb.shape:raise ValueError('Transition images must have the same camera geometry')
+                adapter.reset_for_video();observations=[];index=0
+                for phase,view,count in [('person',rgb,40),('empty',empty,60),('return',rgb,60)]:
+                    for offset in range(count):
+                        stamp=index*40
+                        out=adapter.estimate(ModelInput(FramePacket('same-camera-transition',index,view,{}),stamp))
+                        observations.append(dict(phase=phase,offset_ms=offset*40,people=len(out.candidates),
+                            source_frame_id=adapter.diagnostics['source_frame_id'],frame_id=index,
+                            model_timestamp_ms=out.model_timestamp_ms,requested_timestamp_ms=stamp))
+                        index+=1
+                established=any(r['people'] for r in observations if r['phase']=='person')
+                stale=[r for r in observations if r['phase']=='empty' and r['offset_ms']>=1500 and r['people']]
+                returns=[r['offset_ms'] for r in observations if r['phase']=='return' and r['people']]
+                identities=all(r['source_frame_id']==r['frame_id'] and r['model_timestamp_ms']==r['requested_timestamp_ms'] for r in observations)
+                report['transition']=dict(negative_image_sha256=empty_sha,simulated_static_image_sequence=True,
+                    time_basis='40ms_model_timestamps_not_live_exposure_or_wall_time',person_established=established,
+                    stale_after_1500ms=len(stale),first_return_ms=min(returns) if returns else None,
+                    frame_identity_preserved=identities,observations=observations,
+                    passed=established and not stale and bool(returns) and min(returns)<=1500 and identities)
         finally:adapter.close()
     passed=(all(r['observations_with_a_person']==0 for r in report['negative_controls'])
             and report['transport']['pose_returned'] and report['transport']['transport_errors_added']==1
@@ -77,9 +98,12 @@ def check(args):
             and report['fallback_transport']['pose_returned'] and report['fallback_transport']['transport_errors_added']==2
             and report['fallback_transport']['fallbacks_added']==1 and report['fallback_transport']['same_gpu_private_pipe_used']
             and report['fallback_transport']['external_timestamp_ms']==20 and report['fallback_transport']['source_frame_id']==89)
+    passed=passed and report.get('transition',{}).get('passed',True)
     report['passed']=passed
     (output/'report.json').write_text(json.dumps(report,ensure_ascii=False,indent=2,allow_nan=False),encoding='utf-8')
-    print(json.dumps({k:v for k,v in report.items() if k!='profile'},ensure_ascii=False))
+    summary={k:v for k,v in report.items() if k not in ('profile','transition')}
+    if 'transition' in report:summary['transition']={k:v for k,v in report['transition'].items() if k!='observations'}
+    print(json.dumps(summary,ensure_ascii=False))
     if not passed:raise RuntimeError('GPU recovery smoke check failed; see saved report')
 
 
@@ -87,6 +111,7 @@ if __name__=='__main__':
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--negative-image',nargs='+',required=True,help='Visually verified empty scenes; no baseline is written')
     parser.add_argument('--positive-image',required=True,help='An image with a visible person, not joint ground truth')
+    parser.add_argument('--transition-negative-image',help='Optional empty image from the same camera for appearance/disappearance checks')
     parser.add_argument('--model',default=str(Path(__file__).resolve().parents[1]/'checkpoints/pose_landmarker_full.task'))
     parser.add_argument('--repeats',type=int,default=160);parser.add_argument('--out',required=True)
     args=parser.parse_args()

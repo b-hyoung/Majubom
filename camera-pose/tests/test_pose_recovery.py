@@ -126,6 +126,13 @@ class RecoveryTests(unittest.TestCase):
         self.assertFalse(supports_pose([[250,180,260,200]],q,640,480))
         self.assertFalse(supports_pose([[400,300,600,450]],q,640,480))
 
+    def test_new_video_does_not_inherit_previous_stream_transport_backoff(self):
+        a=BrowserGPUAdapter();a.rpc_until=12000;a.last_timestamp=10000;a.support_stamp=9500
+        a.active_crop=(0,96,640,480)
+        with patch.object(a,'_rpc',return_value=None):a.reset_for_video()
+        self.assertEqual(a.rpc_until,-1);self.assertIsNone(a.last_timestamp)
+        self.assertIsNone(a.active_crop);self.assertIsNone(a.support_stamp)
+
 
 class Reply:
     status=200

@@ -45,6 +45,7 @@ class BrowserGPUAdapter:
         self.frame_context=None;self.diagnostics={}
         self.support_stamp=None;self.support_center=None
         self.needs_video_reacquire=False
+        self.rpc_until=-1
         if self.person_guard is not None:self.person_guard.reset()
 
     def _read(self, process, replies):

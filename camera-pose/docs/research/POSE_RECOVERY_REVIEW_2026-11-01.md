@@ -83,6 +83,8 @@
 .\training\Setup-PoseBenchmarks.ps1 -PrepareModels -EnablePersonGuard -MinimumPersonArea 0.08
 # 실제 MediaPipe GPU에서 빈 장면과 응답 소실을 검사:
 python tools/check_pose_recovery.py --negative-image '빈장면A.jpg' '빈장면B.jpg' --positive-image '사람있는사진.jpg' --out outputs/my-gpu-check
+# 같은 카메라의 등장/소실/재등장 정지영상 연결 검사도 할 때:
+python tools/check_pose_recovery.py --negative-image '빈장면B.jpg' --positive-image '사람있는사진B.jpg' --transition-negative-image '빈장면B.jpg' --out outputs/my-transition-check
 ```
 
 이 노트북에는 환경과 모델을 준비했습니다. 단독 저장소 배치에서는 `.\.venv-pose`를 씁니다. Windows CUDA DLL의 기본 위치는 통합 학습 환경의 PyTorch `torch/lib`이며 다른 위치는 `--cuda-dll-dir`로 지정합니다. 실제 CUDA를 쓸 수 없으면 실패로 알리고, CPU 비교는 `--device cpu`로 명시합니다. 다운로드는 `prepare`/`-PrepareModels`에서만 하고 비교는 준비된 모델의 SHA-256을 검사합니다. 비교 결과에 정답 없음·깊이 없음·모델 자동 전환 안 함을 기록합니다.
@@ -97,3 +99,11 @@ python tools/check_pose_recovery.py --negative-image '빈장면A.jpg' '빈장면
 - 조명/화각·설치 이동·보정 척도·동일인 연결 문제는 자동 탐색만으로 해결되지 않습니다. 현재 3D 정확도와 기록 적격의 미검증 표시는 유지합니다.
 
 검증 기록: 관절/회전/브라우저 GPU 계약 검사 26개, 실제 GPU 빈 침대 대조 장면 600회·응답 소실 두 조건, TypeScript/Vite 빌드·Node 문법·PowerShell 파싱·두 가상환경 의존성 검사를 수행했습니다. 전체 회귀 검사는 557개 중 5개 건너뜀, 기존 `test_interrupted_group_cleanup_restores_moved_files` 1건이 완료 대기 시간 초과였고 해당 검사는 단독 재실행에서 통과했습니다. 첫 전체 실행이 오류 없이 통과했다고 보고하지 않습니다. 소스 구조 문서와 Git 공백 검사도 확인했습니다.
+
+## 2026-11-02 후속: 등장·소실·재등장
+
+사용자의 계속 진행 요청에 따라 같은 B 카메라의 사람 사진 40회 → 빈 침대 60회 → 사람 60회의 모의 연속 입력을 실제 GPU에 실행했습니다. 각 입력 시각은 40ms 간격이며 실제 연속 촬영/벽시계 경과 시간이 아닙니다. 빈 장면 전환 뒤 1,500ms 이후 남은 사람 후보는 0회였고, 재등장 첫 관측은 모델 입력 시각 기준 200ms였습니다. 모든 출력의 원본 frame_id/관측 시각이 유지됐습니다. 기존 빈 장면 600회와 실제 응답 소실 두 조건도 함께 재검사했습니다.
+
+새 영상 재설정이 이전 영상의 GPU HTTP 재시도 대기 시각을 물려받던 문제를 수정했습니다. 다른 시간 기준을 쓰는 새 영상에는 이전 2초 통신 대기가 누적되지 않습니다. 관절 관련 검사는 신규 회귀 검사 포함 27개가 통과했습니다. 위 전체 557개 실행은 이 후속 한 줄 변경 전 결과이며 전체를 다시 실행한 것으로 보고하지 않습니다.
+
+근거: 로컬 `outputs/pose-recovery-transition-20261102/report.json`, `outputs/pose-transition-tests-20261102.txt`. 이 검사 역시 관절 정답 기반 정확도 평가나 새 학습 데이터가 아닙니다.
