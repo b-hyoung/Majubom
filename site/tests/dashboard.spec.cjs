@@ -88,6 +88,29 @@ async function installMockApi(page) {
       if (request.method() === 'POST' && pathname === '/api/dashboard/sim-events') {
         return json({ success: true, id: 1 }, 201);
       }
+      const medMatch = pathname.match(/^\/api\/dashboard\/patients\/([^/]+)\/medications(?:\/(\d+))?$/);
+      if (medMatch) {
+        const bedId = decodeURIComponent(medMatch[1]);
+        const medId = medMatch[2] ? Number(medMatch[2]) : null;
+        if (!control.medications[bedId]) control.medications[bedId] = [];
+        if (request.method() === 'POST') {
+          const body = request.postDataJSON() || {};
+          const id = control.nextMedId++;
+          const med = { id, bed_id: bedId, name: body.name, dose: body.dose || null, frequency: body.frequency || null, notes: body.notes || null, active: 1 };
+          control.medications[bedId].push(med);
+          return json({ success: true, medication: med }, 201);
+        }
+        if (request.method() === 'PUT' && medId != null) {
+          const med = control.medications[bedId].find(m => m.id === medId);
+          if (!med) return json({ success: false, message: '투약 기록을 찾을 수 없습니다.' }, 404);
+          Object.assign(med, request.postDataJSON() || {});
+          return json({ success: true, medication: med });
+        }
+        if (request.method() === 'DELETE' && medId != null) {
+          control.medications[bedId] = control.medications[bedId].filter(m => m.id !== medId);
+          return json({ success: true });
+        }
+      }
       control.unexpectedWrites.push(`${request.method()} ${pathname}`);
       return json({ success: false, message: 'Unexpected mutation blocked by browser test' }, 405);
     }
@@ -101,7 +124,7 @@ async function installMockApi(page) {
       ai: { configured: true, available: true, index_available: true, missing_dependencies: [], error_type: null, message: '분석 준비 완료', prediction_type: 'current_signals_and_recent_changes' },
     });
     if (pathname === '/api/dashboard/patients') return json({ success: true, patients: PATIENTS, live_bed_id: LIVE_ID });
-    if (pathname.startsWith('/api/dashboard/patients/')) return json(detail(decodeURIComponent(pathname.split('/').pop())));
+    if (pathname.startsWith('/api/dashboard/patients/')) return json(detail(decodeURIComponent(pathname.split('/').pop()), control));
     if (pathname === '/api/dashboard/analyses/mock-job-01') {
       control.jobPolls += 1;
       if (control.jobPolls === 1) return json({ success: true, job_id: 'mock-job-01', bed_id: LIVE_ID, status: 'running', result: null, error: null });
@@ -240,6 +263,34 @@ test('weekly report list opens the full report in a modal', async ({ page, dashb
 test('risk trend sparkline reflects a real stored risk score', async ({ page, dashboard }) => {
   await page.locator('nav button[data-page="reports"]').click();
   await expect(page.locator('#reportRiskTrend')).toContainText('70%');
+});
+
+test('nurse can add, edit, and delete a medication from the dedicated tab', async ({ page, dashboard }) => {
+  await page.locator('nav button[data-page="medications"]').click();
+  await expect(page.locator('#medicationsList')).toContainText('등록된 투약 정보가 없습니다');
+
+  await page.locator('#addMedicationBtn').click();
+  await expect(page.locator('#medicationModal')).toBeVisible();
+  await page.locator('#medicationForm [name="name"]').fill('Donepezil 5mg');
+  await page.locator('#medicationForm [name="dose"]').fill('5mg');
+  await page.locator('#medicationForm [name="frequency"]').fill('1일 1회 (저녁)');
+  await page.locator('#medicationForm button[type=submit]').click();
+  await expect(page.locator('#medicationModal')).toBeHidden();
+  await expect(page.locator('#medicationsList')).toContainText('Donepezil 5mg');
+
+  await page.locator('nav button[data-page="overview"]').click();
+  await expect(page.locator('#ovMedications')).toContainText('Donepezil 5mg');
+
+  await page.locator('nav button[data-page="medications"]').click();
+  await page.locator('#medicationsList [data-med-edit]').click();
+  await expect(page.locator('#medicationModalTitle')).toContainText('수정');
+  await page.locator('#medicationForm [name="dose"]').fill('10mg');
+  await page.locator('#medicationForm button[type=submit]').click();
+  await expect(page.locator('#medicationsList')).toContainText('10mg');
+
+  page.once('dialog', dialog => dialog.accept());
+  await page.locator('#medicationsList [data-med-delete]').click();
+  await expect(page.locator('#medicationsList')).toContainText('등록된 투약 정보가 없습니다');
 });
 
 test('all screens are accessible on a phone without horizontal overflow or removed sensor visuals', async ({ page, dashboard }) => {

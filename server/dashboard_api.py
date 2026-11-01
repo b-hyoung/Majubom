@@ -166,12 +166,9 @@ def ensure_demo_patients():
                                     VALUES (?, ?, ?, ?, ?)""", (bed_id, name, dose, frequency, notes))
             has_risks = conn.execute("SELECT 1 FROM risk_factors WHERE bed_id = ? LIMIT 1", (bed_id,)).fetchone()
             if not has_risks:
-                severity_weight = {"high": 0.3, "medium": 0.2, "low": 0.1}
                 for factor, severity, notes in p["risk_factors"]:
-                    conn.execute("""INSERT INTO risk_factors (bed_id, label, weight, factor, severity, notes)
-                                    VALUES (?, ?, ?, ?, ?, ?)""", (
-                        bed_id, factor, severity_weight.get(severity, 0.1), factor, severity, notes,
-                    ))
+                    conn.execute("""INSERT INTO risk_factors (bed_id, factor, severity, notes)
+                                    VALUES (?, ?, ?, ?)""", (bed_id, factor, severity, notes))
 
 
 def _decode_rows(rows):

@@ -63,3 +63,5 @@ TOF/ml/in_bed_model_tof1.joblib
 TOF/ml/in_bed_model_tof2.joblib
 
 assets/*
+
+.codex-ppt-build/*
