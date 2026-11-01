@@ -38,6 +38,7 @@ class LiveEngine:
         self.previous_processing_ns = 0
         self.geometry = None
         self.region, self.region_revision = None, 0
+        self.pose_region_hint = None  # Transient detection proposal, separate from analysis/occupancy region.
         self.region_selection = None
         self.recorder = None
         self.opened = False
@@ -316,7 +317,11 @@ class LiveEngine:
                 raise LiveFailure('MODEL_TIMESTAMP_COLLISION', '모델 입력 시각이 중복되었습니다.')
             row['inference_started_ns'] = str(self.clock())
             self.last_model_ms = timestamp
-            output = self.adapter.estimate(ModelInput(FramePacket(self.stream_id, frame_id, rgb, {}), timestamp))
+            from .bed_geometry import rectangle
+            hint=self.pose_region_hint
+            spec={'pose_region_hint':list(rectangle(self.region))} if self.region else (
+                {'pose_region_hint':list(hint['bounds'])} if hint and hint['resolution']==[rgb.shape[1],rgb.shape[0]] else {})
+            output = self.adapter.estimate(ModelInput(FramePacket(self.stream_id, frame_id, rgb, spec), timestamp))
             preview_packet = getattr(output, 'silhouette_preview', None)
             row['sdk_call_started'] = output.sdk_call_started
             if output.model_timestamp_ms != timestamp:

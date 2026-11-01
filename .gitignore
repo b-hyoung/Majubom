@@ -104,5 +104,7 @@ server/backups/
 
 # Local GPU training environment
 .venv-training/
+.venv-pose/
 !camera-pose/training/requirements.txt
 !camera-pose/training/requirements.lock.txt
+!camera-pose/training/requirements-pose.txt

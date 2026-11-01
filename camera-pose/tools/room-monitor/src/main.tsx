@@ -47,6 +47,8 @@ function CameraPanel({session, view, index}: {session?: InputSession; view: View
     <div className="video">{!view?.image && <div className="empty">{alive?'영상 대기 중':'카메라 미연결'}</div>}<canvas ref={canvas}/></div>
     <div className="camera-meta"><span>{session?.title ?? '입력 미지정'}</span><span>{number(session?.processing_fps)} FPS</span></div>
     <div className="muted">프레임 {view?.frame_id ?? '—'} · 수신 후 {number(view?.age_ms,0)} ms · 검출 {view?.people.length ?? '—'}명</div>
+    {alive && session?.pose_recovery?.visible_joints != null && <div className="muted">관절 관측 {session.pose_recovery.visible_joints}/17 · {session.pose_recovery.visible_joints===0?(session.pose_recovery.person_evidence?.confirmed===false?'사람 검증 보류 · 대상 크기/검출 불일치':'사람 미확인 · 자동 재탐색'):session.pose_recovery.healthy?'관측 양호':'부분 관측 · 자동 재탐색'}{session.pose_recovery.crop_bounds?' · 영역 확대':''}{session.pose_recovery.rotation_degrees?` · 방향 보완 ${session.pose_recovery.rotation_degrees}°`:''}{session.pose_recovery.transport_errors?' · 추론 연결 복구 이력 있음':''}</div>}
+    {session?.error && <div className="muted">입력 오류: {session.error}</div>}
   </section>;
 }
 

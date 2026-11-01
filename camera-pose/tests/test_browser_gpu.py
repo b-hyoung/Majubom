@@ -19,7 +19,8 @@ class BrowserGPUContractTest(unittest.TestCase):
         frame = FramePacket('camera', 7, np.zeros((20, 40, 3), dtype=np.uint8), {})
         with patch.object(adapter, '_rpc', return_value=result) as rpc:
             output = adapter.estimate(ModelInput(frame, 12))
-        self.assertEqual(rpc.call_args.kwargs['timestamp'], 12)
+        self.assertEqual([call.kwargs['timestamp'] for call in rpc.call_args_list], [12,13])
+        self.assertEqual([call.kwargs['mode'] for call in rpc.call_args_list], ['video','probe'])
         self.assertEqual(output.model_timestamp_ms, 12)
         self.assertTrue(output.sdk_call_started)
         self.assertIsNone(output.candidates[0]['sdk_landmarks']['image'][0]['presence'])

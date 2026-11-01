@@ -95,6 +95,7 @@ class RoomMonitor:
         self.posture_filter=PostureFilter()
         self.posture_3d=None
         self.preview_bed=None
+        self.preview_annotation=None
         self.axis_up=None;self.axis_long=None
         self.axis_reference_info=dict(source='none')
         self.display_alignment='bed'
@@ -184,13 +185,16 @@ class RoomMonitor:
                         self.axis_reference_info=saved_axis['reference_info']
                 except (OSError,ValueError,KeyError,TypeError):self.error='저장된 표시 축 기준을 복원하지 못했습니다.'
             self.preview_bed=None
+            self.preview_annotation=None
             bed_path=self.directory/'preview-bed.json'
             if bed_path.is_file():
                 try:saved=load_json(bed_path)
                 except (OSError,ValueError,TypeError):saved={}
                 if saved.get('candidate_hash')==object_hash(self.preview_candidate['cameras']):
                     from .bed_posture_3d import bed_frame
-                    try:self.preview_bed=bed_frame(saved['bed']['corners'],'camera_a_preview',False,'manual_two_view_corners')
+                    try:
+                        self.preview_bed=bed_frame(saved['bed']['corners'],'camera_a_preview',False,'manual_two_view_corners')
+                        self.preview_annotation=deepcopy(saved.get('annotation'))
                     except (ValueError,TypeError,KeyError):self.error='저장된 침대 위치가 손상됐습니다. 다시 등록하세요.'
         self.preview_enabled=enabled
         self.preview_skeleton=None
@@ -213,6 +217,7 @@ class RoomMonitor:
         atomic_json(self.directory/'preview-bed.json',dict(bed=bed,
             candidate_hash=object_hash(self.preview_candidate['cameras']),annotation=deepcopy(values)))
         self.preview_bed=bed
+        self.preview_annotation=deepcopy(values)
         self.display_alignment='bed'
         self.posture_3d=None;self.posture_filter.reset()
         return dict(bed=deepcopy(bed),accuracy_verified=False)
@@ -469,6 +474,15 @@ class RoomMonitor:
         slot = self.config['bindings'].index(session.id)
         row = frame['row']
         rgb = frame['rgb']
+        hint=None
+        if self.preview_enabled and self.config['bindings']==self.preview_bindings and self.preview_annotation:
+            try:
+                annotation=self.preview_annotation;points=np.asarray(annotation['points'][slot],float)
+                if (annotation['resolutions'][slot]==[rgb.shape[1],rgb.shape[0]] and points.shape==(4,2)
+                        and np.isfinite(points).all() and np.all(points>=0) and np.all(points<=[rgb.shape[1],rgb.shape[0]])):
+                    hint=dict(bounds=[float(points[:,0].min()),float(points[:,1].min()),float(points[:,0].max()),float(points[:,1].max())],resolution=[rgb.shape[1],rgb.shape[0]])
+            except (KeyError,TypeError,ValueError,IndexError):pass
+        session.worker.engine.pose_region_hint=hint
         stamp = session.worker.engine.origin + int(row['received_ns'])
         threshold = self.calibration['quality']['min_visibility'] if self.calibration else .5
         # Require exactly one person in each image. Cross-view identity remains an operator assertion.

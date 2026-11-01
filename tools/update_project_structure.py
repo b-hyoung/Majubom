@@ -6,7 +6,7 @@ ROOT = Path(__file__).resolve().parents[1]
 OUTPUT = ROOT / 'docs/PROJECT_STRUCTURE.md'
 START = '<!-- BEGIN GENERATED TREE -->'
 END = '<!-- END GENERATED TREE -->'
-SKIP_DIRS = {'.git', '.venv-training', 'recordings', 'outputs', 'checkpoints', 'build', 'dist', '.venv', 'venv', '__pycache__', '.pio', 'node_modules', '.pytest_cache', '.vscode', '.idea'}
+SKIP_DIRS = {'.git', '.venv-pose', '.venv-training', 'recordings', 'outputs', 'checkpoints', 'build', 'dist', '.venv', 'venv', '__pycache__', '.pio', 'node_modules', '.pytest_cache', '.vscode', '.idea'}
 SKIP_SUFFIXES = {'.pyc', '.pyo', '.log'}
 SKIP_NAME_ENDINGS = ('.db-wal', '.db-shm', '.db-journal')   # SQLite가 쓰는 동안만 생겼다 사라지는 파일(WAL 모드)
 

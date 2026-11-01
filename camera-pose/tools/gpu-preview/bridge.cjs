@@ -5,6 +5,13 @@ const {chromium} = require('playwright-core');
 const root = __dirname, taskDir = path.join(root, 'node_modules', '@mediapipe', 'tasks-vision');
 const token = crypto.randomBytes(24).toString('hex');
 let model, server, browser, page, currentFrame;
+// HTTP retries and private-pipe recovery must share the same GPU/task order.
+let inferenceSerial = Promise.resolve();
+function execute(operation) {
+  const result = inferenceSerial.then(operation);
+  inferenceSerial = result.catch(() => {});
+  return result;
+}
 const paths = new Map([
   ['/bridge.html', [path.join(root, 'bridge.html'), 'text/html']],
   ['/bridge.js', [path.join(root, 'bridge.js'), 'text/javascript']],
@@ -29,14 +36,18 @@ async function init(msg) {
         const chunks=[];let size=0;
         for await (const chunk of req) {size+=chunk.length;if(size>width*height*3)throw Error('Frame too large');chunks.push(chunk);}
         if(size!==width*height*3)throw Error('Incomplete RGB frame');
-        currentFrame=Buffer.concat(chunks);
-        const value=await page.evaluate(async meta => {
-          const rgb=new Uint8Array(await (await fetch('./frame.bin')).arrayBuffer());
-          return window.bridge.estimateBytes({...meta,rgb});
-        },{width,height,timestamp});
+        const bytes=Buffer.concat(chunks);
+        const value=await execute(async () => {
+          currentFrame=bytes;
+          try {
+            return await page.evaluate(async meta => {
+              const rgb=new Uint8Array(await (await fetch('./frame.bin')).arrayBuffer());
+              return window.bridge.estimateBytes({...meta,rgb});
+            },{width,height,timestamp,mode:req.headers['x-mode'] || 'video'});
+          } finally {currentFrame=null;}
+        });
         res.writeHead(200,{'Content-Type':'application/json'});res.end(JSON.stringify(value));
       } catch(error) {res.writeHead(500);res.end(JSON.stringify({error:String(error),sdkCallStarted:false}));}
-      finally {currentFrame=null;}
       return;
     }
     if(req.method!=='GET'){res.writeHead(405);return res.end();}
@@ -74,11 +85,11 @@ readline.createInterface({input:process.stdin, crlfDelay:Infinity}).on('line', l
       msg = JSON.parse(line);
       let value;
       if (msg.op === 'init') value = await init(msg);
-      else if (msg.op === 'estimate') value = await page.evaluate(x => window.bridge.estimate(x), msg);
-      else if (msg.op === 'reset') value = await page.evaluate(() => window.bridge.reset());
-      else if (msg.op === 'close') {await close(); value = null;}
+      else if (msg.op === 'estimate') value = await execute(() => page.evaluate(x => window.bridge.estimate(x), msg));
+      else if (msg.op === 'reset') value = await execute(() => page.evaluate(x => window.bridge.reset(x),msg));
+      else if (msg.op === 'close') {await execute(close); value = null;}
       else throw Error('Unknown operation');
       console.log(JSON.stringify({id:msg.id, ok:true, value}));
     } catch (error) {console.log(JSON.stringify({id:msg && msg.id, ok:false, error:String(error)}));}
   });
-}).on('close', () => {serial.finally(close).finally(() => process.exit());});
+}).on('close', () => {serial.finally(() => execute(close)).finally(() => process.exit());});

@@ -12,6 +12,7 @@
 
 | 하고 싶은 일 | 먼저 읽을 문서 |
 |---|---|
+| 관절 미검출·부분 가림·GPU 연결 오류 개선 | [논문 조사와 실제 적용](research/POSE_RECOVERY_REVIEW_2026-11-01.md) |
 | ToF 동기 저장·내일 학습 준비 | [5·6단계 수집·GPU 학습](guides/TOF_TRAINING.md) |
 | 확정된 범위·미정 사항 확인 | [결정 사항](DECISIONS.md) · [요구사항](REQUIREMENTS.md) |
 | 카메라 연결·화질·영역 설정 | [카메라 설정](guides/CAMERA_CAPTURE.md) · [표시 화질](guides/PREVIEW_QUALITY.md) · [침대 영역](guides/BED_REGION.md) |

@@ -690,6 +690,7 @@ class WebWorkspace:
         state['pose_device'] = profile.get('actual_device')
         state['pose_max_people'] = profile.get('max_returned_people')
         state['pose_gpu_renderer'] = profile.get('gpu_renderer')
+        state['pose_recovery'] = dict(getattr(session.worker.engine.adapter,'diagnostics',{}))
         self._refresh_raw(session)
         try:
             frame = session.worker.frames.get_nowait()
@@ -947,7 +948,7 @@ class WorkspaceHandler(BaseHTTPRequestHandler):
                 with self.server.workspace.lock:
                     workspace=self.server.workspace
                     result=workspace.room_monitor.status(workspace.sessions)
-                    result['sessions']=[{k:s.state.get(k) for k in ('id','title','closed','phase','processing_fps','width','height','pose_device','pose_gpu_renderer','pose_max_people')}
+                    result['sessions']=[{k:s.state.get(k) for k in ('id','title','closed','phase','error','processing_fps','width','height','pose_device','pose_gpu_renderer','pose_max_people','pose_recovery')}
                                         for s in workspace.sessions.values()];result['views']=[]
                     since=parse_qs(url.query)
                     for index,sid in enumerate(workspace.room_monitor.config['bindings']):

@@ -43,6 +43,20 @@ class LiveTests(unittest.TestCase):
         engine.set_region([10,20,200,300],640,360)
         return engine
 
+    def test_pose_region_hint_is_not_an_analysis_region_or_ground_truth(self):
+        engine=self.engine();engine.open()
+        try:
+            engine.pose_region_hint=dict(bounds=[10,20,200,300],resolution=[640,360])
+            original=engine.adapter.estimate
+            with patch.object(engine.adapter,'estimate',side_effect=original) as estimate:
+                row=engine.step()['row']
+            self.assertEqual(estimate.call_args.args[0].frame.spec['pose_region_hint'],[10,20,200,300])
+            self.assertIsNone(engine.region);self.assertIsNone(row['verified_gt']);self.assertIsNone(row['target_posture'])
+            engine.pose_region_hint['resolution']=[320,240]
+            with patch.object(engine.adapter,'estimate',side_effect=original) as estimate:engine.step()
+            self.assertNotIn('pose_region_hint',estimate.call_args.args[0].frame.spec)
+        finally:engine.close()
+
     def lines(self, directory, name):
         return [json.loads(line) for line in (directory/name).read_text(encoding='utf-8').splitlines()]
 
