@@ -69,6 +69,7 @@ LIVE_INTERVAL = 0.3      # snapshot POST 주기 (초)
 FALL_URL = "http://127.0.0.1:5002/mmw/fall"       # 프레임 단위 낙상 사건
 PATIENT_URL = "http://127.0.0.1:5002/mmw/patient" # 화면에서 누른 번호
 PATIENT_POLL_SEC = 0.5
+STREAM_CHECK_SEC = 2.0   # cfg를 보내기 전에 DATA 포트에 프레임이 나오는지 보는 시간
 LIVE_STALE_SEC = 2.0     # 레이더 프레임이 이만큼 없으면 실시간 위치를 보내지 않는다
 
 # ── 침대존 & 환자 소속도(bed affinity) ─────────────────────────────────
@@ -480,7 +481,7 @@ def select_patient(track_history, now):
     recent = [s for s in alive[main_tid] if now - s[0] <= WINDOW_SEC]
     raw = _gait_from_samples(recent)
     if raw is None:
-        return None, {"reliable": False, "n_samples": len(recent)}, presence
+        return None, {"reliable": False, "samples_count": len(recent)}, presence
 
     # 보행 판정: 평균속도 + 윈도우 내 순이동 + 경로 직진성
     #   - 제자리 미동/누움 배제(속도·순이동)
@@ -494,11 +495,31 @@ def select_patient(track_history, now):
     walking = (raw["speed"] >= WALK_SPEED_MIN) and (disp >= WALK_DISP_MIN) \
         and (straightness >= STRAIGHT_MIN)
     quality = {"reliable": True, "walking": walking,
-               "straightness": round(straightness, 2), "n_samples": len(recent)}
+               "straightness": round(straightness, 2), "samples_count": len(recent)}
     return raw, quality, presence
 
 
 # ── 메인 루프 ──────────────────────────────────────────────────────────
+def stream_active(data_port, seconds=STREAM_CHECK_SEC, baud=921600):
+    """DATA 포트에서 seconds 동안 프레임 시작 표시가 보이면 True. 다른 프로세스가 포트를 열고 있으면 예외가 난다."""
+    with serial.Serial(data_port, baud, timeout=0.1, exclusive=True) as port:
+        buf, end = b"", time.time() + seconds
+        while time.time() < end:
+            buf += port.read(4096)
+            if find_magic(buf) >= 0:
+                return True
+    return False
+
+
+def apply_config(cli_port, data_port, cfg_path):
+    """레이더 전원을 새로 켜서 데이터가 없을 때만 cfg를 보낸다. 흐르는 중에 보내면 USB를 다시 꽂을 때까지 출력이 멈춘다."""
+    if stream_active(data_port):
+        print("[cfg] 이미 데이터가 나오고 있어 cfg 전송을 건너뜁니다. 다른 cfg를 쓰려면 USB를 다시 꽂으세요.")
+        return False
+    send_config(cli_port, cfg_path)
+    return True
+
+
 def send_config(cli_port, cfg_path, baud=115200):
     """CLI 포트로 .cfg 한 줄씩 전송하고, 각 줄에 대한 센서 응답을 확인한다.
 
@@ -579,9 +600,9 @@ def run(cli_port, data_port, cfg_path, do_send=True, target_id="room_01", height
         raise RuntimeError("requests 미설치: pip install requests")
 
     if cfg_path:
-        send_config(cli_port, cfg_path)
+        apply_config(cli_port, data_port, cfg_path)
 
-    data = serial.Serial(data_port, 921600, timeout=0.1)
+    data = serial.Serial(data_port, 921600, timeout=0.1, exclusive=True)
     buf = b""
     history = defaultdict(lambda: deque(maxlen=2000))
     window_start = time.time()
@@ -698,7 +719,7 @@ def capture_zone(data_port, seconds, label="zone", margin=0.2, height=2.7, tilt=
     """
     if serial is None:
         raise RuntimeError("pyserial 미설치: pip install pyserial")
-    data = serial.Serial(data_port, 921600, timeout=0.1)
+    data = serial.Serial(data_port, 921600, timeout=0.1, exclusive=True)
     buf = b""
     xs, ys, zs = [], [], []
     frames_seen = 0
@@ -759,7 +780,7 @@ if __name__ == "__main__":
     if args.capture_zone > 0:
         # 측정 모드: (cfg 있으면 먼저 적용 후) 존만 캡처하고 종료 — 서버 불필요
         if args.cfg:
-            send_config(args.cli, args.cfg)
+            apply_config(args.cli, args.data, args.cfg)
         capture_zone(args.data, args.capture_zone, args.capture_label, height=args.height, tilt=args.tilt)
     else:
         run(args.cli, args.data, args.cfg, do_send=not args.no_send, target_id=args.target,
