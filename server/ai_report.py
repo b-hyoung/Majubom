@@ -13,6 +13,7 @@ import json
 import os
 
 import requests
+import report_trace
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ENV_PATH = os.path.join(HERE, "..", ".env")
@@ -88,6 +89,7 @@ def build_cumulative_payload(sim_result: dict, cum: dict) -> dict:
     }
 
 
+@report_trace.traced_stage('llm_call', '실제 LLM 요청·응답')
 def call_openai(payload: dict = None, model: str = DEFAULT_MODEL, timeout: float = 30.0,
                  system_prompt: str | None = None, user_content: str | None = None,
                  json_mode: bool = False) -> dict:

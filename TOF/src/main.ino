@@ -11,12 +11,31 @@
 #include <HTTPClient.h>
 #include <ArduinoJson.h>
 
-// ─── 사용자 설정 (보드마다 여기만 수정) ─────────────────
-const char* SENSOR_NAME = "tof2";   // ← 다른 보드에는 "tof1"
-const char* WIFI_SSID   = "2411 ServerRoom";
-const char* WIFI_PASS   = "D@lstn!0722";
-const char* SERVER_URL  = "http://192.168.6.10:5001/tof";  // 라즈베리파이 서버
-// ─────────────────────────────────────────────────────────
+// ─── 현장 설정: ESP32는 majubom 2.4GHz, Pi는 유선 LAN ───
+// 비밀번호/보드 ID는 무시되는 secrets.h에 작성 (secrets.example.h 참고).
+#if __has_include("secrets.h")
+#include "secrets.h"
+#endif
+#ifndef MAJUBOM_SENSOR_NAME
+#define MAJUBOM_SENSOR_NAME "tof2"
+#endif
+#ifndef MAJUBOM_WIFI_SSID
+#define MAJUBOM_WIFI_SSID "majubom"
+#endif
+#ifndef MAJUBOM_WIFI_PASS
+#define MAJUBOM_WIFI_PASS ""
+#endif
+#ifndef MAJUBOM_SERVER_URL
+#define MAJUBOM_SERVER_URL "http://192.168.0.4:5001/tof"
+#endif
+const char* SENSOR_NAME = MAJUBOM_SENSOR_NAME;
+const char* WIFI_SSID = MAJUBOM_WIFI_SSID;
+const char* WIFI_PASS = MAJUBOM_WIFI_PASS;
+const char* SERVER_URL = MAJUBOM_SERVER_URL;
+// 양쪽 설치: 바닥 기준 1.20m, 수평에서 아래로 20도.
+// 존 순서는 원본 유지. 반전은 실측 방향 확인 후 뷰어/보정 단계에서 수행.
+const float MOUNT_HEIGHT_M = 1.20f;
+const float MOUNT_DOWN_TILT_DEG = 20.0f;
 
 #define SDA_PIN      8
 #define SCL_PIN      9
@@ -124,9 +143,13 @@ void postSensor(VL53L5CX_ResultsData &r) {
   JsonDocument doc;
   doc["sensor"]     = SENSOR_NAME;   // "tof1" 또는 "tof2"
   doc["resolution"] = "8x8";
+  doc["mount_height_m"] = MOUNT_HEIGHT_M;
+  doc["mount_down_tilt_deg"] = MOUNT_DOWN_TILT_DEG;
 
   JsonArray dist = doc["distances_mm"].to<JsonArray>();
   JsonArray tgts = doc["targets"].to<JsonArray>();
+  JsonArray rawDist = doc["raw_distances_mm"].to<JsonArray>();
+  JsonArray status = doc["target_status"].to<JsonArray>();
 
   for (int z = 0; z < ZONE_COUNT; z++) {
     int d = -1;
@@ -135,6 +158,8 @@ void postSensor(VL53L5CX_ResultsData &r) {
       uint8_t st = r.target_status[VL53L5CX_NB_TARGET_PER_ZONE * z];
       if (st == 5) d = (int)r.distance_mm[VL53L5CX_NB_TARGET_PER_ZONE * z];  // 센서단 필터
     }
+    rawDist.add((int)r.distance_mm[VL53L5CX_NB_TARGET_PER_ZONE * z]);
+    status.add((int)r.target_status[VL53L5CX_NB_TARGET_PER_ZONE * z]);
     dist.add(d);
     tgts.add(t);
   }
@@ -175,12 +200,11 @@ void setup() {
   Serial.printf("[%s] ranging 시작\n", SENSOR_NAME);
 
   Serial.printf("[WiFi] 연결 중: %s\n", WIFI_SSID);
-  wifiBegin();
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(".");
+  if (strlen(WIFI_PASS) == 0) {
+    Serial.println("[WiFi] 비밀번호 미설정: 보안 WiFi라면 secrets.h 작성 후 재업로드 필요");
   }
-  Serial.printf("\n[WiFi] IP: %s\n", WiFi.localIP().toString().c_str());
+  // 최초 연결에도 10초 제한. 잘못된 설정 때문에 setup을 영구 대기하지 않음.
+  ensureWiFi();
   Serial.println("=== 측정 시작 ===\n");
 }
 

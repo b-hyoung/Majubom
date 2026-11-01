@@ -153,6 +153,16 @@ test('mmWave maps raw measurements and only the patient-locked track', () => {
   assert.deepEqual(plain(data.position), { x: 1, y: 2, z: 3 });
 });
 
+test('provisional gait judgement is flagged only for a fresh result the server marked provisional', () => {
+  const { api } = harness();
+  const fresh = api.normalizeMmw({ ...mmwFixture(), provisional: true }, null, NOW);
+  assert.equal(fresh.provisional, true);
+  assert.equal(fresh.riskLevel, 'warning');
+  assert.equal(api.normalizeMmw(mmwFixture(), null, NOW).provisional, false);
+  assert.equal(api.normalizeMmw({ ...mmwFixture(), provisional: 'yes' }, null, NOW).provisional, false);
+  assert.equal(api.normalizeMmw({ ...mmwFixture(NOW - 9000), provisional: true }, null, NOW).provisional, false);
+});
+
 test('fresh live heartbeat never revives stale gait measurements or risk', () => {
   const { api } = harness();
   const data = api.normalizeMmw(mmwFixture(NOW - 9000), {

@@ -1,0 +1,105 @@
+{
+  "trained_at": "2026-10-08T20:09:10",
+  "group": "rep",
+  "roi": true,
+  "n_pairs": 18151,
+  "class_counts": {
+    "edge_sit": 2919,
+    "side_left": 2778,
+    "side_right": 2849,
+    "sitting": 2792,
+    "supine": 3530,
+    "empty": 3283
+  },
+  "subjects": [
+    "S01",
+    "없음"
+  ],
+  "folds": [
+    {
+      "held_out": 0,
+      "n": 6118,
+      "accuracy": 1.0,
+      "macro_f1": 1.0
+    },
+    {
+      "held_out": 1,
+      "n": 5995,
+      "accuracy": 1.0,
+      "macro_f1": 1.0
+    },
+    {
+      "held_out": 2,
+      "n": 6038,
+      "accuracy": 0.9996687644915535,
+      "macro_f1": 0.9996504060569397
+    }
+  ],
+  "overall_accuracy": 0.9998898132334306,
+  "confusion_labels": [
+    "empty",
+    "supine",
+    "side_left",
+    "side_right",
+    "sitting",
+    "edge_sit"
+  ],
+  "confusion": [
+    [
+      3283,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      3530,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      2778,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      2,
+      2847,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      2792,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      2919
+    ]
+  ],
+  "mount": {
+    "height_m": 1.2,
+    "down_tilt_deg": {
+      "tof1_foot": 50,
+      "tof2_head": 30
+    }
+  },
+  "note": "회차 단위 평가는 같은 사람·같은 날이라 일반화 성능이 아니다. 사람 단위(LOSO)가 기준."
+}

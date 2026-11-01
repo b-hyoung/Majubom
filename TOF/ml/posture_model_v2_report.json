@@ -1,0 +1,100 @@
+{
+  "trained_at": "2026-10-20T13:10:49",
+  "group": "subject",
+  "roi": true,
+  "n_pairs": 35189,
+  "class_counts": {
+    "edge_sit": 5869,
+    "side_left": 5773,
+    "side_right": 6087,
+    "sitting": 5922,
+    "supine": 7979,
+    "empty": 3559
+  },
+  "subjects": [
+    "S01",
+    "S02",
+    "없음"
+  ],
+  "folds": [
+    {
+      "held_out": 0,
+      "n": 16735,
+      "accuracy": 0.5817149686286226,
+      "macro_f1": 0.5218880877967669
+    },
+    {
+      "held_out": 1,
+      "n": 18454,
+      "accuracy": 0.7303023734691666,
+      "macro_f1": 0.724063334533979
+    }
+  ],
+  "overall_accuracy": 0.659637955042769,
+  "confusion_labels": [
+    "empty",
+    "supine",
+    "side_left",
+    "side_right",
+    "sitting",
+    "edge_sit"
+  ],
+  "confusion": [
+    [
+      3559,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      193,
+      6871,
+      914,
+      1,
+      0,
+      0
+    ],
+    [
+      0,
+      1291,
+      4343,
+      139,
+      0,
+      0
+    ],
+    [
+      367,
+      1854,
+      2819,
+      1047,
+      0,
+      0
+    ],
+    [
+      17,
+      0,
+      1,
+      0,
+      5079,
+      825
+    ],
+    [
+      2427,
+      136,
+      19,
+      137,
+      837,
+      2313
+    ]
+  ],
+  "mount": {
+    "height_m": 1.2,
+    "down_tilt_deg": {
+      "tof1_foot": 50,
+      "tof2_head": 30
+    }
+  },
+  "note": "회차 단위 평가는 같은 사람·같은 날이라 일반화 성능이 아니다. 사람 단위(LOSO)가 기준."
+}

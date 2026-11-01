@@ -46,13 +46,29 @@ SIGMA_FLOOR = {
 # 지표 4개→6개로 늘어나 total_abs가 자연히 커지므로 비례 조정 (×1.5)
 TH_CAUTION, TH_WARNING, TH_CRITICAL = 3.0, 6.0, 9.0
 
-# 절대 임계 (baseline 무관 즉시 위험)
-#  height_drop: track 높이(머리/몸통)가 한 윈도우에서 이만큼(m) 이상 급강하 →
-#               주저앉음/낙상으로 간주하고 즉시 critical.
-HEIGHT_DROP_FALL = 1.2
+# 절대 임계 (baseline 무관 즉시 위험) — 2026-10-12 변경
+#  low_z: 추적 중인 사람의 최근 1초 몸 높이(z, 바닥 기준 m) 중앙값(send_mmw가 계산).
+#         FLOOR_FALL_Z보다 낮으면 바닥 근처에 있다고 보고 즉시 critical. 침대 매트리스 윗면은 37cm(현장 실측).
+#  이전 규칙(6초 창의 max(z)-min(z) > 1.2m)은 시간 순서를 보지 않고, 몸통 높이 기준으로는 실제 낙상에서도
+#  넘기 어려워 폐기했다. height_drop 값은 기록용으로 계속 받는다.
+#  주의: 침대 위에 누운 사람의 몸 중심이 0.4m 아래로 잡히면 오탐이 된다(실측 확인 필요, docs/나중에_할일.md 3장).
+FLOOR_FALL_Z = 0.4
+# 2026-10-12 실측: 레이더는 바닥을 못 보고 거리·설치각 오차로 절대 높이가 0.3~0.5m씩 틀어져 고정 0.4m 규칙을 끈다.
+# 낙상은 mmWave/fall_detect.py(본인 평소 높이 대비 1초 안에 25% 이하 = 급격한 하강, 25% 이하 3초 넘게 = 못 일어남)가 프레임 단위로 판정해 /mmw/fall로 보낸다.
+FLOOR_FALL_ENABLED = False
 
 LEVELS = ("normal", "caution", "warning", "critical")
 LEVEL_KO = {"normal": "정상", "caution": "주의", "warning": "경고", "critical": "위험"}
+
+# ── 문헌 기반 사전분포(gait_prior.py)가 있을 때만 쓰는 상수 ─────────────────
+#  개인 기록이 MIN_SAMPLES건 미만인 동안은 문헌 기대 범위와 비교한 '잠정' 판정만 한다.
+#  KIM2025가 10·90 백분위를 정상 범위 경계로 제시하므로 하위 10%를 주의, 하위 2.5%를 경고로 둔다.
+#  잠정 판정은 '위험' 단계와 정식 알람을 만들지 않는다(높이 급강하 절대 규칙은 그대로 적용).
+Z_P10 = 1.2816               # 정규분포 10·90 백분위 z (기대 범위 표시용)
+PROV_CAUTION_Z = -Z_P10
+PROV_WARNING_Z = -1.9600
+IDENTITY_Z = 2.3263          # 기대 범위 상위 1%보다 빠르면 '환자가 아닐 가능성' 안내(판정에는 반영하지 않음)
+MIN_METRICS_FOR_S = 4        # 합계 S는 원래 지표 4개 기준으로 설계됐다(아래 임계 ×1.5 주석). 그보다 적으면 잠정 유지
 
 
 # ── 영속 저장 (tof_logic.py와 동일 방식) ─────────────────────────────────
@@ -80,14 +96,53 @@ def _new_target() -> dict:
     return bed
 
 
+# ── 사전분포 경로용 '유효값 전용' 누적 ─────────────────────────────────────
+# 기존 합계(sum·sumsq, 건수 n)는 이전 버전과 똑같이 쌓는다(보폭 추정 실패 0.0 포함).
+# → 이전 버전 코드로 되돌려도 파일을 그대로 읽어 같은 결과를 낸다.
+# 사전분포 경로는 결측(보폭 0.0·NaN·무한대·비정상 크기)을 뺀 v_sum·v_sumsq·v_n을 옆 칸에 따로 쌓는다.
+# valid_at_n == n일 때만 이 칸을 믿고, 어긋나면(이전 버전 코드가 파일을 갱신) 기존 합계에서 다시 시작한다.
+VALID_KEY = "valid_at_n"
+MAX_ABS_METRIC = 1e3   # 물리적으로 불가능한 크기 — 제곱이 넘치지 않도록 누적 전에 결측 처리
+
+
+def _valid_ready(bed: dict) -> bool:
+    return bed.get(VALID_KEY) == bed.get("n") and all("v_n" in bed.get(m, {}) for m in METRICS)
+
+
+def _reset_valid_from_legacy(bed: dict) -> None:
+    n = bed.get("n", 0)
+    for m in METRICS:
+        st = bed[m]
+        st["v_sum"], st["v_sumsq"], st["v_n"] = st["sum"], st["sumsq"], n
+    bed[VALID_KEY] = n
+
+
+def _legacy_value(raw: dict, m: str) -> float:
+    """기존 합계에 넣을 값: 이전 버전과 같게 raw 값(없으면 0.0). 단 NaN·무한대·비정상 크기는 0.0."""
+    try:
+        f = float(raw.get(m, 0.0))
+    except (TypeError, ValueError):
+        return 0.0
+    return f if math.isfinite(f) and abs(f) <= MAX_ABS_METRIC else 0.0
+
+
 def update_baseline(store: dict, target_id: str, raw: dict) -> dict:
     """신뢰 가능한 측정 1건을 대상 누적 통계에 반영. (store를 제자리 수정)"""
     bed = store.setdefault(target_id, _new_target())
+    track_valid = _valid_ready(bed)     # 사전분포 경로가 만든 유효값 누적이 있으면 함께 갱신
     for m in METRICS:
         v = float(raw.get(m, 0.0))
         bed[m]["sum"] += v
         bed[m]["sumsq"] += v * v
+        if track_valid:
+            x = _metric_value(raw, m)
+            if x is not None:
+                bed[m]["v_sum"] += x
+                bed[m]["v_sumsq"] += x * x
+                bed[m]["v_n"] += 1
     bed["n"] += 1
+    if track_valid:
+        bed[VALID_KEY] = bed["n"]
     return bed
 
 
@@ -140,14 +195,20 @@ def classify_alert(total_abs: float) -> str:
 
 
 # ── 메인: 측정 1건 평가 (tof_logic.evaluate 와 동일 시그니처) ───────────
-def evaluate(payload: dict, store: dict, persist: bool = True) -> dict:
+def evaluate(payload: dict, store: dict, persist: bool = True, prior: dict | None = None) -> dict:
     """mmWave payload 1건을 받아 baseline 갱신 + z-score/alert 계산 후 보강 dict 반환.
+
+    prior: gait_prior.py가 만든 문헌 기반 사전분포(없으면 기존 동작 그대로).
+      - 개인 기록 5건 미만: 문헌 기대 범위와 비교한 '잠정' 판정(주의·경고까지, 정식 알람 없음)
+      - 5건 이상: 개인 평균에 사전분포를 섞은 값(베이즈 갱신)으로 기존 S 판정
+      - 현재 구간은 비교가 끝난 뒤 기준선에 넣는다(자기 자신과 비교하지 않음)
+      - 보폭 추정 실패(stride_length 0.0)는 0으로 쌓지 않고 결측으로 처리
 
     예외규칙(tof_logic.py와 동일 사상):
       - reliable=false          → 측정 무시 (baseline 갱신 X, 알람 X)
       - patient_locked=false    → 환자 특정 실패(2명+인데 소속도로 못 가림/0명) → 보류
       - walking=false           → 환자 정지·휴식(누움 등) → gait baseline 미반영 (낙상만 감시)
-      - height_drop > 임계       → baseline 무관 즉시 critical (낙상 순간)
+      - low_z < FLOOR_FALL_Z     → baseline 무관 즉시 critical (바닥 근처 = 낙상 의심)
       - age_days<14 / n<MIN     → 학습 중, z는 보여주되 정식 알람 보류
 
     환자 특정은 송신부(send_mmw.select_patient)가 '침대 소속도'로 수행하고,
@@ -166,7 +227,7 @@ def evaluate(payload: dict, store: dict, persist: bool = True) -> dict:
     straightness = quality.get("straightness")
     bed_affinity = presence.get("bed_affinity")
     bed_candidates = presence.get("bed_candidates")
-    height_drop = raw.get("height_drop", 0.0)
+    low_z = raw.get("low_z")
 
     reasons: list[str] = []
     alarm = False
@@ -182,7 +243,13 @@ def evaluate(payload: dict, store: dict, persist: bool = True) -> dict:
                        reasons=reasons, measuring_held=True)
 
     # 2) 절대 임계: 높이 급강하 = 낙상 순간 (baseline 무관)
-    abs_critical = isinstance(height_drop, (int, float)) and height_drop > HEIGHT_DROP_FALL
+    abs_critical = (FLOOR_FALL_ENABLED and isinstance(low_z, (int, float)) and not isinstance(low_z, bool)
+                    and math.isfinite(low_z) and low_z < FLOOR_FALL_Z)
+    # ToF가 지금 침상 위에 사람이 있다고 보면 바닥 판정을 하지 않는다(2026-10-12 실측: 침대 걸터앉음 z≈0.32m가
+    # 0.4m 미만으로 잡혀 낙상 오탐). 레이더 track 높이는 반사점 평균이라 앉으면 허벅지·무릎 높이로 낮아진다.
+    if abs_critical and presence.get("tof_in_bed") is True:
+        abs_critical = False
+        reasons.append(f"몸 높이 z={low_z}m < {FLOOR_FALL_Z}m지만 ToF 침상 재실 중 → 바닥 낙상 판정 제외")
 
     # 3) 환자 특정 실패 → 측정 보류 (누구의 보행인지 귀속 불가). 낙상 절대임계만 감시.
     #    (0명, 또는 2명+인데 소속도로 환자를 못 가린 경우)
@@ -198,7 +265,7 @@ def evaluate(payload: dict, store: dict, persist: bool = True) -> dict:
         stats = baseline_stats(store.get(target_id))
         level = "critical" if abs_critical else "normal"
         if abs_critical:
-            reasons.append(f"단, 높이 급강하(drop={height_drop}m) → 즉시 위험")
+            reasons.append(f"단, 바닥 근처 몸 높이(z={low_z}m < {FLOOR_FALL_Z}m) → 즉시 위험")
             alarm, alarm_urgent = True, True
         return _result(payload, raw, quality, presence, stats, None,
                        alert_level=level, alarm=alarm, alarm_urgent=alarm_urgent,
@@ -208,7 +275,10 @@ def evaluate(payload: dict, store: dict, persist: bool = True) -> dict:
     #    (보행 baseline 은 걷는 값으로만 쌓아야 오염되지 않음. 정지값을 넣으면 baseline 붕괴)
     if not walking:
         moving = isinstance(raw.get("speed"), (int, float)) and raw["speed"] >= 0.2
-        if moving:
+        invalid_fields = quality.get("invalid_fields")
+        if invalid_fields:
+            why = f"지표 값 오류({', '.join(map(str, invalid_fields))}) — 0.0으로 바꾸고 보행 기준선에서 제외"
+        elif moving:
             st_txt = f" (직진성 {straightness})" if straightness is not None else ""
             why = f"보행이나 경로 굽음/왕복 — gait 왜곡 배제{st_txt}"
         else:
@@ -220,7 +290,7 @@ def evaluate(payload: dict, store: dict, persist: bool = True) -> dict:
         if abs_critical:
             level = "critical"
             alarm, alarm_urgent = True, True
-            reasons.append(f"높이 급강하(drop={height_drop}m) → 즉시 위험")
+            reasons.append(f"바닥 근처 몸 높이(z={low_z}m < {FLOOR_FALL_Z}m) → 즉시 위험")
         return _result(payload, raw, quality, presence, stats, None,
                        alert_level=level, alarm=alarm, alarm_urgent=alarm_urgent,
                        reasons=reasons, measuring_held=not abs_critical)
@@ -228,6 +298,16 @@ def evaluate(payload: dict, store: dict, persist: bool = True) -> dict:
     # 5) 정상 경로: 환자 특정 + 보행 → baseline 갱신 후 평가
     if n_targets >= 2:
         reasons.append(f"환자 특정: {n_targets}명 중 소속도 {bed_affinity} track 채택")
+
+    extra: dict = {}
+    if prior and (prior.get("metrics") or {}).get("speed"):
+        return _evaluate_with_prior(payload, raw, quality, presence, store, target_id, prior,
+                                    abs_critical, low_z, reasons, persist)
+    if prior and prior.get("not_applicable") and "보행 불가" in str(prior.get("not_applicable")):
+        note = "보행 불가(와상 등) 기록 환자인데 보행이 감지됨 — 환자 본인이 아닐 가능성 또는 기록 갱신 필요"
+        reasons.append(note)
+        extra = {"identity_note": note, "prior_id": prior.get("id")}
+
     update_baseline(store, target_id, raw)
     update_done = True
     stats = baseline_stats(store.get(target_id))
@@ -258,19 +338,204 @@ def evaluate(payload: dict, store: dict, persist: bool = True) -> dict:
     if abs_critical:
         level = "critical"
         alarm, alarm_urgent = True, True
-        reasons.append(f"높이 급강하(drop={height_drop}m) → 즉시 위험(베이스라인 무관)")
+        reasons.append(f"바닥 근처 몸 높이(z={low_z}m < {FLOOR_FALL_Z}m) → 즉시 위험(베이스라인 무관)")
 
     if persist and update_done:
         save_baseline(store)
 
     return _result(payload, raw, quality, presence, stats, zscore,
                    alert_level=level, alarm=alarm, alarm_urgent=alarm_urgent,
-                   reasons=reasons, measuring_held=False)
+                   reasons=reasons, measuring_held=False, extra=extra)
+
+
+# ── 문헌 기반 사전분포 경로 ─────────────────────────────────────────────────
+def _finite_number(v) -> float | None:
+    if isinstance(v, bool) or not isinstance(v, (int, float)):
+        return None
+    f = float(v)
+    return f if math.isfinite(f) and abs(f) <= MAX_ABS_METRIC else None
+
+
+def _metric_value(raw: dict, m: str) -> float | None:
+    """유효값 전용 누적·비교에 쓸 값. NaN·무한대·비정상 크기는 누적하면 기준선을 망가뜨리므로 결측."""
+    v = _finite_number(raw.get(m))
+    if v is None:
+        return None
+    if m in ("stride_length", "stride_cv"):
+        s = _finite_number(raw.get("stride_length"))
+        if s is None or s <= 0.0:
+            return None   # send_mmw가 보폭 추정에 실패하면 0.0을 보낸다 → 0으로 쌓지 않고 결측
+        if m == "stride_cv" and v <= 0.0:
+            return None   # 걸음 구간이 2개 미만이라 변동계수를 못 구해도 0.0을 보낸다 → 결측
+    return v
+
+
+def _personal(bed: dict | None, m: str) -> tuple[int, float | None, float | None]:
+    """현재 구간을 넣기 전의 개인 기록(유효값 전용 누적): (건수, 평균, 표준편차)."""
+    if not bed or not _valid_ready(bed):
+        return 0, None, None
+    stat = bed[m]
+    n = int(stat.get("v_n", 0))
+    if n <= 0:
+        return 0, None, None
+    mean = stat["v_sum"] / n
+    var = stat["v_sumsq"] / n - mean * mean
+    return n, mean, math.sqrt(var) if var > 0 else 0.0
+
+
+def _posterior(mu0: float, tau0: float, n: int, mean: float | None, s_w: float) -> tuple[float, float]:
+    """정규-정규 베이즈 갱신: 사전 N(mu0, tau0²) + 개인 구간 n개(평균 mean, 구간 흔들림 s_w)."""
+    if n <= 0 or mean is None:
+        return mu0, tau0 ** 2
+    prec = 1.0 / tau0 ** 2 + n / s_w ** 2
+    return (mu0 / tau0 ** 2 + n * mean / s_w ** 2) / prec, 1.0 / prec
+
+
+def _classify_scaled(total_abs: float, scale: float) -> str:
+    if total_abs >= TH_CRITICAL * scale:
+        return "critical"
+    if total_abs >= TH_WARNING * scale:
+        return "warning"
+    if total_abs >= TH_CAUTION * scale:
+        return "caution"
+    return "normal"
+
+
+def _within_sd(n: int, sd: float | None, prior_sd: float, floor: float) -> float:
+    """구간 사이 흔들림(σ_w). 개인 기록이 MIN_SAMPLES건 미만이면 사전값과 합친 추정을 쓴다.
+    사전값의 무게는 자유도 MIN_SAMPLES−1 — 기존 설계가 개인 σ를 믿기 시작하는 5건과 같은 크기의 정보로 취급."""
+    nu0 = MIN_SAMPLES - 1
+    if n >= MIN_SAMPLES and sd is not None:
+        pooled = sd
+    elif n >= 2 and sd is not None:
+        # sd는 n으로 나눈 분산의 제곱근이므로 편차 제곱합 = n·sd² (자유도 n−1)
+        pooled = math.sqrt((nu0 * prior_sd ** 2 + n * sd ** 2) / (nu0 + n - 1))
+    else:
+        pooled = prior_sd
+    return max(pooled, floor)
+
+
+def _evaluate_with_prior(payload, raw, quality, presence, store, target_id, prior,
+                         abs_critical, low_z, reasons, persist) -> dict:
+    metrics_prior = prior.get("metrics") or {}
+    bed = store.get(target_id)
+    if bed and bed.get("n") and not _valid_ready(bed):
+        stale = any("v_n" in bed.get(m, {}) for m in METRICS)
+        _reset_valid_from_legacy(bed)
+        reasons.append("기준선 파일이 이전 버전 코드로 갱신돼 유효값 누적을 기존 합계에서 다시 시작함" if stale
+                       else "기존 기준선을 이어받음(보폭 추정 실패 0.0이 섞인 과거 기록 포함)")
+    values = {m: _metric_value(raw, m) for m in METRICS}
+    z, prov_z, id_z, expected = {}, {}, {}, {}
+    for m in METRICS:
+        n_m, mean_m, sd_m = _personal(bed, m)
+        pr = metrics_prior.get(m)
+        post_mean = mean_m
+        x = values[m]
+        if pr:
+            mu0, tau0 = float(pr["mean"]), float(pr["tau"])
+            s_w = _within_sd(n_m, sd_m, float(pr["sigma_within_prior"]), SIGMA_FLOOR[m])
+            post_mean, post_var = _posterior(mu0, tau0, n_m, mean_m, s_w)
+            pred_sd = math.sqrt(s_w ** 2 + post_var)
+            prior_weight = (1.0 / tau0 ** 2) / (1.0 / tau0 ** 2 + n_m / s_w ** 2)
+            expected[m] = {"mean": round(post_mean, 3),
+                           "p10": round(max(0.0, post_mean - Z_P10 * pred_sd), 3),
+                           "p90": round(post_mean + Z_P10 * pred_sd, 3),
+                           "n_personal": n_m, "prior_weight": round(prior_weight, 3)}
+            if x is not None:
+                # 잠정 판정: 지금까지 k개 구간 평균이 문헌 기대 분포(평균 mu0, 개인차 tau0 + 구간 흔들림/k)의 어디인지
+                k = n_m + 1
+                mean_k = ((mean_m or 0.0) * n_m + x) / k
+                prov_z[m] = (mean_k - mu0) / math.sqrt(tau0 ** 2 + s_w ** 2 / k)
+                # 신원 확인 안내: 이번 한 구간이 기대 분포에서 얼마나 벗어났는지
+                id_z[m] = (x - mu0) / math.sqrt(tau0 ** 2 + s_w ** 2)
+        if x is None:
+            continue
+        if n_m >= MIN_SAMPLES and post_mean is not None:
+            z[m] = (x - post_mean) / max(sd_m or 0.0, SIGMA_FLOOR[m])
+
+    n_before = int((bed or {}).get("n", 0))
+    identity_note = None
+    if len(z) >= MIN_METRICS_FOR_S:
+        provisional = False
+        scale = len(z) / len(METRICS)
+        total = sum(abs(v) for v in z.values())
+        level = _classify_scaled(total, scale)
+        zscore = {m: round(v, 2) for m, v in z.items()}
+        zscore.update(total_abs=round(total, 2), metrics_used=len(z), threshold_scale=round(scale, 3))
+        source = "blended"
+    else:
+        provisional = True
+        source = "population_prior"
+        use_speed = metrics_prior.get("speed", {}).get("use_for_provisional")
+        zs = prov_z.get("speed") if use_speed else None
+        level = "normal"
+        if zs is None:
+            reasons.append(f"개인 기록 {n_before}건 — 이번 구간에 문헌 기준값이 있는 지표가 없어 비교하지 않음")
+        else:
+            if zs <= PROV_WARNING_Z:
+                level = "warning"
+            elif zs <= PROV_CAUTION_Z:
+                level = "caution"
+            reasons.append(f"개인 기록 {n_before}건 — 지금까지 {n_before + 1}개 구간 평균을 문헌 기대 범위와 비교한 "
+                           f"잠정 판정: 속도 z={zs:.2f} → {LEVEL_KO[level]}")
+            if use_speed and id_z.get("speed", 0.0) >= IDENTITY_Z:
+                identity_note = ("이 환자의 문헌 기대 범위보다 훨씬 빠른 보행 — 직원·보호자 보행이거나 "
+                                 "기록 정보(진단·보행 상태)가 실제와 다를 가능성")
+                reasons.append(identity_note)
+        zscore = {"speed": round(zs, 2) if zs is not None else None, "total_abs": None, "provisional": True}
+
+    stats_before = baseline_stats(bed) if bed and bed.get("n") else None
+    age_days = stats_before["age_days"] if stats_before else 0.0
+    alarm = alarm_urgent = False
+    if provisional:
+        reasons.append("잠정 판정 — 개인 기준이 생기기 전이라 정식 알람을 보내지 않음")
+    elif n_before < MIN_SAMPLES or age_days < WARMUP_DAYS:
+        reasons.append(f"베이스라인 학습 중: 누적 {age_days:.1f}/{WARMUP_DAYS}일 — 정식 알람 보류")
+    elif level in ("warning", "critical"):
+        alarm = True
+        alarm_urgent = (level == "critical")
+        reasons.append(f"z-score 종합 {zscore['total_abs']} (지표 {zscore['metrics_used']}개) → {LEVEL_KO[level]} 알람")
+    else:
+        reasons.append(f"z-score 종합 {zscore['total_abs']} (지표 {zscore['metrics_used']}개) → {LEVEL_KO[level]}")
+
+    if abs_critical:
+        level = "critical"
+        alarm = alarm_urgent = True
+        reasons.append(f"바닥 근처 몸 높이(z={low_z}m < {FLOOR_FALL_Z}m) → 즉시 위험(베이스라인 무관)")
+
+    # 비교가 끝난 뒤 현재 구간을 기준선에 넣는다.
+    #  기존 합계: 이전 버전과 같은 방식(보폭 실패 0.0 포함)  ·  유효값 전용 합계: 결측은 건너뜀
+    bed = store.setdefault(target_id, _new_target())
+    if not _valid_ready(bed):
+        _reset_valid_from_legacy(bed)
+    for m in METRICS:
+        stat = bed[m]
+        lv = _legacy_value(raw, m)
+        stat["sum"] += lv
+        stat["sumsq"] += lv * lv
+        v = values[m]
+        if v is not None:
+            stat["v_sum"] += v
+            stat["v_sumsq"] += v * v
+            stat["v_n"] += 1
+    bed["n"] += 1
+    bed[VALID_KEY] = bed["n"]
+    if persist:
+        save_baseline(store)
+    stats = baseline_stats(bed)
+
+    extra = {"provisional": provisional, "baseline_source": source, "expected": expected,
+             "prior_id": prior.get("id")}
+    if identity_note:
+        extra["identity_note"] = identity_note
+    return _result(payload, raw, quality, presence, stats, zscore,
+                   alert_level=level, alarm=alarm, alarm_urgent=alarm_urgent,
+                   reasons=reasons, measuring_held=False, extra=extra)
 
 
 def _result(payload, raw, quality, presence, stats, zscore, *,
-            alert_level, alarm, alarm_urgent, reasons, measuring_held) -> dict:
-    return {
+            alert_level, alarm, alarm_urgent, reasons, measuring_held, extra=None) -> dict:
+    out = {
         "timestamp": payload.get("timestamp"),
         "target_id": payload.get("target_id", "room_01"),
         "sensor": "mmwave",
@@ -287,3 +552,6 @@ def _result(payload, raw, quality, presence, stats, zscore, *,
         "reasons": reasons,
         "received_at": datetime.now().isoformat(timespec="milliseconds"),
     }
+    if extra:
+        out.update(extra)
+    return out

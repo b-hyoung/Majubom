@@ -13,37 +13,58 @@
   // bed-to-sensor calibration yet to justify drawing it against this same room.
   var ROOM = {
     w: 4.6, h: 5.8,
-    bed: { x: 0.6, y: 1.2, w: 1.0, h: 2.2 },
-    bedside: { x: 1.7, y: 1.2, w: 0.5, h: 0.8 },
+    // headAtEnd: 머리(베개)가 bed.y+bed.h 쪽. 2026-10-12 사용자 확인: 화면 기준 왼쪽 아래가 발, 오른쪽이 머리.
+    // 같은 날: 화면(시계 90°) 오른쪽·위쪽 벽에 빈틈 없이 붙도록 침대·센서·협탁을 y −0.95m, x −0.55m 이동.
+    bed: { x: 0.05, y: 0.25, w: 1.0, h: 2.2, headAtEnd: true },
+    bedside: { x: 1.15, y: 0.25, w: 0.5, h: 0.8 },
     table: { x: 2.6, y: 1.2, w: 0.8, h: 0.6 },
     door: { x: 3.2, y: 5.4, w: 1.0, h: 0.2 },
     bath: { x: 0.2, y: 4.4, w: 1.6, h: 1.3 },
     sensors: [
-      { id: 'tof-ceil', kind: 'ToF', subtype: 'ceiling', x: 1.10, y: 2.30, r: 1.4, angle: 0, fov: 360 },
-      { id: 'tof-bed', kind: 'ToF', subtype: 'under-bed', x: 1.60, y: 2.30, r: 1.6, angle: 25, fov: 120 },
-      { id: 'mmw-1', kind: 'mmWave', x: 4.35, y: 0.45, r: 6.2, angle: 130, fov: 120 }
+      // 2026-10-12 실제 설치에 맞춤: ToF 두 대가 침대 머리맡(tof2)·발치(tof1) 바깥에서 서로 침대 쪽을 본다(높이 1.2m).
+      // 침대는 bed.y(발) ~ bed.y+bed.h(머리, 베개 쪽) — 같은 날 사용자 확인으로 머리/발을 바꿨다(이전엔 bed.y가 머리).
+      // angle은 SVG 기준(90=아래=머리 쪽, 270=위=발 쪽), 시야 45°.
+      { id: 'tof1', kind: 'ToF', subtype: 'foot', x: 0.55, y: 0.12, r: 2.4, angle: 90, fov: 45 },
+      { id: 'tof2', kind: 'ToF', subtype: 'head', x: 0.55, y: 2.60, r: 2.4, angle: 270, fov: 45 },
+      // 2026-10-12 실제 설치(사용자 확인): 발치 ToF(tof1) 바로 왼쪽 10cm, 높이 2.5m·하향 50°, 발치 ToF처럼 침대(머리) 쪽을 본다.
+      // 현장 사진(10-12): 레이더 스탠드는 발치 ToF보다 침대가 붙은 벽(책상) 쪽 구석에 있다 → 방 좌표 -x(벽 쪽)로 10cm.
+      // 화면(반시계 90° 회전)에서는 왼쪽 끝, 발치 ToF 바로 아래.
+      // 구석 설치라 침대와 일직선이 아니다: 화면 기준 반시계 45°(방 좌표 angle 90→45, 화면에서 오른쪽 위=방 안쪽을 향함).
+      { id: 'mmw-1', kind: 'mmWave', x: 0.45, y: 0.12, r: 7.0, angle: 45, fov: 120 }   // 시뮬레이션 그림 전용(실측은 dashboard.js 부스 평면도)
     ]
   };
+
+  // 실측 mmWave 추적 좌표(m, 레이더 기준: x=좌우, y=정면 거리) → 위 ROOM 좌표(m, SVG 기준 y가 아래).
+  // 레이더는 ROOM.sensors 의 mmw-1 위치·방향(angle, 0=오른쪽 90=아래)에 있다고 보고 회전·이동만 한다.
+  // 2026-10-12 기준 방 배치 실측 보정 전이라 위치는 추정이다. 좌우가 거울처럼 뒤집혀 보이면 MMW_X_SIGN 을 -1로.
+  var MMW_X_SIGN = 1;
+  function mmwToRoom(x, y) {
+    var s = null;
+    for (var i = 0; i < ROOM.sensors.length; i++) if (ROOM.sensors[i].kind === 'mmWave') s = ROOM.sensors[i];
+    if (!s || typeof x !== 'number' || typeof y !== 'number') return null;
+    var a = s.angle * Math.PI / 180, xr = x * MMW_X_SIGN;
+    return { x: s.x + y * Math.cos(a) - xr * Math.sin(a), y: s.y + y * Math.sin(a) + xr * Math.cos(a) };
+  }
 
   var PHASES = {
     sleep: { name: '정상 수면', icon: '😴', dur: 30, posture: 'supine', postureLabel: '바로 누움', inBed: true,
       tofRisk: 'normal', speed: 0, sway: 0, stride: 0, cv: 0.10, freeze: 1.00, mmRisk: 'normal', level: 'normal',
-      activity: 'inBed', pos: { x: 1.1, y: 1.9 } },
+      activity: 'inBed', pos: { x: 0.55, y: 1.75 } },
     toss: { name: '수면 중 뒤척임', icon: '💤', dur: 20, posture: 'tossing', postureLabel: '뒤척임', inBed: true,
       tofRisk: 'caution', speed: 0.02, sway: 0.01, stride: 0, cv: 0.22, freeze: 0.90, mmRisk: 'caution', level: 'caution',
-      activity: 'inBed', pos: { x: 1.05, y: 2.6 } },
+      activity: 'inBed', pos: { x: 0.5, y: 1.05 } },
     edge: { name: '기상 준비 · 걸터앉음', icon: '🪑', dur: 12, posture: null, postureLabel: '걸터앉음', inBed: true,
       tofRisk: 'caution', speed: 0.01, sway: 0.02, stride: 0, cv: 0.15, freeze: 0.75, mmRisk: 'caution', level: 'caution',
-      reason: null, activity: 'inBed' },
+      reason: null, activity: 'inBed', pos: { x: 0.95, y: 0.65 } },
     exit: { name: '침상 이탈 감지', icon: '🛏️', dur: 25, posture: null, postureLabel: '침상 이탈 중', inBed: false,
       tofRisk: 'warning', speed: 0.12, sway: 0.03, stride: 0.15, cv: 0.18, freeze: 0.60, mmRisk: 'warning', level: 'warning',
-      reason: '침상 가장자리 이탈 감지', activity: 'outOfBed', pos: { x: 1.75, y: 2.85 } },
+      reason: '침상 가장자리 이탈 감지', activity: 'outOfBed', pos: { x: 1.2, y: 1.9 } },
     checkingNormal: { name: '낙상 의심 · 교차검증 중', icon: '🔎', dur: 10, posture: null, postureLabel: '움직임 없음 · 확인 중', inBed: false,
       tofRisk: 'warning', speed: 0, sway: 0, stride: 0, cv: 0, freeze: 1.00, mmRisk: 'warning', level: 'warning',
-      reason: '이탈 전 자세: 걸터앉음(정상) — 이탈 후 움직임 없음, AI 교차검증 중', activity: 'checking', pos: { x: 1.75, y: 2.85 } },
+      reason: '이탈 전 자세: 걸터앉음(정상) — 이탈 후 움직임 없음, AI 교차검증 중', activity: 'checking', pos: { x: 1.2, y: 1.9 } },
     checkingAbnormal: { name: '낙상 의심 · 교차검증 중', icon: '🔎', dur: 10, posture: null, postureLabel: '움직임 없음 · 확인 중', inBed: false,
       tofRisk: 'warning', speed: 0, sway: 0, stride: 0, cv: 0, freeze: 1.00, mmRisk: 'warning', level: 'warning',
-      reason: '이탈 전 자세: 뒤척임(비정상) — 이탈 후 움직임 없음, AI 교차검증 중', activity: 'checking', pos: { x: 1.75, y: 2.85 } },
+      reason: '이탈 전 자세: 뒤척임(비정상) — 이탈 후 움직임 없음, AI 교차검증 중', activity: 'checking', pos: { x: 1.2, y: 1.9 } },
     walk: { name: '이탈 후 이동', icon: '🚶', dur: 20, posture: null, postureLabel: '보행 중', inBed: false,
       tofRisk: 'normal', speed: 0.86, sway: 0.02, stride: 0.62, cv: 0.11, freeze: 0.05, mmRisk: 'normal', level: 'normal',
       reason: null, activity: 'walking', posFrom: { x: 1.9, y: 3.0 }, posTo: { x: 3.6, y: 5.25 } },
@@ -63,7 +84,8 @@
     bed_sim_bedexit:     { label: '침상 이탈 반복',        keys: ['sleep', 'edge', 'exit', 'checkingNormal', 'walk'] },
     bed_sim_gaitcaution: { label: '뒤척임 반복 · 주의',    keys: ['sleep', 'toss', 'toss'] },
     bed_sim_risk:        { label: '낙상 위험 임박 · 회복', keys: ['sleep', 'toss', 'edge', 'risk', 'toss'] },
-    bed_sim_fall:        { label: '낙상 시나리오',         keys: ['sleep', 'toss', 'exit', 'checkingAbnormal', 'fall'] }
+    // 2026-10-12: 낙상(fall) 장면 제거 — 실측 낙상 감지를 시험할 때 시뮬레이션 낙상 팝업·자동 리포트가 섞이지 않게.
+    bed_sim_fall:        { label: '이탈 후 움직임 없음 · 확인', keys: ['sleep', 'toss', 'exit', 'checkingAbnormal'] }
   };
 
   var FALL_BED_ID = 'bed_sim_fall';
@@ -173,7 +195,7 @@
     ],
     bed_sim_fall: [
       { fromH: 21.0, toH: 21.3, key: 'toss' }, { fromH: 21.3, toH: 21.55, key: 'exit' },
-      { fromH: 21.55, toH: 21.75, key: 'checkingAbnormal' }, { fromH: 21.75, toH: 22.0, key: 'fall' }
+      { fromH: 21.55, toH: 22.0, key: 'checkingAbnormal' }
     ]
   };
 
@@ -281,6 +303,7 @@
     createEngine: createEngine,
     FALL_BED_ID: FALL_BED_ID,
     ROOM: ROOM,
+    mmwToRoom: mmwToRoom,
     patientIds: Object.keys(SCENARIOS)
   });
 })(typeof window !== 'undefined' ? window : globalThis);

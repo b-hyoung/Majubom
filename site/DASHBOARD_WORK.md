@@ -1,5 +1,7 @@
 # 대시보드 디자인 작업 가이드 (dashboard_design.html)
 
+> 2026-10-13: 화면을 둘로 나눴다. 간호사 대시보드 `/dashboard`(site/index.html — 개요·추이·투약·AI 리포트만)와 개발·센서 테스트 대시보드 `/dev`(site/dev.html + dashboard-assets/dev.js — 원시값·서버 상태·뷰어·수동 캘리브레이션·연결 설정·개발 도구 링크). 간호사 화면에는 개발용 요소를 넣지 않는다.
+
 > 2026-07-05. **작업 파일 = `site/dashboard_design.html`** (원본 index.html의 디자인용 복사본).
 > 목적: 실배치(사진) 기준 평면도 + mmWave 실위치 포인터. **CSI는 시스템에서 제외됨(패널 전부 삭제).**
 

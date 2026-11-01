@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>마주봄 · 통합 대시보드</title>
+<title>마주봄 · 간호사 대시보드</title>
 <script>
 (function () {
   try {
@@ -41,42 +41,46 @@
       <button data-page="trends" aria-selected="false" type="button">추이</button>
       <button data-page="medications" aria-selected="false" type="button">투약</button>
       <button data-page="reports" aria-selected="false" type="button">AI 리포트</button>
-      <button data-page="devices" aria-selected="false" type="button">기기</button>
     </nav>
 
+    <!-- 2026-10-13: 간호사용 화면만 둔다. 기기 연결·원시 뷰어·로우데이터·구성도는 개발·센서 테스트 대시보드(/dev, site/dev.html)로 옮겼다. -->
     <div id="mainContent" data-patient-id="">
-      <section class="screen" data-screen="overview">
+      <section class="screen screen-wide" data-screen="overview">
         <div id="ovRiskBanner" hidden></div>
-        <div class="card" id="ovPatientHeader"><div class="empty-state">불러오는 중…</div></div>
-        <div class="grid-2">
-          <div class="card" data-sensor="tof" id="ovTof"></div>
-          <div class="card" data-sensor="mmwave" id="ovMmw"></div>
+        <div class="card ov-hero">
+          <div id="ovPatientHeader"><div class="empty-state">불러오는 중…</div></div>
+          <div class="kpi-strip" id="ovKpis"></div>
         </div>
-        <div class="card">
-          <div class="card-h">
-            <div><div class="card-title">병실 평면도 · 위치</div><div class="card-sub" id="ovFloorplanSub"></div></div>
-            <button class="btn sm" id="ovToggleViewer" type="button">3D/포인트클라우드 뷰어 열기</button>
+        <div class="ov-layout">
+          <div class="ov-main">
+            <div class="grid-2">
+              <div class="card" data-sensor="tof" id="ovTof"></div>
+              <div class="card" data-sensor="mmwave" id="ovMmw"></div>
+            </div>
+            <div class="card">
+              <div class="card-h">
+                <div><div class="card-title">병실 평면도 · 위치</div><div class="card-sub" id="ovFloorplanSub"></div></div>
+              </div>
+              <div id="ovFloorplan"><div class="empty-state">불러오는 중…</div></div>
+            </div>
+            <div class="card">
+              <div class="card-h"><div><div class="card-title">오늘의 활동 · 이벤트</div><div class="card-sub" id="ovTimelineSub"></div></div></div>
+              <div id="ovTimeline"><div class="empty-state">불러오는 중…</div></div>
+            </div>
           </div>
-          <div id="ovFloorplan"><div class="empty-state">불러오는 중…</div></div>
-          <div id="ovRawViewer" hidden></div>
-        </div>
-        <div class="grid-2">
-          <div class="card">
-            <div class="card-h"><div class="card-title">위험 인자</div></div>
-            <div id="ovRiskFactors"><div class="empty-state">불러오는 중…</div></div>
-          </div>
-          <div class="card">
-            <div class="card-h"><div class="card-title">투약</div></div>
-            <div id="ovMedications"><div class="empty-state">불러오는 중…</div></div>
-          </div>
-        </div>
-        <div class="card">
-          <div class="card-h"><div><div class="card-title">24시간 활동 타임라인</div><div class="card-sub" id="ovTimelineSub"></div></div></div>
-          <div id="ovTimeline"><div class="empty-state">불러오는 중…</div></div>
-        </div>
-        <div class="card">
-          <div class="card-h"><div class="card-title">최근 이벤트</div></div>
-          <div id="ovEvents"><div class="empty-state">불러오는 중…</div></div>
+          <aside class="ov-side">
+            <div class="card side-card" id="ovFallRisk"><div class="empty-state">불러오는 중…</div></div>
+            <div class="card side-card" id="ovGaitTrend"><div class="empty-state">불러오는 중…</div></div>
+            <div class="card side-card" id="ovGaitPriorCard"><div class="empty-state">불러오는 중…</div></div>
+            <div class="card side-card">
+              <div class="card-h"><div class="card-title">위험 인자</div></div>
+              <div id="ovRiskFactors"><div class="empty-state">불러오는 중…</div></div>
+            </div>
+            <div class="card side-card">
+              <div class="card-h"><div class="card-title">투약</div></div>
+              <div id="ovMedications"><div class="empty-state">불러오는 중…</div></div>
+            </div>
+          </aside>
         </div>
       </section>
 
@@ -119,38 +123,16 @@
         <div class="card">
           <div class="card-h">
             <div>
-              <div class="card-title">AI 주간 리포트</div>
-              <div class="card-sub">매주 자동으로 생성됩니다 — 행을 클릭하면 전체 내용을 볼 수 있습니다.</div>
+              <div class="card-title">AI 리포트</div>
+              <div class="card-sub">주간 종합 리포트는 매주 자동, 낙상 사건 리포트는 낙상 감지 직후 자동 — 행을 클릭하면 그래프와 전체 내용을 볼 수 있습니다.</div>
             </div>
+            <div style="text-align:right"><button class="btn primary sm" id="reportGenerate" type="button">지금 리포트 만들기</button>
+              <div class="muted" id="reportGenerateMsg" style="font-size:11px;margin-top:4px;min-height:1em"></div></div>
           </div>
           <div id="reportHistory"><div class="empty-state">불러오는 중…</div></div>
         </div>
       </section>
 
-      <section class="screen" data-screen="devices" hidden>
-        <div class="card" id="connectionForm">
-          <div class="card-h"><div class="card-title">센서 서버 연결</div></div>
-          <div class="conn-row">
-            <label>서버 주소
-              <input id="connBaseUrl" class="mono" placeholder="비워두면 이 대시보드와 동일 서버">
-            </label>
-            <label>mmWave 타겟 ID
-              <input id="connTargetId" class="mono" placeholder="room_01">
-            </label>
-            <button class="btn primary sm" id="connApply" type="button">적용</button>
-          </div>
-          <div class="muted" style="font-size:11px;margin-top:10px">기본값은 이 대시보드를 서빙하는 서버(:5001)입니다. 라즈베리파이를 다른 주소에서 운영 중이면 여기에 입력하세요.</div>
-        </div>
-        <div class="grid-2">
-          <div class="card" id="devTof"></div>
-          <div class="card" id="devMmw"></div>
-        </div>
-        <div class="card">
-          <div class="card-h"><div class="card-title">원시 센서 뷰어</div></div>
-          <button class="btn sm" id="toggleRawViewers" type="button">3D/포인트클라우드 뷰어 열기</button>
-          <div id="rawViewers" hidden></div>
-        </div>
-      </section>
     </div>
   </main>
 </div>
@@ -195,11 +177,23 @@
 <div class="modal-wrap" id="reportModal" hidden>
   <div class="modal card report-modal">
     <div class="card-h">
-      <div><div class="card-title">AI 주간 리포트</div><div class="card-sub" id="reportModalSub"></div></div>
+      <div><div class="card-title" id="reportModalTitle">AI 리포트</div><div class="card-sub" id="reportModalSub"></div></div>
       <button class="btn icon ghost" id="reportModalClose" type="button" aria-label="닫기">✕</button>
     </div>
+    <div id="reportModalReview" aria-live="polite"></div>
     <div id="reportModalBody"></div>
     <div id="reportModalEvidence"></div>
+  </div>
+</div>
+
+<!-- 오른쪽에서 열리는 상세 패널(낙상 위험도·보행 추세·보행 기대 범위 자세히) — 2026-10-13 디자인 개편 -->
+<div class="drawer-wrap" id="sideDrawer" hidden>
+  <div class="drawer" role="dialog" aria-modal="true" aria-labelledby="drawerTitle">
+    <div class="drawer-h">
+      <div class="drawer-title" id="drawerTitle"></div>
+      <button class="btn icon ghost" id="drawerClose" type="button" aria-label="닫기">✕</button>
+    </div>
+    <div id="drawerBody"></div>
   </div>
 </div>
 
@@ -216,6 +210,7 @@
 
 <script src="dashboard-assets/data.js"></script>
 <script src="dashboard-assets/simulation.js"></script>
+<script src="dashboard-assets/report-review.js"></script>
 <script src="dashboard-assets/dashboard.js"></script>
 </body>
 </html>

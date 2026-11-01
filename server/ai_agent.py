@@ -20,13 +20,14 @@ from __future__ import annotations
 
 import json
 import os
-from datetime import datetime
+from datetime import datetime, timezone
 
 import requests
 
 import ai_report
 import db
 import sim_state
+import report_trace
 
 TOF_BASE = os.environ.get("MAJUBOM_TOF_BASE", "http://127.0.0.1:5001")
 MMW_BASE = os.environ.get("MAJUBOM_MMW_BASE", "http://127.0.0.1:5002")
@@ -46,7 +47,36 @@ def _fresh(timestamp, seconds):
         return False
 
 
+def _recent_record(timestamp, hours=24):
+    try:
+        stamp = datetime.fromisoformat(str(timestamp).replace("Z", "+00:00"))
+        if stamp.tzinfo is None:
+            stamp = stamp.replace(tzinfo=timezone.utc)  # SQLite event timestamps are UTC.
+        age = (datetime.now(timezone.utc) - stamp).total_seconds()
+        return 0 <= age <= hours * 3600
+    except (ValueError, TypeError, OverflowError):
+        return False
+
+
 # ── ① 현재 상태 수집 (SQL DB + 실서버 라이브 상태) ────────────────────────
+@report_trace.traced_stage('patient_state', '환자 기록·실측 상태 수집')
+def _attach_fall_risk(state: dict, bed_id: str) -> dict:
+    """환자별 낙상 위험도(Morse + 변동 점수)와 거동 범위 — 2026-10-12
+    + 보행 저하 추세 예측(gait_trend.py, 2026-10-13): 리포트의 '향후 위험 가능성'이 계산된 예측을 근거로 쓰게 한다."""
+    try:
+        import fall_risk
+        with db.get_conn() as conn:
+            state["fall_risk_profile"] = fall_risk.get_profile(conn, bed_id, events=10)
+    except Exception as e:
+        state["fall_risk_profile_error"] = f"위험도 프로필을 읽지 못했습니다: {type(e).__name__}"
+    try:
+        import gait_trend
+        state["gait_trend"] = gait_trend.summary_for_bed(bed_id)
+    except Exception as e:
+        state["gait_trend"] = {"status": "error", "message": f"보행 추세 예측을 계산하지 못했습니다: {type(e).__name__}"}
+    return state
+
+
 def gather_patient_state(bed_id: str) -> dict:
     """환자 프로필·위험인자·투약(SQL DB)과, ToF/mmWave 실서버의 현재 판정을 한데 모은다.
     실서버가 꺼져있어도(개발 중 등) 예외를 던지지 않고 그 부분만 None으로 정직하게 비운다 —
@@ -59,10 +89,14 @@ def gather_patient_state(bed_id: str) -> dict:
         "patient_profile": patient,
         "risk_factors": db.list_risk_factors(bed_id) if patient else [],
         "medications": db.list_medications(bed_id) if patient else [],
-        "recent_24h": db.get_patient_timeseries_summary(bed_id, window="24h"),
+        "emr_records": db.list_emr_records(bed_id) if patient else [],
+        "nursing_records": db.list_nursing_records(bed_id) if patient else [],
+        "data_source": "simulation" if sim_state.is_simulated(bed_id) else "patient_records_and_live_sensors",
+        "recent_24h": db.get_patient_timeseries_summary(bed_id, window="24h", exclude_types=("ai_analysis_completed",)),
         # 실제 개별 이벤트(시각·제목·메모) — 집계 요약(recent_24h)만으로는 "언제 어떤 전조가
         # 있었는지"를 알 수 없어, 낙상 등 특정 사건 전후의 시계열 근거로 그대로 씀.
-        "recent_events": db.get_activity_log(bed_id, limit=20) if patient else [],
+        "recent_events": [e for e in db.get_activity_log(bed_id, limit=60)
+                          if e.get("event_type") != "ai_analysis_completed" and _recent_record(e.get("ts"))][:20] if patient else [],
         "tof_behavior": None, "tof_behavior_error": None,
         "mmw_latest": None, "mmw_latest_error": None,
     }
@@ -74,7 +108,7 @@ def gather_patient_state(bed_id: str) -> dict:
     if sim_state.is_simulated(bed_id):
         state["tof_behavior"] = sim_state.simulated_tof_behavior(bed_id)
         state["mmw_latest"] = sim_state.simulated_mmw_latest(bed_id)
-        return state
+        return _attach_fall_risk(state, bed_id)
 
     # The shared hardware stream is wired to the first patient only. The retired
     # /tof/behavior route no longer exists; use current posture and presence APIs.
@@ -114,14 +148,17 @@ def gather_patient_state(bed_id: str) -> dict:
         except (requests.exceptions.RequestException, ValueError):
             state["mmw_latest_error"] = "mmWave 서버 상태를 조회하지 못했습니다."
 
-    return state
+    return _attach_fall_risk(state, bed_id)
 
 
 # ── ② AI Query 자동 생성 (STEP 15-18) ────────────────────────────────────
 QUERY_GEN_SYSTEM_PROMPT = (
     "당신은 치매환자 낙상예측시스템의 조사 보조원입니다. 아래 JSON은 한 환자의 현재 센서 상태·위험인자·"
     "투약 요약입니다. 이 상태를 근거로, 관련 연구 문헌에서 무엇을 더 확인해야 하는지 판단해 자연어 검색 "
-    "질의를 만드세요. 절대 이 데이터에 없는 사실을 지어내지 말고, 오직 '무엇을 검색해야 하는가'만 판단하세요. "
+    "질의를 만드세요. emr_records와 nursing_records가 있으면 해당 환자의 원문 기록도 참고하세요. "
+    "walking=false는 지금 걷는 신호가 없다는 뜻이며, 의학적으로 보행이 불가능하다는 뜻이 아닙니다. "
+    "data_source=simulation이면 가상 환자와 가상 센서 상태입니다. "
+    "절대 이 데이터에 없는 사실을 지어내지 말고, 오직 '무엇을 검색해야 하는가'만 판단하세요. "
     "환자가 진정제·향정신성 약물(예: 트라조돈, 벤조디아제핀 계열 등)을 복용 중이라면, 그 약물과 낙상·섬망·"
     "다제병용 위험의 관계를 확인하는 질의를 최소 1개 반드시 포함하세요 — 이는 통합분석 리포트의 '투약 "
     "조정 제안' 항목의 근거로 쓰입니다. "
@@ -130,6 +167,7 @@ QUERY_GEN_SYSTEM_PROMPT = (
 )
 
 
+@report_trace.traced_stage('query_generation', '현재 상황에 필요한 검색 질문 생성')
 def generate_queries(patient_state: dict, max_queries: int = QUERIES_PER_ROUND_DEFAULT) -> dict:
     """현재 상태를 LLM에 넘겨 검색 질의를 생성시킨다. 정직한 실패 shape은 ai_report.call_openai()와 동일."""
     user_content = (
@@ -158,6 +196,7 @@ SUFFICIENCY_SYSTEM_PROMPT = (
 )
 
 
+@report_trace.traced_stage('sufficiency', '근거 충분성 판단·추가 질문')
 def judge_sufficiency(patient_state: dict, results_so_far: list[dict]) -> dict:
     user_content = (
         f"환자 상태(JSON):\n{json.dumps(patient_state, ensure_ascii=False, indent=2, default=str)}\n\n"
@@ -178,21 +217,29 @@ def judge_sufficiency(patient_state: dict, results_so_far: list[dict]) -> dict:
 
 
 # ── ④ 반복 검색 Agent 루프 (STEP 16, 20) ─────────────────────────────────
+@report_trace.traced_run('investigation')
 def investigate(bed_id: str, max_rounds: int = MAX_ROUNDS_DEFAULT,
-                 max_queries_per_round: int = QUERIES_PER_ROUND_DEFAULT, top_k: int = 5) -> dict:
-    """전체 루프: 상태수집 → query생성 → Vector 검색 → 충분성판단 → (부족하면) 추가검색 반복
+                 max_queries_per_round: int = QUERIES_PER_ROUND_DEFAULT, top_k: int = 5,
+                 search_method: str = "hybrid") -> dict:
+    """전체 루프: 상태수집 → query생성 → Hybrid 검색 → 충분성판단 → (부족하면) 추가검색 반복
     → SQL 환자기록은 ①에서 이미 gather_patient_state()로 모아뒀으므로 여기서 다시 붙인다(Hybrid).
 
     반환 shape: {"success":bool, "bed_id", "patient_state", "rounds":[...], "final_results":[...],
                  "sufficient":bool, "reasoning":str}
     이 결과는 STEP 21-23(통합분석/리포트)이 그대로 입력으로 받게 될 재료다 — 이 함수 자체는
     최종 리포트나 위험점수를 만들지 않는다."""
+    report_trace.emit('retrieval_configuration', 'running', '문헌 검색 구성 확인', {'method': search_method, 'max_rounds': max_rounds, 'queries_per_round': max_queries_per_round, 'top_k': top_k})
     import paper_kb
 
+    if search_method not in {"hybrid", "dense"}:
+        return {"success": False, "error_type": "invalid_argument", "stage": "search_configuration",
+                "message": "search_method는 hybrid 또는 dense여야 합니다."}
+    retrieve = paper_kb.search_hybrid if search_method == "hybrid" else paper_kb.search
     patient_state = gather_patient_state(bed_id)
 
     rounds: list[dict] = []
     all_results: dict[str, dict] = {}  # chunk_id -> result (중복 검색 결과 제거)
+    emr_results, emr_statuses = {}, {}
 
     qgen = generate_queries(patient_state, max_queries=max_queries_per_round)
     if not qgen["success"]:
@@ -207,17 +254,32 @@ def investigate(bed_id: str, max_rounds: int = MAX_ROUNDS_DEFAULT,
             break
         round_results = []
         for q in queries:
-            sr = paper_kb.search(q, top_k=top_k)
+            # Titles/authors alone cannot substantiate a report's medical claims.
+            sr = retrieve(q, top_k=top_k * 3)
             if not sr["success"]:
                 # Vector DB 쪽이 실패(키 미설정 등)해도 지금까지 모은 SQL 상태는 살려서 반환 —
                 # "검색을 못 했다"와 "검색했는데 결과가 없다"를 구분해 정직하게 기록.
                 return {"success": False, **{k: v for k, v in sr.items() if k != "success"},
                         "bed_id": bed_id, "patient_state": patient_state,
-                        "rounds": rounds, "stage": "vector_search", "query": q}
-            for r in sr["results"]:
+                        "rounds": rounds, "stage": "vector_search", "search_method": search_method, "query": q}
+            import emr_kb
+            emr_result = emr_kb.search(bed_id, q, top_k=3)
+            for record in emr_result.get('results', []) if emr_result.get('success') else []:
+                emr_results[record['chunk_id']] = record
+            status_key = emr_result.get('error_type') or ('complete' if (emr_result.get('coverage') or {}).get('complete') else 'partial')
+            emr_statuses[status_key] = {k:emr_result.get(k) for k in ('success','error_type','message','coverage','warning')}
+            content_results = [r for r in sr["results"] if r.get("section") != "identity"][:top_k]
+            report_trace.emit('evidence_selection', 'completed', '실제 검색 근거 선택', {
+                'round': round_i + 1, 'query': q, 'method': search_method,
+                'retrieved': len(sr['results']), 'selected': len(content_results),
+                'excluded_identity': sum(r.get('section') == 'identity' for r in sr['results']),
+                'evidence': content_results,
+            })
+            for r in content_results:
                 all_results[r["chunk_id"]] = r
                 round_results.append(r)
-        rounds.append({"round": round_i + 1, "queries": queries, "n_results": len(round_results)})
+        rounds.append({"round": round_i + 1, "queries": queries, "n_results": len(round_results),
+                       "search_method": search_method})
 
         sufficiency = judge_sufficiency(patient_state, list(all_results.values()))
         if not sufficiency["success"]:
@@ -226,13 +288,17 @@ def investigate(bed_id: str, max_rounds: int = MAX_ROUNDS_DEFAULT,
         if sufficiency["sufficient"] or round_i == max_rounds - 1:
             break
         queries = sufficiency["additional_queries"][:max_queries_per_round]
+        report_trace.emit('additional_queries', 'completed', '근거 부족으로 재검색 질문 선택', {'round': round_i + 2, 'queries': queries})
 
     return {
         "success": True, "bed_id": bed_id, "patient_state": patient_state,
         "rounds": rounds, "final_results": list(all_results.values()),
+        "emr_retrieval": {"results":list(emr_results.values()), "statuses":list(emr_statuses.values()),
+                          "method":"local-text-hash-v1", "note":"환자 원문 검색; 논문 근거와 별도, 어휘 점수는 확률 아님"},
         "sufficient": sufficiency.get("sufficient", False),
         "reasoning": sufficiency.get("reasoning", ""),
         "initial_query_reasoning": qgen.get("reasoning", ""),
+        "search_method": search_method,
     }
 
 

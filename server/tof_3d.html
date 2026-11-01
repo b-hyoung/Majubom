@@ -753,5 +753,16 @@ resize();
 (function loop(){ if(dirty){ draw(); dirty=false; } requestAnimationFrame(loop); })();
 poll(); setInterval(poll, POLL_MS);
 </script>
+<script>
+// ?embed=1 — 간호사 앱 작은 칸용: HUD 숨기고 3D + 자세 라벨만.
+if (new URLSearchParams(location.search).get('embed') === '1') {
+  const st = document.createElement('style');
+  st.textContent = '#top,#status,#panelToggle,#panel,#coord,#help,#legend{display:none!important}'
+    + '#state{top:8px!important;right:10px!important;font-size:15px!important}';
+  document.head.appendChild(st);
+  // 작은 칸에서도 침대 전체가 보이게 시점을 창 크기에 맞춰 축소
+  scale = Math.round(Math.min(innerWidth, innerHeight * 1.6) * 0.3); dirty = true;
+}
+</script>
 </body>
 </html>
