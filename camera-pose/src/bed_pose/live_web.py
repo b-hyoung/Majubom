@@ -713,6 +713,7 @@ class WebWorkspace:
             state['elapsed']=(int(frame['row']['received_ns'])-int(state['started_ns']))/1e9
         state['processing_fps']=frame.get('processing_fps')
         state['processing_ms']=frame.get('processing_ms')
+        state['capture_diagnostics']=frame.get('capture_diagnostics')
         state['image_runtime']=frame.get('image_runtime')
         state['image_runtime_metrics']=frame.get('image_runtime_metrics')
         session.preview_worker.submit(self._preview_job(session))
@@ -948,7 +949,7 @@ class WorkspaceHandler(BaseHTTPRequestHandler):
                 with self.server.workspace.lock:
                     workspace=self.server.workspace
                     result=workspace.room_monitor.status(workspace.sessions)
-                    result['sessions']=[{k:s.state.get(k) for k in ('id','title','closed','phase','error','processing_fps','width','height','pose_device','pose_gpu_renderer','pose_max_people','pose_recovery')}
+                    result['sessions']=[{k:s.state.get(k) for k in ('id','title','closed','phase','error','processing_fps','processing_ms','capture_diagnostics','width','height','pose_device','pose_gpu_renderer','pose_max_people','pose_recovery')}
                                         for s in workspace.sessions.values()];result['views']=[]
                     since=parse_qs(url.query)
                     for index,sid in enumerate(workspace.room_monitor.config['bindings']):

@@ -386,6 +386,8 @@ class LiveEngine:
         if (not isinstance(image_preview,dict) or image_preview.get('stream_frame_id')!=row['stream_frame_id']
                 or image_preview.get('candidate_id')!=row['posture_assessment']['candidate_id']
                 or (row.get('body_state_observation') or {}).get('decision') is None):image_preview=None
+        from .camera_diagnostics import image_diagnostics
+        capture_diagnostics=image_diagnostics(rgb)
         finished=self.clock()
         self.previous_processing_ns=max(0,finished-received)
         def duration(start,end):
@@ -396,6 +398,7 @@ class LiveEngine:
                        'total':(finished-read_started)/1e6}
         return {'processing_fps':self.processing_rate.observe(self.clock()), 'rgb': rgb, 'row': row, 'silhouette_preview':silhouette_preview,
                 'body_state_input_preview':image_preview, 'processing_ms':processing_ms,
+                'capture_diagnostics':capture_diagnostics,
                 'image_runtime':deepcopy(getattr(getattr(self.body_state_provider,'runtime',None),'execution_info',None)),
                 'image_runtime_metrics':row.get('image_runtime_metrics'),
                 'posture_diagnostics':diagnostics, 'bed_region': self.region, 'bed_revision': self.region_revision,

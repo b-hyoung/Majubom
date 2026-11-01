@@ -57,6 +57,15 @@ class LiveTests(unittest.TestCase):
             self.assertNotIn('pose_region_hint',estimate.call_args.args[0].frame.spec)
         finally:engine.close()
 
+    def test_camera_hints_do_not_enter_label_or_pose_record_schema(self):
+        engine=self.engine();engine.open()
+        try:
+            result=engine.step();row=result['row']
+            self.assertTrue(result['capture_diagnostics']['diagnostic_only'])
+            self.assertNotIn('capture_diagnostics',row)
+            self.assertIsNone(row['verified_gt']);self.assertIsNone(row['target_posture'])
+        finally:engine.close()
+
     def lines(self, directory, name):
         return [json.loads(line) for line in (directory/name).read_text(encoding='utf-8').splitlines()]
 

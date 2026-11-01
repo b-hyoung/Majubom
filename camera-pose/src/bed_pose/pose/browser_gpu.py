@@ -180,8 +180,13 @@ class BrowserGPUAdapter:
                 view=rgb[y0:y1,x0:x1];image=np.ascontiguousarray(np.rot90(view,turns))
                 result=restore(self._infer_image(image,stamp,probe),turns,crop,packet.width,packet.height)
                 if probe and result.get('landmarks') and self.person_guard is not None:
-                    if not self.person_guard.confirm(rgb,stamp,turns,quality(result)):
-                        return dict(landmarks=[],worldLandmarks=[])
+                    people=result['landmarks'];world=result.get('worldLandmarks',[])
+                    kept=[i for i,person in enumerate(people)
+                          if self.person_guard.confirm(rgb,stamp,turns,quality({'landmarks':[person]}))]
+                    result['landmarks']=[people[i] for i in kept]
+                    result['worldLandmarks']=[world[i] for i in kept] if world else []
+                    self.person_guard.diagnostics.update(confirmed=bool(kept),reason=None if kept else 'person_not_confirmed_at_configured_scale',
+                                                         accepted_sdk_person_indices=kept,rejected_people=len(people)-len(kept))
                 return result
             crop=self.active_crop
             # A cropped primary is re-detected on this image; it must not live indefinitely on VIDEO tracking.

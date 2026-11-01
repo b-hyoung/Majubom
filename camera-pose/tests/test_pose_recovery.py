@@ -133,6 +133,20 @@ class RecoveryTests(unittest.TestCase):
         self.assertEqual(a.rpc_until,-1);self.assertIsNone(a.last_timestamp)
         self.assertIsNone(a.active_crop);self.assertIsNone(a.support_stamp)
 
+    def test_person_guard_filters_each_person_and_keeps_world_coordinates_paired(self):
+        class Guard:
+            diagnostics={}
+            def confirm(self,rgb,stamp,turn,q):return q['center'][0]<.6
+        a=BrowserGPUAdapter();a.max_people=2;a.person_guard=Guard()
+        first=pose(x=.8);second=pose(x=.3)
+        for p in second['worldLandmarks'][0]:p['z']=.7
+        raw={k:first[k]+second[k] for k in ('landmarks','worldLandmarks')}
+        with patch.object(a,'_rpc',return_value=deepcopy(raw)):out=a.estimate(self.frame())
+        self.assertEqual(len(out.candidates),1)
+        self.assertAlmostEqual(out.candidates[0]['sdk_landmarks']['image'][0]['x'],.3)
+        self.assertAlmostEqual(out.candidates[0]['sdk_landmarks']['world'][0]['z'],.7)
+        self.assertEqual(a.diagnostics['person_evidence']['accepted_sdk_person_indices'],[1])
+
 
 class Reply:
     status=200

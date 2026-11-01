@@ -48,6 +48,9 @@ function CameraPanel({session, view, index}: {session?: InputSession; view: View
     <div className="camera-meta"><span>{session?.title ?? '입력 미지정'}</span><span>{number(session?.processing_fps)} FPS</span></div>
     <div className="muted">프레임 {view?.frame_id ?? '—'} · 수신 후 {number(view?.age_ms,0)} ms · 검출 {view?.people.length ?? '—'}명</div>
     {alive && session?.pose_recovery?.visible_joints != null && <div className="muted">관절 관측 {session.pose_recovery.visible_joints}/17 · {session.pose_recovery.visible_joints===0?(session.pose_recovery.person_evidence?.confirmed===false?'사람 검증 보류 · 대상 크기/검출 불일치':'사람 미확인 · 자동 재탐색'):session.pose_recovery.healthy?'관측 양호':'부분 관측 · 자동 재탐색'}{session.pose_recovery.crop_bounds?' · 영역 확대':''}{session.pose_recovery.rotation_degrees?` · 방향 보완 ${session.pose_recovery.rotation_degrees}°`:''}{session.pose_recovery.transport_errors?' · 추론 연결 복구 이력 있음':''}</div>}
+    {alive && session?.processing_ms && <div className="muted">입력 대기 {number(session.processing_ms.read)} ms · 관절 추론 {number(session.processing_ms.pose)} ms{(session.processing_ms.read??0)>=50 && (session.processing_ms.read??0)>(session.processing_ms.pose??0)?' · 입력 지연: 조명·노출·USB 상태 확인':''}</div>}
+    {alive && session?.capture_diagnostics?.low_light && <div className="muted">영상이 어두움 · 조명·렌즈 가림 확인 · 밝기 진단은 미검출 원인을 확정하지 않습니다</div>}
+    {alive && session?.capture_diagnostics?.highlight_clipping && <div className="muted">밝은 영역이 많음 · 조명·노출·반사 확인</div>}
     {session?.error && <div className="muted">입력 오류: {session.error}</div>}
   </section>;
 }
