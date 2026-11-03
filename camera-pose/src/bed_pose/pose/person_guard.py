@@ -16,8 +16,9 @@ def supports_pose(boxes,q,width,height):
 
 
 class PersonGuard:
-    def __init__(self,config):
+    def __init__(self,config,*,max_people=1):
         self.process=None;self.cache_stamp=None;self.boxes=[];self.diagnostics={};self.sequence=0
+        self.max_people=max_people;self.views_used=0
         values=json.loads(Path(config).read_text(encoding='utf-8'))
         executable=Path(values['python_path'])
         if not executable.is_absolute() or not executable.is_file():raise ValueError('Person guard Python is unavailable')
@@ -45,17 +46,25 @@ class PersonGuard:
         h,w=rgb.shape[:2]
         if self.cache_stamp is None or stamp-self.cache_stamp>=500:
             self.sequence+=1
-            request=dict(id=self.sequence,width=w,height=h,turns=turns,rgb=base64.b64encode(rgb.tobytes()).decode('ascii'))
+            request=dict(id=self.sequence,width=w,height=h,turns=turns,rgb=base64.b64encode(rgb.tobytes()).decode('ascii'),
+                         pose_quality=q if self.max_people==1 else None)
             self.process.stdin.write(json.dumps(request,separators=(',',':'))+'\n');self.process.stdin.flush()
             value=self._response()
             if value['id']!=self.sequence:raise RuntimeError('Person guard response sequence mismatch')
-            self.boxes=value['boxes'];self.cache_stamp=stamp
+            self.boxes=value['boxes'];self.cache_stamp=stamp;self.views_used=value['views_used']
         accepted=supports_pose(self.boxes,q,w,h)
         self.diagnostics=dict(confirmed=accepted,reason=None if accepted else 'person_not_confirmed_at_configured_scale',
-                              detector_age_ms=stamp-self.cache_stamp,boxes=len(self.boxes),accuracy_verified=False)
+                              detector_age_ms=stamp-self.cache_stamp,boxes=len(self.boxes),views_used=self.views_used,accuracy_verified=False)
+        if q.get('box') and q.get('center'):
+            a,b,c,d=q['box'];a*=w;c*=w;b*=h;d*=h
+            area=max(1,(c-a)*(d-b));cx,cy=q['center'][0]*w,q['center'][1]*h
+            self.diagnostics.update(pose_box=q['box'],pose_center=q['center'],
+                center_in_detector_box=any(x0<=cx<=x1 and y0<=cy<=y1 for x0,y0,x1,y1 in self.boxes),
+                maximum_pose_box_coverage=max((max(0,min(c,x1)-max(a,x0))*max(0,min(d,y1)-max(b,y0))/area
+                                              for x0,y0,x1,y1 in self.boxes),default=0.))
         return accepted
 
-    def reset(self):self.cache_stamp=None;self.boxes=[];self.diagnostics={}
+    def reset(self):self.cache_stamp=None;self.boxes=[];self.diagnostics={};self.views_used=0
 
     def close(self):
         if self.process is None:return
@@ -64,6 +73,26 @@ class PersonGuard:
         except (OSError,subprocess.TimeoutExpired):process.kill();process.wait(timeout=5)
         finally:
             process.stdout.close();self.process=None
+
+
+def person_boxes(detector,bgr,turns,minimum,pose_quality=None):
+    """Keep the opposite direction when needed; a supported single target is conclusive for this OR gate."""
+    h,w=bgr.shape[:2];boxes=[];views_used=0
+    directions=(turns%4,(turns+2)%4)
+    if pose_quality is not None:directions+=((turns+1)%4,(turns+3)%4)
+    for turn in directions:
+        views_used+=1
+        detections=detector(np.ascontiguousarray(np.rot90(bgr,turn)))
+        for x0,y0,x1,y1 in detections:
+            corners=np.array([[x0,y0],[x0,y1],[x1,y0],[x1,y1]],float)
+            x,y=corners[:,0].copy(),corners[:,1].copy()
+            if turn==1:corners[:,0]=w-y;corners[:,1]=x
+            elif turn==2:corners[:,0]=w-x;corners[:,1]=h-y
+            elif turn==3:corners[:,0]=y;corners[:,1]=h-x
+            low=np.maximum(corners.min(axis=0),[0,0]);high=np.minimum(corners.max(axis=0),[w,h])
+            if np.prod(np.maximum(0,high-low))/(w*h)>=minimum:boxes.append([*low.tolist(),*high.tolist()])
+        if pose_quality is not None and supports_pose(boxes,pose_quality,w,h):break
+    return boxes,views_used
 
 
 def worker(config):
@@ -104,19 +133,9 @@ def worker(config):
         request=json.loads(line);w,h=request['width'],request['height']
         if type(w) is not int or type(h) is not int or min(w,h)<1 or w*h>4096*2160:raise ValueError('Invalid frame geometry')
         rgb=np.frombuffer(base64.b64decode(request['rgb'],validate=True),np.uint8).reshape(h,w,3)
-        bgr=cv2.cvtColor(rgb,cv2.COLOR_RGB2BGR);boxes=[]
-        # The opposite upright direction helps lying patients without an unbounded rotation search.
-        for turn in (request['turns']%4,(request['turns']+2)%4):
-            detections=detector(np.ascontiguousarray(np.rot90(bgr,turn)))
-            for x0,y0,x1,y1 in detections:
-                corners=np.array([[x0,y0],[x0,y1],[x1,y0],[x1,y1]],float)
-                x,y=corners[:,0].copy(),corners[:,1].copy()
-                if turn==1:corners[:,0]=w-y;corners[:,1]=x
-                elif turn==2:corners[:,0]=w-x;corners[:,1]=h-y
-                elif turn==3:corners[:,0]=y;corners[:,1]=h-x
-                low=np.maximum(corners.min(axis=0),[0,0]);high=np.minimum(corners.max(axis=0),[w,h])
-                if np.prod(np.maximum(0,high-low))/(w*h)>=minimum:boxes.append([*low.tolist(),*high.tolist()])
-        print(json.dumps(dict(ok=True,id=request['id'],boxes=boxes)),flush=True)
+        bgr=cv2.cvtColor(rgb,cv2.COLOR_RGB2BGR)
+        boxes,views_used=person_boxes(detector,bgr,request['turns'],minimum,request.get('pose_quality'))
+        print(json.dumps(dict(ok=True,id=request['id'],boxes=boxes,views_used=views_used)),flush=True)
 
 
 if __name__=='__main__':

@@ -45,6 +45,8 @@ class BrowserGPUAdapter:
         self.frame_context=None;self.diagnostics={}
         self.support_stamp=None;self.support_center=None
         self.needs_video_reacquire=False
+        self.confirmation_misses=0
+        self.confirmation_turn=None
         self.rpc_until=-1
         if self.person_guard is not None:self.person_guard.reset()
 
@@ -107,7 +109,7 @@ class BrowserGPUAdapter:
         if guard_path.is_file():
             try:
                 from .person_guard import PersonGuard
-                self.person_guard=PersonGuard(guard_path)
+                self.person_guard=PersonGuard(guard_path,max_people=self.max_people)
             except Exception:self.close();raise
         from .recovery import POLICY
         return {'adapter_id':'mediapipe_pose', 'execution_kind':'model_inference',
@@ -175,15 +177,18 @@ class BrowserGPUAdapter:
             if self.frame_context is not None and context!=self.frame_context:
                 self._rpc('reset',all_tasks=True);self._clear_pose_state()
             self.frame_context=context
+            probe_evidence={}
             def infer(turns,crop=None,probe=False):
                 x0,y0,x1,y1=crop or (0,0,packet.width,packet.height)
                 view=rgb[y0:y1,x0:x1];image=np.ascontiguousarray(np.rot90(view,turns))
                 result=restore(self._infer_image(image,stamp,probe),turns,crop,packet.width,packet.height)
+                if probe:probe_evidence.update(rotation_degrees=turns*90,sdk_people=len(result.get('landmarks',[])),guard_rejected=0)
                 if probe and result.get('landmarks') and self.person_guard is not None:
                     people=result['landmarks'];world=result.get('worldLandmarks',[])
                     kept=[i for i,person in enumerate(people)
                           if self.person_guard.confirm(rgb,stamp,turns,quality({'landmarks':[person]}))]
                     result['landmarks']=[people[i] for i in kept]
+                    probe_evidence['guard_rejected']=len(people)-len(kept)
                     result['worldLandmarks']=[world[i] for i in kept] if world else []
                     self.person_guard.diagnostics.update(confirmed=bool(kept),reason=None if kept else 'person_not_confirmed_at_configured_scale',
                                                          accepted_sdk_person_indices=kept,rejected_people=len(people)-len(kept))
@@ -204,11 +209,19 @@ class BrowserGPUAdapter:
             if crop is None and result.get('landmarks') and not fresh_support and not result.get('error'):
                 if probe_available:
                     self.last_rotation_probe=stamp;attempted=True
-                    result=infer(self.rotation_turns,probe=True);chosen=quality(result);before=chosen
+                    # A VIDEO track may exist while IMAGE repeatedly fails at
+                    # that orientation. Rechecking the same orientation used
+                    # the sole retry budget forever and starved rotation rescue.
+                    turn=(self.rotation_turns+(0,1,3,2)[self.confirmation_misses%4])%4
+                    self.confirmation_turn=turn
+                    result=infer(turn,probe=True);chosen=quality(result);before=chosen
                     if not result.get('error') and supported(chosen):
+                        if turn!=self.rotation_turns:self._rpc('reset')
+                        self.rotation_turns=turn;self.confirmation_misses=0
                         if self.needs_video_reacquire:self._rpc('reset');self.needs_video_reacquire=False
                         self.support_stamp=stamp;self.support_center=chosen['center'];strategy='image_confirmed'
                     elif not result.get('error'):
+                        self.confirmation_misses+=1
                         if self.support_stamp is not None:self._rpc('reset')
                         self.needs_video_reacquire=True
                         self.support_stamp=None;self.support_center=None;strategy='full_rejected_no_image_person'
@@ -250,6 +263,9 @@ class BrowserGPUAdapter:
                 self.recent_box=[chosen['box'][0]*packet.width,chosen['box'][1]*packet.height,chosen['box'][2]*packet.width,chosen['box'][3]*packet.height];self.recent_box_stamp=stamp
             self.diagnostics=dict(version=POLICY['version'],visible_joints=chosen['visible'],torso_joints=chosen['torso'],
                 healthy=chosen['healthy'],strategy=strategy,rotation_degrees=self.rotation_turns*90,crop_bounds=list(crop) if crop else None,
+                confirmation_misses=self.confirmation_misses,
+                confirmation_rotation_degrees=None if self.confirmation_turn is None else self.confirmation_turn*90,
+                probe_evidence=probe_evidence,
                 recovery_attempted=attempted,transport_errors=self.transport_errors,transport_fallbacks=self.transport_fallbacks,
                 independent_support_age_ms=stamp-self.support_stamp if self.support_stamp is not None else None,
                 person_evidence=dict(self.person_guard.diagnostics) if self.person_guard else None,

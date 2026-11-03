@@ -32,14 +32,16 @@ function CameraPanel({session, view, index}: {session?: InputSession; view: View
     let cancelled = false;
     const image = new Image(); image.onload = () => {
       if (cancelled) return;
-      c.width = view.width; c.height = view.height; context.drawImage(image,0,0,c.width,c.height);
+      if(c.width!==view.width)c.width=view.width;
+      if(c.height!==view.height)c.height=view.height;
+      context.drawImage(image,0,0,c.width,c.height);
       context.strokeStyle = '#7df4b9'; context.fillStyle = '#7df4b9'; context.lineWidth = Math.max(1,c.width/500);
       for (const p of view.people) {
         const usable = (i: number) => {const j=p.joints[i]; return j && j.x_px !== null && j.y_px !== null && Number.isFinite(j.x_px) && Number.isFinite(j.y_px) && (j.visibility == null || j.visibility >= .5);};
         for (const [a,b] of p.edges ?? EDGES) if (usable(a) && usable(b)) {context.beginPath(); context.moveTo(p.joints[a].x_px!,p.joints[a].y_px!); context.lineTo(p.joints[b].x_px!,p.joints[b].y_px!); context.stroke();}
         for (let i=0;i<p.joints.length;i++) if (usable(i)) {context.beginPath(); context.arc(p.joints[i].x_px!,p.joints[i].y_px!,2.5,0,Math.PI*2); context.fill();}
       }
-    }; image.src = view.image; return () => {cancelled=true;};
+    }; image.decoding='async'; image.src = view.image; return () => {cancelled=true;};
   }, [view]);
   const alive = !!session && !session.closed && !['error','closing','ended'].includes(session.phase);
   return <section className="panel camera" ref={panel}>
@@ -71,6 +73,7 @@ function App() {
     let stopped=false, timer: ReturnType<typeof setTimeout>;
     let bindingKey='',frameIds=[-1,-1],count=[0,0],sampled=performance.now();
     async function tick() {
+      const started=performance.now();
       try {
         const room=await api('/api/room/live?0='+frameIds[0]+'&1='+frameIds[1]) as RoomStatus & {sessions:InputSession[];views:((View & {unchanged?:boolean})|null)[]};
         if (stopped) return;
@@ -81,8 +84,8 @@ function App() {
         setViews(old=>room.views.map((v,i)=>{if(v?.unchanged)return old[i];if(v)frameIds[i]=v.frame_id;else frameIds[i]=-1;return v;}));
         const now=performance.now();if(now-sampled>=1000){setDisplayFps(count.map(c=>c*1000/(now-sampled)));count=[0,0];sampled=now;}
       } catch (e) {
-        if (!stopped) {setConnection(false);setViews([null,null]);setNotice(String(e));setData(old=>old?{...old,skeleton:null,posture_3d:old.posture_3d?{...old.posture_3d,label:null,label_ko:null,status:'held',reason:'connection_lost'}:undefined,experimental_preview:old.experimental_preview?{...old.experimental_preview,skeleton:null}:undefined}:null);}
-      } finally {if (!stopped) timer=setTimeout(tick,25);}
+        if (!stopped) {setConnection(false);setViews([null,null]);setNotice(String(e));setData(old=>old?{...old,skeleton:null,camera_posture:old.camera_posture?{...old.camera_posture,label:null,label_ko:'카메라 연결 확인 중',status:'unavailable',views:[]}:undefined,posture_3d:old.posture_3d?{...old.posture_3d,label:null,label_ko:null,status:'held',reason:'connection_lost'}:undefined,experimental_preview:old.experimental_preview?{...old.experimental_preview,skeleton:null}:undefined}:null);}
+      } finally {if (!stopped) timer=setTimeout(tick,Math.max(0,1000/30-(performance.now()-started)));}
     }
     tick(); return ()=>{stopped=true;clearTimeout(timer);};
   },[]);
@@ -96,7 +99,7 @@ function App() {
   const vector = (title: string, value: Vec3, update: (v:Vec3)=>void) => <label className="field">{title}<div className="vector">{value.map((x,i)=><label key={i}><span>{['X','Y','Z'][i]}</span><input aria-label={title+' '+['X','Y','Z'][i]} type="number" step="0.01" value={x} onChange={e=>update(value.map((v,j)=>i===j?Number(e.target.value):v) as Vec3)}/></label>)}</div></label>;
   return <main>
     <header><div><div className="eyebrow">BED POSE SKELETON AI / SPATIAL MONITORING</div><h1>3D 공간 모니터</h1></div><div className="header-actions"><span className="badge"><i className={'dot '+(connection?'green':'')}/>{connection?'서버 연결됨':'서버 연결 대기'}</span><a href={'/#'+token}>측정 작업실 ↗</a></div></header>
-    <div className="performance"><label><input type="checkbox" checked={preview?.enabled??false} disabled={busy} onChange={e=>{const enabled=e.target.checked;setDemo(false);action(async()=>{await api('/api/room/experimental-preview',{enabled});log(enabled?'실시간 임시 3D 표시 켜짐 · 정확도 미검증':'임시 표시 꺼짐');});}}/> 실시간 임시 3D · 정확도 미검증</label><label><input type="checkbox" checked={demo} onChange={e=>setDemo(e.target.checked)}/> DEMO 3D · 시뮬레이션 관절</label><span>3D 렌더링 {number(renderStats.fps,0)} FPS</span><span>영상 갱신 A {number(displayFps[0],0)} / B {number(displayFps[1],0)} FPS</span><span>{sessions.map(s=>s.pose_device??'—').join(' / ')}</span><span>3D 입력: {preview?.skeleton?.source==='single_camera_mediapipe_pnp'?`단일 카메라 ${preview.skeleton.source_camera} · 깊이 추정`:preview?.skeleton?'두 카메라 삼각측량':'대기'}</span>{preview?.input_rotations?.some(r=>r!==0)&&<span>검출 방향 보완 A {preview.input_rotations[0]}° / B {preview.input_rotations[1]}°</span>}<span>6자세: {data?.posture_3d?.label_ko??'판정 보류'}</span><button onClick={()=>document.getElementById('posture3d')?.scrollIntoView({behavior:'smooth'})}>침대 등록 · 자세 보기 ↓</button><details><summary>렌더링 GPU</summary>{renderStats.renderer}</details></div>
+    <div className="performance"><label><input type="checkbox" checked={preview?.enabled??false} disabled={busy} onChange={e=>{const enabled=e.target.checked;setDemo(false);action(async()=>{await api('/api/room/experimental-preview',{enabled});log(enabled?'실시간 임시 3D 표시 켜짐 · 정확도 미검증':'임시 표시 꺼짐');});}}/> 실시간 임시 3D · 정확도 미검증</label><label><input type="checkbox" checked={demo} onChange={e=>setDemo(e.target.checked)}/> DEMO 3D · 시뮬레이션 관절</label><span>3D 렌더링 {number(renderStats.fps,0)} FPS</span><span>영상 갱신 A {number(displayFps[0],0)} / B {number(displayFps[1],0)} FPS</span><span>{data?.config.bindings.map(id=>sessions.find(s=>s.id===id)?.pose_device??'—').join(' / ')}</span><span>3D 입력: {preview?.skeleton?.source==='single_camera_mediapipe_pnp'?`단일 카메라 ${preview.skeleton.source_camera} · 깊이 추정`:preview?.skeleton?'두 카메라 삼각측량':'대기'}</span>{preview?.input_rotations?.some(r=>r!==0)&&<span>검출 방향 보완 A {preview.input_rotations[0]}° / B {preview.input_rotations[1]}°</span>}<span>현재 자세: {data?.camera_posture?.label_ko??data?.posture_3d?.label_ko??'관절 확인 중'}</span><button onClick={()=>document.getElementById('posture3d')?.scrollIntoView({behavior:'smooth'})}>침대 등록 · 자세 보기 ↓</button><details><summary>렌더링 GPU</summary>{renderStats.renderer}</details></div>
     {sessions.some(s=>s.pose_max_people===1) && <p className="muted">단일 대상 GPU 모드 · 주변 인물이 있어도 추가 인물을 출력하지 않을 수 있습니다. 실제 복원 시 양쪽에 같은 대상 한 명만 있도록 유지하세요.</p>}
     <div className="stats"><article><span>스테레오 복원</span><strong className={displayedPose?'good':''}>{connection && displayedPose?(preview?.enabled?'실시간 임시 관절':'관절 복원 중'):'대기'}</strong></article><article><span>시간 차이 / 허용 오차</span><strong>{number(data?.synchronization.skew_ms)} <small>/ {data?.config.max_skew_ms ?? '—'} ms</small></strong></article><article><span>동기화 쌍 처리율</span><strong>{number(data?.synchronization.pair_rate_fps)} <small>FPS</small></strong></article><article><span>보정 상태</span><strong>{preview?.enabled?'임시 후보 · 미검증':data?.calibration?'파일 로드됨':'미보정'}</strong></article></div>
     <div className="workspace"><section className="panel scene-panel"><div className="panel-heading"><span>침상 3D 모니터 <span className="muted">{preview?.enabled&&!demo?(preview.alignment?.source==='bed_plane'?'침상 윗면 65cm 표시 · 척도 미검증':'거리·방 위치 미검증'):'미터 · Y 위쪽'}</span></span><span className="badge">{demo?'DEMO · 실제 추적 아님':preview?.enabled?(preview.skeleton?.source==='single_camera_mediapipe_pnp'?'LIVE · 단일 카메라 추정 3D':'LIVE · 실제 카메라 입력 / 임시 3D'):data?.config.dimensions_source==='measured'?'입력한 실측 치수':'DEMO 치수'}</span></div><div className="scene" ref={host}>{webglError && <p>{webglError}</p>}</div><div className="scene-toolbar">{[['reset','초기 시점'],['top','위'],['front','정면'],['side','측면'],['bed','침대 중심']].map(([key,label])=><button key={key} onClick={()=>scene.current?.preset(key)}>{label}</button>)}<label><input type="checkbox" checked={axes} onChange={e=>setAxes(e.target.checked)}/>좌표축</label><label><input type="checkbox" checked={ceiling} onChange={e=>setCeiling(e.target.checked)}/>천장</label></div><div className="legend"><span style={{color:'#37d2d0'}}>● 카메라 A</span><span style={{color:'#f6ad55'}}>● 카메라 B</span><span style={{color:preview?.skeleton?.source==='single_camera_mediapipe_pnp'?'#f6ad55':'#73f0b0'}}>● {demo?'데모 관절':preview?.enabled?'실시간 임시 관절':'복원 관절'}</span><span>떨림 억제 · 적응형 평활화 60~160ms / 전환 300ms · 렌더링 FPS와 추론 FPS는 별개</span></div><p className="status-message">{demo?'SIMULATED · 침대 위 데모 관절입니다. 실제 사람의 자세·위치 측정이 아닙니다.':!connection?'서버 연결을 확인하세요':displayReason?previewReasons[displayReason]??reasons[displayReason]??displayReason:preview?.enabled?'실제 관절을 사용합니다. 양쪽 복원이 부족하면 단일 카메라 MediaPipe 추정 3D로 전환합니다. 깊이·거리·방 정렬은 미검증입니다. 별도 침대 등록 후 실험적 6자세 후보를 표시하며 학습 정답으로 저장하지 않습니다.':'보정된 양쪽 2D 관절을 삼각측량한 추정 좌표입니다'}</p></section>

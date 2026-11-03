@@ -17,7 +17,9 @@ type Point=[number,number];
 export function Posture3D({data,views,api,log}:{data:RoomStatus|null;views:(View|null)[];api:(path:string,body?:unknown)=>Promise<any>;log:(s:string)=>void}) {
   const [frozen,setFrozen]=useState<(View|null)[]|null>(null),[points,setPoints]=useState<Point[][]>([[],[]]);
   const [busy,setBusy]=useState(false),[error,setError]=useState('');
-  const result=data?.posture_3d;
+  const live=data?.camera_posture;
+  const sensor=data?.sensor_crosscheck;
+  const result=live??data?.posture_3d;
   async function save(){setBusy(true);setError('');try{
     await api('/api/room/preview-bed',{points,bindings:data?.config.bindings,resolutions:frozen!.map(v=>[v!.width,v!.height]),frame_ids:frozen!.map(v=>v!.frame_id)});
     setFrozen(null);log('침대 위치를 임시 3D 좌표에 등록했습니다 · 정확도 미검증');
@@ -26,11 +28,18 @@ export function Posture3D({data,views,api,log}:{data:RoomStatus|null;views:(View
     await api('/api/room/preview-axis',{reference});log(reference==='bed'?'침대 평면을 수평 기준으로 맞췄습니다':reference==='standing'?'서 있음 기준으로 위쪽 축을 맞췄습니다':reference==='lying'?'누움 기준으로 길이 방향을 맞췄습니다':'표시 축을 초기화했습니다');
   }catch(e){setError(String(e));}finally{setBusy(false);}}
   return <section id="posture3d" className="panel" style={{margin:'18px 0',padding:20}}>
-    <div className="panel-heading">4단계 · 3D 관절 + 침대 위치 / 6개 자세</div>
-    <p><strong style={{fontSize:26,color:result?.label?'#73f0b0':'#f6ad55'}}>{result?.label_ko??'판정 보류'}</strong> <span className="badge">{result?.status==='stable'?`${result?.required_stable_seconds??.6}초 이상 유지`:result?.status==='candidate'?'순간 후보':'관측 대기'} · {result?.evidence_level==='partial'?'일부 관절 가림 · 제한된 후보':'실험적 예측'}</span></p>
-    <p>{result?.reason?reasons[result.reason]??result.reason:'동기화된 실제 3D 관절과 침대 평면의 관계로 계산합니다.'}</p>
-    <p className="muted">{Object.values(result?.labels??{}).join(' · ')}<br/>관절 품질 점수 {result?.quality_score==null?'—':result.quality_score.toFixed(2)} · 정답 확률이 아닙니다. 정확도 미검증 · ToF/학습 정답으로 저장하지 않습니다.</p>
-    {!!result?.warnings?.length&&<p className="warning">{result.warnings.map(w=>({one_knee_occluded:'한쪽 무릎 가림',both_knees_occluded_strong_torso_only:'양쪽 무릎 가림 · 강한 몸통 근거만 사용',nose_occluded_using_eyes:'코 가림 · 눈 위치 참고',monocular_depth_estimate:'단일 카메라 깊이 추정',cross_view_disagreement:'카메라별 기하 근거 불일치'}[w]??w)).join(' · ')}</p>}
+    <div className="panel-heading">카메라 자동 추정 · 확정 자세 아님</div>
+    {sensor&&<div style={{border:'1px solid #64748b',padding:12,marginBottom:12}}>
+      <strong>카메라·ToF 비교: {({match:'일치',conflict:'불일치',tof_only:'ToF만 유효',low_confidence:'ToF 신뢰도 부족',unavailable:'ToF 수신 대기'} as Record<string,string>)[sensor.status]??sensor.status}</strong>
+      <p>카메라: {live?.label_ko??'미검출'} / ToF 원시 예측: {live?.labels[sensor.tof_raw_label??'']??sensor.tof_raw_label??'없음'} / 모델 점수: {sensor.tof_confidence==null?'—':sensor.tof_confidence.toFixed(2)}<br/>ToF 후처리: {sensor.tof_filtered_label??'없음'} · {sensor.note}<br/>일치 여부는 실제 정답 정확도가 아닙니다.</p>
+      {sensor.assisted_source==='tof_only_unverified'&&<p>보조 자세: {live?.labels[sensor.assisted_label??'']??sensor.assisted_label} · ToF만 사용, 카메라 미검출 / 미검증</p>}
+      <div className="two-cols">{Object.entries(sensor.maps).map(([id,m])=><div key={id}><p>{id} · 유효 {m.valid_zones}/64</p><div style={{display:'grid',gridTemplateColumns:'repeat(8,1fr)',gap:2,maxWidth:380}}>{m.distances_mm?.map((v,i)=><span key={i} style={{fontSize:10,textAlign:'center',background:v>0?`hsl(${Math.min(230,v/8)},40%,25%)`:'#333'}}>{v>0?Math.round(v):'—'}</span>)}</div></div>)}</div>
+    </div>}
+    <p><strong style={{fontSize:26,color:result?.status==='stable'?'#73f0b0':'#f6ad55'}}>{result?.label_ko??'카메라 관절 확인 중'}</strong> <span className="badge">{result?.status==='stable'?'자세 유지 중':result?.label?'즉시 추정':'관측 중'}</span></p>
+    <p>{live?live.views.map(v=>`${v.camera}: ${v.source==='clip_image_and_bed_relation'?'CLIP + 침대 경계':v.source==='clip_and_supported_bed_geometry'?'CLIP + 침대 관절 기하':'관절 기하 보완'} · 관절 ${v.joints}개`).join(' / '):data?.posture_3d?.reason?reasons[data.posture_3d.reason]??data.posture_3d.reason:'카메라 영상 근거를 기다립니다.'}</p>
+    <p className="muted">바로 누움 · 엎드림 · 왼쪽 누움 · 오른쪽 누움 · 침대 위 앉음 · 걸터앉음<br/>관절 품질 {result?.quality_score==null?'—':result.quality_score.toFixed(2)} · 자세 정확도 목표 95% / 실제 6자세 평가 전 · ToF 재학습 대기</p>
+    {live&&<details><summary>3D 기하·학습 조건 확인</summary><p>{data?.posture_3d?.label_ko??'3D 기하 추가 확인 필요'} · {data?.posture_3d?.reason?reasons[data.posture_3d.reason]??data.posture_3d.reason:'3D 관절·침대 관계 관측'}<br/>화면의 현재 추정은 검증된 정답이 아닙니다. 95% 실측 검증과 라벨 검토 전에는 자동 학습 정답으로 승인하지 않습니다.</p></details>}
+    {!!result?.warnings?.length&&<p className="warning">{result.warnings.map(w=>({one_knee_occluded:'한쪽 무릎 가림',both_knees_occluded_strong_torso_only:'양쪽 무릎 가림 · 강한 몸통 근거만 사용',nose_occluded_using_eyes:'코 가림 · 눈 위치 참고',monocular_depth_estimate:'단일 카메라 깊이 추정',cross_view_disagreement:'카메라별 근거 불일치',left_right_from_unverified_geometry:'좌우는 관절 방향 추정 사용',lying_direction_unavailable:'누운 방향 추가 확인 필요',clip_unavailable_for_frame:'현재 프레임은 관절 기하로 보완',bed_region_unavailable:'침대 영역 확인 필요',bed_location_uncertain:'침대 경계/바깥 관측'}[w]??w)).join(' · ')}</p>}
     {data?.experimental_preview?.enabled&&<>
       <div className="panel-heading">좌표축 정렬 · 녹화/학습용 라벨 아님</div>
       <p className="muted">기본은 등록된 침대 면을 수평으로 놓고 중심을 맞춥니다. 침상 윗면 65cm는 표시 높이이며 거리 척도는 미검증입니다. 서 있음/누움 기준은 필요할 때 선택할 수 있습니다. 모든 기준은 카메라·관절·침대에 함께 적용하며 학습이 아닙니다.</p>

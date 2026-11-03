@@ -24,7 +24,7 @@ class WebTests(unittest.TestCase):
     def setUp(self):
         self.temp=tempfile.TemporaryDirectory();self.addCleanup(self.temp.cleanup)
         self.root=Path(self.temp.name)
-        self.workspace=WebWorkspace(output_root=self.root/'records',engine_factory=factory,model_store=self.root/'model-store')
+        self.workspace=WebWorkspace(output_root=self.root/'records',engine_factory=factory,model_store=self.root/'model-store',clip_model=self.root/'unprepared-clip')
         self.server=WorkspaceHTTPServer(self.workspace)
         self.thread=threading.Thread(target=self.server.serve_forever,daemon=True);self.thread.start()
         self.addCleanup(self.cleanup)

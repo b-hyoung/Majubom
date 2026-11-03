@@ -94,6 +94,9 @@ class RoomMonitor:
         from .bed_posture_3d import PostureFilter
         self.posture_filter=PostureFilter()
         self.posture_3d=None
+        self.sensor_crosscheck=None
+        from .camera_posture import LivePostureEstimator
+        self.camera_posture=LivePostureEstimator()
         self.preview_bed=None
         self.preview_annotation=None
         self.axis_up=None;self.axis_long=None
@@ -505,6 +508,14 @@ class RoomMonitor:
         from .automatic_calibration import person_boxes
         packet.update(person_boxes=person_boxes(row,rgb.shape[1],rgb.shape[0]),processing_ok=row.get('processing_status')=='ok')
         packet['people_count']=len(people)
+        assessment=row.get('posture_assessment') or {}
+        packet.update(input_id=session.id,source_camera='AB'[slot],track_id=assessment.get('track_id'),
+                      bed_region=deepcopy(frame.get('bed_region')),
+                      image_body_state=deepcopy((assessment.get('rule_features') or {}).get('body_state')))
+        if packet['image_body_state'] is None and assessment.get('candidate_id') is not None:
+            from .body_state import read_observation
+            packet['image_body_state']=read_observation(row.get('body_state_observation'),row,
+                assessment['candidate_id'],session.worker.engine.body_state_profile)
         packet['world_joints']=None
         packet['rotation_ccw_degrees']=next((c.get('inference_rotation_ccw_degrees',0) for c in row.get('raw_candidates',[]) if isinstance(c,dict)),0)
         if len(people)==1 and packet['processing_ok']:
@@ -617,6 +628,15 @@ class RoomMonitor:
                 # Draw the fitted surface; preserve original raw corners for geometry/diagnostics.
                 corners[:,1]=self.bed_surface_height
             preview_bed=bed_frame(corners,'bed_preview' if offset is not None else 'camera_a_preview_aligned',False,preview_bed['source'])
+        live_posture=self.camera_posture.update([p if alive(i) and p and p.get('input_id')==self.config['bindings'][i] else None
+            for i,p in enumerate(self.latest_observations)],
+            self.preview_annotation if self.preview_enabled and self.preview_bindings==self.config['bindings'] else None,
+            self.preview_bed if self.preview_enabled else None,now)
+        live_posture['setup_signature']=object_hash(dict(bindings=self.config['bindings'],
+            sources=[{k:sessions[sid].state.get(k) for k in ('title','source_profile','automatic_posture_profile','body_state_provider_profile')}
+                     if sid in sessions else None for sid in self.config['bindings']],
+            bed_annotation=self.preview_annotation,preview_candidate=self.preview_candidate,
+            method=live_posture['method']))
         return dict(config=deepcopy(self.config), calibration=deepcopy(self.calibration), error=self.error,
                     learning_observation=dict(
                         observation_id=self.preview_skeleton.get('observation_id') if self.preview_enabled and self.preview_skeleton else str([p['frame_id'] for p in pair]) if pair else None,
@@ -625,6 +645,8 @@ class RoomMonitor:
                         time_basis='host_receive_not_exposure',source=self.preview_skeleton.get('source') if self.preview_skeleton else None,
                         calibration_verified=not self.preview_enabled and self.calibration is not None and reason is None),
                     posture_3d=posture,
+                    camera_posture=live_posture,
+                    sensor_crosscheck=self.sensor_crosscheck.snapshot(live_posture) if self.sensor_crosscheck else None,
                     experimental_preview=dict(enabled=self.preview_enabled,accuracy_verified=False,
                         input_rotations=[p.get('rotation_ccw_degrees',0) if p else 0 for p in self.latest_observations],
                         bed=preview_bed,alignment=alignment,

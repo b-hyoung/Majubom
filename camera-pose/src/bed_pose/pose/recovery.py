@@ -10,7 +10,7 @@ POLICY={'version':'pose-recovery-0.1','visibility_min':.5,'healthy_visible_joint
 POLICY.update(crop_requires_current_torso=True,cropped_primary='stateless_image',
               crop_expires_without_full_frame_support=True,video_acquisition_requires_image_confirmation=True,
               independent_full_frame_recheck_ms=1000,extra_inference_budget_scope='mediapipe_only',
-              optional_person_detector_max_views=2,optional_person_detector_interval_ms=500)
+              optional_person_detector_max_views=4,optional_person_detector_interval_ms=500)
 
 
 def quality(result):

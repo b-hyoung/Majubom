@@ -7,7 +7,7 @@ from bed_pose.pose.browser_gpu import BrowserGPUAdapter
 from bed_pose.pose.recovery import quality,improves,proposals,restore
 from bed_pose.contracts import FramePacket,ModelInput,AdapterCallError
 from bed_pose.pose.mediapipe import COCO_INDICES
-from bed_pose.pose.person_guard import supports_pose
+from bed_pose.pose.person_guard import supports_pose,person_boxes
 
 
 def pose(visible=range(17),x=.4):
@@ -17,6 +17,17 @@ def pose(visible=range(17),x=.4):
 
 
 class RecoveryTests(unittest.TestCase):
+    def test_failed_video_confirmation_does_not_starve_other_orientations(self):
+        a=BrowserGPUAdapter();turns=[]
+        def infer(image,stamp,probe=False):
+            if probe:turns.append(image.shape[:2]);return dict(landmarks=[],worldLandmarks=[])
+            return pose()
+        with patch.object(a,'_infer_image',side_effect=infer),patch.object(a,'_rpc',return_value=None):
+            for i in range(4):a.estimate(self.frame(stamp=10+i*600))
+        self.assertEqual(turns,[(480,640),(640,480),(640,480),(480,640)])
+        self.assertEqual(a.confirmation_misses,4)
+        self.assertEqual(a.diagnostics['confirmation_rotation_degrees'],180)
+
     def frame(self,stamp=10,spec=None):
         return ModelInput(FramePacket('camera',7,np.zeros((480,640,3),np.uint8),spec or {}),stamp)
 
@@ -125,6 +136,30 @@ class RecoveryTests(unittest.TestCase):
         self.assertTrue(supports_pose([[100,50,450,350]],q,640,480))
         self.assertFalse(supports_pose([[250,180,260,200]],q,640,480))
         self.assertFalse(supports_pose([[400,300,600,450]],q,640,480))
+
+    def test_guard_skips_opposite_direction_only_after_single_target_support(self):
+        q={'center':[.4,.4],'box':[.2,.2,.6,.6]};image=np.zeros((480,640,3),np.uint8)
+        detector=unittest.mock.Mock(return_value=np.array([[0,0,640,480]]))
+        boxes,views=person_boxes(detector,image,0,.08,q)
+        self.assertEqual(views,1);self.assertEqual(detector.call_count,1)
+        self.assertTrue(supports_pose(boxes,q,640,480))
+        detector.reset_mock();person_boxes(detector,image,0,.08)
+        self.assertEqual(detector.call_count,2) # Multi-person evidence still checks both views.
+
+    def test_guard_retains_opposite_view_for_failure_and_lying_recovery(self):
+        q={'center':[.4,.4],'box':[.2,.2,.6,.6]};image=np.zeros((480,640,3),np.uint8)
+        detector=unittest.mock.Mock(side_effect=[np.empty((0,4)),np.array([[0,0,640,480]])])
+        boxes,views=person_boxes(detector,image,0,.08,q)
+        self.assertEqual(views,2);self.assertTrue(supports_pose(boxes,q,640,480))
+        detector=unittest.mock.Mock(return_value=np.empty((0,4)))
+        boxes,views=person_boxes(detector,image,0,.08,q)
+        self.assertEqual(views,4);self.assertFalse(supports_pose(boxes,q,640,480))
+
+    def test_guard_tries_orthogonal_view_only_after_two_failures(self):
+        q={'center':[.4,.4],'box':[.2,.2,.6,.6]};image=np.zeros((480,640,3),np.uint8)
+        detector=unittest.mock.Mock(side_effect=[np.empty((0,4)),np.empty((0,4)),np.array([[0,0,480,640]])])
+        boxes,views=person_boxes(detector,image,0,.08,q)
+        self.assertEqual(views,3);self.assertTrue(supports_pose(boxes,q,640,480))
 
     def test_new_video_does_not_inherit_previous_stream_transport_backoff(self):
         a=BrowserGPUAdapter();a.rpc_until=12000;a.last_timestamp=10000;a.support_stamp=9500

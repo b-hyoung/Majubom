@@ -16,6 +16,7 @@ PlatformIO/Python 빌드, node_modules, 로그, LanceDB 저장 엔진 내부 파
 | camera-pose/ | 독립 카메라 자세 연구·MediaPipe/CLIP·Three.js 3D 침상 모니터. 자체 AGENTS.md 적용. src/bed_pose/tof_learning은 읽기 전용 Pi 스트림+카메라 동기 수집·라벨 검토·CNN/CNN+GRU·LightGBM/RF/XGBoost 비교. training/의 PowerShell 도구와 docs/guides/TOF_TRAINING.md가 진입점. 실측 검증 전 운영 모델로 사용하지 않음 |
 | camera-pose/src/bed_pose/pose/ | MediaPipe/browser GPU 어댑터, 원본 좌표 복원·부분 관절 재탐색·IMAGE 확인·GPU 연결 복구. person_guard.py는 명시적 로컬 설정의 근접 촬영용 CUDA 사람 검증. tools/pose_candidates.py·.venv-pose/는 후보 비교/검증기 설정, tools/check_pose_recovery.py는 실제 GPU 빈 장면/응답 소실 검사. ROI·모델 점수·실제 정답은 구분하며 관절 모델 자동 교체와 분리한다 |
 | camera-pose/src/bed_pose/camera_diagnostics.py | RGB 표본의 밝기/클리핑 표시용 진단. live_engine의 프레임 부가정보→live_web→카메라 패널로 전달하며 원본/노출/관절/정답 기록을 변경하지 않음. 입력 대기와 추론 지연은 기존 processing_ms와 함께 표시 |
+| camera-pose/src/bed_pose/camera_posture.py · camera_validation.py | 주 모니터의 즉시 CLIP/관절/침대 추정과 별도 검토 정답의95% 평가. 단일 시점·신선도·대상 변경·누락/좌우 미확정 처리, 설정 서명·원본 해시·coverage 포함. 기존 posture_3d와 학습 정답 승인은 분리. Start-CameraGPU.ps1과 docs/guides/CAMERA_ACCURACY_GATE.md가 진입점 |
 | TOF/src/ | ESP32-S3 Arduino 펌웨어와 PlatformIO 프로젝트. main.ino가 원본; 이전 Windows 전처리 생성물 main.ino.cpp는 제거했고 PlatformIO가 빌드 시 임시 생성한다 |
 | TOF/ml/ | 자세 Random Forest 학습·추론(운영 v2: train_posture_v2.py, 이전 모델은 archive/), ROI/침대 좌표, LSTM-AE 참고 이상탐지, 특징 로깅, 후보 모델 비교 |
 | TOF/dataset*/ | 라벨별 ToF 거리 CSV/JSONL, 기존 4×4 및 빈 침대 데이터 보관 |
@@ -142,6 +143,7 @@ Majubom/
 │   │   │   ├── ACCURACY_IMPROVEMENTS.md
 │   │   │   ├── AUTOMATIC_CALIBRATION.md
 │   │   │   ├── BED_REGION.md
+│   │   │   ├── CAMERA_ACCURACY_GATE.md
 │   │   │   ├── CAMERA_CAPTURE.md
 │   │   │   ├── EXPERIMENTAL_3D_PREVIEW.md
 │   │   │   ├── LIVE_MEASUREMENT.md
@@ -168,6 +170,7 @@ Majubom/
 │   │   │   └── TECHNOLOGY_CANDIDATES.md
 │   │   ├── reviews/
 │   │   │   ├── AUTOMATIC_POSTURE_REVIEW.md
+│   │   │   ├── CAMERA_FAILURE_CAUSES_2026-11-02.md
 │   │   │   ├── IMPLEMENTATION_REVIEW.md
 │   │   │   ├── MANNEQUIN_POSTURE_CRITERIA_2026-10-31.md
 │   │   │   ├── POSTURE_CONDITION_AUDIT_2026-10-31.md
@@ -222,6 +225,8 @@ Majubom/
 │   │       ├── calibration.py
 │   │       ├── calibration_methods.py
 │   │       ├── camera_diagnostics.py
+│   │       ├── camera_posture.py
+│   │       ├── camera_validation.py
 │   │       ├── camera_video.py
 │   │       ├── cli.py
 │   │       ├── clip_assets.py
@@ -276,6 +281,7 @@ Majubom/
 │   │       ├── room_monitor.py
 │   │       ├── runner.py
 │   │       ├── screen_pattern.py
+│   │       ├── sensor_crosscheck.py
 │   │       ├── separated_posture.py
 │   │       ├── silhouette.py
 │   │       ├── silhouette_overlay.py
@@ -314,7 +320,9 @@ Majubom/
 │   │   ├── test_calibration_methods.py
 │   │   ├── test_camera_decoupling.py
 │   │   ├── test_camera_diagnostics.py
+│   │   ├── test_camera_posture.py
 │   │   ├── test_camera_settings.py
+│   │   ├── test_camera_validation.py
 │   │   ├── test_camera_video.py
 │   │   ├── test_clip_optimization.py
 │   │   ├── test_clip_pool.py
@@ -358,6 +366,7 @@ Majubom/
 │   │   ├── test_room_monitor.py
 │   │   ├── test_rotation_rescue.py
 │   │   ├── test_runtime_performance.py
+│   │   ├── test_sensor_crosscheck.py
 │   │   ├── test_separated_posture.py
 │   │   ├── test_silhouette.py
 │   │   ├── test_silhouette_overlay.py
@@ -406,9 +415,11 @@ Majubom/
 │   │   │   ├── tsconfig.json
 │   │   │   └── vite.config.js
 │   │   ├── bed-pose-camera.service
+│   │   ├── camera_posture_check.py
 │   │   ├── check_pose_recovery.py
 │   │   ├── pi_camera_stream.py
-│   │   └── pose_candidates.py
+│   │   ├── pose_candidates.py
+│   │   └── start_gpu_monitor.py
 │   ├── training/
 │   │   ├── Check-Connection.ps1
 │   │   ├── requirements-pose.txt
@@ -425,7 +436,8 @@ Majubom/
 │   ├── AGENTS.md
 │   ├── pyproject.toml
 │   ├── README.md
-│   └── ROADMAP.md
+│   ├── ROADMAP.md
+│   └── Start-CameraGPU.ps1
 ├── deploy/
 │   ├── cloudflare/
 │   │   ├── code-guide-worker.js
