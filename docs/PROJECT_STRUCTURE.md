@@ -1,5 +1,9 @@
 # 마주봄 전체 구조
 
+카메라 입력: `camera-pose/src/bed_pose/live_engine.py`는 최신 카메라에서 수신 ns와 SDK용 ms를 구분한다. 같은 ms의 서로 다른 수신은 SDK 시각만 보정하며 실제 동기화 시각은 바꾸지 않는다.
+
+논문 기록: `camera-pose/src/bed_pose/tof_learning/paper_record.py`는 `session_train.py`의 완료된 실행 기록을 `outputs/<날짜>/paper_record.md`로 렌더링한다. 원본은 `paper_record.json`이며 미측정 항목은 빈칸으로 유지한다. 운영 Pi 파일에는 쓰지 않는다.
+
 > **2026-10-31:** `main`의 `mmWave/`는 새 작업을 위해 비워졌습니다. 기존 수집기·설정·실험 데이터는 `backup/mmwave-before-reset` 브랜치에 보관되어 있으며, 아래 mmWave 실행 경로는 복원 전까지 사용할 수 없습니다. 서버의 mmWave 수신 코드는 남아 있지만 해당 수집기가 없어 독립적으로 실측을 수집하지 않습니다. 이후 Pi에서 실제로 돌리는 최신 mmWave 코드(천장 2.5m·하향 90° 설정, 노트북 스트림, 낙상 판정 `fall_detect.py`)는 `claude/sensor-remount-posture-v2` 브랜치에 있습니다(2026-10-31). main의 server/·tools/ 일부(예: `tools/set_bed_center.py`, `server/bed_position.py`가 읽는 `mmWave/bed_center.json`, 노트북 스트림 `/api/stream`)는 그 수집기와 함께 쓸 때 동작합니다.
 
 AI 작업 진입점은 `AGENTS.md`와 `docs/AI_START_HERE.md`다.
@@ -61,39 +65,9 @@ PlatformIO/Python 빌드, node_modules, 로그, LanceDB 저장 엔진 내부 파
 <!-- BEGIN GENERATED TREE -->
 ```text
 Majubom/
-├── .codex-ppt-build/
-│   ├── bed-double-2368D8.png
-│   ├── bed-single-2368D8.png
-│   ├── bell-2368D8.png
-│   ├── build.mjs
-│   ├── camera-2368D8.png
-│   ├── candidate.pptx
-│   ├── candidate.pptx.inspect.ndjson
-│   ├── inspection.ndjson
-│   ├── monitor-BFD8FF.png
-│   ├── radar-2368D8.png
-│   ├── slide-1.png
-│   ├── slide-2.png
-│   ├── slide-3.png
-│   ├── slide-4.png
-│   ├── validation.json
-│   └── watch-2368D8.png
 ├── .github/
 │   └── workflows/
 │       └── camera-pose.yml
-├── assets/
-│   └── equipment_layout/
-│       ├── .gitignore
-│       ├── blender_capture.png
-│       ├── build_scene.py
-│       ├── majubom_equipment_clean.png
-│       ├── MajuBom_Equipment_Layout.blend
-│       ├── MajuBom_Equipment_Layout.blend1
-│       ├── majubom_equipment_layout.png
-│       ├── majubom_equipment_top.png
-│       ├── open_scene.py
-│       ├── preview.png
-│       └── README.md
 ├── camera-pose/
 │   ├── .github/
 │   │   └── workflows/
@@ -106,6 +80,25 @@ Majubom/
 │   │       ├── physical-measurements.json
 │   │       ├── preview-axis-reference.json
 │   │       └── preview-bed.json
+│   ├── data/
+│   │   └── paired/
+│   │       ├── bedC-20261103-camera-check/
+│   │       │   ├── camera.jsonl
+│   │       │   ├── manifest.json
+│   │       │   ├── pairs.jsonl
+│   │       │   ├── status.json
+│   │       │   └── tof.jsonl
+│   │       └── bedC-20261103-main/
+│   │           ├── camera.jsonl
+│   │           ├── experiment_conditions.json
+│   │           ├── manifest.json
+│   │           ├── orientation-candidate.json
+│   │           ├── pairs.jsonl
+│   │           ├── recording_journal.jsonl
+│   │           ├── restart-cleanup-report.json
+│   │           ├── status.json
+│   │           ├── STOP
+│   │           └── tof.jsonl
 │   ├── docs/
 │   │   ├── archive/
 │   │   │   ├── IMPLEMENTATION_HISTORY.md
@@ -113,7 +106,6 @@ Majubom/
 │   │   │   ├── README.md
 │   │   │   └── REFERENCE_POSTURE.md
 │   │   ├── assets/
-│   │   │   ├── system-overview.png
 │   │   │   └── system-overview.svg
 │   │   ├── design/
 │   │   │   ├── ARCHITECTURE.md
@@ -220,6 +212,11 @@ Majubom/
 │   │       │   ├── collect.py
 │   │       │   ├── data.py
 │   │       │   ├── models.py
+│   │       │   ├── paper_record.py
+│   │       │   ├── session_collect.py
+│   │       │   ├── session_data.py
+│   │       │   ├── session_models.py
+│   │       │   ├── session_train.py
 │   │       │   └── train.py
 │   │       ├── __init__.py
 │   │       ├── __main__.py
@@ -354,6 +351,7 @@ Majubom/
 │   │   ├── test_mediapipe_adapter.py
 │   │   ├── test_multiview_posture.py
 │   │   ├── test_native_pose_cues.py
+│   │   ├── test_paper_record.py
 │   │   ├── test_person_crop.py
 │   │   ├── test_pi_camera.py
 │   │   ├── test_pose_display.py
@@ -491,7 +489,6 @@ Majubom/
 │   └── .gitkeep
 ├── output/
 │   └── presentation/
-│       ├── 마주봄_30초_발표대본.txt
 │       └── 마주봄_발표_4장.pptx
 ├── research/
 │   └── alternatives/
@@ -550,7 +547,6 @@ Majubom/
 │   ├── integrated_analysis.py
 │   ├── live_diagnostics.py
 │   ├── maintenance_ai.py
-│   ├── majubom.db
 │   ├── majubom.db.4x4bak.gz
 │   ├── mmw_logic.py
 │   ├── mmw_server.py
@@ -592,13 +588,6 @@ Majubom/
 │   │   ├── report-review.js
 │   │   └── simulation.js
 │   ├── tests/
-│   │   ├── artifacts/
-│   │   │   ├── test-results/
-│   │   │   │   └── .last-run.json
-│   │   │   ├── dashboard-dark.png
-│   │   │   ├── dashboard-light.png
-│   │   │   ├── dashboard-mobile.png
-│   │   │   └── results.json
 │   │   ├── .gitignore
 │   │   ├── dashboard.spec.cjs
 │   │   ├── data.test.cjs
@@ -975,7 +964,6 @@ Majubom/
 │   ├── seed_demo_emr.py
 │   ├── set_bed_center.py
 │   └── update_project_structure.py
-├── .env
 ├── .gitattributes
 ├── .gitignore
 ├── 0704할일.md
@@ -989,3 +977,5 @@ Majubom/
 └── SYSTEM_ARCHITECTURE.md
 ```
 <!-- END GENERATED TREE -->
+
+Bed C 실험 비교는 GPU 모니터 실행 시 BEDPOSE_TOF_URL과 BEDPOSE_TOF_RF_MODEL을 지정한다. 노트북에서 ToF1·ToF2 원시 거리 128개를 S01 RF에 입력하며, 카메라·ToF 비교 패널에 실험 모델임을 표시한다.

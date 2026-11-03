@@ -225,6 +225,22 @@ class LiveTests(unittest.TestCase):
             with self.assertRaises(SourceError):CameraSource().open()
         self.assertTrue(capture.released)
 
+    def test_latest_capture_same_millisecond_preserves_receive_time(self):
+        source=SyntheticSource(interval=0)
+        source.analysis_capture=dict(read_started_ns=1000000,received_ns=1100000,
+            received_utc_ns=1700000000000000000,capture_frame_id=0,skipped_before=0)
+        engine=self.engine(source=source);engine.open()
+        try:
+            first=engine.step()['row']
+            source.analysis_capture.update(received_ns=1200000,capture_frame_id=1)
+            second=engine.step()['row']
+            self.assertEqual(int(second['model_timestamp_ms']),int(first['model_timestamp_ms'])+1)
+            self.assertEqual(second['received_ns'],'1200000')
+            self.assertTrue(second['camera_capture']['model_timestamp_adjusted'])
+            # 수신 ns까지 중복되거나 역행하면 정상 프레임으로 위장하지 않는다.
+            with self.assertRaises(LiveFailure):engine.step()
+        finally:engine.close()
+
     def test_empty_measurement_and_model_timestamp_collision(self):
         engine=self.ready(self.engine())
         directory=engine.start_measurement();engine.stop_measurement();engine.close()

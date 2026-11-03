@@ -15,7 +15,8 @@ def main():
         tof_url=os.environ.get('BEDPOSE_TOF_URL')
         if tof_url:
             from bed_pose.sensor_crosscheck import SensorCrosscheck
-            crosscheck=SensorCrosscheck(tof_url);workspace.room_monitor.sensor_crosscheck=crosscheck
+            crosscheck=SensorCrosscheck(tof_url,model_path=os.environ.get('BEDPOSE_TOF_RF_MODEL'))
+            workspace.room_monitor.sensor_crosscheck=crosscheck
         if not workspace.clip_status['available']:
             raise RuntimeError('CLIP unavailable; run training/Setup-Training.ps1 and python -m bed_pose clip-setup')
         server=WorkspaceHTTPServer(workspace,50966)

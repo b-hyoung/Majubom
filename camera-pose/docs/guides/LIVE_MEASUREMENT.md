@@ -1,5 +1,7 @@
 # 측정 작업실 사용법
 
+2026-11-03: 최신 카메라 입력의 서로 다른 수신 ns가 같은 ms로 잘릴 때 SDK용 model_timestamp_ms만 이전 값+1로 보정한다. 실제 received_ns·received_utc_ns와 노트북 동기화 시각은 유지하며 camera_capture.model_timestamp_adjusted로 표시한다. 동일하거나 역행한 수신 ns와 파일 PTS 오류는 계속 중단한다.
+
 [문서 목차](../README.md) · [분야 목차](README.md) · [현재 상태](../PROJECT_STATUS.md)
 
 

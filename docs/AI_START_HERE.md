@@ -1,5 +1,9 @@
 # AI 작업 시작 안내
 
+2026-11-03 카메라 시각: live_engine은 최신 카메라의 수신 ns가 증가하나 ms가 겹칠 때 SDK용 시각만 증가시키고 원시 수신 시각을 보존한다. [시간 처리](../camera-pose/docs/guides/LIVE_MEASUREMENT.md).
+
+2026-11-03 논문 기록: 새 침상 `train-session` 완료 시 `camera-pose/outputs/<날짜>/paper_record.md`·`paper_record.json`을 생성한다. 미측정 항목은 빈칸이며 실측 학습·Pi CPU 시간은 아직 미확인이다. [사용 조건](../camera-pose/docs/guides/TOF_TRAINING.md).
+
 > **2026-10-31:** `main`의 `mmWave/`는 새 작업을 위해 비워졌습니다. 기존 수집기·설정·실험 데이터는 `backup/mmwave-before-reset` 브랜치에 보관되어 있으며, 아래 mmWave 실행 경로는 복원 전까지 사용할 수 없습니다. 서버의 mmWave 수신 코드는 남아 있지만 해당 수집기가 없어 독립적으로 실측을 수집하지 않습니다. 이후 Pi에서 실제로 돌리는 최신 mmWave 코드(천장 2.5m·하향 90° 설정, 노트북 스트림, 낙상 판정 `fall_detect.py`)는 `claude/sensor-remount-posture-v2` 브랜치에 있습니다(2026-10-31). main의 server/·tools/ 일부(예: `tools/set_bed_center.py`, `server/bed_position.py`가 읽는 `mmWave/bed_center.json`, 노트북 스트림 `/api/stream`)는 그 수집기와 함께 쓸 때 동작합니다.
 
 이 문서는 루트 AGENTS.md에서 필독으로 지정한다. 먼저 이 문서, PROJECT_STRUCTURE.md,
@@ -125,3 +129,5 @@ ls -l /dev/serial/by-id/
 ## 2026-11-03 카메라 노트북 이전
 
 `camera-pose/docs/guides/NEW_LAPTOP.md`에 minhyuk 전체 원본 백업 복원과 새 CUDA 환경 설치를 정리했다. 암호화 백업은 Git LFS, 키는 기존 노트북 바탕화면 별도 보관. 이전 카메라 배치의 미검증 보정은 새 방/카메라 배치에 적용하지 않는다.
+
+Bed C 실험 비교는 GPU 모니터 실행 시 BEDPOSE_TOF_URL과 BEDPOSE_TOF_RF_MODEL을 지정한다. 노트북에서 ToF1·ToF2 원시 거리 128개를 S01 RF에 입력하며, 카메라·ToF 비교 패널에 실험 모델임을 표시한다.

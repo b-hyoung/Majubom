@@ -10,6 +10,9 @@ DEFAULT_POLICY=dict(label_policy='verified',min_joint_quality=.8,min_stable_seco
 
 
 def collect(args):
+    if getattr(args, 'capture_all', False):
+        from .session_collect import collect_all
+        return collect_all(args)
     policy=dict(DEFAULT_POLICY,label_policy=args.label_policy)
     parts=urlsplit(args.camera_url)
     if parts.scheme!='http' or parts.hostname not in ('127.0.0.1','localhost') or not parts.fragment:

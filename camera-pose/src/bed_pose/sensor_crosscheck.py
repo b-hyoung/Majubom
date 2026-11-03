@@ -26,7 +26,15 @@ def compare(camera,latest,presence):
 
 
 class SensorCrosscheck:
-    def __init__(self,url):
+    def __init__(self,url,model_path=None):
+        self.model=None
+        if model_path:
+            import joblib
+            self.model=joblib.load(model_path)
+            from .tof_learning.session_data import LABELS
+            self.labels=LABELS
+            if self.model.n_features_in_!=128 or list(self.model.classes_)!=list(range(len(LABELS))):
+                raise ValueError('실험 RF의 입력 또는 클래스 순서가 다릅니다.')
         self.url=url.rstrip('/');self.stop=threading.Event();self.lock=threading.Lock()
         self.data=None;self.error=None;self.at=None
         self.thread=threading.Thread(target=self._run,daemon=True);self.thread.start()
@@ -36,6 +44,15 @@ class SensorCrosscheck:
                 def get(path):
                     with urllib.request.urlopen(self.url+path,timeout=2) as r:return json.loads(r.read(1024*1024))
                 latest=get('/tof/latest');presence=get('/tof/presence')
+                if self.model is not None:
+                    latest.update(posture_raw=None,posture_conf=None,posture=None)
+                    if sensor_timing(latest,presence)['fresh']:
+                        from .tof_learning.session_data import distances
+                        import numpy as np
+                        inputs=np.concatenate([distances(latest[s]['distances_mm']) for s in ('tof1','tof2')])
+                        scores=self.model.predict_proba(inputs.reshape(1,128))[0]
+                        prediction=int(scores.argmax())
+                        latest.update(posture_raw=self.labels[prediction],posture_conf=float(scores[prediction]))
                 with self.lock:self.data=(latest,presence);self.error=None;self.at=time.monotonic()
             except Exception as e:
                 with self.lock:self.error=type(e).__name__
@@ -45,5 +62,8 @@ class SensorCrosscheck:
             if self.error or self.data is None or self.at is None or time.monotonic()-self.at>1:
                 return dict(status='unavailable',error=self.error,accuracy_verified=False,maps={},camera_label=camera.get('label'))
             latest,presence=deepcopy(self.data)
-        return compare(camera,latest,presence)
+        result=compare(camera,latest,presence)
+        if self.model is not None:
+            result['note']='Bed C S01 실험 · 원시 거리 RF · 새 참여자 검증 중'
+        return result
     def close(self):self.stop.set();self.thread.join(timeout=5)

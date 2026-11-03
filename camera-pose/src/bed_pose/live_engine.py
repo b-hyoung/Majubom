@@ -35,6 +35,7 @@ class LiveEngine:
         self.stream_id = uuid.uuid4().hex
         self.clock_id = self.stream_id + ':perf_counter_ns'
         self.next_frame_id, self.last_model_ms = 0, None
+        self.last_capture_received_ns = None
         self.previous_processing_ns = 0
         self.geometry = None
         self.region, self.region_revision = None, 0
@@ -291,6 +292,14 @@ class LiveEngine:
         self.next_frame_id += 1
         media = getattr(self.source, 'media', None)
         timestamp = int(media['relative_time_ns']) // 1_000_000 if media else received // 1_000_000
+        timestamp_adjusted = False
+        if (capture is not None and media is None and self.last_model_ms is not None
+                and timestamp <= self.last_model_ms
+                and self.last_capture_received_ns is not None and received > self.last_capture_received_ns):
+            # 최신 카메라 프레임이 같은 ms 안에 연속 수신되어도 SDK 순서는 증가해야 한다.
+            # 실제 수신 ns는 그대로 두고 SDK용 정수 시각만 조정한다.
+            timestamp = self.last_model_ms + 1
+            timestamp_adjusted = True
         row = {'stream_id': self.stream_id, 'stream_frame_id': frame_id, 'clock_id': self.clock_id,
                'read_started_ns': str(read_started), 'received_ns': str(received), 'received_utc_ns': str(utc),
                'timestamp_source': 'received_after_read', 'camera_exposure_ns': None,
@@ -307,6 +316,7 @@ class LiveEngine:
                'verified_gt': None, 'sensor_results': None}
         if capture is not None:
             row['camera_capture']={k:str(capture[k]) for k in ('capture_frame_id','skipped_before')}
+            row['camera_capture']['model_timestamp_adjusted'] = timestamp_adjusted
         if media is not None:
             row['source_media'] = dict(media)
         failure = None
@@ -317,6 +327,8 @@ class LiveEngine:
                 raise LiveFailure('MODEL_TIMESTAMP_COLLISION', '모델 입력 시각이 중복되었습니다.')
             row['inference_started_ns'] = str(self.clock())
             self.last_model_ms = timestamp
+            if capture is not None:
+                self.last_capture_received_ns = received
             from .bed_geometry import rectangle
             hint=self.pose_region_hint
             spec={'pose_region_hint':list(rectangle(self.region))} if self.region else (

@@ -59,7 +59,9 @@ def review_confirm(args):
 
 def main():
     ap=argparse.ArgumentParser(description=__doc__);sub=ap.add_subparsers(dest='command',required=True)
-    p=sub.add_parser('collect');p.add_argument('--stream-url',required=True);p.add_argument('--camera-url',required=True)
+    p=sub.add_parser('collect');p.add_argument('--stream-url',required=True);p.add_argument('--camera-url')
+    p.add_argument('--camera-connection',default='outputs/live-connection.json')
+    p.add_argument('--capture-all',action='store_true',help='미검출·빈 침대도 버리지 않는 원시 비교 수집')
     p.add_argument('--subject',required=True);p.add_argument('--session',required=True);p.add_argument('--out',default='data/paired')
     p.add_argument('--label-policy',choices=['verified','pseudo'],default='verified');p.add_argument('--seconds',type=float,default=0)
     from .collect import collect
@@ -83,7 +85,19 @@ def main():
     from .train import run
     p.set_defaults(func=run)
     p=sub.add_parser('doctor');p.add_argument('--out',default='outputs/training-doctor.json');p.set_defaults(func=doctor)
+    p=sub.add_parser('train-session',help='dataset_v3의 말로 지정한 정답으로 센서별 CNN·트리 학습')
+    p.add_argument('--dataset',required=True);p.add_argument('--baseline',required=True);p.add_argument('--out',required=True)
+    p.add_argument('--camera',nargs='*',default=[]);p.add_argument('--orientation');p.add_argument('--augment',action='store_true')
+    p.add_argument('--device',choices=['cuda','cpu'],default='cuda');p.add_argument('--epochs',type=int,default=60)
+    p.add_argument('--batch',type=int,default=128);p.add_argument('--patience',type=int,default=10)
+    p.add_argument('--trees',type=int,default=200);p.add_argument('--seed',type=int,default=42)
+    from .session_train import run as train_session
+    p.set_defaults(func=train_session)
     args=ap.parse_args()
+    if args.command=='collect' and not args.camera_url and not args.capture_all:
+        ap.error('기존 품질 수집에는 --camera-url이 필요합니다.')
+    if args.command=='train-session' and min(args.epochs,args.batch,args.patience,args.trees)<1:
+        ap.error('학습 횟수·배치·인내 횟수·트리 개수는 양수여야 합니다.')
     if getattr(args,'session','') and (Path(args.session).name!=args.session or args.session in ('.','..')):ap.error('session must be a plain identifier')
     if args.command=='train':
         if any(m not in ('cnn','cnn_gru') for m in args.models.split(',')):ap.error('models: cnn,cnn_gru')

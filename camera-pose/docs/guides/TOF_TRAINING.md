@@ -1,5 +1,11 @@
 # 5·6단계: 카메라 자세 + ToF 저장, CNN/GRU 및 트리 비교
 
+## 논문 실측 기록 · 2026-11-03
+
+`bed_pose.tof_learning train-session --dataset <dataset_v3> --baseline <복사한 기준.json> --out outputs/<날짜>`는 학습·외부 시험 평가·CPU 내보내기가 모두 성공한 뒤 `paper_record.md`와 원본 값 `paper_record.json`을 생성한다. 센서별 CNN 구조, 실제 실행 epoch, optimizer, batch, 내부 검증 early stopping, 증강, 트리별 전체 매개변수·가중치, 패키지 버전, 실제 학습 GPU, 참여자·세션·클래스별 짝 수, 분할, 다섯 모델의 외부 시험 지표와 카메라 비교를 기록한다. `--camera`에 시간 정렬 가능한 카메라 JSONL을 전달하지 않으면 카메라 일치율은 빈칸이다. 참가자 수는 세션 subject 식별자 기준이며 별도 신원 인증이 아니다.
+
+미리 만든 빈 `paper_record.md`만 있는 출력 폴더는 학습에 사용할 수 있다. 기존 실제 결과가 있거나 학습이 중단된 폴더에는 덮어쓰지 않는다. 학습 전 빈 기록표는 완료 실측이 아니며 값을 채우지 않는다. Pi 5 CPU 추론 시간은 Pi 실측을 아직 연결하지 않아 비워 두며 노트북 CPU 시간을 대신 쓰지 않는다. 실제 녹화·학습 성능은 아직 미확인이다.
+
 ## 최신: 카메라·ToF 동시 비교 재개
 
 2026-11-02 사용자가 ToF 수신을 다시 허용하고 카메라와 비교하여 촬영할 것을 요청했다. Pi의 기존 ToF5001 수신 서버만 시작하여 실제 tof1/tof2 각64칸과 갱신 시각을 확인했다. 펌웨어·모델·baseline은 변경하지 않았으며 학습은 시작하지 않았다. 서버 시작에 따라 기존 운영 DB 수신 기록은 원래 정책대로 계속된다.
@@ -135,3 +141,5 @@
 실측 데이터가 없어 실제 알고리즘 성능 순위는 아직 없습니다. 합성 576프레임으로 CUDA CNN·GRU 2epoch, 세 트리의 특징 학습 및 저장/비교표 생성까지 확인했습니다. 이 결과는 `outputs/synthetic-training-check/`에 로컬로만 저장하며 **정확도 보고 자료로 쓰지 않습니다.** Majubom 루트 `.github/workflows/camera-pose.yml`은 카메라 검사·웹 빌드·합성 CPU 학습을 정의합니다. CI의 원격 실행 결과와 이 노트북의 CUDA 확인은 별개입니다.
 
 공식 근거: [PyTorch CUDA 설치](https://pytorch.org/get-started/previous-versions/), [XGBoost GPU hist/device](https://xgboost.readthedocs.io/en/stable/gpu/index.html), [LightGBM Windows GPU 제약](https://lightgbm.readthedocs.io/en/latest/Installation-Guide.html). 라이브러리의 GPU 표기만 믿지 않고 이 노트북의 실제 연산 결과를 doctor에 저장했습니다.
+
+Bed C 실험 비교는 GPU 모니터 실행 시 BEDPOSE_TOF_URL과 BEDPOSE_TOF_RF_MODEL을 지정한다. 노트북에서 ToF1·ToF2 원시 거리 128개를 S01 RF에 입력하며, 카메라·ToF 비교 패널에 실험 모델임을 표시한다.

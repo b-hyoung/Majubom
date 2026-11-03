@@ -4,7 +4,9 @@ param(
     [string]$Session = ('session-' + (Get-Date -Format 'yyyyMMdd-HHmmss')),
     [ValidateSet('verified','pseudo')][string]$LabelPolicy = 'verified',
     [string]$CameraUrl,
-    [int]$Port = 5012
+    [int]$Port = 5012,
+    [switch]$CaptureAll,
+    [double]$Seconds = 0
 )
 $ErrorActionPreference = 'Stop'
 $projectRoot = Split-Path $PSScriptRoot -Parent
@@ -19,5 +21,7 @@ if (-not $CameraUrl) {
     $CameraUrl = (Get-Content -LiteralPath $connectionPath -Raw | ConvertFrom-Json).url
 }
 $streamUrl = "http://${Pi}:${Port}/api/stream?sensors=tof1,tof2"
-& $trainingPython -m bed_pose.tof_learning collect --stream-url $streamUrl --camera-url $CameraUrl --subject $Subject --session $Session --label-policy $LabelPolicy --out (Join-Path $projectRoot 'data/paired')
+$collectionArguments = @('--stream-url',$streamUrl,'--camera-url',$CameraUrl,'--subject',$Subject,'--session',$Session,'--label-policy',$LabelPolicy,'--seconds',"$Seconds",'--out',(Join-Path $projectRoot 'data/paired'))
+if ($CaptureAll) { $collectionArguments += '--capture-all' }
+& $trainingPython -m bed_pose.tof_learning collect @collectionArguments
 if ($LASTEXITCODE -ne 0) { throw 'Collection failed; inspect error above' }

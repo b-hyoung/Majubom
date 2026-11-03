@@ -646,6 +646,15 @@ class RoomMonitor:
                         calibration_verified=not self.preview_enabled and self.calibration is not None and reason is None),
                     posture_3d=posture,
                     camera_posture=live_posture,
+                    camera_comparison_observation=dict(
+                        observed_unix=time.time()-(now-max(p['time_ns'] for p in self.latest_observations if p))/1e9
+                            if any(self.latest_observations) else None,
+                        time_basis='host_receive_not_exposure',
+                        views=[dict(camera='AB'[i], frame_id=p['frame_id'],
+                                    observed_unix=time.time()-(now-p['time_ns'])/1e9,
+                                    processing_ok=p['processing_ok'], people_count=p['people_count'],
+                                    image_body_state=deepcopy(p.get('image_body_state')))
+                               for i,p in enumerate(self.latest_observations) if p]),
                     sensor_crosscheck=self.sensor_crosscheck.snapshot(live_posture) if self.sensor_crosscheck else None,
                     experimental_preview=dict(enabled=self.preview_enabled,accuracy_verified=False,
                         input_rotations=[p.get('rotation_ccw_degrees',0) if p else 0 for p in self.latest_observations],
