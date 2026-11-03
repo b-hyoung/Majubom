@@ -31,7 +31,8 @@ def main():
             if ids[-1]:workspace.sessions[ids[-1]].worker.engine.body_state_provider.input_preview_enabled=False
         with workspace.lock:
             workspace.room_monitor.configure(dict(workspace.room_monitor.config,bindings=ids))
-            workspace.room_monitor.set_preview({'enabled':True})
+            candidate=workspace.room_monitor.directory/'guided-calibration-candidate-20.json'
+            workspace.room_monitor.set_preview({'enabled':candidate.is_file()})
             if workspace.room_monitor.preview_bed is not None:workspace.room_monitor.align_preview({'reference':'bed'})
         # Reuse the user's existing 2D corners in the independent CLIP/bed path.
         deadline=time.monotonic()+25;restored=set()

@@ -98,6 +98,14 @@ Majubom/
 │   ├── .github/
 │   │   └── workflows/
 │   │       └── tests.yml
+│   ├── config/
+│   │   └── installation-20261103/
+│   │       ├── camera-pitch-reference.json
+│   │       ├── guided-calibration-candidate-20.json
+│   │       ├── manifest.json
+│   │       ├── physical-measurements.json
+│   │       ├── preview-axis-reference.json
+│   │       └── preview-bed.json
 │   ├── docs/
 │   │   ├── archive/
 │   │   │   ├── IMPLEMENTATION_HISTORY.md
@@ -147,6 +155,7 @@ Majubom/
 │   │   │   ├── CAMERA_CAPTURE.md
 │   │   │   ├── EXPERIMENTAL_3D_PREVIEW.md
 │   │   │   ├── LIVE_MEASUREMENT.md
+│   │   │   ├── NEW_LAPTOP.md
 │   │   │   ├── PREVIEW_EXCEPTION_HANDLING.md
 │   │   │   ├── PREVIEW_QUALITY.md
 │   │   │   ├── README.md
@@ -419,7 +428,9 @@ Majubom/
 │   │   ├── check_pose_recovery.py
 │   │   ├── pi_camera_stream.py
 │   │   ├── pose_candidates.py
-│   │   └── start_gpu_monitor.py
+│   │   ├── restore_laptop.py
+│   │   ├── start_gpu_monitor.py
+│   │   └── workspace_backup.py
 │   ├── training/
 │   │   ├── Check-Connection.ps1
 │   │   ├── requirements-pose.txt
@@ -431,12 +442,16 @@ Majubom/
 │   │   ├── split.example.json
 │   │   ├── Start-Collection.ps1
 │   │   └── Start-Training.ps1
+│   ├── transfer/
+│   │   ├── camera-workspace-20261103.enc
+│   │   └── camera-workspace-20261103.manifest.json
 │   ├── .gitattributes
 │   ├── .gitignore
 │   ├── AGENTS.md
 │   ├── pyproject.toml
 │   ├── README.md
 │   ├── ROADMAP.md
+│   ├── Setup-NewLaptop.ps1
 │   └── Start-CameraGPU.ps1
 ├── deploy/
 │   ├── cloudflare/
@@ -961,6 +976,7 @@ Majubom/
 │   ├── set_bed_center.py
 │   └── update_project_structure.py
 ├── .env
+├── .gitattributes
 ├── .gitignore
 ├── 0704할일.md
 ├── 0707_TOF_진행상황_인수인계.md

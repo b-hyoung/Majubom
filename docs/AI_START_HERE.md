@@ -121,3 +121,7 @@ ls -l /dev/serial/by-id/
 - 구조 변경 후 `python3 tools/update_project_structure.py` 실행.
 - 역할/실행/API 변경 시 문서 설명도 수정하고 `--check`, `git diff --check`로 확인.
 - 선택 모델(joblib/sklearn/torch 등)이 없으면 수집 서버는 켜져도 자세/이상탐지 기능은 비활성일 수 있다.
+
+## 2026-11-03 카메라 노트북 이전
+
+`camera-pose/docs/guides/NEW_LAPTOP.md`에 minhyuk 전체 원본 백업 복원과 새 CUDA 환경 설치를 정리했다. 암호화 백업은 Git LFS, 키는 기존 노트북 바탕화면 별도 보관. 이전 카메라 배치의 미검증 보정은 새 방/카메라 배치에 적용하지 않는다.

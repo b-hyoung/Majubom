@@ -73,3 +73,8 @@ CLIP ViT-B/16 실행 제공자·0.10 최종 조합·[정답 주석 평가 CLI](d
 - 원본 영상·개인정보·모델 파일은 GitHub에 올리지 않습니다.
 
 Windows와 Apple Silicon Mac의 공통 실행 경로(CPU/CUDA/MPS)를 제공합니다. 현재 Mac 패키지 대상과 설치 방법은 [측정 작업실 안내](docs/guides/LIVE_MEASUREMENT.md#macos-설치와-실행)를 확인하세요. Mac 실기기 실행 검증과 Intel Mac 대응은 별도입니다.
+# 다른 노트북으로 옮기기
+
+원본 촬영·관절 기록·모델·보정 설정까지 옮기는 방법은
+[전체 백업 복원 및 새 노트북 설치](docs/guides/NEW_LAPTOP.md)를 참조하세요.
+공개 저장소의 원본 자료는 Git LFS 암호화 백업으로 제공하며 키는 별도 전달합니다.

@@ -1,0 +1,20 @@
+{
+  "format": "AES-256-GCM / ZIP",
+  "files": 1959,
+  "bytes": 788044109,
+  "sha256": "933f1819a72db8d79c3100457f71613db0bd9991b4c1527f9420f31cac335c9d",
+  "key_in_repository": false,
+  "excluded_rebuildable_directories": [
+    ".git",
+    ".pytest_cache",
+    ".venv",
+    ".venv-pose",
+    ".venv-training",
+    "__pycache__",
+    "build",
+    "dist",
+    "node_modules",
+    "transfer"
+  ],
+  "contains_original_images_models_logs_and_runtime_settings": true
+}
