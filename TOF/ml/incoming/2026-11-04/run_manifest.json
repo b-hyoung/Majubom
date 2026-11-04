@@ -1,0 +1,18 @@
+{
+  "seed": 42,
+  "baseline_sha256": "23f2e8acddadd3111c1b87ad211af8d8237ea6ff98d4b69de1fa6e8af6cacead",
+  "sessions_csv_sha256": "88c6ba3ae282e40abd9b49bb613e3caa6caf7d635ff33d281c3c520dafa3cf84",
+  "orientation_sha256": null,
+  "camera_sha256": {
+    "camera-pose/data/paired/bedC-20261103-main/camera.jsonl": "933a2d29373f7350bd962e909aeb708a2ad24487119928f31ea24d6a07cdb687",
+    "camera-pose/data/paired/bedC-S02-20261104-counted/camera.jsonl": "b8a2d0234e7c9f155cd6e69b6b28f32c59cca3880170e94dd997058db5f25d9b",
+    "camera-pose/data/paired/bedC-S02-20261104-postures/camera.jsonl": "7cc3678308bbbc0e5c0dff0ea00373702130be781379e66f36a6e7b6f80fffb6"
+  },
+  "packages": {
+    "torch": "2.6.0+cu124",
+    "numpy": "2.5.4",
+    "scikit-learn": "1.9.1",
+    "xgboost": "3.4.1",
+    "lightgbm": "4.7.0"
+  }
+}

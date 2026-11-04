@@ -71,3 +71,20 @@ class BedClear20261022(unittest.TestCase):
         self.assertTrue(A.bed_clear(far, 5.5)["clear"])
         self.assertTrue(A.bed_clear([(t * 0.5, []) for t in range(12)], 5.5)["clear"])
         self.assertFalse(A.bed_clear(far[:2], 5.5)["clear"])                        # 기록 부족 → 안전하게 '아님'
+
+
+class ModelEmptyReady20261104(unittest.TestCase):
+    def test_ratio_over_full_window(self):
+        h = [(t * 0.1, "empty", 0.9) for t in range(0, 700)]                    # 0~69.9초 빈 침대
+        h[300] = (30.0, "edge_sit", 0.97)                                         # 한 번 튐 → 허용
+        self.assertTrue(A.model_empty_ready(h, 70.0)["ready"])
+        self.assertFalse(A.model_empty_ready(h[:400], 40.0)["ready"])            # 아직 1분이 안 참
+
+    def test_edge_sit_mix_and_low_conf_and_gap_refused(self):
+        mix = [(t * 0.1, "empty" if t % 4 else "edge_sit", 0.9) for t in range(0, 700)]   # 25% 걸터앉음
+        self.assertFalse(A.model_empty_ready(mix, 70.0)["ready"])
+        low = [(t * 0.1, "empty", 0.6) for t in range(0, 700)]
+        self.assertFalse(A.model_empty_ready(low, 70.0)["ready"])
+        gap = [(t * 0.1, "empty", 0.9) for t in range(0, 700) if not 400 <= t < 450]      # 40~45초 센서 끊김
+        self.assertFalse(A.model_empty_ready(gap, 70.0)["ready"])
+        self.assertFalse(A.model_empty_ready([(t * 0.1, "empty", 0.9) for t in range(0, 700)], 75.0)["ready"])  # 오래됨

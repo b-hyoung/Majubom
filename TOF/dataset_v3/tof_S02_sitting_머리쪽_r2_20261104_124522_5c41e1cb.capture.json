@@ -1,0 +1,12 @@
+{
+  "session": "S02_sitting_머리쪽_r2_20261104_124522_5c41e1cb",
+  "file": "tof_S02_sitting_머리쪽_r2_20261104_124522_5c41e1cb.jsonl",
+  "rep": 2,
+  "complete": true,
+  "error": null,
+  "target_pairs": 150,
+  "retained_pairs": 150,
+  "elapsed_s": 73.48455432697665,
+  "tof1": 196,
+  "tof2": 208
+}

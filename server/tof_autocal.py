@@ -88,3 +88,38 @@ def compare(old: list[int] | None, new: list[int]) -> dict:
     big = sum(d > BIG_CHANGE_MM for d in diffs)
     return {"changed": sum(d > 20 for d in diffs), "big_changes": big,
             "mean_abs_mm": round(st.mean(diffs), 1) if diffs else None, "apply": big <= BIG_CHANGE_MAX}
+
+
+# ── 자세 모델 기준 자동 갱신(2026-11-04 사용자 결정: ToF만 쓸 때, 모델의 '빈 침대' 판정으로 계속 다시 잡는다) ──
+# 레이더 없이(USE_RADAR=False) 쓰는 경로. 자세 모델은 원시 거리만 보고 판정하므로 빈 침대 기준과 무관하다
+# (기준에 의존하는 '사람 칸 0 → empty' 게이트 전의 모델 출력만 쓴다 — 기준이 틀어지면 판정도 틀어지는 순환 방지).
+MODEL_WINDOW_SEC = 60.0        # 최근 이 시간 동안의 모델 판정을 본다
+MODEL_EMPTY_RATIO = 0.8        # 그중 empty 비율이 이 이상이어야 한다. 11-04 실측: 이불·베개 있는 빈 침대 0.87(나머지는
+                               # 걸터앉음 오판 — 학습 빈 침대에 이불·베개가 없었음). 사람 단위 시험에서 실제 걸터앉음이
+                               # empty로 나온 비율은 27%·9%라 0.8이면 구분된다(회차별로는 더 높을 수 있음)
+MODEL_EMPTY_MEDIAN_CONF = 0.8  # empty 판정 확신의 중앙값(11-04 빈 침대·이불·베개: 0.8~1.0)
+MODEL_RECAL_INTERVAL_SEC = 600.0   # 갱신 후 다음 갱신까지 최소 간격(빈 침대가 오래 이어지면 10분마다)
+MODEL_HINT_MAX_AGE_SEC = 2.0   # 판정 사이가 이보다 벌어지면(센서 끊김) 창을 처음부터 다시 채운다
+
+
+def model_empty_ready(history: list[tuple[float, str | None, float | None]], now: float,
+                      window: float = MODEL_WINDOW_SEC) -> dict:
+    """history: [(시각, 모델 라벨, 확신)] 시간순(같은 프레임 중복 없음). 최근 window초가 끊김 없이 채워졌고
+    empty 비율·확신 중앙값이 기준 이상이면 ready. 시험(11-04 사람 단위): 걸터앉음의 약 27%가 empty로 나와
+    한두 번 튀는 것은 막을 수 없으므로 '연속'이 아니라 '비율'로 본다."""
+    rec = [h for h in history if now - h[0] <= window]
+    out = {"ready": False, "ratio": None, "median_conf": None, "frames": len(rec)}
+    if not rec or now - rec[-1][0] > MODEL_HINT_MAX_AGE_SEC:
+        return out
+    start = rec[0][0]
+    for a, b in zip(rec, rec[1:]):
+        if b[0] - a[0] > MODEL_HINT_MAX_AGE_SEC:
+            start = b[0]
+    rec = [h for h in rec if h[0] >= start]
+    empties = [c for _, l, c in rec if l == "empty" and c is not None]
+    out.update(ratio=round(len(empties) / len(rec), 3), frames=len(rec),
+               median_conf=round(st.median(empties), 3) if empties else None)
+    out["ready"] = (rec[-1][0] - start >= window - MODEL_HINT_MAX_AGE_SEC and out["ratio"] >= MODEL_EMPTY_RATIO
+                    and empties and out["median_conf"] >= MODEL_EMPTY_MEDIAN_CONF)
+    out["ready"] = bool(out["ready"])
+    return out

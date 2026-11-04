@@ -1,0 +1,15 @@
+{
+  "seed": 42,
+  "baseline_sha256": "23f2e8acddadd3111c1b87ad211af8d8237ea6ff98d4b69de1fa6e8af6cacead",
+  "sessions_csv_sha256": "f867e2217c855199209f8acf88f019913e6bb02fa4d9bd75f1befc438fec1a4d",
+  "synthetic_sessions_csv_sha256": "df8cc9f546ff36a45913f10bb7041f5de901c4e674264db9a1b26eacabacdb33",
+  "orientation_sha256": null,
+  "camera_sha256": {},
+  "packages": {
+    "torch": "2.6.0+cu124",
+    "numpy": "2.5.4",
+    "scikit-learn": "1.9.1",
+    "xgboost": "3.4.1",
+    "lightgbm": "4.7.0"
+  }
+}

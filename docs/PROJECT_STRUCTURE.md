@@ -14,8 +14,8 @@ PlatformIO 빌드, node_modules, 로그, LanceDB 저장 엔진 내부 파일은 
 | 경로 | 책임/진입점 |
 |---|---|
 | TOF/src/ | ESP32-S3 Arduino 펌웨어와 PlatformIO 프로젝트. main.ino가 원본; 이전 Windows 전처리 생성물 main.ino.cpp는 제거했고 PlatformIO가 빌드 시 임시 생성한다 |
-| TOF/ml/ | 자세 Random Forest 학습·추론(운영 v2: train_posture_v2.py, 이전 모델은 archive/), ROI/침대 좌표, LSTM-AE 참고 이상탐지, 특징 로깅, 후보 모델 비교 |
-| TOF/dataset*/ | 라벨별 ToF 거리 CSV/JSONL, 기존 4×4 및 빈 침대 데이터 보관 |
+| TOF/ml/ | 자세 추론 predict_posture.py(운영: 세 사람 실측 RF posture_rf_bedC_20261104_3p/ → 없으면 CNN 특징+RF posture_cnn_bedC_20261104/ → RF posture_model.joblib, 노트북 원본 incoming/), RF 학습(train_posture_v2.py, 이전 모델은 archive/), ROI/침대 좌표, LSTM-AE 참고 이상탐지, 특징 로깅, 후보 모델 비교 |
+| TOF/dataset*/ | 라벨별 ToF 거리 CSV/JSONL, 기존 4×4 및 빈 침대 데이터 보관. dataset_v3 = 새 침상 실측, dataset_v3_synth = 합성 참가자(학습 보조 전용, synth_subjects.py) |
 | TOF/의 Python/HTML | 수집(capture_dataset; 2026-10 새 설치용 세션 녹화 record_posture → dataset_v2/), 전처리(preprocess_dataset), viewer_proxy 및 자세/3D 실험 화면 |
 | mmWave/ | TI IWR6843AOP cfg(현재 천장 AOP_ceiling_2m5.cfg), USB TLV 리더 send_mmw, 침대 가운데 bed_center.json(tools/set_bed_center.py, server/bed_position.py), 설정 quick_cfg, record, 자세 probe/통합 리더 실험 |
 | mmWave/exit_seq/ | 이탈 시퀀스 기록·공동 로깅·증강·시계열/속도 분석 및 실험 인수인계 |
@@ -78,8 +78,11 @@ Majubom/
 │   │       ├── 2026-06-15-csi-server-integration-design.md
 │   │       ├── 2026-06-23-majubom-interactive-presentation-design.md
 │   │       └── 2026-06-24-csi-mmwave-fusion-honest-direction.md
+│   ├── AI_GUIDE.html
 │   ├── AI_START_HERE.md
 │   ├── CODE_GUIDE_LIVE.html
+│   ├── codex_remote-control.md
+│   ├── DEEP_LEARNING_PLAN.md
 │   ├── EMR_DATA_MODEL.md
 │   ├── operating_concept_day_night.md
 │   ├── PROJECT_STRUCTURE.md
@@ -88,9 +91,15 @@ Majubom/
 │   ├── SENSOR_DIAGNOSTICS.md
 │   ├── SYSTEM_ARCHITECTURE.html
 │   ├── 나중에_할일.md
+│   ├── 논문메모_ToF_20261104.md
+│   ├── 진행상황_및_예측연구계획.md
 │   └── 질문.md
 ├── mmWave/
+│   ├── tests/
 │   └── .gitkeep
+├── output/
+│   └── presentation/
+│       └── 마주봄_발표_4장.pptx
 ├── research/
 │   └── alternatives/
 │       ├── artifacts/
@@ -115,11 +124,81 @@ Majubom/
 │       ├── README.md
 │       └── test_alternatives.py
 ├── server/
+│   ├── backups/
+│   │   ├── ai_analysis_bed01_20261022.json
+│   │   ├── tof_baseline_before_20261022_1125.json
+│   │   ├── tof_baseline_before_20261022_2026.json
+│   │   ├── tof_baseline_before_20261023_0835.json
+│   │   ├── tof_baseline_before_20261023_1424.json
+│   │   ├── tof_baseline_before_20261029_115451.json
+│   │   ├── tof_baseline_before_20261029_161246.json
+│   │   ├── tof_baseline_before_20261029_161619.json
+│   │   ├── tof_baseline_before_20261031_163820.json
+│   │   └── tof_baseline_before_20261031_164540.json
 │   ├── lancedb_store/
 │   │   ├── analysis_chunks.lance/
 │   │   │   └── [LanceDB 자동 생성 내부 파일 생략]
+│   │   ├── emr_chunks.lance/
+│   │   │   └── [LanceDB 자동 생성 내부 파일 생략]
 │   │   └── paper_chunks.lance/
 │   │       └── [LanceDB 자동 생성 내부 파일 생략]
+│   ├── raw_archive/
+│   │   ├── 2026-10-08/
+│   │   │   ├── mmw_readings.jsonl.gz
+│   │   │   └── tof_readings.jsonl.gz
+│   │   ├── 2026-10-09/
+│   │   │   └── mmw_readings.jsonl.gz
+│   │   ├── 2026-10-11/
+│   │   │   ├── mmw_readings.jsonl.gz
+│   │   │   └── tof_readings.jsonl.gz
+│   │   ├── 2026-10-12/
+│   │   │   ├── mmw_readings.jsonl.gz
+│   │   │   └── tof_readings.jsonl.gz
+│   │   ├── 2026-10-13/
+│   │   │   ├── mmw_readings.jsonl.gz
+│   │   │   └── tof_readings.jsonl.gz
+│   │   ├── 2026-10-14/
+│   │   │   ├── mmw_readings.jsonl.gz
+│   │   │   └── tof_readings.jsonl.gz
+│   │   ├── 2026-10-15/
+│   │   │   ├── mmw_readings.jsonl.gz
+│   │   │   └── tof_readings.jsonl.gz
+│   │   ├── 2026-10-16/
+│   │   │   ├── mmw_readings.jsonl.gz
+│   │   │   └── tof_readings.jsonl.gz
+│   │   ├── 2026-10-17/
+│   │   │   ├── mmw_readings.jsonl.gz
+│   │   │   └── tof_readings.jsonl.gz
+│   │   ├── 2026-10-18/
+│   │   │   ├── mmw_readings.jsonl.gz
+│   │   │   └── tof_readings.jsonl.gz
+│   │   ├── 2026-10-19/
+│   │   │   ├── mmw_readings.jsonl.gz
+│   │   │   └── tof_readings.jsonl.gz
+│   │   ├── 2026-10-20/
+│   │   │   ├── mmw_readings.jsonl.gz
+│   │   │   └── tof_readings.jsonl.gz
+│   │   ├── 2026-10-21/
+│   │   │   ├── mmw_readings.jsonl.gz
+│   │   │   └── tof_readings.jsonl.gz
+│   │   ├── 2026-10-22/
+│   │   │   ├── mmw_readings.jsonl.gz
+│   │   │   └── tof_readings.jsonl.gz
+│   │   ├── 2026-10-23/
+│   │   │   ├── mmw_readings.jsonl.gz
+│   │   │   └── tof_readings.jsonl.gz
+│   │   ├── 2026-10-28/
+│   │   │   ├── mmw_readings.jsonl.gz
+│   │   │   └── tof_readings.jsonl.gz
+│   │   ├── 2026-10-29/
+│   │   │   ├── mmw_readings.jsonl.gz
+│   │   │   └── tof_readings.jsonl.gz
+│   │   ├── 2026-10-30/
+│   │   │   ├── mmw_readings.jsonl.gz
+│   │   │   └── tof_readings.jsonl.gz
+│   │   └── 2026-10-31/
+│   │       ├── mmw_readings.jsonl.gz
+│   │       └── tof_readings.jsonl.gz
 │   ├── reports/
 │   │   ├── 2026-08-08.json
 │   │   ├── 2026-08-15.json
@@ -148,7 +227,9 @@ Majubom/
 │   ├── integrated_analysis.py
 │   ├── live_diagnostics.py
 │   ├── maintenance_ai.py
+│   ├── majubom.db
 │   ├── majubom.db.4x4bak.gz
+│   ├── mmw_baseline.json
 │   ├── mmw_logic.py
 │   ├── mmw_server.py
 │   ├── paper_kb.py
@@ -176,6 +257,8 @@ Majubom/
 │   ├── test_tof_toss.py
 │   ├── tof_3d.html
 │   ├── tof_autocal.py
+│   ├── tof_baseline.json
+│   ├── tof_baseline_history.jsonl
 │   ├── tof_baseline_tilt20_20261008.json
 │   ├── tof_logic.py
 │   ├── tof_server.py
@@ -512,13 +595,260 @@ Majubom/
 │   │   ├── tof_없음_empty_이불없음_r7_20261008_164407.jsonl
 │   │   ├── tof_없음_empty_이불없음_r8_20261008_164442.jsonl
 │   │   └── tof_없음_empty_이불없음_r9_20261008_164517.jsonl
+│   ├── dataset_v3/
+│   │   ├── sessions.csv
+│   │   ├── tof_S01_edge_sit_보이는쪽_가운데_r2_20261103_191818.jsonl
+│   │   ├── tof_S01_edge_sit_보이는쪽_가운데_r2_20261104_191039_3ea00085.capture.json
+│   │   ├── tof_S01_edge_sit_보이는쪽_가운데_r2_20261104_191039_3ea00085.jsonl
+│   │   ├── tof_S01_edge_sit_보이는쪽_머리가까이_r1_20261103_191710.jsonl
+│   │   ├── tof_S01_edge_sit_보이는쪽_머리가까이_r1_20261104_190924_8bde9187.capture.json
+│   │   ├── tof_S01_edge_sit_보이는쪽_머리가까이_r1_20261104_190924_8bde9187.jsonl
+│   │   ├── tof_S01_edge_sit_보이는쪽_발가까이_r3_20261103_191915.jsonl
+│   │   ├── tof_S01_edge_sit_보이는쪽_발가까이_r3_20261104_191146_a341d8df.capture.json
+│   │   ├── tof_S01_edge_sit_보이는쪽_발가까이_r3_20261104_191146_a341d8df.jsonl
+│   │   ├── tof_S01_side_left_가운데_r1_20261103_185711.jsonl
+│   │   ├── tof_S01_side_left_가운데_r1_20261104_185646_81241b9c.capture.json
+│   │   ├── tof_S01_side_left_가운데_r1_20261104_185646_81241b9c.jsonl
+│   │   ├── tof_S01_side_left_오른쪽가장자리_r3_20261103_190059.jsonl
+│   │   ├── tof_S01_side_left_오른쪽가장자리_r3_20261104_185911_8f3268c2.capture.json
+│   │   ├── tof_S01_side_left_오른쪽가장자리_r3_20261104_185911_8f3268c2.jsonl
+│   │   ├── tof_S01_side_left_왼쪽가장자리_r2_20261103_185900.jsonl
+│   │   ├── tof_S01_side_left_왼쪽가장자리_r2_20261104_185757_9c31b8d0.capture.json
+│   │   ├── tof_S01_side_left_왼쪽가장자리_r2_20261104_185757_9c31b8d0.jsonl
+│   │   ├── tof_S01_side_right_가운데_r1_20261103_190236.jsonl
+│   │   ├── tof_S01_side_right_가운데_r1_20261104_190036_1da6505b.capture.json
+│   │   ├── tof_S01_side_right_가운데_r1_20261104_190036_1da6505b.jsonl
+│   │   ├── tof_S01_side_right_오른쪽가장자리_r3_20261103_190511.jsonl
+│   │   ├── tof_S01_side_right_오른쪽가장자리_r3_20261104_190358_59e16a8b.capture.json
+│   │   ├── tof_S01_side_right_오른쪽가장자리_r3_20261104_190358_59e16a8b.jsonl
+│   │   ├── tof_S01_side_right_왼쪽가장자리_r2_20261103_190352.jsonl
+│   │   ├── tof_S01_side_right_왼쪽가장자리_r2_20261104_190220_409226ac.capture.json
+│   │   ├── tof_S01_side_right_왼쪽가장자리_r2_20261104_190220_409226ac.jsonl
+│   │   ├── tof_S01_sitting_가운데_r1_20261103_190857.jsonl
+│   │   ├── tof_S01_sitting_가운데_r1_20261104_190516_f38950dd.capture.json
+│   │   ├── tof_S01_sitting_가운데_r1_20261104_190516_f38950dd.jsonl
+│   │   ├── tof_S01_sitting_머리쪽_r2_20261103_191428.jsonl
+│   │   ├── tof_S01_sitting_머리쪽_r2_20261104_190639_e3c507e2.capture.json
+│   │   ├── tof_S01_sitting_머리쪽_r2_20261104_190639_e3c507e2.jsonl
+│   │   ├── tof_S01_sitting_발쪽_r3_20261103_191538.jsonl
+│   │   ├── tof_S01_sitting_발쪽_r3_20261104_190812_6d78f0d5.capture.json
+│   │   ├── tof_S01_sitting_발쪽_r3_20261104_190812_6d78f0d5.jsonl
+│   │   ├── tof_S01_supine_가운데_r1_20261103_184527.jsonl
+│   │   ├── tof_S01_supine_가운데_r1_20261104_185048_c7241f79.capture.json
+│   │   ├── tof_S01_supine_가운데_r1_20261104_185048_c7241f79.jsonl
+│   │   ├── tof_S01_supine_오른쪽가장자리_r3_20261103_185513.jsonl
+│   │   ├── tof_S01_supine_오른쪽가장자리_r3_20261104_185528_d1d49f7e.capture.json
+│   │   ├── tof_S01_supine_오른쪽가장자리_r3_20261104_185528_d1d49f7e.jsonl
+│   │   ├── tof_S01_supine_왼쪽가장자리_r2_20261103_184723.jsonl
+│   │   ├── tof_S01_supine_왼쪽가장자리_r2_20261103_184921.jsonl
+│   │   ├── tof_S01_supine_왼쪽가장자리_r2_20261104_185417_463e966f.capture.json
+│   │   ├── tof_S01_supine_왼쪽가장자리_r2_20261104_185417_463e966f.jsonl
+│   │   ├── tof_S02_edge_sit_보이는쪽_가운데_r2_20261104_125254_458c2817.capture.json
+│   │   ├── tof_S02_edge_sit_보이는쪽_가운데_r2_20261104_125254_458c2817.jsonl
+│   │   ├── tof_S02_edge_sit_보이는쪽_머리가까이_r1_20261104_125048_3cc0d925.capture.json
+│   │   ├── tof_S02_edge_sit_보이는쪽_머리가까이_r1_20261104_125048_3cc0d925.jsonl
+│   │   ├── tof_S02_edge_sit_보이는쪽_발가까이_r3_20261104_125453_51142e87.capture.json
+│   │   ├── tof_S02_edge_sit_보이는쪽_발가까이_r3_20261104_125453_51142e87.jsonl
+│   │   ├── tof_S02_side_left_가운데_r1_20261104_123351_be512be5.capture.json
+│   │   ├── tof_S02_side_left_가운데_r1_20261104_123351_be512be5.jsonl
+│   │   ├── tof_S02_side_left_오른쪽가장자리_r3_20261104_123641_c48b8fd3.capture.json
+│   │   ├── tof_S02_side_left_오른쪽가장자리_r3_20261104_123641_c48b8fd3.jsonl
+│   │   ├── tof_S02_side_left_왼쪽가장자리_r2_20261104_123513_9c3985da.capture.json
+│   │   ├── tof_S02_side_left_왼쪽가장자리_r2_20261104_123513_9c3985da.jsonl
+│   │   ├── tof_S02_side_right_가운데_r1_20261104_123818_753df92d.capture.json
+│   │   ├── tof_S02_side_right_가운데_r1_20261104_123818_753df92d.jsonl
+│   │   ├── tof_S02_side_right_오른쪽가장자리_r3_20261104_124149_b4f43e63.capture.json
+│   │   ├── tof_S02_side_right_오른쪽가장자리_r3_20261104_124149_b4f43e63.jsonl
+│   │   ├── tof_S02_side_right_왼쪽가장자리_r2_20261104_124014_266153db.capture.json
+│   │   ├── tof_S02_side_right_왼쪽가장자리_r2_20261104_124014_266153db.jsonl
+│   │   ├── tof_S02_sitting_가운데_r1_20261104_124322_89a82bcf.capture.json
+│   │   ├── tof_S02_sitting_가운데_r1_20261104_124322_89a82bcf.jsonl
+│   │   ├── tof_S02_sitting_머리쪽_r2_20261104_124522_5c41e1cb.capture.json
+│   │   ├── tof_S02_sitting_머리쪽_r2_20261104_124522_5c41e1cb.jsonl
+│   │   ├── tof_S02_sitting_발쪽_r3_20261104_124841_066df9d7.capture.json
+│   │   ├── tof_S02_sitting_발쪽_r3_20261104_124841_066df9d7.jsonl
+│   │   ├── tof_S02_supine_가운데_r1_20261104_094925.jsonl
+│   │   ├── tof_S02_supine_가운데_r1_20261104_122840_f4f67433.capture.json
+│   │   ├── tof_S02_supine_가운데_r1_20261104_122840_f4f67433.jsonl
+│   │   ├── tof_S02_supine_오른쪽가장자리_r3_20261104_123223_4bddf136.capture.json
+│   │   ├── tof_S02_supine_오른쪽가장자리_r3_20261104_123223_4bddf136.jsonl
+│   │   ├── tof_S02_supine_왼쪽가장자리_r2_20261104_123010_ce55cd7b.capture.json
+│   │   ├── tof_S02_supine_왼쪽가장자리_r2_20261104_123010_ce55cd7b.jsonl
+│   │   ├── tof_S05_edge_sit_보이는쪽_가운데_r2_20261104_181417_e98295a1.capture.json
+│   │   ├── tof_S05_edge_sit_보이는쪽_가운데_r2_20261104_181417_e98295a1.jsonl
+│   │   ├── tof_S05_edge_sit_보이는쪽_머리가까이_r1_20261104_181157_0e030047.capture.json
+│   │   ├── tof_S05_edge_sit_보이는쪽_머리가까이_r1_20261104_181157_0e030047.jsonl
+│   │   ├── tof_S05_edge_sit_보이는쪽_발가까이_r3_20261104_181603_eef8d7b4.capture.json
+│   │   ├── tof_S05_edge_sit_보이는쪽_발가까이_r3_20261104_181603_eef8d7b4.jsonl
+│   │   ├── tof_S05_side_left_가운데_r1_20261104_175552_b8857636.capture.json
+│   │   ├── tof_S05_side_left_가운데_r1_20261104_175552_b8857636.jsonl
+│   │   ├── tof_S05_side_left_오른쪽가장자리_r3_20261104_175941_405ab597.capture.json
+│   │   ├── tof_S05_side_left_오른쪽가장자리_r3_20261104_175941_405ab597.jsonl
+│   │   ├── tof_S05_side_left_왼쪽가장자리_r2_20261104_175747_a1ee1dee.capture.json
+│   │   ├── tof_S05_side_left_왼쪽가장자리_r2_20261104_175747_a1ee1dee.jsonl
+│   │   ├── tof_S05_side_right_가운데_r1_20261104_180119_e2fbafc6.capture.json
+│   │   ├── tof_S05_side_right_가운데_r1_20261104_180119_e2fbafc6.jsonl
+│   │   ├── tof_S05_side_right_오른쪽가장자리_r3_20261104_180429_a1b91f45.capture.json
+│   │   ├── tof_S05_side_right_오른쪽가장자리_r3_20261104_180429_a1b91f45.jsonl
+│   │   ├── tof_S05_side_right_왼쪽가장자리_r2_20261104_180243_2a4dbce4.capture.json
+│   │   ├── tof_S05_side_right_왼쪽가장자리_r2_20261104_180243_2a4dbce4.jsonl
+│   │   ├── tof_S05_sitting_가운데_r1_20261104_180609_9513069e.capture.json
+│   │   ├── tof_S05_sitting_가운데_r1_20261104_180609_9513069e.jsonl
+│   │   ├── tof_S05_sitting_머리쪽_r2_20261104_180758_ac2e0507.capture.json
+│   │   ├── tof_S05_sitting_머리쪽_r2_20261104_180758_ac2e0507.jsonl
+│   │   ├── tof_S05_sitting_발쪽_r3_20261104_180925_2828f0c3.capture.json
+│   │   ├── tof_S05_sitting_발쪽_r3_20261104_180925_2828f0c3.jsonl
+│   │   ├── tof_S05_supine_가운데_r1_20261104_175100_5000edc6.capture.json
+│   │   ├── tof_S05_supine_가운데_r1_20261104_175100_5000edc6.jsonl
+│   │   ├── tof_S05_supine_오른쪽가장자리_r3_20261104_175431_c6c7109b.capture.json
+│   │   ├── tof_S05_supine_오른쪽가장자리_r3_20261104_175431_c6c7109b.jsonl
+│   │   ├── tof_S05_supine_왼쪽가장자리_r2_20261104_175249_f75b6d4f.capture.json
+│   │   ├── tof_S05_supine_왼쪽가장자리_r2_20261104_175249_f75b6d4f.jsonl
+│   │   ├── tof_없음_empty_빈침대_r1_20261103_182144.jsonl
+│   │   ├── tof_없음_empty_빈침대_r1_20261104_094559.jsonl
+│   │   ├── tof_없음_empty_빈침대_r1_20261104_095332_ccca99cc.capture.json
+│   │   ├── tof_없음_empty_빈침대_r1_20261104_095332_ccca99cc.jsonl
+│   │   ├── tof_없음_empty_빈침대_r1_20261104_095652_c5808ea1.capture.json
+│   │   ├── tof_없음_empty_빈침대_r1_20261104_095652_c5808ea1.jsonl
+│   │   ├── tof_없음_empty_빈침대_r1_20261104_174827_41116a77.capture.json
+│   │   ├── tof_없음_empty_빈침대_r1_20261104_174827_41116a77.jsonl
+│   │   ├── tof_없음_empty_빈침대_r1_20261104_184914_b7c39cbb.capture.json
+│   │   ├── tof_없음_empty_빈침대_r1_20261104_184914_b7c39cbb.jsonl
+│   │   ├── tof_없음_empty_빈침대_r2_20261103_182214.jsonl
+│   │   ├── tof_없음_empty_빈침대_r2_20261104_094629.jsonl
+│   │   ├── tof_없음_empty_빈침대_r2_20261104_095358_50c86905.capture.json
+│   │   ├── tof_없음_empty_빈침대_r2_20261104_095358_50c86905.jsonl
+│   │   ├── tof_없음_empty_빈침대_r2_20261104_095734_70f342e6.capture.json
+│   │   ├── tof_없음_empty_빈침대_r2_20261104_095734_70f342e6.jsonl
+│   │   ├── tof_없음_empty_빈침대_r2_20261104_174904_990c720c.capture.json
+│   │   ├── tof_없음_empty_빈침대_r2_20261104_174904_990c720c.jsonl
+│   │   ├── tof_없음_empty_빈침대_r2_20261104_184931_243cb912.capture.json
+│   │   ├── tof_없음_empty_빈침대_r2_20261104_184931_243cb912.jsonl
+│   │   ├── tof_없음_empty_빈침대_r3_20261103_182244.jsonl
+│   │   ├── tof_없음_empty_빈침대_r3_20261104_094659.jsonl
+│   │   ├── tof_없음_empty_빈침대_r3_20261104_095426_982234c6.capture.json
+│   │   ├── tof_없음_empty_빈침대_r3_20261104_095426_982234c6.jsonl
+│   │   ├── tof_없음_empty_빈침대_r3_20261104_095815_bf9d131b.capture.json
+│   │   ├── tof_없음_empty_빈침대_r3_20261104_095815_bf9d131b.jsonl
+│   │   ├── tof_없음_empty_빈침대_r3_20261104_174921_9d1de89e.capture.json
+│   │   ├── tof_없음_empty_빈침대_r3_20261104_174921_9d1de89e.jsonl
+│   │   ├── tof_없음_empty_빈침대_r3_20261104_184948_f26bb3a1.capture.json
+│   │   └── tof_없음_empty_빈침대_r3_20261104_184948_f26bb3a1.jsonl
+│   ├── dataset_v3_synth/
+│   │   ├── sessions.csv
+│   │   ├── tof_S03syn_edge_sit_from_S01_edge_sit_보이는쪽_가운데_r2_20261103_191818.jsonl
+│   │   ├── tof_S03syn_edge_sit_from_S01_edge_sit_보이는쪽_머리가까이_r1_20261103_191710.jsonl
+│   │   ├── tof_S03syn_edge_sit_from_S01_edge_sit_보이는쪽_발가까이_r3_20261103_191915.jsonl
+│   │   ├── tof_S03syn_side_left_from_S01_side_left_가운데_r1_20261103_185711.jsonl
+│   │   ├── tof_S03syn_side_left_from_S01_side_left_오른쪽가장자리_r3_20261103_190059.jsonl
+│   │   ├── tof_S03syn_side_left_from_S01_side_left_왼쪽가장자리_r2_20261103_185900.jsonl
+│   │   ├── tof_S03syn_side_right_from_S01_side_right_가운데_r1_20261103_190236.jsonl
+│   │   ├── tof_S03syn_side_right_from_S01_side_right_오른쪽가장자리_r3_20261103_190511.jsonl
+│   │   ├── tof_S03syn_side_right_from_S01_side_right_왼쪽가장자리_r2_20261103_190352.jsonl
+│   │   ├── tof_S03syn_sitting_from_S01_sitting_가운데_r1_20261103_190857.jsonl
+│   │   ├── tof_S03syn_sitting_from_S01_sitting_머리쪽_r2_20261103_191428.jsonl
+│   │   ├── tof_S03syn_sitting_from_S01_sitting_발쪽_r3_20261103_191538.jsonl
+│   │   ├── tof_S03syn_supine_from_S01_supine_가운데_r1_20261103_184527.jsonl
+│   │   ├── tof_S03syn_supine_from_S01_supine_오른쪽가장자리_r3_20261103_185513.jsonl
+│   │   ├── tof_S03syn_supine_from_S01_supine_왼쪽가장자리_r2_20261103_184723.jsonl
+│   │   ├── tof_S03syn_supine_from_S01_supine_왼쪽가장자리_r2_20261103_184921.jsonl
+│   │   ├── tof_S04syn_edge_sit_from_S02_edge_sit_보이는쪽_가운데_r2_20261104_125254_458c2817.jsonl
+│   │   ├── tof_S04syn_edge_sit_from_S02_edge_sit_보이는쪽_머리가까이_r1_20261104_125048_3cc0d925.jsonl
+│   │   ├── tof_S04syn_edge_sit_from_S02_edge_sit_보이는쪽_발가까이_r3_20261104_125453_51142e87.jsonl
+│   │   ├── tof_S04syn_side_left_from_S02_side_left_가운데_r1_20261104_123351_be512be5.jsonl
+│   │   ├── tof_S04syn_side_left_from_S02_side_left_오른쪽가장자리_r3_20261104_123641_c48b8fd3.jsonl
+│   │   ├── tof_S04syn_side_left_from_S02_side_left_왼쪽가장자리_r2_20261104_123513_9c3985da.jsonl
+│   │   ├── tof_S04syn_side_right_from_S02_side_right_가운데_r1_20261104_123818_753df92d.jsonl
+│   │   ├── tof_S04syn_side_right_from_S02_side_right_오른쪽가장자리_r3_20261104_124149_b4f43e63.jsonl
+│   │   ├── tof_S04syn_side_right_from_S02_side_right_왼쪽가장자리_r2_20261104_124014_266153db.jsonl
+│   │   ├── tof_S04syn_sitting_from_S02_sitting_가운데_r1_20261104_124322_89a82bcf.jsonl
+│   │   ├── tof_S04syn_sitting_from_S02_sitting_머리쪽_r2_20261104_124522_5c41e1cb.jsonl
+│   │   ├── tof_S04syn_sitting_from_S02_sitting_발쪽_r3_20261104_124841_066df9d7.jsonl
+│   │   ├── tof_S04syn_supine_from_S02_supine_가운데_r1_20261104_122840_f4f67433.jsonl
+│   │   ├── tof_S04syn_supine_from_S02_supine_오른쪽가장자리_r3_20261104_123223_4bddf136.jsonl
+│   │   └── tof_S04syn_supine_from_S02_supine_왼쪽가장자리_r2_20261104_123010_ce55cd7b.jsonl
 │   ├── ml/
 │   │   ├── archive/
 │   │   │   ├── lstm_ae_oldmount_20260707.pt
 │   │   │   ├── posture_model_8x8_oldmount_20260707.joblib
+│   │   │   ├── posture_model_v2_bedB_20261031.joblib
 │   │   │   ├── posture_model_v2_S01only_20261008.joblib
 │   │   │   ├── posture_model_v2_S01only_20261008_report.json
 │   │   │   └── README.md
+│   │   ├── incoming/
+│   │   │   └── 2026-11-04/
+│   │   │       ├── bedc-s01retake-s02-s05-ratios/
+│   │   │       ├── bedc-s01retake-s02-s05-ratios-ZNXqhr/
+│   │   │       │   ├── cnn-xgboost-synth50/
+│   │   │       │   │   ├── cnn_cpu.ts
+│   │   │       │   │   ├── cnn_xgboost.json
+│   │   │       │   │   ├── metrics.json
+│   │   │       │   │   ├── paper_record.json
+│   │   │       │   │   ├── preprocessing.json
+│   │   │       │   │   ├── run_manifest.json
+│   │   │       │   │   └── synthetic_training_sessions.json
+│   │   │       │   ├── rf-real/
+│   │   │       │   │   ├── metrics.json
+│   │   │       │   │   ├── paper_record.json
+│   │   │       │   │   ├── preprocessing.json
+│   │   │       │   │   ├── raw_rf.joblib
+│   │   │       │   │   └── run_manifest.json
+│   │   │       │   ├── comparison.md
+│   │   │       │   ├── README.md
+│   │   │       │   ├── real_training_sessions.csv
+│   │   │       │   ├── SHA256SUMS
+│   │   │       │   └── training_baseline.json
+│   │   │       ├── manual-edge-sit-4205cde2/
+│   │   │       │   ├── metrics.json
+│   │   │       │   ├── preprocessing.json
+│   │   │       │   └── raw_rf.joblib
+│   │   │       ├── cnn_cpu.pt
+│   │   │       ├── cnn_lightgbm.joblib
+│   │   │       ├── cnn_rf.joblib
+│   │   │       ├── cnn_xgboost.joblib
+│   │   │       ├── cnn_xgboost.json
+│   │   │       ├── export_validation.json
+│   │   │       ├── infer.py
+│   │   │       ├── metrics.json
+│   │   │       ├── paper_record.json
+│   │   │       ├── paper_record.md
+│   │   │       ├── preprocessing.json
+│   │   │       ├── raw_rf.joblib
+│   │   │       ├── README.md
+│   │   │       ├── run_manifest.json
+│   │   │       ├── session_metadata.json
+│   │   │       ├── SHA256SUMS
+│   │   │       ├── split_audit.json
+│   │   │       ├── training_baseline.json
+│   │   │       └── training_sessions.csv
+│   │   ├── posture_cnn_bedC_20261104/
+│   │   │   ├── cnn_cpu.pt
+│   │   │   ├── cnn_rf.joblib
+│   │   │   ├── metrics.json
+│   │   │   ├── preprocessing.json
+│   │   │   ├── README.md
+│   │   │   ├── SHA256SUMS
+│   │   │   ├── training_baseline.json
+│   │   │   └── training_sessions.csv
+│   │   ├── posture_rf_bedC_20261104_3p/
+│   │   │   ├── comparison.md
+│   │   │   ├── metrics.json
+│   │   │   ├── paper_record.json
+│   │   │   ├── preprocessing.json
+│   │   │   ├── raw_rf.joblib
+│   │   │   ├── README.md
+│   │   │   ├── README_laptop.md
+│   │   │   ├── real_training_sessions.csv
+│   │   │   ├── run_manifest.json
+│   │   │   ├── SHA256SUMS
+│   │   │   └── training_baseline.json
+│   │   ├── posture_rf_bedC_20261104_edge/
+│   │   │   ├── metrics.json
+│   │   │   ├── preprocessing.json
+│   │   │   ├── raw_rf.joblib
+│   │   │   ├── README.md
+│   │   │   ├── SHA256SUMS
+│   │   │   └── training_baseline.json
 │   │   ├── analyze_4x4_backup.py
 │   │   ├── augment_tof.py
 │   │   ├── backup_4x4_analysis.json
@@ -539,6 +869,7 @@ Majubom/
 │   │   ├── README.md
 │   │   ├── retrain_with_tabpfn.py
 │   │   ├── roi.py
+│   │   ├── synth_subjects.py
 │   │   ├── tof_anomaly.py
 │   │   ├── train_lstm_ae_v2.py
 │   │   ├── train_posture.py
@@ -547,7 +878,8 @@ Majubom/
 │   ├── src/
 │   │   ├── main.ino
 │   │   ├── platformio.ini
-│   │   └── secrets.example.h
+│   │   ├── secrets.example.h
+│   │   └── secrets.h
 │   ├── capture_dataset.py
 │   ├── preprocess_dataset.py
 │   ├── record_posture.py
@@ -565,6 +897,7 @@ Majubom/
 │   ├── seed_demo_emr.py
 │   ├── set_bed_center.py
 │   └── update_project_structure.py
+├── .env
 ├── .gitignore
 ├── 0704할일.md
 ├── 0707_TOF_진행상황_인수인계.md

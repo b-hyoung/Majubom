@@ -1,0 +1,12 @@
+{
+  "session": "S02_side_right_오른쪽가장자리_r3_20261104_124149_b4f43e63",
+  "file": "tof_S02_side_right_오른쪽가장자리_r3_20261104_124149_b4f43e63.jsonl",
+  "rep": 3,
+  "complete": true,
+  "error": null,
+  "target_pairs": 150,
+  "retained_pairs": 150,
+  "elapsed_s": 45.40237830602564,
+  "tof1": 198,
+  "tof2": 187
+}

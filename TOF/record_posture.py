@@ -2,16 +2,16 @@
 # 시작 후 DELAY초 대기(자세 잡는 시간) → SEC초 동안 /tof/latest 의 새 프레임만 저장.
 # 사용: python record_posture.py <label> [--subject S01] [--cond 이불없음] [--rep 1]
 #   label: empty, supine, side_left, side_right, sitting, edge_sit
-# 출력: dataset_v2/tof_<subject>_<label>_<cond>_r<rep>_<timestamp>.jsonl
+# 출력: <dataset>/tof_<subject>_<label>_<cond>_r<rep>_<timestamp>.jsonl
+#   --dataset 기본 dataset_v3(2026-10-31~ 실감미디어랩 침상, 삼각대 머리·발). 예전 설치(양옆 1.2m)는 dataset_v2.
 #   한 줄 = 한 센서의 한 프레임. capture_dataset.py 형식에 subject/cond/rep/session 을 더했다.
 #   원본 거리 그대로 저장한다(침대 영역 마스킹은 학습 때 다시 계산할 수 있도록).
-# 세션 목록: dataset_v2/sessions.csv 에 한 줄씩 추가.
+# 세션 목록: <dataset>/sessions.csv 에 한 줄씩 추가.
 import argparse, json, os, time, urllib.request
 
 LABELS = ("empty", "supine", "side_left", "side_right", "sitting", "edge_sit")
 ZONES = 64
 HERE = os.path.dirname(os.path.abspath(__file__))
-OUT_DIR = os.path.join(HERE, "dataset_v2")
 
 ap = argparse.ArgumentParser()
 ap.add_argument("label", choices=LABELS)
@@ -20,8 +20,10 @@ ap.add_argument("--cond", default="기본", help="조건 메모(예: 이불없�
 ap.add_argument("--rep", type=int, default=1, help="반복 회차")
 ap.add_argument("--delay", type=float, default=5.0)
 ap.add_argument("--sec", type=float, default=30.0)
+ap.add_argument("--dataset", default="dataset_v3", help="TOF/ 아래 저장 폴더(설치가 바뀌면 새 폴더)")
 ap.add_argument("--server", default=os.environ.get("TOF_SERVER", "http://localhost:5001/tof/latest"))
 args = ap.parse_args()
+OUT_DIR = os.path.join(HERE, args.dataset)
 
 os.makedirs(OUT_DIR, exist_ok=True)
 ts = time.strftime("%Y%m%d_%H%M%S")

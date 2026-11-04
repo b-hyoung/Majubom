@@ -1,0 +1,12 @@
+{
+  "session": "S01_sitting_발쪽_r3_20261104_190812_6d78f0d5",
+  "file": "tof_S01_sitting_발쪽_r3_20261104_190812_6d78f0d5.jsonl",
+  "rep": 3,
+  "complete": true,
+  "error": null,
+  "target_pairs": 150,
+  "retained_pairs": 150,
+  "elapsed_s": 38.59684923203895,
+  "tof1": 163,
+  "tof2": 340
+}

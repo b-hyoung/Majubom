@@ -14,7 +14,7 @@ from flask_cors import CORS
 from datetime import datetime
 import logging
 import os, json, sys
-from collections import deque
+from collections import deque, Counter
 import db
 from copy import deepcopy
 from diagnostic_observer import observer, tof_snapshot
@@ -123,10 +123,13 @@ CORS(app)
 # A 방식: 양쪽 레일에서 침대 위를 내려다봄.
 # 빈 침대 베이스라인 대비, 그보다 PRESENCE_DELTA_MM 이상 "가까운" 존 =
 # 매트리스 위에 몸/이불이 올라온 것 → 그런 존이 일정 개수 이상이면 사람 있음.
-PRESENCE_DELTA_MM  = 150    # 베이스라인보다 이만큼(mm) 가까우면 점유 존
-PRESENCE_MIN_ZONES = 8      # 들어올 때: 점유 존이 이 개수 이상이면 그 센서는 "감지"
-                            # (8x8 전환: 존 개수가 4x4 대비 4배라 2→8로 비례 조정 — 실측 미검증치)
-STAY_MIN_ZONES     = 4      # 이미 재실 중엔 이 개수 이상이면 유지 (8x8: 1→4로 비례 조정 — 실측 미검증치)
+# 2026-11-04 밤 사용자 결정(새 침상 학습 녹화로 확인): 예전 '한 센서 150mm·8칸'은 침대 중앙 걸터앉음(S01·S05)을 0%,
+# S02 중앙 앉음을 0%·바로 누움을 16%만 잡았다 → '두 센서 합 100mm·3칸'(유지 2칸)으로 낮춤. 같은 녹화에서 중앙 걸터앉음 S01·S05 100%,
+# S02 중앙 앉음 78%·바로 누움 100%, 빈 침대(학습 9세션 + 실시간 20초) 오탐 0%. S02 중앙 걸터앉음은 센서에 안 보여 여전히 0%.
+PRESENCE_DELTA_MM  = 100    # 베이스라인보다 이만큼(mm) 가까우면 점유 존(재실·빈 침대 게이트용)
+BODY_DELTA_MM      = 150    # 몸 위치(가장자리 쏠림 등) 계산용 — 예전 값 유지
+PRESENCE_MIN_ZONES = 3      # 들어올 때: 두 센서 점유 존 합이 이 이상
+STAY_MIN_ZONES     = 2      # 이미 재실 중엔 두 센서 합이 이 이상이면 유지
 STRONG_ZONES       = 16     # 10-29: 두 센서 사람 칸 합이 이 이상이면 레이더 보정(서 있음·아무도 없음)으로 재실을 끄지 않는다(누운 사람 22~26칸)
 CONFIRM_ENTER      = 3      # 이탈→재실 확정에 필요한 연속 프레임 (빠르게 진입)
 CONFIRM_EXIT       = 16     # 재실→이탈 확정에 필요한 연속 프레임(두 센서 합쳐 초당 약 20 → 약 0.8초; 10-22 시연 24→16)
@@ -215,8 +218,13 @@ def occupied_zones(sensor_id, distances):
 
 BED_POSTURES = ("edge_sit", "sitting", "supine", "side_left", "side_right")
 _posture_hint = {"label": None, "conf": None, "at": 0.0}
+_model_raw = {"label": None, "conf": None, "at": 0.0}    # 빈 침대 게이트를 거치기 전 자세 모델 출력(2026-11-04)
 _disp_state = {"shown": None, "cand": None, "since": 0.0}
-DISP_STABLE_SEC = 0.5   # 10-22 시연: 1초 → 0.5초(조명 가린 뒤)   # _posture_fields가 갱신(재실 판단 보조)
+# 2026-11-04 밤: 조금만 움직여도 화면이 이탈↔걸터앉음으로 깜빡였다 → 화면 표시만 최근 DISP_WINDOW_SEC초 판정 중
+# DISP_MAJORITY 이상을 차지한 자세로 바꾼다(아니면 이전 표시 유지). 판정·알림·DB에 쓰는 자세(label)는 그대로.
+DISP_WINDOW_SEC = 2.0
+DISP_MAJORITY = 0.7
+_disp_hist = deque()
 
 
 def now_ts_s():
@@ -248,9 +256,9 @@ def update_presence(sensor_id, distances, now):
     # 히스테리시스(Schmitt): 들어올 땐 MIN_ZONES 이상, 이미 재실 중엔 STAY_MIN_ZONES만
     # 넘어도 유지. + 이탈 확정은 CONFIRM_EXIT 프레임(약 2.4초) 지속돼야 함 → 깜빡임 제거.
     if presence["in_bed"]:
-        overall = (t1o >= STAY_MIN_ZONES) or (t2o >= STAY_MIN_ZONES)
+        overall = (t1o + t2o) >= STAY_MIN_ZONES
     else:
-        overall = (t1o >= PRESENCE_MIN_ZONES) or (t2o >= PRESENCE_MIN_ZONES)
+        overall = (t1o + t2o) >= PRESENCE_MIN_ZONES
     # 2026-10-22: 침대 끝에 걸터앉으면 몸 대부분이 매트리스 밖이라 사람 칸이 0~1개 → '이탈'로 깜빡였다.
     # 자세 모델이 최근 3초 안에 사람 자세(걸터앉음·앉음·누움)를 확신도 0.5 이상으로 냈고 사람 칸이 하나라도 있으면 침대 위로 본다.
     h = _posture_hint
@@ -313,6 +321,35 @@ def grid_html(distances, resolution):
             cells += "</tr>"
     return f'<table style="border-collapse:collapse;font-family:monospace;font-size:12px">{cells}</table>'
 
+# 2026-11-04: 칸 정리. 펌웨어는 센서 상태 5(완전 유효)만 거리로 보내고 나머지는 -1로 보낸다. 실측(빈 침대 15초):
+# 침대 안쪽에서 깜빡이는 '—'는 대부분 상태 9(유효, 반사 펄스가 넓음 — ST 문서상 5와 함께 유효 거리)이고 원래 거리도
+# 이웃 칸과 같았으며, 끊김은 대부분 1프레임이었다. → 상태 9는 펌웨어가 함께 보낸 원래 거리를 쓰고, 그래도 빈 칸은
+# 직전 유효값으로 HOLD_FRAMES 프레임까지 채운다(그보다 길면 -1 — 침대 밖 구석 255는 계속 -1).
+# 판정·화면·자세 모델에만 쓴다. DB 원시 기록과 노트북 스트림은 펌웨어 값 그대로.
+VALID_STATUS = (5, 9)
+HOLD_FRAMES = 3
+_hold = {"tof1": None, "tof2": None}
+
+
+def clean_distances(sensor_id, distances, raw=None, status=None):
+    out = [(-1 if (d is None or d <= 0) else d) for d in distances]
+    if isinstance(raw, list) and isinstance(status, list) and len(raw) == len(status) == len(out):
+        for z, (d, r, st) in enumerate(zip(out, raw, status)):
+            if d < 0 and st in VALID_STATUS and isinstance(r, (int, float)) and 0 < r <= 4000:
+                out[z] = int(r)
+    h = _hold.get(sensor_id)
+    if h is None or len(h["last"]) != len(out):
+        h = _hold[sensor_id] = {"last": [None] * len(out), "miss": [0] * len(out)}
+    for z, d in enumerate(out):
+        if d > 0:
+            h["last"][z], h["miss"][z] = d, 0
+            continue
+        h["miss"][z] += 1
+        if h["last"][z] is not None and h["miss"][z] <= HOLD_FRAMES:
+            out[z] = h["last"][z]
+    return out
+
+
 @app.route("/tof", methods=["POST"])
 def receive_tof():
     data = request.get_json(silent=True)
@@ -333,6 +370,9 @@ def receive_tof():
         return jsonify({"error": "sensor must be tof1 or tof2"}), 400
     if not isinstance(distances, list) or len(distances) == 0:
         return jsonify({"error": "distances_mm must be a non-empty list"}), 400
+
+    fw_distances = distances   # 펌웨어 원본(DB 저장용)
+    distances = clean_distances(sensor_id, distances, data.get("raw_distances_mm"), data.get("target_status"))
 
     now = datetime.now().isoformat(timespec="milliseconds")
     latest[sensor_id] = {
@@ -390,7 +430,7 @@ def receive_tof():
     store_raw = _should_store_raw(presence["in_bed"], _time.time())
     if store_raw:
         try:
-            raw_id = observer.write('tof', 'tof_readings', db.insert_tof, sensor_id, now, resolution, distances, targets,
+            raw_id = observer.write('tof', 'tof_readings', db.insert_tof, sensor_id, now, resolution, fw_distances, targets,
                                     occupied=presence[sensor_id]["occupied"],
                                     in_bed=presence["in_bed"],
                                     labels={'sensor': sensor_id, 'in_bed': presence['in_bed'],
@@ -574,7 +614,7 @@ def _body_mean_y():
             b = base[z] if (base and z < len(base)) else None
             if not b or b <= 0 or b > ROI_MAX_MM:      # 침대 ROI 밖(벽·바닥) 제외
                 continue
-            if dist < b - PRESENCE_DELTA_MM:           # baseline 대비 가까움 = 몸
+            if dist < b - BODY_DELTA_MM:               # baseline 대비 가까움 = 몸
                 y = _roi.hit_y(sid, z, dist)
                 if y is not None and abs(y) <= 0.9:
                     ys.append(y)
@@ -629,7 +669,7 @@ def _inbed_person_ys():
             continue
         for z, dist in enumerate(d):
             b = base[z] if (base and z < len(base)) else None
-            if not dist or dist <= 0 or not b or b <= 0 or b > ROI_MAX_MM or dist >= b - PRESENCE_DELTA_MM:
+            if not dist or dist <= 0 or not b or b <= 0 or b > ROI_MAX_MM or dist >= b - BODY_DELTA_MM:
                 continue
             y = _roi.hit_y(sid, z, dist)
             if y is not None and abs(y) <= 0.9 and _roi.on_bed(sid, z, dist):
@@ -738,6 +778,7 @@ def _posture_fields() -> dict:
             return dict(_posture_cache["fields"])
         try:
             label, conf = _predict_posture(_POSTURE, latest)
+            _model_raw.update(label=label, conf=conf, at=_time.time())   # 게이트 전 모델 출력(빈 침대 자동 갱신용)
             # 빈침대 게이트: 점유존(baseline 대비 가까운 존)이 하나도 없으면 RF 무시하고 empty 확정.
             # RF가 발쪽 걸터앉기↔빈침대를 헷갈려 빈침대를 edge_sit 등으로 오탐하는 것 방지.
             # (사람이 있으면 occ>0 → RF 자세 그대로 사용, 걸터앉기 감지도 유지)
@@ -750,10 +791,12 @@ def _posture_fields() -> dict:
             _posture_hint.update(label=label, conf=conf, at=_time.time())
             # 화면 표시는 새 자세가 1초 이상 이어질 때만 바꾼다(조명 잡음으로 한두 번 튀는 '걸터앉음' 깜빡임 제거, 10-22)
             nowt = _time.time()
-            if label != _disp_state["cand"]:
-                _disp_state.update(cand=label, since=nowt)
-            if _disp_state["shown"] is None or nowt - _disp_state["since"] >= DISP_STABLE_SEC:
-                _disp_state["shown"] = label
+            _disp_hist.append((nowt, label))
+            while _disp_hist and nowt - _disp_hist[0][0] > DISP_WINDOW_SEC:
+                _disp_hist.popleft()
+            top, n_top = Counter(l for _, l in _disp_hist).most_common(1)[0]
+            if _disp_state["shown"] is None or n_top >= DISP_MAJORITY * len(_disp_hist):
+                _disp_state["shown"] = top
             disp = _disp_state["shown"]
             toss = _toss_update(label)
             ko, color = POSTURE_KO.get(disp, (disp or "--", "#9aa0b4"))
@@ -991,7 +1034,85 @@ def _autocal_worker():
             print(f"[autocal] 오류: {e}")
 
 
-_threading.Thread(target=_autocal_worker, daemon=True).start()
+if USE_RADAR:
+    _threading.Thread(target=_autocal_worker, daemon=True).start()
+
+
+def _model_autocal_worker():
+    """2026-11-04 사용자 결정: ToF만 쓸 때 최근 1분 자세 모델 판정의 80% 이상이 '빈 침대'(확신 중앙값 0.8 이상)면
+    5초 칸별 중앙값으로 기준을 다시 잡는다. 빈 침대가 계속되면 10분마다 갱신. 수집 5초를 포함한 최근 1분이 다시 기준 미달이면 취소,
+    큰 변화(30cm 넘는 칸 16개 초과)는 적용하지 않고 기록만 한다(레이더 경로와 같은 안전장치·이력 파일)."""
+    import time as _t
+    from collections import deque as _dq
+    hist = _dq(maxlen=3000)           # 새 프레임마다 한 줄(수집 중엔 0.03초 간격), 1분 창보다 넉넉히
+    last_done = 0.0
+    while True:
+        _t.sleep(0.25)
+        try:
+            now = _t.time()
+            if _POSTURE is None:
+                continue
+            _posture_fields()                       # 새 프레임이면 모델을 돌려 _model_raw 갱신
+            if _model_raw["at"] and (not hist or hist[-1][0] != _model_raw["at"]):
+                hist.append((_model_raw["at"], _model_raw["label"], _model_raw["conf"]))
+            ready = _autocal.model_empty_ready(list(hist), now)
+            if not ready["ready"] or now - last_done < _autocal.MODEL_RECAL_INTERVAL_SEC:
+                continue
+            frames, seen = {"tof1": [], "tof2": []}, {}
+            end = _t.time() + _autocal.COLLECT_SEC
+            while _t.time() < end:
+                _posture_fields()
+                if _model_raw["at"] and hist[-1][0] != _model_raw["at"]:
+                    hist.append((_model_raw["at"], _model_raw["label"], _model_raw["conf"]))
+                for sid in ("tof1", "tof2"):
+                    at = latest[sid].get("received_at")
+                    if at and at != seen.get(sid) and latest[sid].get("distances_mm"):
+                        seen[sid] = at
+                        frames[sid].append(list(latest[sid]["distances_mm"]))
+                _t.sleep(0.03)
+            chk = _autocal.model_empty_ready(list(hist), _t.time())   # 수집 5초를 포함한 최근 1분으로 다시 확인
+            if not chk["ready"]:
+                hist.clear()
+                _autocal_log("aborted", f"수집 뒤 최근 1분 자세 모델 빈 침대 비율 {chk['ratio']}(기준 {_autocal.MODEL_EMPTY_RATIO}) → 이번 갱신 취소", "normal")
+                continue
+            last_done = _t.time()
+            results, refuse = {}, []
+            for sid in ("tof1", "tof2"):
+                if len(frames[sid]) < 10:
+                    refuse.append(f"{sid} 프레임 부족({len(frames[sid])})")
+                    continue
+                new, stats = _autocal.build_baseline(frames[sid], baseline[sid])
+                cmp = _autocal.compare(baseline[sid], new)
+                results[sid] = {"new": new, "stats": stats, "compare": cmp}
+                if not cmp["apply"]:
+                    refuse.append(f"{sid} 30cm 넘게 바뀐 칸 {cmp['big_changes']}개(허용 {_autocal.BIG_CHANGE_MAX})")
+            summary = " · ".join(f"{sid} 바뀐 칸 {r['compare']['changed']}·평균 {r['compare']['mean_abs_mm']}mm·흔들린 칸 {r['stats']['unstable_zones']}"
+                                 for sid, r in results.items())
+            detail = {"trigger": "model_empty", "empty_ratio": ready["ratio"], "empty_median_conf": ready["median_conf"],
+                      "frames": {k: len(v) for k, v in frames.items()}}
+            if refuse:
+                _autocal_log("refused", "자동 적용 안 함: " + ", ".join(refuse) + (f" ({summary})" if summary else "")
+                             + " — 센서·침대 위치를 확인하고 빈 침대에서 수동으로 다시 잡으세요", "caution", detail)
+                continue
+            old = deepcopy(baseline)
+            for sid, r in results.items():
+                baseline[sid] = r["new"]
+            save_baseline()
+            try:
+                with open(BASELINE_HISTORY_FILE, "a", encoding="utf-8") as fh:
+                    fh.write(json.dumps({"at": datetime.now().isoformat(timespec="seconds"), "trigger": "model_empty",
+                                         "empty_ratio": ready["ratio"], "empty_median_conf": ready["median_conf"], "old": old, "new": deepcopy(baseline),
+                                         "results": {k: {"stats": v["stats"], "compare": v["compare"]} for k, v in results.items()}},
+                                        ensure_ascii=False) + "\n")
+            except Exception as e:
+                print(f"[autocal] 이력 기록 실패: {e}")
+            _autocal_log("applied", f"최근 1분 자세 모델 빈 침대 비율 {ready['ratio']}·확신 중앙값 {ready['median_conf']}, 5초 중앙값으로 갱신 ({summary})", "normal", detail)
+        except Exception as e:
+            print(f"[autocal] 오류: {e}")
+
+
+if not USE_RADAR:
+    _threading.Thread(target=_model_autocal_worker, daemon=True).start()
 
 _edge_latest = {"offbed": None, "edge_motion": None}
 

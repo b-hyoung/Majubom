@@ -13,8 +13,12 @@ train_posture.py(이전 설치용)와 다른 점:
       --group subject : 사람 단위(LOSO, 2명 이상일 때 의미 있음). 피험자 '없음'(빈 침대)은 회차로 나눠 각 묶음에 배분.
   - 추론(predict_posture.frame_vec)과 같게 roi.mask_offbed 를 적용한다(--no-roi 로 끔).
 
+새 침상(2026-10-31~ 실감미디어랩, 삼각대 머리·발)은 --data dataset_v3. roi.py가 예전 설치 기하라 ROI를 자동으로 끄고,
+평가 결과는 posture_model_<data>_report.json에 따로 남긴다(v2 보고서는 논문·가이드가 읽으므로 덮어쓰지 않음).
+
 사용:
   python train_posture_v2.py                 # 회차 단위 평가 후 전체 데이터로 학습·저장
+  python train_posture_v2.py --data dataset_v3   # 새 침상 임시 모델
   python train_posture_v2.py --group subject
   python train_posture_v2.py --no-save       # 평가만
 """
@@ -29,7 +33,8 @@ from sklearn.metrics import accuracy_score, confusion_matrix, f1_score
 import roi
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-DDIR = os.path.join(HERE, "..", "dataset_v2")
+MOUNTS = {"dataset_v2": {"height_m": 1.2, "down_tilt_deg": {"tof1_foot": 50, "tof2_head": 30}},
+          "dataset_v3": {"place": "실감미디어랩 침상(2026-10-31~)", "tripod": "tof2 머리맡·tof1 발치", "height_angle": "미측정"}}
 ZONES = 64
 TRIM_SEC = 1.0
 PAIR_SEC = 0.25
@@ -44,9 +49,9 @@ def _clean(d):
     return ([(-1 if (v is None or v < 0) else v) for v in d] + [-1] * ZONES)[:ZONES]
 
 
-def load(use_roi):
+def load(use_roi, data="dataset_v2"):
     X, meta = [], []
-    for f in sorted(glob.glob(os.path.join(DDIR, "tof_*.jsonl"))):
+    for f in sorted(glob.glob(os.path.join(HERE, "..", data, "tof_*.jsonl"))):
         rows = [json.loads(l) for l in open(f, encoding="utf-8")]
         if not rows:
             continue
@@ -89,9 +94,14 @@ def main():
     ap.add_argument("--group", choices=["rep", "subject"], default="rep")
     ap.add_argument("--no-roi", action="store_true")
     ap.add_argument("--no-save", action="store_true")
+    ap.add_argument("--data", default="dataset_v2", help="TOF/ 아래 데이터 폴더")
+    ap.add_argument("--out", default=os.path.join(HERE, "posture_model.joblib"), help="저장할 모델 경로")
     args = ap.parse_args()
+    use_roi = not args.no_roi and args.data == "dataset_v2"
+    if use_roi != (not args.no_roi):
+        print(f"{args.data}: roi.py는 예전 설치 기하라 ROI를 끕니다.")
 
-    X, meta = load(not args.no_roi)
+    X, meta = load(use_roi, args.data)
     y = np.array([m["label"] for m in meta])
     g = groups_for(meta, args.group)
     print(f"샘플 {len(y)}쌍, 클래스 {dict(collections.Counter(y))}, 묶음({args.group}) {sorted(set(g.tolist()))}")
@@ -113,23 +123,25 @@ def main():
     print("혼동행렬(행=정답, 열=예측):", labels)
     print(cm)
 
-    report = {"trained_at": datetime.now().isoformat(timespec="seconds"), "group": args.group, "roi": not args.no_roi,
+    report = {"trained_at": datetime.now().isoformat(timespec="seconds"), "group": args.group, "roi": use_roi,
+              "dataset": f"TOF/{args.data}",
               "n_pairs": int(len(y)), "class_counts": dict(collections.Counter(y.tolist())),
               "subjects": sorted({m["subject"] for m in meta}), "folds": folds,
               "overall_accuracy": accuracy_score(y[done], pred[done]) if done.any() else None,
               "confusion_labels": labels, "confusion": cm.tolist(),
-              "mount": {"height_m": 1.2, "down_tilt_deg": {"tof1_foot": 50, "tof2_head": 30}},
+              "mount": MOUNTS.get(args.data),
               "note": "회차 단위 평가는 같은 사람·같은 날이라 일반화 성능이 아니다. 사람 단위(LOSO)가 기준."}
-    with open(os.path.join(HERE, "posture_model_v2_report.json"), "w", encoding="utf-8") as f:
+    name = "posture_model_v2_report.json" if args.data == "dataset_v2" else f"posture_model_{args.data}_report.json"
+    with open(os.path.join(HERE, name), "w", encoding="utf-8") as f:
         json.dump(report, f, ensure_ascii=False, indent=2)
 
     if args.no_save:
         return
     clf = make_model().fit(X, y)
-    out = os.path.join(HERE, "posture_model.joblib")
+    out = args.out
     joblib.dump({"model": clf, "labels": sorted(set(y)), "zones": ZONES,
                  "features": "tof1_d0..63 + tof2_d0..63 (mm, -1=무효)", "filtered": False,
-                 "roi": not args.no_roi, "version": "v2", "dataset": "TOF/dataset_v2",
+                 "roi": use_roi, "version": "v2", "dataset": f"TOF/{args.data}",
                  "subjects": report["subjects"], "trained_at": report["trained_at"],
                  "mount": report["mount"]}, out)
     print(f"모델 저장: {out}")

@@ -1,0 +1,12 @@
+{
+  "session": "S02_supine_오른쪽가장자리_r3_20261104_123223_4bddf136",
+  "file": "tof_S02_supine_오른쪽가장자리_r3_20261104_123223_4bddf136.jsonl",
+  "rep": 3,
+  "complete": true,
+  "error": null,
+  "target_pairs": 150,
+  "retained_pairs": 150,
+  "elapsed_s": 45.190326346986694,
+  "tof1": 185,
+  "tof2": 201
+}

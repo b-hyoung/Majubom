@@ -1,0 +1,12 @@
+{
+  "session": "S01_supine_가운데_r1_20261104_185048_c7241f79",
+  "file": "tof_S01_supine_가운데_r1_20261104_185048_c7241f79.jsonl",
+  "rep": 1,
+  "complete": true,
+  "error": null,
+  "target_pairs": 150,
+  "retained_pairs": 150,
+  "elapsed_s": 39.52734244201565,
+  "tof1": 177,
+  "tof2": 259
+}
