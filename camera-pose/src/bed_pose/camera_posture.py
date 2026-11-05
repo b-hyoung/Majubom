@@ -101,9 +101,13 @@ def estimate_view(packet,region,bed):
     quality=sum(valid)/len(valid) if valid else 0.
     coverage=len(valid)/17
     total=sum(scores.values());scores={k:v/total for k,v in scores.items()}
+    torso=[points[i] for i in (5,6,11,12)]
+    torso_xy=[[x/packet['width'],y/packet['height']] for x,y in torso] if all(p is not None for p in torso) else None
     return dict(camera=packet.get('source_camera','?'),scores=scores,weight=max(.1,quality*coverage),
                 source=source,quality_score=quality,joints=len(valid),relation=relation,
-                warnings=warnings,frame_id=packet['frame_id'],strict_geometry_label=strict)
+                warnings=warnings,frame_id=packet['frame_id'],strict_geometry_label=strict,
+                torso_xy=torso_xy,received_ns=packet['time_ns'],track_id=packet.get('track_id'),
+                input_id=packet.get('input_id'))
 
 
 class LivePostureEstimator:

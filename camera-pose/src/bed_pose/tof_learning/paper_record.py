@@ -60,12 +60,51 @@ def render_record(record=None):
         lines.append(f'| {title} | {cell(data.get(key))} |')
     lines += ['', '| 클래스 | 프레임 쌍 수 |', '|---|---:|']
     lines += [f'| {label} | {cell(data.get("class_pairs", {}).get(label))} |' for label in labels]
+    if r.get('synthetic', {}).get('pairs', 0):
+        lines += ['', '## 합성 학습 자료', '',
+                  '아래 합성 자료는 원본 학습 세션에서 파생된 것만 해당 학습 묶음에 추가했다. 외부 시험과 내부 검증에는 실제 표본만 사용했다.', '',
+                  '| 항목 | 값 |', '|---|---|',
+                  '| 합성 세션 수 | '+cell(r['synthetic'].get('sessions'))+' |',
+                  '| 합성 프레임 쌍 수 | '+cell(r['synthetic'].get('pairs'))+' |',
+                  '| 합성 시험 쌍 수 | '+cell(r['synthetic'].get('test_pairs'))+' |',
+                  '| 실제 참여자 수 | '+cell(data.get('participants'))+' |']
     lines += ['', '## 분류기 비교', '',
               '정확도·macro-F1·재현율은 0–1 척도이며, 완료된 학습의 외부 시험 묶음 예측만 집계한다.', '',
               '| 모델 | 입력 | 정확도 | macro-F1 | Pi 5 CPU ms/프레임 쌍 |', '|---|---|---:|---:|---:|']
     for key, (name, inputs) in MODELS.items():
         metrics = r.get('models', {}).get(key, {})
         lines.append(f'| {name} | {inputs} | {cell(metrics.get("accuracy"))} | {cell(metrics.get("macro_f1"))} | {cell(r.get("pi_cpu_ms", {}).get(key))} |')
+    if r.get('experiment_conditions'):
+        lines += ['', '## 실험 조건', '', r['experiment_conditions']]
+    if 'camera_used_for_training' in r:
+        lines += ['', '| 라벨·입력 출처 | 값 |', '|---|---|',
+                  '| 카메라 판정의 학습 사용 | '+cell(r['camera_used_for_training'])+' |',
+                  '| 카메라 판정으로 ToF 값 교정 | '+cell(r.get('camera_used_to_correct_tof'))+' |',
+                  '| 정답 | 운영자가 말로 지정한 세션 라벨 |']
+    if 'roi_mask' in r:
+        lines += ['', '| 입력 처리 | 값 |', '|---|---|',
+                  '| ROI 마스킹 적용 | '+cell(r['roi_mask'])+' |',
+                  '| ROI 설정·제외 칸 집계 | '+cell(r.get('roi'))+' |',
+                  '| 빈 침대 평가 분리 | '+cell(r.get('empty_split_policy'))+' |']
+    if r.get('folds'):
+        lines += ['', '## 사람별 외부 시험 결과', '',
+                  '| 시험 참여자 | 모델 | 시험 쌍 수 | 정확도 | macro-F1 |', '|---|---|---:|---:|---:|']
+        for fold in r['folds']:
+            for key, (name, _) in MODELS.items():
+                metrics = fold['models'][key]
+                lines.append(f'| {fold["held_out"]} | {name} | {fold["test_samples"]} | {cell(metrics["accuracy"])} | {cell(metrics["macro_f1"])} |')
+        for fold in r['folds']:
+            lines += ['', '### 시험 참여자 '+fold['held_out']+' 클래스별 재현율', '',
+                      '| 모델 | '+' | '.join(labels)+' |', '|---|'+'---:|'*len(labels)]
+            for key, (name, _) in MODELS.items():
+                metrics = fold['models'][key]
+                lines.append('| '+name+' | '+' | '.join(cell(metrics['per_class_recall'].get(label)) for label in labels)+' |')
+            for key, (name, _) in MODELS.items():
+                metrics = fold['models'][key]
+                lines += ['', '#### '+fold['held_out']+' · '+name+' 혼동 행렬', '',
+                          '| 지시 라벨 / 예측 | '+' | '.join(labels)+' |', '|---|'+'---:|'*len(labels)]
+                for label, values in zip(labels, metrics['confusion_matrix']):
+                    lines.append('| '+label+' | '+' | '.join(cell(v) for v in values)+' |')
     lines += ['', '### 클래스별 재현율', '', '| 모델 | '+' | '.join(labels)+' |',
               '|---|'+'---:|'*len(labels)]
     for key, (name, _) in MODELS.items():

@@ -9,7 +9,7 @@ import numpy as np
 from .data import write_json
 from .paper_record import write_record, render_record, parameter_snapshot
 from .session_data import (LABELS, load_dataset, outer_folds, validation_split,
-                           orientation_verified, mirror, camera_accuracy)
+                           orientation_verified, mirror, camera_accuracy, with_training_derivatives)
 
 
 def run(args):
@@ -29,16 +29,32 @@ def run(args):
         if len(entries)!=1 or entries[0].name!='paper_record.md' or entries[0].read_text(encoding='utf-8')!=render_record():
             raise ValueError('기존 학습 결과를 보존하도록 새 출력 폴더를 지정하세요.')
     samples, baseline, audit = load_dataset(args.dataset, args.baseline)
+    real_count = len(samples)
+    real_session_count = len(audit)
     mode, folds = outer_folds(samples)
+    synthetic_path = getattr(args, 'synthetic_dataset', None)
+    if synthetic_path:
+        derived, _, derived_audit = load_dataset(synthetic_path, args.baseline, synthetic=True,
+                                               source_sessions={row['session']:row for row in audit})
+        samples.extend(derived)
+        audit.extend(derived_audit)
+    roi = None
+    roi_module = getattr(args, 'roi_module', None)
+    if roi_module:
+        from .session_roi import apply_roi
+        baseline, roi = apply_roi(samples, baseline, roi_module)
     augment = orientation_verified(args.orientation) if args.augment else False
     if args.augment and not augment: raise ValueError('좌우 증강에는 --orientation 검증 파일이 필요합니다.')
     device = torch.device(args.device)
     if device.type == 'cuda' and not torch.cuda.is_available(): raise RuntimeError('CUDA를 사용할 수 없습니다.')
     torch.set_num_threads(min(8, torch.get_num_threads()))
     root.mkdir(parents=True,exist_ok=True)
+    if roi_module:
+        (root/'roi.py').write_bytes(Path(roi_module).read_bytes())
+        write_json(root/'roi_audit.json', roi)
     x = np.stack([s['x'] for s in samples]); raw = np.stack([s['raw'].reshape(128) for s in samples])
     y = np.array([s['y'] for s in samples], dtype=np.int64)
-    all_predictions = {name:np.full(len(y),-1,dtype=int) for name in ('raw_rf','cnn','cnn_rf','cnn_xgboost','cnn_lightgbm')}
+    all_predictions = {name:np.full(real_count,-1,dtype=int) for name in ('raw_rf','cnn','cnn_rf','cnn_xgboost','cnn_lightgbm')}
     epochs = []; split_audit = []; fold_reports = []
     training_runs = []; optimizer_parameters = {}; fitted_tree_parameters = {}
     gpu_name = torch.cuda.get_device_name(device) if device.type == 'cuda' else None
@@ -99,6 +115,8 @@ def run(args):
 
     def fit_models(train, test, model, folder):
         folder.mkdir()
+        if roi_module:
+            (folder/'roi.py').write_bytes(Path(roi_module).read_bytes())
         feature_train=infer(model,train)[1]
         cnn_pred,feature_test=infer(model,test)
         results=dict(cnn=cnn_pred)
@@ -122,37 +140,44 @@ def run(args):
             sensor_order=['tof1_foot','tof2_head'],input_shape=['batch',2,3,8,8],
             channels=['distance_div_4000','baseline_minus_distance_div_4000','valid_mask'],
             baseline={s:baseline[i].tolist() for i,s in enumerate(('tof1','tof2'))},
-            delta_valid_only_when_baseline_and_current_valid=True,raw_rf_invalid=-1,roi_mask=False))
+            delta_valid_only_when_baseline_and_current_valid=True,raw_rf_invalid=-1,roi_mask=bool(roi),roi=roi))
         return results
 
     for key,train,test in folds:
         inner_train,inner_valid=validation_split(samples,train)
-        candidate,best_epoch=fit_encoder(inner_train,inner_valid);del candidate
+        inner_augmented=with_training_derivatives(samples,inner_train)
+        augmented_train=with_training_derivatives(samples,train)
+        candidate,best_epoch=fit_encoder(inner_augmented,inner_valid);del candidate
         # 검증에서 epoch를 정한 뒤 바깥 학습 전체로 CNN을 새로 학습한다.
-        model,_=fit_encoder(train,fixed_epochs=best_epoch);epochs.append(best_epoch)
-        predictions=fit_models(train,test,model,root/('fold-'+key));del model
+        model,_=fit_encoder(augmented_train,fixed_epochs=best_epoch);epochs.append(best_epoch)
+        predictions=fit_models(augmented_train,test,model,root/('fold-'+key));del model
         report={name:metrics(y[test],pred) for name,pred in predictions.items()}
         for name,pred in predictions.items():all_predictions[name][test]=pred
-        fold_reports.append(dict(held_out=key,test_samples=len(test),selected_epochs=best_epoch,models=report))
+        fold_reports.append(dict(held_out=key,test_samples=len(test),selected_epochs=best_epoch,models=report,
+                                 real_train_samples=len(train),synthetic_train_samples=len(augmented_train)-len(train)))
         split_audit.append(dict(held_out=key,
-            train_sample_ids=[samples[i]['sample_id'] for i in train],test_sample_ids=[samples[i]['sample_id'] for i in test],
-            epoch_selection_train_ids=[samples[i]['sample_id'] for i in inner_train],
+            train_sample_ids=[samples[i]['sample_id'] for i in augmented_train],test_sample_ids=[samples[i]['sample_id'] for i in test],
+            epoch_selection_train_ids=[samples[i]['sample_id'] for i in inner_augmented],
             epoch_selection_validation_ids=[samples[i]['sample_id'] for i in inner_valid]))
         print('묶음 평가 완료: '+key,flush=True)
     if any((p<0).any() for p in all_predictions.values()):raise RuntimeError('시험 예측이 누락됐습니다.')
-    overall={name:metrics(y,pred) for name,pred in all_predictions.items()}
+    overall={name:metrics(y[:real_count],pred) for name,pred in all_predictions.items()}
     final_epochs=max(1,int(np.median(epochs)));indices=np.arange(len(y))
     final,_=fit_encoder(indices,fixed_epochs=final_epochs)
     fit_models(indices,indices,final,root/'final')  # 반환값은 평가 지표로 사용하지 않는다.
-    camera=camera_accuracy(samples,args.camera)
+    camera=camera_accuracy(samples[:real_count],args.camera)
     write_json(root/'metrics.json',dict(version='bed-session-training-1',labels=LABELS,split_mode=mode,
         same_person_evaluation=mode=='rep',test_used_for_model_selection=False,
-        label_source='operator_spoken_session_declaration',samples=len(samples),folds=fold_reports,
+        label_source='operator_spoken_session_declaration',samples=real_count,folds=fold_reports,
+        synthetic_samples=len(samples)-real_count,synthetic_test_samples=0,
         models=overall,camera=camera,augmentation=augment,final_epochs=final_epochs,
-        trained_device=str(device),deployment_device='cpu',production_ready=False))
-    write_json(root/'split_audit.json',dict(sessions=audit,folds=split_audit))
+        trained_device=str(device),deployment_device='cpu',production_ready=False,roi_mask=bool(roi),roi=roi))
+    write_json(root/'split_audit.json',dict(sessions=audit,folds=split_audit,
+        sample_lineage=[{key:sample[key] for key in ('sample_id','session','collection_subject','synthetic','source_session')}
+                        for sample in samples]))
     write_json(root/'run_manifest.json',dict(seed=args.seed,baseline_sha256=hashlib.sha256(Path(args.baseline).read_bytes()).hexdigest(),
         sessions_csv_sha256=hashlib.sha256((Path(args.dataset)/'sessions.csv').read_bytes()).hexdigest(),
+        synthetic_sessions_csv_sha256=hashlib.sha256((Path(synthetic_path)/'sessions.csv').read_bytes()).hexdigest() if synthetic_path else None,
         orientation_sha256=hashlib.sha256(Path(args.orientation).read_bytes()).hexdigest() if args.orientation else None,
         camera_sha256={str(p):hashlib.sha256(Path(p).read_bytes()).hexdigest() for p in args.camera},
         packages={p:__import__('importlib.metadata',fromlist=['version']).version(p) for p in ('torch','numpy','scikit-learn','xgboost','lightgbm')}))
@@ -167,7 +192,7 @@ def run(args):
               '최종 모델 경로: '+str((root/'final').resolve()),'카메라 평가는 metrics.json의 camera 항목을 확인하세요.']
     (root/'majubom-c1-summary.md').write_text('\n'.join(lines)+'\n',encoding='utf-8')
     # 완료된 실행의 설정과 외부 시험 예측만 논문 기록에 사용한다.
-    people={s['subject'] for s in samples if s['subject'] and s['subject'] not in ('없음','none','empty')}
+    people={s['subject'] for s in samples[:real_count] if s['subject'] and s['subject'] not in ('없음','none','empty')}
     record=dict(completed=True, source='Pi dataset_v3 운영자 지시 라벨; 외부 시험 묶음 예측 집계',
         labels=LABELS, settings=dict(
             convolutions={name:[dict(in_channels=m.in_channels,out_channels=m.out_channels,
@@ -187,12 +212,19 @@ def run(args):
             packages={p:__import__('importlib.metadata',fromlist=['version']).version(p)
                       for p in ('torch','numpy','scikit-learn','xgboost','lightgbm','joblib')},
             gpu=gpu_name,device=str(device),seed=args.seed),
-        data=dict(participants=len(people) if people else None,sessions=len(audit),
-                  sessions_with_pairs=sum(a['pairs']>0 for a in audit),pairs=len(samples),
-                  class_pairs={label:sum(s['label']==label for s in samples) for label in LABELS},
+        data=dict(participants=len(people) if people else None,sessions=real_session_count,
+                  sessions_with_pairs=sum(a['pairs']>0 for a in audit[:real_session_count]),pairs=real_count,
+                  class_pairs={label:sum(s['label']==label for s in samples[:real_count]) for label in LABELS},
                   validation='사람 단위 (Leave-One-Subject-Out)' if mode=='subject' else '회차 단위',
                   same_person=mode=='rep',pairing='수신 시각 차이 ≤250ms, 1:1 짝짓기, 세션 앞뒤 1초 제외'),
-        models=overall,camera=camera)
+        models=overall,camera=camera,folds=fold_reports,roi_mask=bool(roi),roi=roi,
+        synthetic=dict(sessions=len(audit)-real_session_count,pairs=len(samples)-real_count,
+                       test_pairs=0,actual_participants_exclude_synthetic=True,
+                       source_session_excluded_from_inner_validation_and_outer_test=True),
+        camera_used_for_training=False, camera_used_to_correct_tof=False,
+        experiment_conditions='카메라 2대, 침대 같은 긴 면의 양 끝 위쪽에서 촬영, 반대쪽 긴 면은 보이지 않음',
+        empty_split_policy='session_metadata.json의 촬영 묶음 참여자에 귀속' if
+            (Path(args.dataset)/'session_metadata.json').exists() else '회차 기준 분배')
     record=parameter_snapshot(record)
     write_json(root/'paper_record.json',record)
     write_record(root,record)

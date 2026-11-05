@@ -1,5 +1,7 @@
 # 마주봄 전체 구조
 
+실시간 ToF 보강 실험은 `camera-pose/src/bed_pose/sensor_crosscheck.py`에서 새 거리 프레임과 카메라를 비교하고, `tof_learning/live_adaptation.py`에서 안정 불일치 기록과 로컬 후보 RF 학습을 담당한다.
+
 카메라 입력: `camera-pose/src/bed_pose/live_engine.py`는 최신 카메라에서 수신 ns와 SDK용 ms를 구분한다. 같은 ms의 서로 다른 수신은 SDK 시각만 보정하며 실제 동기화 시각은 바꾸지 않는다.
 
 논문 기록: `camera-pose/src/bed_pose/tof_learning/paper_record.py`는 `session_train.py`의 완료된 실행 기록을 `outputs/<날짜>/paper_record.md`로 렌더링한다. 원본은 `paper_record.json`이며 미측정 항목은 빈칸으로 유지한다. 운영 Pi 파일에는 쓰지 않는다.
@@ -88,14 +90,63 @@ Majubom/
 │   │       │   ├── pairs.jsonl
 │   │       │   ├── status.json
 │   │       │   └── tof.jsonl
-│   │       └── bedC-20261103-main/
+│   │       ├── bedC-20261103-main/
+│   │       │   ├── camera.jsonl
+│   │       │   ├── experiment_conditions.json
+│   │       │   ├── manifest.json
+│   │       │   ├── orientation-candidate.json
+│   │       │   ├── pairs.jsonl
+│   │       │   ├── recording_journal.jsonl
+│   │       │   ├── restart-cleanup-report.json
+│   │       │   ├── status.json
+│   │       │   ├── STOP
+│   │       │   └── tof.jsonl
+│   │       ├── bedC-S01-retake/
+│   │       │   ├── camera.jsonl
+│   │       │   ├── manifest.json
+│   │       │   ├── pairs.jsonl
+│   │       │   ├── recording_journal.jsonl
+│   │       │   ├── status.json
+│   │       │   ├── STOP
+│   │       │   └── tof.jsonl
+│   │       ├── bedC-S02-20261104/
+│   │       │   ├── camera.jsonl
+│   │       │   ├── manifest.json
+│   │       │   ├── pairs.jsonl
+│   │       │   ├── recording_journal.jsonl
+│   │       │   ├── status.json
+│   │       │   ├── STOP
+│   │       │   └── tof.jsonl
+│   │       ├── bedC-S02-20261104-counted/
+│   │       │   ├── camera.jsonl
+│   │       │   ├── empty-counted-report.json
+│   │       │   ├── manifest.json
+│   │       │   ├── pairs.jsonl
+│   │       │   ├── status.json
+│   │       │   ├── STOP
+│   │       │   └── tof.jsonl
+│   │       ├── bedC-S02-20261104-postures/
+│   │       │   ├── camera.jsonl
+│   │       │   ├── manifest.json
+│   │       │   ├── pairs.jsonl
+│   │       │   ├── recording_journal.jsonl
+│   │       │   ├── status.json
+│   │       │   ├── STOP
+│   │       │   └── tof.jsonl
+│   │       ├── bedC-S03-20261104-counted/
+│   │       │   ├── camera.jsonl
+│   │       │   ├── empty-counted-report.json
+│   │       │   ├── manifest.json
+│   │       │   ├── pairs.jsonl
+│   │       │   ├── status.json
+│   │       │   ├── STOP
+│   │       │   └── tof.jsonl
+│   │       └── bedC-S05-20261104-postures/
 │   │           ├── camera.jsonl
-│   │           ├── experiment_conditions.json
+│   │           ├── empty-counted-report.json
 │   │           ├── manifest.json
-│   │           ├── orientation-candidate.json
 │   │           ├── pairs.jsonl
 │   │           ├── recording_journal.jsonl
-│   │           ├── restart-cleanup-report.json
 │   │           ├── status.json
 │   │           ├── STOP
 │   │           └── tof.jsonl
@@ -211,11 +262,13 @@ Majubom/
 │   │       │   ├── check.py
 │   │       │   ├── collect.py
 │   │       │   ├── data.py
+│   │       │   ├── live_adaptation.py
 │   │       │   ├── models.py
 │   │       │   ├── paper_record.py
 │   │       │   ├── session_collect.py
 │   │       │   ├── session_data.py
 │   │       │   ├── session_models.py
+│   │       │   ├── session_roi.py
 │   │       │   ├── session_train.py
 │   │       │   └── train.py
 │   │       ├── __init__.py
@@ -375,6 +428,9 @@ Majubom/
 │   │   ├── test_runtime_performance.py
 │   │   ├── test_sensor_crosscheck.py
 │   │   ├── test_separated_posture.py
+│   │   ├── test_session_roi.py
+│   │   ├── test_session_subject_split.py
+│   │   ├── test_session_synthetic.py
 │   │   ├── test_silhouette.py
 │   │   ├── test_silhouette_overlay.py
 │   │   ├── test_single_camera_preview.py
@@ -480,6 +536,8 @@ Majubom/
 │   ├── operating_concept_day_night.md
 │   ├── PROJECT_STRUCTURE.md
 │   ├── related_work_gait_fall.md
+│   ├── research-results-2026-11-03.md
+│   ├── research-results-2026-11-04.md
 │   ├── SENSOR_CHECK_2026-10-06.md
 │   ├── SENSOR_DIAGNOSTICS.md
 │   ├── SYSTEM_ARCHITECTURE.html
@@ -979,3 +1037,9 @@ Majubom/
 <!-- END GENERATED TREE -->
 
 Bed C 실험 비교는 GPU 모니터 실행 시 BEDPOSE_TOF_URL과 BEDPOSE_TOF_RF_MODEL을 지정한다. 노트북에서 ToF1·ToF2 원시 거리 128개를 S01 RF에 입력하며, 카메라·ToF 비교 패널에 실험 모델임을 표시한다.
+
+사람 간 학습 평가에서 `camera-pose/src/bed_pose/tof_learning/session_data.py`는 선택적 session_metadata.json의 촬영 묶음으로 빈 침대를 분할한다. paper_record.py는 사람별 시험 결과·ROI 여부·카메라 입력 사용 여부를 기록한다.
+
+ToF 학습 ROI 비교는 camera-pose/src/bed_pose/tof_learning/session_roi.py가 담당한다. train-session --roi-module로 기존 mask_offbed 모듈을 지정하며 원본 거리 표본·baseline의 복사본에서 마스크와 세 채널을 계산하고 설정·제외 관측 수를 내보낸다.
+
+합성 체형 ToF 비교는 session_data.py의 출처 검증과 with_training_derivatives, session_train.py의 --synthetic-dataset 경로를 사용한다. 합성 자료는 허용된 학습 원본 세션에서 파생된 경우만 추가하고 실제 시험·내부 검증 표본과 분리한다. paper_record.py는 실제 및 합성 데이터 수를 구분해 표시한다.

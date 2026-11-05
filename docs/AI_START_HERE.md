@@ -1,5 +1,7 @@
 # AI 작업 시작 안내
 
+Bed C 실시간 보강 실험은 신선한 ToF 쌍과 안정된 두 카메라가 지속적으로 다르게 판정할 때 의사 라벨을 모아 로컬 RF 후보를 갱신한다. [실행과 판정 기준](../camera-pose/docs/guides/TOF_TRAINING.md#실시간-카메라-불일치-후보-학습).
+
 2026-11-03 카메라 시각: live_engine은 최신 카메라의 수신 ns가 증가하나 ms가 겹칠 때 SDK용 시각만 증가시키고 원시 수신 시각을 보존한다. [시간 처리](../camera-pose/docs/guides/LIVE_MEASUREMENT.md).
 
 2026-11-03 논문 기록: 새 침상 `train-session` 완료 시 `camera-pose/outputs/<날짜>/paper_record.md`·`paper_record.json`을 생성한다. 미측정 항목은 빈칸이며 실측 학습·Pi CPU 시간은 아직 미확인이다. [사용 조건](../camera-pose/docs/guides/TOF_TRAINING.md).
@@ -131,3 +133,9 @@ ls -l /dev/serial/by-id/
 `camera-pose/docs/guides/NEW_LAPTOP.md`에 minhyuk 전체 원본 백업 복원과 새 CUDA 환경 설치를 정리했다. 암호화 백업은 Git LFS, 키는 기존 노트북 바탕화면 별도 보관. 이전 카메라 배치의 미검증 보정은 새 방/카메라 배치에 적용하지 않는다.
 
 Bed C 실험 비교는 GPU 모니터 실행 시 BEDPOSE_TOF_URL과 BEDPOSE_TOF_RF_MODEL을 지정한다. 노트북에서 ToF1·ToF2 원시 거리 128개를 S01 RF에 입력하며, 카메라·ToF 비교 패널에 실험 모델임을 표시한다.
+
+2026-11-04 사람 간 ToF 평가에서 빈 침대는 `session_metadata.json`의 촬영 묶음에 따라 분할한다. 카메라 판정은 별도 비교 지표로만 사용한다. S01·S02의 비마스킹 2D CNN 및 하이브리드 평가 결과는 로컬 camera-pose/outputs/2026-11-04/paper_record.md에 기록한다.
+
+2026-11-04 ToF 학습의 선택 옵션 --roi-module은 기존 기하 ROI의 비교 실험을 지원한다. 원본을 보존하고 모든 모델 입력·baseline에 같은 ROI를 적용한다. 현재 Bed C 설치 치수 재검증은 별도이며 TOF_TRAINING.md에 조건을 기록한다.
+
+2026-11-04 합성 ToF 학습은 --synthetic-dataset을 별도로 지정하며 실제 외부 시험·내부 검증 및 그 파생 자료를 학습에서 분리한다. S03syn·S04syn은 실제 추가 참여자로 집계하지 않는다. 사용법과 실측 결과 경로는 camera-pose/docs/guides/TOF_TRAINING.md에 기록한다.

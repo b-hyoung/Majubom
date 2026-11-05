@@ -143,3 +143,23 @@
 공식 근거: [PyTorch CUDA 설치](https://pytorch.org/get-started/previous-versions/), [XGBoost GPU hist/device](https://xgboost.readthedocs.io/en/stable/gpu/index.html), [LightGBM Windows GPU 제약](https://lightgbm.readthedocs.io/en/latest/Installation-Guide.html). 라이브러리의 GPU 표기만 믿지 않고 이 노트북의 실제 연산 결과를 doctor에 저장했습니다.
 
 Bed C 실험 비교는 GPU 모니터 실행 시 BEDPOSE_TOF_URL과 BEDPOSE_TOF_RF_MODEL을 지정한다. 노트북에서 ToF1·ToF2 원시 거리 128개를 S01 RF에 입력하며, 카메라·ToF 비교 패널에 실험 모델임을 표시한다.
+
+## 사람 간 평가 및 원본 보존 · 2026-11-04
+
+`train-session`은 데이터 폴더의 선택적 `session_metadata.json`에서 세션별 `collection_subject`를 읽는다. 빈 침대는 이 촬영 묶음으로 사람 단위 분할에 귀속하고 실제 subject=없음은 유지한다. 사람 자세 세션의 subject와 촬영 묶음이 다르면 거절한다. 파일이 없는 이전 자료는 기존 분할을 지원한다. CNN은 외부 시험 참여자 자료를 제외하고 새로 학습하며, 내부 회차로 epoch를 선택한다. 논문 기록에 사람별 시험 결과와 ROI 적용 여부를 추가한다.
+
+S01·S02 실측은 37세션 5,415쌍으로 두 방향 사람 간 평가를 완료했다. 기존 S01 최종 모델을 그대로 S02에 평가한 값도 별도 저장했다. 현재 새 학습의 ROI는 미적용이다. 카메라 예측은 비교 지표에만 쓰고 학습 정답이나 ToF 교정에 사용하지 않는다. 결과는 로컬 `outputs/2026-11-04/paper_record.md`에서 확인한다. Pi 5 추론 시간은 미측정이다.
+
+2026-11-04 ROI 비교는 `train-session --roi-module TOF/ml/roi.py`로 실행한다. 원본 JSONL을 보존한 채 학습 표본의 거리와 baseline에 기존 mask_offbed를 적용하고 세 CNN 채널을 다시 계산한다. RF와 CNN·하이브리드에 모두 같은 마스크를 적용한다. 각 모델 폴더에 roi.py와 preprocessing.json을 내보내므로 추론 전 같은 ROI를 적용해야 한다. roi_audit.json에 모듈 해시·기하 설정·클래스별 제외 칸을 기록한다. 현재 기존 ROI는 10월 설치값이라 Bed C 재실측 검증 전 비교 실험으로 보고한다. 같은 분할 검증과 정확도·macro-F1 비교는 로컬 outputs/2026-11-04/roi_comparison.md에 있다.
+
+## 합성 체형 데이터의 출처 분리 · 2026-11-04
+
+`train-session --synthetic-dataset <dataset_v3_synth>`는 실제 dataset_v3와 합성 폴더를 따로 읽는다. 합성 행은 synthetic=true, source_session, synth 변환 기록이 모두 있어야 한다. 원본 세션 목록의 라벨·회차와 대조하고 출처가 없으면 거절한다. 빈 침대가 없는 합성 폴더를 실제 자료에 추가할 수 있다. 외부 시험과 내부 검증은 실제 자료로만 구성하고 그 출처 세션에서 파생된 합성 표본도 해당 학습에서 제외한다. 합성 피험자 이름은 실제 참여자 수에 포함하지 않는다. split_audit.json에 표본 계보를 저장한다. 최종 전체 재학습은 실제와 합성 자료를 함께 사용한다.
+
+## 실시간 카메라 불일치 후보 학습
+
+`Start-CameraGPU.ps1` 실행 환경에서 `BEDPOSE_TOF_URL`, `BEDPOSE_TOF_RF_MODEL`, `BEDPOSE_TOF_ADAPT_DIR`, `BEDPOSE_TOF_ADAPT_DATASET`, `BEDPOSE_TOF_ADAPT_BASELINE`을 지정한다. 경로는 절대 경로를 사용한다. 적응 데이터셋과 기준은 비교용 RF를 학습할 때 사용한 실측 자료를 지정한다. 브라우저를 닫아도 모니터 프로세스가 실행 중이면 관측을 계속한다.
+
+두 센서가 각각 새 프레임을 받고 시차가 250ms 이하일 때 같은 시간대의 안정 카메라 판정과 비교한다. 두 카메라가 같은 자세를 제시하고 같은 사람의 몸통 관절 이동이 정규화 영상 좌표에서 0.045 이내인 불일치가 2초 이상 지속돼야 후보를 저장한다. 이 값은 초기 실험 기준이다. 24쌍마다 실측 자료와 의사 라벨을 함께 써서 로컬 RF 후보를 재학습한다. 클래스별 의사 라벨은 실측의 5% 이하, 표본 가중치는 실측의 절반이다. `/api/room/status`의 `sensor_crosscheck.adaptation`과 출력 폴더의 `camera_conflicts.jsonl`, `rf_shadow_*.joblib`로 확인한다. 후보 모델의 채택은 별도의 실제 정답 시험 후 결정한다.
+
+S01·S02 실측 5,415쌍과 S03syn·S04syn 합성 4,198쌍으로 비마스킹 비교·CPU 데모를 생성했다. 합성 폴더는 31세션이며 실제 참여자는 2명이다. 결과는 로컬 outputs/2026-11-04/synthetic_comparison.md, 데모는 S01-S02-synthetic-demo/final이다. 새로운 실제 체형의 독립 시험은 미측정이다.

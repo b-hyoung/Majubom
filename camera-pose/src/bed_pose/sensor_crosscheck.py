@@ -26,7 +26,8 @@ def compare(camera,latest,presence):
 
 
 class SensorCrosscheck:
-    def __init__(self,url,model_path=None):
+    def __init__(self,url,model_path=None,adaptation=None):
+        self.adaptation=adaptation
         self.model=None
         if model_path:
             import joblib
@@ -43,7 +44,9 @@ class SensorCrosscheck:
             try:
                 def get(path):
                     with urllib.request.urlopen(self.url+path,timeout=2) as r:return json.loads(r.read(1024*1024))
+                started=time.perf_counter_ns()
                 latest=get('/tof/latest');presence=get('/tof/presence')
+                polled=time.perf_counter_ns()
                 if self.model is not None:
                     latest.update(posture_raw=None,posture_conf=None,posture=None)
                     if sensor_timing(latest,presence)['fresh']:
@@ -53,7 +56,7 @@ class SensorCrosscheck:
                         scores=self.model.predict_proba(inputs.reshape(1,128))[0]
                         prediction=int(scores.argmax())
                         latest.update(posture_raw=self.labels[prediction],posture_conf=float(scores[prediction]))
-                with self.lock:self.data=(latest,presence);self.error=None;self.at=time.monotonic()
+                with self.lock:self.data=(latest,presence,polled,(polled-started)/1e9);self.error=None;self.at=time.monotonic()
             except Exception as e:
                 with self.lock:self.error=type(e).__name__
             self.stop.wait(.2)
@@ -61,9 +64,13 @@ class SensorCrosscheck:
         with self.lock:
             if self.error or self.data is None or self.at is None or time.monotonic()-self.at>1:
                 return dict(status='unavailable',error=self.error,accuracy_verified=False,maps={},camera_label=camera.get('label'))
-            latest,presence=deepcopy(self.data)
+            latest,presence,polled,round_trip=deepcopy(self.data)
         result=compare(camera,latest,presence)
         if self.model is not None:
-            result['note']='Bed C S01 실험 · 원시 거리 RF · 새 참여자 검증 중'
+            result['note']='Bed C 실험 · 원시 거리 RF · 새 참여자 검증 중'
+        if self.adaptation is not None:
+            result['adaptation']=self.adaptation.observe(camera,latest,result,polled,round_trip)
         return result
-    def close(self):self.stop.set();self.thread.join(timeout=5)
+    def close(self):
+        self.stop.set();self.thread.join(timeout=5)
+        if self.adaptation is not None:self.adaptation.close()

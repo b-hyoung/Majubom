@@ -86,6 +86,8 @@ def main():
     p.set_defaults(func=run)
     p=sub.add_parser('doctor');p.add_argument('--out',default='outputs/training-doctor.json');p.set_defaults(func=doctor)
     p=sub.add_parser('train-session',help='dataset_v3의 말로 지정한 정답으로 센서별 CNN·트리 학습')
+    p.add_argument('--synthetic-dataset',help='source_session을 갖는 합성 데이터 폴더. 학습 묶음에만 사용')
+    p.add_argument('--roi-module',help='mask_offbed 함수가 있는 기존 ToF ROI 파일 경로')
     p.add_argument('--dataset',required=True);p.add_argument('--baseline',required=True);p.add_argument('--out',required=True)
     p.add_argument('--camera',nargs='*',default=[]);p.add_argument('--orientation');p.add_argument('--augment',action='store_true')
     p.add_argument('--device',choices=['cuda','cpu'],default='cuda');p.add_argument('--epochs',type=int,default=60)

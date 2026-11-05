@@ -11,11 +11,22 @@ def main():
         clip_device='cuda',clip_precision='amp-fp16',clip_shared=True,clip_batch_size=2,clip_batch_wait_ms=2)
     server=None
     crosscheck=None
+    adaptation=None
+    learner_stop=threading.Event()
+    learner=None
     try:
         tof_url=os.environ.get('BEDPOSE_TOF_URL')
         if tof_url:
             from bed_pose.sensor_crosscheck import SensorCrosscheck
-            crosscheck=SensorCrosscheck(tof_url,model_path=os.environ.get('BEDPOSE_TOF_RF_MODEL'))
+            model_path=os.environ.get('BEDPOSE_TOF_RF_MODEL')
+            adaptation_dir=os.environ.get('BEDPOSE_TOF_ADAPT_DIR')
+            if adaptation_dir:
+                if not model_path:
+                    raise ValueError('실시간 재학습에는 비교용 Bed C RF 모델이 필요합니다.')
+                from bed_pose.tof_learning.live_adaptation import LiveAdaptation
+                adaptation=LiveAdaptation(adaptation_dir,os.environ['BEDPOSE_TOF_ADAPT_DATASET'],
+                                          os.environ['BEDPOSE_TOF_ADAPT_BASELINE'])
+            crosscheck=SensorCrosscheck(tof_url,model_path=model_path,adaptation=adaptation)
             workspace.room_monitor.sensor_crosscheck=crosscheck
         if not workspace.clip_status['available']:
             raise RuntimeError('CLIP unavailable; run training/Setup-Training.ps1 and python -m bed_pose clip-setup')
@@ -51,12 +62,26 @@ def main():
             time.sleep(.05)
         connection.write_text(json.dumps(dict(origin=server.origin,token=server.token,url=server.origin+'/monitor#'+server.token)),encoding='utf-8')
         print('GPU_MONITOR_READY',flush=True)
+        if adaptation is not None:
+            def observe_without_browser():
+                while not learner_stop.wait(.2):
+                    try:
+                        with workspace.lock:
+                            workspace.room_monitor.status(workspace.sessions)
+                    except (OSError, ValueError) as error:
+                        print('실시간 ToF 재학습 관측 오류: '+str(error),flush=True)
+                        learner_stop.wait(2)
+            learner=threading.Thread(target=observe_without_browser,daemon=True)
+            learner.start()
         def shutdown_when_requested():
             workspace.stop_requested.wait();server.shutdown()
         threading.Thread(target=shutdown_when_requested,daemon=True).start()
         server.serve_forever()
     finally:
+        learner_stop.set()
+        if learner is not None:learner.join()
         if crosscheck is not None:crosscheck.close()
+        elif adaptation is not None:adaptation.close()
         workspace.close()
         if server is not None:server.server_close()
 
