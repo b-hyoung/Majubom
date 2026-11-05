@@ -71,6 +71,15 @@ class GaitTrendTests(unittest.TestCase):
         self.assertLess(bt["mae"], 0.05)          # 7일 앞 예측 평균 오차 5 cm/s 미만
         self.assertGreaterEqual(bt["coverage80"], 0.6)
 
+    def test_stride_decline_is_not_judged(self):
+        # C안: 보폭 추세는 판정에서 뺀다. 속도는 그대로인데 보폭만 크게 줄어도 정상.
+        conn = make_db([(d, 0.60) for d in range(30, 0, -1)])
+        start = (NOW - timedelta(days=10)).isoformat(timespec="seconds")
+        conn.execute("UPDATE mmw_readings SET stride_length = 0.3 WHERE timestamp >= ?", (start,))
+        r = G.assess(conn, "t", now=NOW)
+        self.assertEqual(r["level"], "normal")
+        self.assertNotIn("stride", r["metrics"])
+
     def test_prior_from_admission_records_is_used(self):
         conn = make_db([(d, 0.45) for d in range(20, 0, -1)])
         r = G.assess(conn, "t", prior={"metrics": {"speed": {"mean": 0.47, "tau": 0.1}}}, now=NOW)

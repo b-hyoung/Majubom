@@ -35,6 +35,9 @@ WARMUP_DAYS = 14         # 누적 일수 < 14 → "학습 중", 정식 알람 �
 #  stride_length : 추정 보폭 (m)              — 짧아지면 위험
 #  stride_cv     : 보폭 변동계수               — 불규칙할수록 위험
 METRICS = ("speed", "speed_cv", "sway", "freeze_ratio", "stride_length", "stride_cv")
+# z 합계 판정에 쓰는 지표(2026-11-05 C안). 보폭 두 지표는 실측(걸음 수를 센 6초 창 69개)에서 46%가 계산 실패,
+# 정답 ±10% 안은 7%라 판정에서 뺀다. 기준선에는 METRICS 전부를 계속 쌓는다(나중에 다시 넣을 수 있게).
+JUDGED_METRICS = ("speed", "speed_cv", "sway", "freeze_ratio")
 
 # σ 하한 (측정 초기 분산이 0에 가까워 z가 폭발하는 것을 방지)
 SIGMA_FLOOR = {
@@ -44,6 +47,7 @@ SIGMA_FLOOR = {
 
 # alert_level 임계 (total_abs 기준)
 # 지표 4개→6개로 늘어나 total_abs가 자연히 커지므로 비례 조정 (×1.5)
+# 2026-11-05 C안으로 판정 지표가 다시 4개가 됐지만 문턱은 낮추지 않는다(지표 4개·문턱 3에서도 평소 걷기의 42%가 주의 이상).
 TH_CAUTION, TH_WARNING, TH_CRITICAL = 3.0, 6.0, 9.0
 
 # 절대 임계 (baseline 무관 즉시 위험) — 2026-10-12 변경
@@ -176,7 +180,7 @@ def baseline_stats(bed: dict | None) -> dict | None:
 def compute_zscore(raw: dict, stats: dict) -> dict:
     z = {}
     total = 0.0
-    for m in METRICS:
+    for m in JUDGED_METRICS:
         zi = (float(raw.get(m, 0.0)) - stats[f"{m}_mu"]) / stats[f"{m}_sigma"]
         z[m] = round(zi, 2)
         total += abs(zi)
@@ -451,7 +455,7 @@ def _evaluate_with_prior(payload, raw, quality, presence, store, target_id, prio
                 prov_z[m] = (mean_k - mu0) / math.sqrt(tau0 ** 2 + s_w ** 2 / k)
                 # 신원 확인 안내: 이번 한 구간이 기대 분포에서 얼마나 벗어났는지
                 id_z[m] = (x - mu0) / math.sqrt(tau0 ** 2 + s_w ** 2)
-        if x is None:
+        if x is None or m not in JUDGED_METRICS:
             continue
         if n_m >= MIN_SAMPLES and post_mean is not None:
             z[m] = (x - post_mean) / max(sd_m or 0.0, SIGMA_FLOOR[m])
@@ -460,7 +464,7 @@ def _evaluate_with_prior(payload, raw, quality, presence, store, target_id, prio
     identity_note = None
     if len(z) >= MIN_METRICS_FOR_S:
         provisional = False
-        scale = len(z) / len(METRICS)
+        scale = len(z) / len(JUDGED_METRICS)
         total = sum(abs(v) for v in z.values())
         level = _classify_scaled(total, scale)
         zscore = {m: round(v, 2) for m, v in z.items()}

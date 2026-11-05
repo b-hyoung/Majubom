@@ -578,6 +578,31 @@ class MmwLegacyPathTests(unittest.TestCase):
         self.assertIsNone(risk["combined_risk_score"])
 
 
+class StrideExcludedTests(unittest.TestCase):
+    """C안: 보폭 지표(stride_length, stride_cv)는 기준선에 쌓되 z 합계 판정에는 넣지 않는다."""
+
+    def test_legacy_total_ignores_stride(self):
+        store = MmwLegacyPathTests().store_with(5, days_ago=20)          # 속도 0.5, 보폭 0.45
+        p = MmwLegacyPathTests().payload(0.5)
+        p["raw"].update(stride_length=0.1, stride_cv=0.5)                 # 보폭만 크게 다름
+        r = L.evaluate(p, store, persist=False)
+        self.assertNotIn("stride_length", r["zscore"])
+        self.assertNotIn("stride_cv", r["zscore"])
+        self.assertEqual(r["zscore"]["total_abs"], 0.0)
+        self.assertEqual(r["alert_level"], "normal")
+        self.assertIn("stride_length_mu", r["baseline"])                  # 기록은 계속 쌓인다
+
+    def test_prior_path_total_ignores_stride(self):
+        store = {}
+        for s in (0.40, 0.50, 0.45, 0.55, 0.35):
+            L.evaluate(MmwPriorPathTests().payload(speed=s), store, persist=False, prior=MmwPriorPathTests.PRIOR)
+        r = L.evaluate(MmwPriorPathTests().payload(speed=0.45, stride=0.1), store, persist=False,
+                       prior=MmwPriorPathTests.PRIOR)
+        self.assertNotIn("stride_length", r["zscore"])
+        self.assertEqual((r["zscore"]["metrics_used"], r["zscore"]["threshold_scale"]), (4, 1.0))
+        self.assertEqual(r["alert_level"], "normal")
+
+
 class RiskScoreTests(unittest.TestCase):
     def test_provisional_gait_level_is_reported_but_not_scored(self):   # Codex2 new
         r = integrated_analysis.compute_risk_score({"mmw_latest": {"alert_level": "warning", "provisional": True}})

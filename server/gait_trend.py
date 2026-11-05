@@ -36,7 +36,10 @@ METRICS = {
                "caution_cm": 2.54, "warn_cm": 7.6,
                "q_level": 0.005, "q_slope": 0.001, "r_floor": 0.03, "slope_prior_sd": 0.005},
 }
-WINDOW_SD_FLOOR = 0.10     # 6초 구간 하나의 측정 흔들림 최소값(m/s·m). 하루 구간이 적을 때 오차를 과소평가하지 않게
+# 추세 판정에 쓰는 지표(2026-11-05 C안). 보폭은 레이더 측정 정확도가 낮아(mmw_logic.JUDGED_METRICS 참고) 빼고,
+# daily_series는 보폭 하루 값도 계속 만든다(나중에 다시 넣을 수 있게).
+JUDGED_METRICS = ("speed",)
+WINDOW_SD_FLOOR = 0.10    # 6초 구간 하나의 측정 흔들림 최소값(m/s·m). 하루 구간이 적을 때 오차를 과소평가하지 않게
                            # (합성 시험: 하루 5구간·잡음 0.15에서 오탐 6/40 → 이 하한으로 줄임)
 MIN_WINDOWS_PER_DAY = 5     # 하루에 곧게 걸은 6초 구간이 5개 미만이면 그날 값은 쓰지 않는다(Phillips: 하루 4~35회 보행)
 MIN_DAYS = 14               # 예측을 내려면 최근 기록일이 14일 이상(Phillips의 14일 보행 추정 창)
@@ -200,9 +203,7 @@ def assess(conn, target_id: str, prior: dict | None = None, now: datetime | None
     priors = {}
     if metrics_prior.get("speed", {}).get("mean"):
         priors["speed"] = (metrics_prior["speed"]["mean"], metrics_prior["speed"].get("tau") or 0.2)
-    if metrics_prior.get("stride_length", {}).get("mean"):
-        priors["stride"] = (metrics_prior["stride_length"]["mean"], metrics_prior["stride_length"].get("tau") or 0.2)
-    per = {key: _metric_assessment(series, key, priors.get(key), now.date()) for key in METRICS}
+    per = {key: _metric_assessment(series, key, priors.get(key), now.date()) for key in JUDGED_METRICS}
     ok = [m for m in per.values() if m["status"] == "ok"]
     order = ["normal", "caution", "warning"]
     level = max((m["level"] for m in ok), key=order.index) if ok else None
