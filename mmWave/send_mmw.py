@@ -71,6 +71,8 @@ PATIENT_URL = "http://127.0.0.1:5002/mmw/patient" # 화면에서 누른 번호
 PATIENT_POLL_SEC = 0.5
 STREAM_CHECK_SEC = 2.0   # cfg를 보내기 전에 DATA 포트에 프레임이 나오는지 보는 시간
 LIVE_STALE_SEC = 2.0     # 레이더 프레임이 이만큼 없으면 실시간 위치를 보내지 않는다
+FRAME_PERIOD_SEC = 0.055 # cfg에서 frameCfg를 못 읽을 때 쓰는 프레임 간격(천장 cfg 55ms, 약 18.2fps)
+CLOCK_RESYNC_SEC = 1.0   # 프레임 번호로 센 시각이 벽시계와 이만큼 어긋나면 기준을 다시 잡는다
 
 # ── 침대존 & 환자 소속도(bed affinity) ─────────────────────────────────
 # 여러 사람이 있을 때 "환자(메인 타겟)"를 순간위치가 아니라 track 이력으로 특정한다.
@@ -111,6 +113,41 @@ def parse_frame_header(data):
         "numTLVs": fields[6],
         "subFrameNum": fields[7],
     }
+
+
+def frame_period_from_cfg(cfg_path):
+    """cfg의 frameCfg 5번째 값(framePeriodicity, ms) → 초. 못 읽으면 FRAME_PERIOD_SEC."""
+    try:
+        with open(cfg_path, encoding="utf-8") as f:
+            for line in f:
+                parts = line.split()
+                if parts and parts[0] == "frameCfg" and len(parts) > 5:
+                    return float(parts[5]) / 1000.0
+    except (OSError, TypeError, ValueError):
+        pass
+    return FRAME_PERIOD_SEC
+
+
+class FrameClock:
+    """프레임 시각 = 기준 시각 + (프레임 번호 − 기준 번호) × 프레임 간격.
+
+    시리얼 포트는 한 번에 프레임 여러 개를 읽으므로, 읽은 시각을 그대로 붙이면 시간 차이 대부분이 0이 되어
+    보폭 계산의 샘플링 주파수가 틀어진다(2026-11-05 확인). 번호가 되돌아가거나(레이더 재시작)
+    벽시계와 CLOCK_RESYNC_SEC 넘게 어긋나면 지금 시각으로 기준을 다시 잡는다.
+    """
+
+    def __init__(self, period):
+        self.period = period
+        self.anchor = None   # (프레임 번호, 시각)
+
+    def stamp(self, frame_num, now):
+        if self.anchor is not None:
+            f0, t0 = self.anchor
+            t = t0 + (frame_num - f0) * self.period
+            if frame_num >= f0 and abs(t - now) <= CLOCK_RESYNC_SEC:
+                return t
+        self.anchor = (frame_num, now)
+        return now
 
 
 MOUNT_UPSIDE_DOWN = True   # 레이더가 칩 면 안에서 180° 뒤집혀 설치된 경우
@@ -614,6 +651,7 @@ def run(cli_port, data_port, cfg_path, do_send=True, target_id="room_01", height
     pipeline = RoomPipeline(ROOM_POLYGON, BED_POLYGON, DOOR_POLYGON, max_people=max_people, room_filter=room_filter, tilt=tilt)
     click = {"tid": None, "seq": None}
     applied_seq = None
+    clock = FrameClock(frame_period_from_cfg(cfg_path))
     if do_send:
         threading.Thread(target=poll_patient_clicks, args=(target_id, window_start, click), daemon=True, name="mmw-click").start()
 
@@ -624,11 +662,12 @@ def run(cli_port, data_port, cfg_path, do_send=True, target_id="room_01", height
             if chunk:
                 buf += chunk
                 frames, buf = iter_frames(buf)
-                now = time.time()
+                read_at = time.time()
                 for hdr, fb in frames:
                     if not frame_is_valid(hdr, fb):
                         prev_zs = None   # 다음 프레임의 1011이 가리킬 점을 알 수 없다
                         continue
+                    now = clock.stamp(hdr["frameNum"], read_at)   # 프레임마다 다른 시각(한 번에 여러 프레임을 읽음)
                     # 사람 ID는 범위 밖으로 나가는 것도 봐야 하므로 범위 필터 전의 추적을 전부 넘긴다
                     targets = [track_to_world(t, height, tilt) for t in extract_targets(hdr, fb)]
                     zs, index = extract_points(hdr, fb, height, tilt)
