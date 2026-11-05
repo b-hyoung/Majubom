@@ -791,6 +791,7 @@
     }
     fpSetGoals(pos2, main ? main.t.tid : null, targets.filter(function (o) { return o !== main; }));
     var lockNote = mm.patientLock === 'manual' ? '환자: 화면에서 지정 — 다른 점을 누르면 바뀝니다'
+      : mm.patientLock === 'auto' ? '환자: 방에 혼자 있어 자동 지정 — 다른 점을 누르면 바뀝니다'
       : mm.bedPark ? '환자 침대 위(누우면 레이더가 놓침) — 내려오면 다시 따라갑니다'
       : (mm.connected && mm.mainTid == null ? '환자 없음 — 회색 점을 눌러 환자를 지정하세요' : '');
     if (lockNote && !note) note = lockNote;

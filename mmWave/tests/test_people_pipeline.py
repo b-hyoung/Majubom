@@ -140,6 +140,39 @@ class RoleTests(unittest.TestCase):
         self.assertIsNone(sim.pipe.patient_pid)
 
 
+class AutoPatientTests(unittest.TestCase):
+    """클릭이 없어도 방 안에 움직이는 사람이 혼자면 자동으로 사람 ID를 붙이고 환자로 정한다(2026-11-05)."""
+
+    def test_lone_walker_becomes_patient_and_falls_are_watched(self):
+        sim = Sim()
+        sim.run(3, walk(1, (2.5, 0.0), (1.5, 0.0)))
+        self.assertEqual(sim.last["patient_tid"], 1)
+        self.assertEqual((sim.last["patient"]["pid"], sim.last["patient"]["locked"]), ("P1", "auto"))
+        fall_at(sim, 1.5, 0.0)
+        self.assertEqual([e["stage"] for e in sim.events], ["fallen"])
+
+    def test_two_walkers_wait_for_a_click(self):
+        sim = Sim()
+        sim.run(3, lambda i, n: walk(1, (2.5, 0.0), (1.5, 0.0))(i, n) + walk(2, (0.0, -1.0), (1.0, -1.0))(i, n))
+        self.assertIsNone(sim.last["patient_tid"])
+        self.assertEqual(sim.last["persons"], [])
+
+    def test_unmoved_track_is_not_chosen(self):
+        sim = Sim()
+        sim.run(5, lambda i, n: [target(1, 1.5, 0.0)])      # 빈 방의 멈춘 유령 번호 같은 경우
+        self.assertIsNone(sim.last["patient_tid"])
+
+    def test_second_walker_is_not_auto_chosen_and_click_wins(self):
+        sim = Sim()
+        sim.run(3, walk(1, (2.5, 0.0), (1.5, 0.0)))
+        both = lambda i, n: [target(1, 1.5, 0.0)] + walk(2, (0.0, -1.0), (1.0, -1.0))(i, n)
+        sim.run(3, both)
+        self.assertEqual(sim.last["patient_tid"], 1)          # 두 번째 사람은 자동으로 바꾸지 않는다
+        self.assertEqual(sim.pipe.designate(sim.t, 2), "P2")
+        sim.run(1, lambda i, n: [target(1, 1.5, 0.0), target(2, 1.0, -1.0)])
+        self.assertEqual((sim.last["patient_tid"], sim.last["patient"]["locked"]), (2, "manual"))
+
+
 class HelperTests(unittest.TestCase):
     def test_frame_validation(self):
         tlv = struct.pack("<2I", 1021, 4) + b"\0" * 4

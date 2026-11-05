@@ -2,6 +2,8 @@
 
 처리 순서는 테스트 뷰어의 전처리 탭과 같다: 사람 ID → 문·남은 번호 제외 → 범위 필터 → 이동 이력 → EMA.
 화면에서 누른 번호만 사람 ID를 받고, 마지막으로 누른 사람이 환자(보행 지표 대상)가 된다.
+예외(2026-11-05): 방 안에 사람 ID가 붙은 사람이 없고 움직이는 사람 후보 번호가 정확히 하나면, 클릭 없이 그 번호를
+환자로 정한다(locked="auto"). 클릭이 없으면 낙상 판정이 아예 돌지 않던 문제를 막는다. 2명 이상이면 클릭을 기다린다.
 
 낙상 사건은 그대로 보내지 않는다.
 - 침상 안: 침상에 눕는 것도 높이가 떨어지므로 보내지 않는다.
@@ -11,7 +13,7 @@
 import math
 
 import fall_detect
-from person_ids import PersonTracker, in_poly
+from person_ids import FRESH_MIN_FRAMES, FRESH_MIN_POINTS, PersonTracker, in_poly
 
 EMA_ALPHA = 0.3          # 위치 평활화 계수
 MOVE_SETTLE_SEC = 1.5    # 추적이 생긴 직후 칩이 위치를 잡는 동안은 이동으로 치지 않는다
@@ -93,6 +95,7 @@ class RoomPipeline:
         self.falls = FallWatch(bed, door)
         self.tracks = {}
         self.patient_pid = None
+        self.patient_auto = False
         fall_detect.BED_CENTER = (sum(c[0] for c in bed) / len(bed), sum(c[1] for c in bed) / len(bed))
         if tilt >= 80:
             fall_detect.HEIGHT_FIT = (1.0, 0.0)   # 거리별 높이 보정은 벽 설치에서 잰 값이라 천장에서는 끈다
@@ -102,7 +105,34 @@ class RoomPipeline:
         pid = self.people.label(now, tid, "person")
         if pid:
             self.patient_pid = pid
+            self.patient_auto = False
         return pid
+
+    def _auto_designate(self, now, snap, targets):
+        """방 안에 사람 ID가 붙은 사람이 없고 사람 후보 번호가 정확히 하나면 그 번호를 환자로 정한다. 반환: 정했는지.
+        후보: 사람 ID 없음, 숨김(문·나간 사람의 번호·반사점 없는 번호) 아님, 방 안, 생긴 자리에서 움직인 적 있음,
+        최근 1초 반사점이 사람 잇기 기준(person_ids FRESH_MIN_*)을 넘음. 멈춘 유령 번호는 움직인 적이 없어 빠진다."""
+        if any(p["state"] == "in" for p in snap["persons"]):
+            return False
+        cands = []
+        for t in targets:
+            st = self.people.tracks.get(t["tid"])
+            if st is None or st["pid"] or t["tid"] in snap["hidden"] or not st["moved"]:
+                continue
+            if not in_poly(t["posX"], t["posY"], self.room):
+                continue
+            counts = [n for _, n in st["frames"]]
+            if sum(n > 0 for n in counts) < FRESH_MIN_FRAMES or sum(counts) / max(len(counts), 1) < FRESH_MIN_POINTS:
+                continue
+            cands.append(t["tid"])
+        if len(cands) != 1:
+            return False
+        pid = self.people.label(now, cands[0], "person")
+        if not pid:
+            return False
+        self.patient_pid = pid
+        self.patient_auto = True
+        return True
 
     def _moved(self, now, tid, x, y, z):
         state = self.tracks.get(tid)
@@ -132,6 +162,8 @@ class RoomPipeline:
         """targets: 바닥 기준 좌표 추적 목록(posX, posY, posZ, velX, velY, velZ, npts, linked_npts, top_z)."""
         tracks = [{"tid": t["tid"], "world": [t["posX"], t["posY"], t["posZ"]], "npts": t["npts"]} for t in targets]
         snap = self.people.update(now, tracks, self.room, self.door, self.bed)
+        if self._auto_designate(now, snap, targets):
+            snap = self.people.snapshot(now, self.room, self.door, self.bed)
         patient = next((p for p in snap["persons"] if p["pid"] == self.patient_pid), None)
         patient_tid = patient["tid"] if patient else None
 
@@ -154,7 +186,7 @@ class RoomPipeline:
         for tid in [k for k, v in self.tracks.items() if now - v["last"] > TRACK_END_SEC]:
             del self.tracks[tid]
 
-        info = {"tid": patient_tid, "pid": self.patient_pid, "locked": "manual" if patient_tid is not None else None,
+        info = {"tid": patient_tid, "pid": self.patient_pid, "locked": ("auto" if self.patient_auto else "manual") if patient_tid is not None else None,
                 "since": now - patient["since"] if patient else None,
                 "bed_in": bool(patient_target and in_poly(patient_target["posX"], patient_target["posY"], self.bed)),
                 "bed_park": False}
