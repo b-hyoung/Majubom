@@ -7,7 +7,7 @@ import math
 import os
 import tempfile
 import unittest
-from datetime import date
+from datetime import date, datetime, timedelta, timezone
 from unittest.mock import patch
 
 from flask import Flask
@@ -523,6 +523,59 @@ class MmwPriorPathTests(unittest.TestCase):
         r = L.evaluate(self.payload(), {}, persist=False, prior=prior)
         self.assertIn("identity_note", r)
         self.assertNotIn("provisional", r)
+
+
+class MmwLegacyPathTests(unittest.TestCase):
+    """사전분포가 없는 기존 경로: 비교 순서(A안)와 학습 기간 표시(B안)."""
+
+    def payload(self, speed):
+        return {"target_id": "room_y", "raw": {"speed": speed, "speed_cv": 0.15, "sway": 0.05, "freeze_ratio": 0.1,
+                                               "stride_length": 0.45, "stride_cv": 0.09},
+                "quality": {"reliable": True, "walking": True}, "presence": {"n_targets": 1}}
+
+    def store_with(self, n, days_ago, speed=0.5):
+        store = {}
+        for _ in range(n):
+            L.update_baseline(store, "room_y", self.payload(speed)["raw"])
+        first = datetime.now(timezone.utc) - timedelta(days=days_ago)
+        store["room_y"]["first_seen"] = first.isoformat()
+        return store
+
+    def test_legacy_compares_before_adding_current(self):
+        store = self.store_with(5, days_ago=20)
+        r = L.evaluate(self.payload(0.3), store, persist=False)
+        # 기준선 5건은 모두 0.5 → σ는 하한 0.05 → z = (0.3 − 0.5) / 0.05 = −4.0 (현재 구간을 섞으면 약 −2.24)
+        self.assertAlmostEqual(r["zscore"]["speed"], -4.0, places=2)
+        self.assertEqual(store["room_y"]["n"], 6)   # 비교한 뒤에는 기준선에 들어간다
+
+    def test_legacy_warming_level_is_marked_and_not_scored(self):
+        store = self.store_with(5, days_ago=1)
+        r = L.evaluate(self.payload(0.2), store, persist=False)
+        self.assertIn(r["alert_level"], ("warning", "critical"))
+        self.assertFalse(r["alarm"])
+        self.assertTrue(r["warming"])
+        self.assertNotIn("provisional", r)
+        risk = integrated_analysis.compute_risk_score({"mmw_latest": r})
+        self.assertIsNone(risk["combined_risk_score"])
+        self.assertEqual(risk["provisional_levels"], {"mmwave_gait": r["alert_level"]})
+
+    def test_legacy_after_warmup_is_scored(self):
+        store = self.store_with(5, days_ago=20)
+        r = L.evaluate(self.payload(0.2), store, persist=False)
+        self.assertNotIn("warming", r)
+        risk = integrated_analysis.compute_risk_score({"mmw_latest": r})
+        self.assertEqual(risk["combined_risk_score"], integrated_analysis.RISK_LEVEL_SCORE[r["alert_level"]])
+
+    def test_prior_path_warming_level_is_marked_and_not_scored(self):
+        store = {}
+        for s in (0.40, 0.50, 0.45, 0.55, 0.35):
+            L.evaluate(MmwPriorPathTests().payload(speed=s), store, persist=False, prior=MmwPriorPathTests.PRIOR)
+        r = L.evaluate(MmwPriorPathTests().payload(speed=0.1), store, persist=False, prior=MmwPriorPathTests.PRIOR)
+        self.assertFalse(r["provisional"])
+        self.assertTrue(r["warming"])
+        self.assertNotEqual(r["alert_level"], "normal")
+        risk = integrated_analysis.compute_risk_score({"mmw_latest": r})
+        self.assertIsNone(risk["combined_risk_score"])
 
 
 class RiskScoreTests(unittest.TestCase):

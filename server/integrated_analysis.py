@@ -62,10 +62,11 @@ def compute_risk_score(patient_state: dict) -> dict:
     posture_level = (tof.get("posture_baseline") or {}).get("alert_level")
     exit_level = (tof.get("exit_episode") or {}).get("alert_level")
     mmw_level = mmw.get("alert_level") if not mmw.get("measuring_held") and (mmw.get("quality") or {}).get("reliable") is not False else None
-    # 개인 기준이 생기기 전의 '잠정' 보행 판정(문헌 기대 범위 비교)은 정식 위험 점수에 넣지 않고 따로 보여준다.
+    # 개인 기준이 생기기 전의 '잠정' 보행 판정(문헌 기대 범위 비교)과 기준선 학습 기간(warming)의 판정은
+    # 정식 위험 점수에 넣지 않고 따로 보여준다. 둘 다 정식 알람을 보류하는 판정이기 때문이다.
     # 단 높이 급강하(낙상) 절대 규칙에서 나온 critical은 잠정 여부와 관계없이 반영한다.
     provisional = {}
-    if mmw_level and mmw.get("provisional") and mmw_level != "critical":
+    if mmw_level and (mmw.get("provisional") or mmw.get("warming")) and mmw_level != "critical":
         provisional["mmwave_gait"] = mmw_level
         mmw_level = None
 

@@ -308,24 +308,24 @@ def evaluate(payload: dict, store: dict, persist: bool = True, prior: dict | Non
         reasons.append(note)
         extra = {"identity_note": note, "prior_id": prior.get("id")}
 
-    update_baseline(store, target_id, raw)
-    update_done = True
-    stats = baseline_stats(store.get(target_id))
+    # 현재 구간은 비교가 끝난 뒤 기준선에 넣는다(자기 자신과 비교하지 않음). 사전분포 경로와 같은 순서.
+    stats_before = baseline_stats(store.get(target_id))
 
     zscore = None
     level = "normal"
-    warming = (stats is None) or (stats["n"] < MIN_SAMPLES) or (stats["age_days"] < WARMUP_DAYS)
+    warming = (stats_before is None) or (stats_before["n"] < MIN_SAMPLES) or (stats_before["age_days"] < WARMUP_DAYS)
 
-    if stats and stats["n"] >= MIN_SAMPLES:
-        zscore = compute_zscore(raw, stats)
+    if stats_before and stats_before["n"] >= MIN_SAMPLES:
+        zscore = compute_zscore(raw, stats_before)
         level = classify_alert(zscore["total_abs"])
 
     if warming:
-        if stats and stats["n"] < MIN_SAMPLES:
-            reasons.append(f"베이스라인 학습 중: 누적 {stats['n']}/{MIN_SAMPLES}건 — 정식 알람 보류")
+        if stats_before is None or stats_before["n"] < MIN_SAMPLES:
+            n_before = stats_before["n"] if stats_before else 0
+            reasons.append(f"베이스라인 학습 중: 누적 {n_before}/{MIN_SAMPLES}건 — 정식 알람 보류")
         else:
-            age = stats["age_days"] if stats else 0
-            reasons.append(f"베이스라인 학습 중: 누적 {age:.1f}/{WARMUP_DAYS}일 — 정식 알람 보류")
+            reasons.append(f"베이스라인 학습 중: 누적 {stats_before['age_days']:.1f}/{WARMUP_DAYS}일 — 정식 알람 보류")
+        extra["warming"] = True   # 학습 기간 판정은 통합 위험 점수에 넣지 않는다(integrated_analysis)
     else:
         if level in ("warning", "critical"):
             alarm = True
@@ -340,6 +340,9 @@ def evaluate(payload: dict, store: dict, persist: bool = True, prior: dict | Non
         alarm, alarm_urgent = True, True
         reasons.append(f"바닥 근처 몸 높이(z={low_z}m < {FLOOR_FALL_Z}m) → 즉시 위험(베이스라인 무관)")
 
+    update_baseline(store, target_id, raw)
+    update_done = True
+    stats = baseline_stats(store.get(target_id))
     if persist and update_done:
         save_baseline(store)
 
@@ -526,6 +529,8 @@ def _evaluate_with_prior(payload, raw, quality, presence, store, target_id, prio
 
     extra = {"provisional": provisional, "baseline_source": source, "expected": expected,
              "prior_id": prior.get("id")}
+    if not provisional and (n_before < MIN_SAMPLES or age_days < WARMUP_DAYS):
+        extra["warming"] = True   # 학습 기간 판정은 통합 위험 점수에 넣지 않는다(integrated_analysis)
     if identity_note:
         extra["identity_note"] = identity_note
     return _result(payload, raw, quality, presence, stats, zscore,
