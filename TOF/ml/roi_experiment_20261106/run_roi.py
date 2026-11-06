@@ -11,7 +11,7 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 from tl.session_data import load_dataset, outer_folds, validation_split, channels, LABELS
 
-REPO = Path('/home/pi/Documents/Github/Majubom')
+REPO = HERE.parents[2]   # 저장소 루트
 SCR = HERE.parent
 DATASETS = {
     'v2': (REPO / 'TOF/dataset_v2', HERE / 'baseline_v2.json'),
