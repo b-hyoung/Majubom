@@ -172,6 +172,40 @@ class AutoPatientTests(unittest.TestCase):
         sim.run(1, lambda i, n: [target(1, 1.5, 0.0), target(2, 1.0, -1.0)])
         self.assertEqual((sim.last["patient_tid"], sim.last["patient"]["locked"]), (2, "manual"))
 
+    def test_ghost_that_stopped_long_ago_is_not_auto_chosen(self):
+        """2026-11-07 Pi 걷기 확인: 사람을 따라 움직이다 x- 벽에 멈춘 유령 번호(13번)가 반사점을 계속 내서,
+        사람 번호가 끊긴 뒤 환자로 자동 지정됐다. 멈춘 지 오래된 번호는 후보가 아니어야 한다."""
+        sim = Sim()
+        ghost_stop = (-1.2, 1.0)
+        sim.run(3, lambda i, n: walk(1, (2.0, -1.0), (1.5, 0.5))(i, n) + walk(2, (-0.2, 1.2), ghost_stop)(i, n))
+        self.assertEqual(sim.pipe.designate(sim.t, 1), "P1")
+        sim.run(8, lambda i, n: walk(1, (1.5, 0.5), (1.5, -0.5))(i, n) + [target(2, *ghost_stop)])   # 유령은 멈추고 사람은 걷는다
+        sim.run(4, lambda i, n: [target(2, *ghost_stop)])                                           # 사람 번호가 사라진다
+        self.assertIsNone(sim.last["patient_tid"], "멈춘 유령 번호가 환자로 자동 지정됨")
+        sim.run(3, lambda i, n: walk(3, (1.0, -1.0), (2.0, -1.0))(i, n) + [target(2, *ghost_stop)])  # 사람이 새 번호로 다시 걷는다
+        self.assertEqual((sim.last["patient_tid"], sim.last["patient"]["pid"]), (3, "P1"))
+
+
+class PersonLogTests(unittest.TestCase):
+    """리더가 사람 ID 사건을 로그에 남겨야 환자 번호가 왜 바뀌었는지 확인할 수 있다(2026-11-07)."""
+
+    def test_auto_designation_and_loss_are_logged_with_reason(self):
+        logged = []
+        sim = Sim(emit=lambda now, event, pid, pos, text, guess: logged.append((event, text)))
+        sim.run(3, walk(1, (2.5, 0.0), (1.5, 0.0)))
+        self.assertEqual(sim.last["patient_tid"], 1)
+        self.assertTrue(any(e == "person_link" and "자동 지정" in t for e, t in logged), logged)
+        sim.run(4, lambda i, n: [])                                   # 번호가 방 안에서 사라진다
+        self.assertTrue(any(e == "person_lost" and "1번" in t for e, t in logged), logged)
+
+    def test_click_is_logged_as_user_mark(self):
+        logged = []
+        sim = Sim(emit=lambda now, event, pid, pos, text, guess: logged.append((event, text)))
+        make = lambda i, n: [target(1, 1.5, 0.0), target(2, 0.5, -1.0)]
+        sim.run(3, make)
+        sim.pipe.designate(sim.t, 2)
+        self.assertTrue(any(e == "person_link" and "사용자 표시" in t for e, t in logged), logged)
+
 
 class HelperTests(unittest.TestCase):
     def test_frame_validation(self):

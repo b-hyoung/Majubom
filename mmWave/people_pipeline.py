@@ -18,6 +18,7 @@ from person_ids import FRESH_MIN_FRAMES, FRESH_MIN_POINTS, PersonTracker, in_pol
 EMA_ALPHA = 0.3          # 위치 평활화 계수
 MOVE_SETTLE_SEC = 1.5    # 추적이 생긴 직후 칩이 위치를 잡는 동안은 이동으로 치지 않는다
 MOVE_MIN_M = 0.3         # 생긴 자리에서 이만큼 움직인 적이 있는 추적만 사람 후보로 본다
+AUTO_RECENT_MOVE_SEC = 5.0  # 자동 지정 후보는 최근 이 시간 안에 움직인 번호만(2026-11-07: 멈춘 유령 번호가 자동 지정됨)
 TRACK_END_SEC = 2.0      # 이 시간 넘게 안 보인 추적 번호는 끝난 것으로 본다
 FALL_CONFIRM_SEC = 1.0   # 기존 리더의 FALL_CONFIRM_SEC와 같다
 DOOR_NEAR_M = 0.3        # 낙상 위치가 문 구역에서 이 안이면 문 근처로 본다
@@ -88,10 +89,10 @@ class FallWatch:
 
 
 class RoomPipeline:
-    def __init__(self, room, bed, door, max_people=3, room_filter=True, tilt=90.0):
+    def __init__(self, room, bed, door, max_people=3, room_filter=True, tilt=90.0, emit=None):
         self.room, self.bed, self.door = room, bed, door
         self.room_filter = room_filter
-        self.people = PersonTracker(max_people=max_people)
+        self.people = PersonTracker(emit, max_people=max_people)   # emit: 사람 ID 사건(연결·끊김·나감) 기록 함수
         self.falls = FallWatch(bed, door)
         self.tracks = {}
         self.patient_pid = None
@@ -111,13 +112,16 @@ class RoomPipeline:
     def _auto_designate(self, now, snap, targets):
         """방 안에 사람 ID가 붙은 사람이 없고 사람 후보 번호가 정확히 하나면 그 번호를 환자로 정한다. 반환: 정했는지.
         후보: 사람 ID 없음, 숨김(문·나간 사람의 번호·반사점 없는 번호) 아님, 방 안, 생긴 자리에서 움직인 적 있음,
-        최근 1초 반사점이 사람 잇기 기준(person_ids FRESH_MIN_*)을 넘음. 멈춘 유령 번호는 움직인 적이 없어 빠진다."""
+        최근 1초 반사점이 사람 잇기 기준(person_ids FRESH_MIN_*)을 넘음, 최근 AUTO_RECENT_MOVE_SEC 안에 움직임.
+        멈춘 유령 번호는 움직인 적이 없어 빠지고, 사람을 따라 움직이다 멈춘 유령 번호는 멈춘 지 오래되어 빠진다."""
         if any(p["state"] == "in" for p in snap["persons"]):
             return False
         cands = []
         for t in targets:
             st = self.people.tracks.get(t["tid"])
             if st is None or st["pid"] or t["tid"] in snap["hidden"] or not st["moved"]:
+                continue
+            if now - st["anchor_t"] > AUTO_RECENT_MOVE_SEC:
                 continue
             if not in_poly(t["posX"], t["posY"], self.room):
                 continue
@@ -127,7 +131,7 @@ class RoomPipeline:
             cands.append(t["tid"])
         if len(cands) != 1:
             return False
-        pid = self.people.label(now, cands[0], "person")
+        pid = self.people.label(now, cands[0], "person", reason="자동 지정(후보 1명)")
         if not pid:
             return False
         self.patient_pid = pid

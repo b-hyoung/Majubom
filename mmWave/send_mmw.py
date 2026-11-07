@@ -631,6 +631,11 @@ def send_fall_event(ev, target_id, do_send):
             pass  # 서버가 잠시 꺼져 있어도 수신은 계속한다
 
 
+def log_person(now, event, pid, pos, text, guess):
+    """사람 ID 사건(연결·끊김·나감)을 journal에 남긴다. 환자 번호가 왜 바뀌었는지 나중에 확인하려고 쓴다(2026-11-07)."""
+    print(f"[person] {time.strftime('%H:%M:%S', time.localtime(now))} {text} 위치=({pos[0]:.2f}, {pos[1]:.2f})")
+
+
 class RawTap:
     """DATA 포트에서 읽은 바이트를 127.0.0.1:port에 접속한 프로그램(테스트 뷰어)에 그대로 복사한다.
     포트는 리더 혼자 열고, 뷰어는 이 복사본을 읽는다. 복사에 실패해도 리더는 멈추지 않는다."""
@@ -687,7 +692,8 @@ def run(cli_port, data_port, cfg_path, do_send=True, target_id="room_01", height
     latest_at = 0.0
     prev_zs = None
     history_tid = None
-    pipeline = RoomPipeline(ROOM_POLYGON, BED_POLYGON, DOOR_POLYGON, max_people=max_people, room_filter=room_filter, tilt=tilt)
+    pipeline = RoomPipeline(ROOM_POLYGON, BED_POLYGON, DOOR_POLYGON, max_people=max_people, room_filter=room_filter, tilt=tilt,
+                            emit=log_person)
     click = {"tid": None, "seq": None}
     applied_seq = None
     clock = FrameClock(frame_period_from_cfg(cfg_path))

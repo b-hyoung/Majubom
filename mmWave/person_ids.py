@@ -75,7 +75,7 @@ class PersonTracker:
         self.next_id = 1
 
     # ---------- 사용자 표시 ----------
-    def label(self, now, tid, truth):
+    def label(self, now, tid, truth, reason="사용자 표시"):
         st = self.tracks.get(tid)
         if st is None:
             return None
@@ -96,7 +96,7 @@ class PersonTracker:
             self.next_id += 1
             person = self.persons[pid] = {"pid": pid, "state": "lost", "tid": None, "pos": st["pos"], "z": st["z"],
                                           "changed": now, "exit_kind": None, "guess": False}
-        self._link(now, person, st, tid, guess=False, reason="사용자 표시")
+        self._link(now, person, st, tid, guess=False, reason=reason)
         return person["pid"]
 
     # ---------- 내부 동작 ----------
