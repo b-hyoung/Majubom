@@ -1,0 +1,6 @@
+{
+  "local_cpu_models_verified": 5,
+  "preprocessing_matches_training": true,
+  "skew_rejection_verified": true,
+  "pi_cpu_benchmark_measured": false
+}

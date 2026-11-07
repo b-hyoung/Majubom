@@ -1,0 +1,12 @@
+{
+  "session": "S01_edge_sit_보이는쪽_가운데_r2_20261104_191039_3ea00085",
+  "file": "tof_S01_edge_sit_보이는쪽_가운데_r2_20261104_191039_3ea00085.jsonl",
+  "rep": 2,
+  "complete": true,
+  "error": null,
+  "target_pairs": 150,
+  "retained_pairs": 150,
+  "elapsed_s": 32.31808979797643,
+  "tof1": 197,
+  "tof2": 236
+}

@@ -71,6 +71,8 @@ assets/*
 # 연구 검토 질문·나중에 할 일(2026-10-07~)
 !docs/질문.md
 !docs/나중에_할일.md
+# 논문 작성용 메모(2026-11-04~)
+!docs/논문메모_*.md
 !docs/captures/
 !docs/CODE_GUIDE_LIVE.html
 .venv/
@@ -99,3 +101,5 @@ server/majubom.db-shm
 mmWave/fall_traces/
 mmWave/recordings/
 server/backups/
+
+.codex-ppt-build/*

@@ -1,0 +1,12 @@
+{
+  "session": "S02_supine_왼쪽가장자리_r2_20261104_123010_ce55cd7b",
+  "file": "tof_S02_supine_왼쪽가장자리_r2_20261104_123010_ce55cd7b.jsonl",
+  "rep": 2,
+  "complete": true,
+  "error": null,
+  "target_pairs": 150,
+  "retained_pairs": 150,
+  "elapsed_s": 55.66952308299369,
+  "tof1": 189,
+  "tof2": 203
+}

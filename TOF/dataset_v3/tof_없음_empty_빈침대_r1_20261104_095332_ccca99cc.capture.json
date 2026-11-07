@@ -1,0 +1,12 @@
+{
+  "session": "없음_empty_빈침대_r1_20261104_095332_ccca99cc",
+  "file": "tof_없음_empty_빈침대_r1_20261104_095332_ccca99cc.jsonl",
+  "rep": 1,
+  "complete": true,
+  "error": null,
+  "target_pairs": 150,
+  "retained_pairs": 150,
+  "elapsed_s": 26.20039793700562,
+  "tof1": 182,
+  "tof2": 173
+}

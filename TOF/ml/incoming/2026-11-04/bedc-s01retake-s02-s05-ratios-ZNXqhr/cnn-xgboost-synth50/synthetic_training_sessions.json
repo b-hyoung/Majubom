@@ -1,0 +1,1052 @@
+[
+  {
+    "session": "S03syn_v3_090_from_S01_supine_가운데_r1_20261104_185048_c7241f79",
+    "label": "supine",
+    "subject": "S03syn",
+    "collection_subject": "S01",
+    "pairs": 150,
+    "rep": 1,
+    "synthetic": true,
+    "source_session": "S01_supine_가운데_r1_20261104_185048_c7241f79",
+    "synth": {
+      "version": 3,
+      "scale": 0.9,
+      "grow": false,
+      "edge_radius_cells": 0,
+      "edge_depth_fraction": 0,
+      "shift": {
+        "tof1": [
+          0,
+          0
+        ],
+        "tof2": [
+          0,
+          0
+        ]
+      },
+      "body_threshold": "max(80mm,3*empty_cell_MAD)",
+      "invalid_preserved": true,
+      "baseline_source": "source_capture_group_empty_median",
+      "minimum_simulated_range_mm": 40
+    },
+    "trim_start_unix": 1793785852.031,
+    "trim_end_unix": 1793785889.522,
+    "source_sha256": "6480087b15f6acf2287d8c43ae0df7b444a120e54be1a26b6261c6b42de4fb3d",
+    "selected_pairs": 135
+  },
+  {
+    "session": "S03syn_v3_090_from_S01_supine_왼쪽가장자리_r2_20261104_185417_463e966f",
+    "label": "supine",
+    "subject": "S03syn",
+    "collection_subject": "S01",
+    "pairs": 150,
+    "rep": 2,
+    "synthetic": true,
+    "source_session": "S01_supine_왼쪽가장자리_r2_20261104_185417_463e966f",
+    "synth": {
+      "version": 3,
+      "scale": 0.9,
+      "grow": false,
+      "edge_radius_cells": 0,
+      "edge_depth_fraction": 0,
+      "shift": {
+        "tof1": [
+          0,
+          0
+        ],
+        "tof2": [
+          0,
+          0
+        ]
+      },
+      "body_threshold": "max(80mm,3*empty_cell_MAD)",
+      "invalid_preserved": true,
+      "baseline_source": "source_capture_group_empty_median",
+      "minimum_simulated_range_mm": 40
+    },
+    "trim_start_unix": 1793786061.692,
+    "trim_end_unix": 1793786097.872,
+    "source_sha256": "759f71f87a9839edeeb8ba6f8724fbe59d5607286f37b7b4502ec097f6638463",
+    "selected_pairs": 135
+  },
+  {
+    "session": "S03syn_v3_090_from_S01_supine_오른쪽가장자리_r3_20261104_185528_d1d49f7e",
+    "label": "supine",
+    "subject": "S03syn",
+    "collection_subject": "S01",
+    "pairs": 150,
+    "rep": 3,
+    "synthetic": true,
+    "source_session": "S01_supine_오른쪽가장자리_r3_20261104_185528_d1d49f7e",
+    "synth": {
+      "version": 3,
+      "scale": 0.9,
+      "grow": false,
+      "edge_radius_cells": 0,
+      "edge_depth_fraction": 0,
+      "shift": {
+        "tof1": [
+          0,
+          0
+        ],
+        "tof2": [
+          0,
+          0
+        ]
+      },
+      "body_threshold": "max(80mm,3*empty_cell_MAD)",
+      "invalid_preserved": true,
+      "baseline_source": "source_capture_group_empty_median",
+      "minimum_simulated_range_mm": 40
+    },
+    "trim_start_unix": 1793786132.203,
+    "trim_end_unix": 1793786168.584,
+    "source_sha256": "307d9e30a1109cfdc14e31fbf3ca67fe5fa24d0ec0c1ab2f4325a90db7c55f6b",
+    "selected_pairs": 135
+  },
+  {
+    "session": "S03syn_v3_090_from_S01_side_left_가운데_r1_20261104_185646_81241b9c",
+    "label": "side_left",
+    "subject": "S03syn",
+    "collection_subject": "S01",
+    "pairs": 150,
+    "rep": 1,
+    "synthetic": true,
+    "source_session": "S01_side_left_가운데_r1_20261104_185646_81241b9c",
+    "synth": {
+      "version": 3,
+      "scale": 0.9,
+      "grow": false,
+      "edge_radius_cells": 0,
+      "edge_depth_fraction": 0,
+      "shift": {
+        "tof1": [
+          0,
+          0
+        ],
+        "tof2": [
+          0,
+          0
+        ]
+      },
+      "body_threshold": "max(80mm,3*empty_cell_MAD)",
+      "invalid_preserved": true,
+      "baseline_source": "source_capture_group_empty_median",
+      "minimum_simulated_range_mm": 40
+    },
+    "trim_start_unix": 1793786210.661,
+    "trim_end_unix": 1793786248.03,
+    "source_sha256": "9fd261b245101d1ac42151f2c59542f4269fba6a7ef6b7f27693535a0d0418b5",
+    "selected_pairs": 135
+  },
+  {
+    "session": "S03syn_v3_090_from_S01_side_left_왼쪽가장자리_r2_20261104_185757_9c31b8d0",
+    "label": "side_left",
+    "subject": "S03syn",
+    "collection_subject": "S01",
+    "pairs": 150,
+    "rep": 2,
+    "synthetic": true,
+    "source_session": "S01_side_left_왼쪽가장자리_r2_20261104_185757_9c31b8d0",
+    "synth": {
+      "version": 3,
+      "scale": 0.9,
+      "grow": false,
+      "edge_radius_cells": 0,
+      "edge_depth_fraction": 0,
+      "shift": {
+        "tof1": [
+          0,
+          0
+        ],
+        "tof2": [
+          0,
+          0
+        ]
+      },
+      "body_threshold": "max(80mm,3*empty_cell_MAD)",
+      "invalid_preserved": true,
+      "baseline_source": "source_capture_group_empty_median",
+      "minimum_simulated_range_mm": 40
+    },
+    "trim_start_unix": 1793786280.971,
+    "trim_end_unix": 1793786318.497,
+    "source_sha256": "1b629e34fffb4379d3793f4da53c79585338dfec2b51bbc33f27b1763e1bf27b",
+    "selected_pairs": 135
+  },
+  {
+    "session": "S03syn_v3_090_from_S01_side_left_오른쪽가장자리_r3_20261104_185911_8f3268c2",
+    "label": "side_left",
+    "subject": "S03syn",
+    "collection_subject": "S01",
+    "pairs": 150,
+    "rep": 3,
+    "synthetic": true,
+    "source_session": "S01_side_left_오른쪽가장자리_r3_20261104_185911_8f3268c2",
+    "synth": {
+      "version": 3,
+      "scale": 0.9,
+      "grow": false,
+      "edge_radius_cells": 0,
+      "edge_depth_fraction": 0,
+      "shift": {
+        "tof1": [
+          0,
+          0
+        ],
+        "tof2": [
+          0,
+          0
+        ]
+      },
+      "body_threshold": "max(80mm,3*empty_cell_MAD)",
+      "invalid_preserved": true,
+      "baseline_source": "source_capture_group_empty_median",
+      "minimum_simulated_range_mm": 40
+    },
+    "trim_start_unix": 1793786355.025,
+    "trim_end_unix": 1793786381.901,
+    "source_sha256": "471f54fdd5e2a06116f6a9ee108a62ec36383f009e62bcc6851f5ef2a536bdd4",
+    "selected_pairs": 136
+  },
+  {
+    "session": "S03syn_v3_090_from_S01_side_right_가운데_r1_20261104_190036_1da6505b",
+    "label": "side_right",
+    "subject": "S03syn",
+    "collection_subject": "S01",
+    "pairs": 150,
+    "rep": 1,
+    "synthetic": true,
+    "source_session": "S01_side_right_가운데_r1_20261104_190036_1da6505b",
+    "synth": {
+      "version": 3,
+      "scale": 0.9,
+      "grow": false,
+      "edge_radius_cells": 0,
+      "edge_depth_fraction": 0,
+      "shift": {
+        "tof1": [
+          0,
+          0
+        ],
+        "tof2": [
+          0,
+          0
+        ]
+      },
+      "body_threshold": "max(80mm,3*empty_cell_MAD)",
+      "invalid_preserved": true,
+      "baseline_source": "source_capture_group_empty_median",
+      "minimum_simulated_range_mm": 40
+    },
+    "trim_start_unix": 1793786440.522,
+    "trim_end_unix": 1793786474.741,
+    "source_sha256": "64ddc7600d28f7983c9f7312df67160e44d5f9d6a0242f0f5ef15792f450823b",
+    "selected_pairs": 135
+  },
+  {
+    "session": "S03syn_v3_090_from_S01_side_right_왼쪽가장자리_r2_20261104_190220_409226ac",
+    "label": "side_right",
+    "subject": "S03syn",
+    "collection_subject": "S01",
+    "pairs": 150,
+    "rep": 2,
+    "synthetic": true,
+    "source_session": "S01_side_right_왼쪽가장자리_r2_20261104_190220_409226ac",
+    "synth": {
+      "version": 3,
+      "scale": 0.9,
+      "grow": false,
+      "edge_radius_cells": 0,
+      "edge_depth_fraction": 0,
+      "shift": {
+        "tof1": [
+          0,
+          0
+        ],
+        "tof2": [
+          0,
+          0
+        ]
+      },
+      "body_threshold": "max(80mm,3*empty_cell_MAD)",
+      "invalid_preserved": true,
+      "baseline_source": "source_capture_group_empty_median",
+      "minimum_simulated_range_mm": 40
+    },
+    "trim_start_unix": 1793786543.95,
+    "trim_end_unix": 1793786579.231,
+    "source_sha256": "2070962b632def38e414440dd431bc7566d9d87275f5299aa140e49053fc3687",
+    "selected_pairs": 135
+  },
+  {
+    "session": "S03syn_v3_090_from_S01_side_right_오른쪽가장자리_r3_20261104_190358_59e16a8b",
+    "label": "side_right",
+    "subject": "S03syn",
+    "collection_subject": "S01",
+    "pairs": 150,
+    "rep": 3,
+    "synthetic": true,
+    "source_session": "S01_side_right_오른쪽가장자리_r3_20261104_190358_59e16a8b",
+    "synth": {
+      "version": 3,
+      "scale": 0.9,
+      "grow": false,
+      "edge_radius_cells": 0,
+      "edge_depth_fraction": 0,
+      "shift": {
+        "tof1": [
+          0,
+          0
+        ],
+        "tof2": [
+          0,
+          0
+        ]
+      },
+      "body_threshold": "max(80mm,3*empty_cell_MAD)",
+      "invalid_preserved": true,
+      "baseline_source": "source_capture_group_empty_median",
+      "minimum_simulated_range_mm": 40
+    },
+    "trim_start_unix": 1793786642.676,
+    "trim_end_unix": 1793786685.201,
+    "source_sha256": "4adf23e978dbb9023ca7af124062166b7bc2d0207ac098f36eef3740e2685684",
+    "selected_pairs": 135
+  },
+  {
+    "session": "S03syn_v3_090_from_S01_sitting_가운데_r1_20261104_190516_f38950dd",
+    "label": "sitting",
+    "subject": "S03syn",
+    "collection_subject": "S01",
+    "pairs": 150,
+    "rep": 1,
+    "synthetic": true,
+    "source_session": "S01_sitting_가운데_r1_20261104_190516_f38950dd",
+    "synth": {
+      "version": 3,
+      "scale": 0.9,
+      "grow": false,
+      "edge_radius_cells": 0,
+      "edge_depth_fraction": 0,
+      "shift": {
+        "tof1": [
+          0,
+          0
+        ],
+        "tof2": [
+          0,
+          0
+        ]
+      },
+      "body_threshold": "max(80mm,3*empty_cell_MAD)",
+      "invalid_preserved": true,
+      "baseline_source": "source_capture_group_empty_median",
+      "minimum_simulated_range_mm": 40
+    },
+    "trim_start_unix": 1793786719.951,
+    "trim_end_unix": 1793786758.027,
+    "source_sha256": "fa953e7cf30e36860f04a692f38363fe3a7fd3044ac6cdb023136d078d595289",
+    "selected_pairs": 135
+  },
+  {
+    "session": "S03syn_v3_090_from_S01_sitting_머리쪽_r2_20261104_190639_e3c507e2",
+    "label": "sitting",
+    "subject": "S03syn",
+    "collection_subject": "S01",
+    "pairs": 150,
+    "rep": 2,
+    "synthetic": true,
+    "source_session": "S01_sitting_머리쪽_r2_20261104_190639_e3c507e2",
+    "synth": {
+      "version": 3,
+      "scale": 0.9,
+      "grow": false,
+      "edge_radius_cells": 0,
+      "edge_depth_fraction": 0,
+      "shift": {
+        "tof1": [
+          0,
+          0
+        ],
+        "tof2": [
+          0,
+          0
+        ]
+      },
+      "body_threshold": "max(80mm,3*empty_cell_MAD)",
+      "invalid_preserved": true,
+      "baseline_source": "source_capture_group_empty_median",
+      "minimum_simulated_range_mm": 40
+    },
+    "trim_start_unix": 1793786802.87,
+    "trim_end_unix": 1793786841.148,
+    "source_sha256": "3c13e544c4de78cc38a0e3238a203159e96773fe30d944d4dee8fbf7eccc8dd1",
+    "selected_pairs": 135
+  },
+  {
+    "session": "S03syn_v3_090_from_S01_sitting_발쪽_r3_20261104_190812_6d78f0d5",
+    "label": "sitting",
+    "subject": "S03syn",
+    "collection_subject": "S01",
+    "pairs": 150,
+    "rep": 3,
+    "synthetic": true,
+    "source_session": "S01_sitting_발쪽_r3_20261104_190812_6d78f0d5",
+    "synth": {
+      "version": 3,
+      "scale": 0.9,
+      "grow": false,
+      "edge_radius_cells": 0,
+      "edge_depth_fraction": 0,
+      "shift": {
+        "tof1": [
+          0,
+          0
+        ],
+        "tof2": [
+          0,
+          0
+        ]
+      },
+      "body_threshold": "max(80mm,3*empty_cell_MAD)",
+      "invalid_preserved": true,
+      "baseline_source": "source_capture_group_empty_median",
+      "minimum_simulated_range_mm": 40
+    },
+    "trim_start_unix": 1793786895.996,
+    "trim_end_unix": 1793786932.704,
+    "source_sha256": "b1645feb7c818e3fef51462bef8f1ed7948faeafc93cca3a2d45ed78eef9b971",
+    "selected_pairs": 135
+  },
+  {
+    "session": "S03syn_v3_090_from_S01_edge_sit_보이는쪽_머리가까이_r1_20261104_190924_8bde9187",
+    "label": "edge_sit",
+    "subject": "S03syn",
+    "collection_subject": "S01",
+    "pairs": 151,
+    "rep": 1,
+    "synthetic": true,
+    "source_session": "S01_edge_sit_보이는쪽_머리가까이_r1_20261104_190924_8bde9187",
+    "synth": {
+      "version": 3,
+      "scale": 0.9,
+      "grow": false,
+      "edge_radius_cells": 0,
+      "edge_depth_fraction": 0,
+      "shift": {
+        "tof1": [
+          0,
+          0
+        ],
+        "tof2": [
+          0,
+          0
+        ]
+      },
+      "body_threshold": "max(80mm,3*empty_cell_MAD)",
+      "invalid_preserved": true,
+      "baseline_source": "source_capture_group_empty_median",
+      "minimum_simulated_range_mm": 40
+    },
+    "trim_start_unix": 1793786968.607,
+    "trim_end_unix": 1793787001.135,
+    "source_sha256": "2dc71539bbddf46cb003b16fbc6b83ef348396ed5dfa54fc11bba0d861ed7023",
+    "selected_pairs": 135
+  },
+  {
+    "session": "S03syn_v3_090_from_S01_edge_sit_보이는쪽_가운데_r2_20261104_191039_3ea00085",
+    "label": "edge_sit",
+    "subject": "S03syn",
+    "collection_subject": "S01",
+    "pairs": 150,
+    "rep": 2,
+    "synthetic": true,
+    "source_session": "S01_edge_sit_보이는쪽_가운데_r2_20261104_191039_3ea00085",
+    "synth": {
+      "version": 3,
+      "scale": 0.9,
+      "grow": false,
+      "edge_radius_cells": 0,
+      "edge_depth_fraction": 0,
+      "shift": {
+        "tof1": [
+          0,
+          0
+        ],
+        "tof2": [
+          0,
+          0
+        ]
+      },
+      "body_threshold": "max(80mm,3*empty_cell_MAD)",
+      "invalid_preserved": true,
+      "baseline_source": "source_capture_group_empty_median",
+      "minimum_simulated_range_mm": 40
+    },
+    "trim_start_unix": 1793787043.837,
+    "trim_end_unix": 1793787074.131,
+    "source_sha256": "e117c63b255f1196f8a01bcc65012fe52376db0733b798dc3433ba9a622d98a1",
+    "selected_pairs": 135
+  },
+  {
+    "session": "S03syn_v3_090_from_S01_edge_sit_보이는쪽_발가까이_r3_20261104_191146_a341d8df",
+    "label": "edge_sit",
+    "subject": "S03syn",
+    "collection_subject": "S01",
+    "pairs": 150,
+    "rep": 3,
+    "synthetic": true,
+    "source_session": "S01_edge_sit_보이는쪽_발가까이_r3_20261104_191146_a341d8df",
+    "synth": {
+      "version": 3,
+      "scale": 0.9,
+      "grow": false,
+      "edge_radius_cells": 0,
+      "edge_depth_fraction": 0,
+      "shift": {
+        "tof1": [
+          0,
+          0
+        ],
+        "tof2": [
+          0,
+          0
+        ]
+      },
+      "body_threshold": "max(80mm,3*empty_cell_MAD)",
+      "invalid_preserved": true,
+      "baseline_source": "source_capture_group_empty_median",
+      "minimum_simulated_range_mm": 40
+    },
+    "trim_start_unix": 1793787110.876,
+    "trim_end_unix": 1793787152.117,
+    "source_sha256": "2c0558d2dfcd248b8bea9cd6ba7706b6f2a3fbe53397a7f5086ae3a50f7c4665",
+    "selected_pairs": 135
+  },
+  {
+    "session": "S04syn_v3_110_from_S02_supine_가운데_r1_20261104_122840_f4f67433",
+    "label": "supine",
+    "subject": "S04syn",
+    "collection_subject": "S02",
+    "pairs": 150,
+    "rep": 1,
+    "synthetic": true,
+    "source_session": "S02_supine_가운데_r1_20261104_122840_f4f67433",
+    "synth": {
+      "version": 3,
+      "scale": 1.1,
+      "grow": true,
+      "edge_radius_cells": 1,
+      "edge_depth_fraction": 0.5,
+      "shift": {
+        "tof1": [
+          0,
+          0
+        ],
+        "tof2": [
+          0,
+          0
+        ]
+      },
+      "body_threshold": "max(80mm,3*empty_cell_MAD)",
+      "invalid_preserved": true,
+      "baseline_source": "source_capture_group_empty_median",
+      "minimum_simulated_range_mm": 40
+    },
+    "trim_start_unix": 1793762924.274,
+    "trim_end_unix": 1793762962.972,
+    "source_sha256": "7a76bff629cc76a3ccc596b288f157c4b6313c5d4677fc2cf197f99483a64a94",
+    "selected_pairs": 135
+  },
+  {
+    "session": "S04syn_v3_110_from_S02_supine_왼쪽가장자리_r2_20261104_123010_ce55cd7b",
+    "label": "supine",
+    "subject": "S04syn",
+    "collection_subject": "S02",
+    "pairs": 150,
+    "rep": 2,
+    "synthetic": true,
+    "source_session": "S02_supine_왼쪽가장자리_r2_20261104_123010_ce55cd7b",
+    "synth": {
+      "version": 3,
+      "scale": 1.1,
+      "grow": true,
+      "edge_radius_cells": 1,
+      "edge_depth_fraction": 0.5,
+      "shift": {
+        "tof1": [
+          0,
+          0
+        ],
+        "tof2": [
+          0,
+          0
+        ]
+      },
+      "body_threshold": "max(80mm,3*empty_cell_MAD)",
+      "invalid_preserved": true,
+      "baseline_source": "source_capture_group_empty_median",
+      "minimum_simulated_range_mm": 40
+    },
+    "trim_start_unix": 1793763014.775,
+    "trim_end_unix": 1793763068.44,
+    "source_sha256": "597ce056da665c8b3857e6e2cc8f6bb6d96133a3965336cbf5fa8c273871047c",
+    "selected_pairs": 136
+  },
+  {
+    "session": "S04syn_v3_110_from_S02_supine_오른쪽가장자리_r3_20261104_123223_4bddf136",
+    "label": "supine",
+    "subject": "S04syn",
+    "collection_subject": "S02",
+    "pairs": 150,
+    "rep": 3,
+    "synthetic": true,
+    "source_session": "S02_supine_오른쪽가장자리_r3_20261104_123223_4bddf136",
+    "synth": {
+      "version": 3,
+      "scale": 1.1,
+      "grow": true,
+      "edge_radius_cells": 1,
+      "edge_depth_fraction": 0.5,
+      "shift": {
+        "tof1": [
+          0,
+          0
+        ],
+        "tof2": [
+          0,
+          0
+        ]
+      },
+      "body_threshold": "max(80mm,3*empty_cell_MAD)",
+      "invalid_preserved": true,
+      "baseline_source": "source_capture_group_empty_median",
+      "minimum_simulated_range_mm": 40
+    },
+    "trim_start_unix": 1793763146.876,
+    "trim_end_unix": 1793763190.369,
+    "source_sha256": "9b5b69d7ead33be56fac9ed0fce234dc884c5ee13c8ec37b551dd3ed104abe26",
+    "selected_pairs": 135
+  },
+  {
+    "session": "S04syn_v3_110_from_S02_side_left_가운데_r1_20261104_123351_be512be5",
+    "label": "side_left",
+    "subject": "S04syn",
+    "collection_subject": "S02",
+    "pairs": 150,
+    "rep": 1,
+    "synthetic": true,
+    "source_session": "S02_side_left_가운데_r1_20261104_123351_be512be5",
+    "synth": {
+      "version": 3,
+      "scale": 1.1,
+      "grow": true,
+      "edge_radius_cells": 1,
+      "edge_depth_fraction": 0.5,
+      "shift": {
+        "tof1": [
+          0,
+          0
+        ],
+        "tof2": [
+          0,
+          0
+        ]
+      },
+      "body_threshold": "max(80mm,3*empty_cell_MAD)",
+      "invalid_preserved": true,
+      "baseline_source": "source_capture_group_empty_median",
+      "minimum_simulated_range_mm": 40
+    },
+    "trim_start_unix": 1793763235.149,
+    "trim_end_unix": 1793763274.256,
+    "source_sha256": "24dd2d99997215143f090cc848ce1c17055ac5e27b0cdd7a466468343da4450a",
+    "selected_pairs": 135
+  },
+  {
+    "session": "S04syn_v3_110_from_S02_side_left_왼쪽가장자리_r2_20261104_123513_9c3985da",
+    "label": "side_left",
+    "subject": "S04syn",
+    "collection_subject": "S02",
+    "pairs": 150,
+    "rep": 2,
+    "synthetic": true,
+    "source_session": "S02_side_left_왼쪽가장자리_r2_20261104_123513_9c3985da",
+    "synth": {
+      "version": 3,
+      "scale": 1.1,
+      "grow": true,
+      "edge_radius_cells": 1,
+      "edge_depth_fraction": 0.5,
+      "shift": {
+        "tof1": [
+          0,
+          0
+        ],
+        "tof2": [
+          0,
+          0
+        ]
+      },
+      "body_threshold": "max(80mm,3*empty_cell_MAD)",
+      "invalid_preserved": true,
+      "baseline_source": "source_capture_group_empty_median",
+      "minimum_simulated_range_mm": 40
+    },
+    "trim_start_unix": 1793763317.042,
+    "trim_end_unix": 1793763353.858,
+    "source_sha256": "23c82d0dec9054aa562af3f3e87d40028bee45accf89482cbee719969bed33e0",
+    "selected_pairs": 135
+  },
+  {
+    "session": "S04syn_v3_110_from_S02_side_left_오른쪽가장자리_r3_20261104_123641_c48b8fd3",
+    "label": "side_left",
+    "subject": "S04syn",
+    "collection_subject": "S02",
+    "pairs": 150,
+    "rep": 3,
+    "synthetic": true,
+    "source_session": "S02_side_left_오른쪽가장자리_r3_20261104_123641_c48b8fd3",
+    "synth": {
+      "version": 3,
+      "scale": 1.1,
+      "grow": true,
+      "edge_radius_cells": 1,
+      "edge_depth_fraction": 0.5,
+      "shift": {
+        "tof1": [
+          0,
+          0
+        ],
+        "tof2": [
+          0,
+          0
+        ]
+      },
+      "body_threshold": "max(80mm,3*empty_cell_MAD)",
+      "invalid_preserved": true,
+      "baseline_source": "source_capture_group_empty_median",
+      "minimum_simulated_range_mm": 40
+    },
+    "trim_start_unix": 1793763405.517,
+    "trim_end_unix": 1793763430.36,
+    "source_sha256": "edef87fdb419e3535adbfa02c9243973c96138187b16b037080d19d85cf117fd",
+    "selected_pairs": 135
+  },
+  {
+    "session": "S04syn_v3_110_from_S02_side_right_가운데_r1_20261104_123818_753df92d",
+    "label": "side_right",
+    "subject": "S04syn",
+    "collection_subject": "S02",
+    "pairs": 150,
+    "rep": 1,
+    "synthetic": true,
+    "source_session": "S02_side_right_가운데_r1_20261104_123818_753df92d",
+    "synth": {
+      "version": 3,
+      "scale": 1.1,
+      "grow": true,
+      "edge_radius_cells": 1,
+      "edge_depth_fraction": 0.5,
+      "shift": {
+        "tof1": [
+          0,
+          0
+        ],
+        "tof2": [
+          0,
+          0
+        ]
+      },
+      "body_threshold": "max(80mm,3*empty_cell_MAD)",
+      "invalid_preserved": true,
+      "baseline_source": "source_capture_group_empty_median",
+      "minimum_simulated_range_mm": 40
+    },
+    "trim_start_unix": 1793763502.629,
+    "trim_end_unix": 1793763551.796,
+    "source_sha256": "946fb0da92109aee29e4ae252485aa07ad1efc10c06cc4039d9c7ad138bc0b4d",
+    "selected_pairs": 135
+  },
+  {
+    "session": "S04syn_v3_110_from_S02_side_right_왼쪽가장자리_r2_20261104_124014_266153db",
+    "label": "side_right",
+    "subject": "S04syn",
+    "collection_subject": "S02",
+    "pairs": 151,
+    "rep": 2,
+    "synthetic": true,
+    "source_session": "S02_side_right_왼쪽가장자리_r2_20261104_124014_266153db",
+    "synth": {
+      "version": 3,
+      "scale": 1.1,
+      "grow": true,
+      "edge_radius_cells": 1,
+      "edge_depth_fraction": 0.5,
+      "shift": {
+        "tof1": [
+          0,
+          0
+        ],
+        "tof2": [
+          0,
+          0
+        ]
+      },
+      "body_threshold": "max(80mm,3*empty_cell_MAD)",
+      "invalid_preserved": true,
+      "baseline_source": "source_capture_group_empty_median",
+      "minimum_simulated_range_mm": 40
+    },
+    "trim_start_unix": 1793763618.506,
+    "trim_end_unix": 1793763652.76,
+    "source_sha256": "245a8a1bd46f5ee4d67e85065c3b1c736326d8243a1e11b77f5da0bf720d3f36",
+    "selected_pairs": 135
+  },
+  {
+    "session": "S04syn_v3_110_from_S02_side_right_오른쪽가장자리_r3_20261104_124149_b4f43e63",
+    "label": "side_right",
+    "subject": "S04syn",
+    "collection_subject": "S02",
+    "pairs": 150,
+    "rep": 3,
+    "synthetic": true,
+    "source_session": "S02_side_right_오른쪽가장자리_r3_20261104_124149_b4f43e63",
+    "synth": {
+      "version": 3,
+      "scale": 1.1,
+      "grow": true,
+      "edge_radius_cells": 1,
+      "edge_depth_fraction": 0.5,
+      "shift": {
+        "tof1": [
+          0,
+          0
+        ],
+        "tof2": [
+          0,
+          0
+        ]
+      },
+      "body_threshold": "max(80mm,3*empty_cell_MAD)",
+      "invalid_preserved": true,
+      "baseline_source": "source_capture_group_empty_median",
+      "minimum_simulated_range_mm": 40
+    },
+    "trim_start_unix": 1793763713.019,
+    "trim_end_unix": 1793763756.78,
+    "source_sha256": "7350f555190b95695f188d54238ab68b9c530cd5eccfa5f8f94316ad8737a261",
+    "selected_pairs": 136
+  },
+  {
+    "session": "S04syn_v3_110_from_S02_sitting_가운데_r1_20261104_124322_89a82bcf",
+    "label": "sitting",
+    "subject": "S04syn",
+    "collection_subject": "S02",
+    "pairs": 150,
+    "rep": 1,
+    "synthetic": true,
+    "source_session": "S02_sitting_가운데_r1_20261104_124322_89a82bcf",
+    "synth": {
+      "version": 3,
+      "scale": 1.1,
+      "grow": true,
+      "edge_radius_cells": 1,
+      "edge_depth_fraction": 0.5,
+      "shift": {
+        "tof1": [
+          0,
+          0
+        ],
+        "tof2": [
+          0,
+          0
+        ]
+      },
+      "body_threshold": "max(80mm,3*empty_cell_MAD)",
+      "invalid_preserved": true,
+      "baseline_source": "source_capture_group_empty_median",
+      "minimum_simulated_range_mm": 40
+    },
+    "trim_start_unix": 1793763806.68,
+    "trim_end_unix": 1793763854.093,
+    "source_sha256": "2ce0b452131a98baff79502eb4e4ef7a7509a7707dce90abb80a491dd55adc8f",
+    "selected_pairs": 135
+  },
+  {
+    "session": "S04syn_v3_110_from_S02_sitting_머리쪽_r2_20261104_124522_5c41e1cb",
+    "label": "sitting",
+    "subject": "S04syn",
+    "collection_subject": "S02",
+    "pairs": 150,
+    "rep": 2,
+    "synthetic": true,
+    "source_session": "S02_sitting_머리쪽_r2_20261104_124522_5c41e1cb",
+    "synth": {
+      "version": 3,
+      "scale": 1.1,
+      "grow": true,
+      "edge_radius_cells": 1,
+      "edge_depth_fraction": 0.5,
+      "shift": {
+        "tof1": [
+          0,
+          0
+        ],
+        "tof2": [
+          0,
+          0
+        ]
+      },
+      "body_threshold": "max(80mm,3*empty_cell_MAD)",
+      "invalid_preserved": true,
+      "baseline_source": "source_capture_group_empty_median",
+      "minimum_simulated_range_mm": 40
+    },
+    "trim_start_unix": 1793763925.813,
+    "trim_end_unix": 1793763997.561,
+    "source_sha256": "9349b4b6daccf2b9673278cb94e6b0b4802f46a2b2a1ee0223266d64783771a9",
+    "selected_pairs": 135
+  },
+  {
+    "session": "S04syn_v3_110_from_S02_sitting_발쪽_r3_20261104_124841_066df9d7",
+    "label": "sitting",
+    "subject": "S04syn",
+    "collection_subject": "S02",
+    "pairs": 150,
+    "rep": 3,
+    "synthetic": true,
+    "source_session": "S02_sitting_발쪽_r3_20261104_124841_066df9d7",
+    "synth": {
+      "version": 3,
+      "scale": 1.1,
+      "grow": true,
+      "edge_radius_cells": 1,
+      "edge_depth_fraction": 0.5,
+      "shift": {
+        "tof1": [
+          0,
+          0
+        ],
+        "tof2": [
+          0,
+          0
+        ]
+      },
+      "body_threshold": "max(80mm,3*empty_cell_MAD)",
+      "invalid_preserved": true,
+      "baseline_source": "source_capture_group_empty_median",
+      "minimum_simulated_range_mm": 40
+    },
+    "trim_start_unix": 1793764124.532,
+    "trim_end_unix": 1793764187.136,
+    "source_sha256": "a4a7eff6b6a47ba144dc9bc27196b7d58af27ff4e37c1098af10c6ac752d9023",
+    "selected_pairs": 135
+  },
+  {
+    "session": "S04syn_v3_110_from_S02_edge_sit_보이는쪽_머리가까이_r1_20261104_125048_3cc0d925",
+    "label": "edge_sit",
+    "subject": "S04syn",
+    "collection_subject": "S02",
+    "pairs": 150,
+    "rep": 1,
+    "synthetic": true,
+    "source_session": "S02_edge_sit_보이는쪽_머리가까이_r1_20261104_125048_3cc0d925",
+    "synth": {
+      "version": 3,
+      "scale": 1.1,
+      "grow": true,
+      "edge_radius_cells": 1,
+      "edge_depth_fraction": 0.5,
+      "shift": {
+        "tof1": [
+          0,
+          0
+        ],
+        "tof2": [
+          0,
+          0
+        ]
+      },
+      "body_threshold": "max(80mm,3*empty_cell_MAD)",
+      "invalid_preserved": true,
+      "baseline_source": "source_capture_group_empty_median",
+      "minimum_simulated_range_mm": 40
+    },
+    "trim_start_unix": 1793764252.383,
+    "trim_end_unix": 1793764318.261,
+    "source_sha256": "e7e790f2216bd947bfa6a0800ea6f1ec17a6232a2f1857f431d96392c645378e",
+    "selected_pairs": 135
+  },
+  {
+    "session": "S04syn_v3_110_from_S02_edge_sit_보이는쪽_가운데_r2_20261104_125254_458c2817",
+    "label": "edge_sit",
+    "subject": "S04syn",
+    "collection_subject": "S02",
+    "pairs": 151,
+    "rep": 2,
+    "synthetic": true,
+    "source_session": "S02_edge_sit_보이는쪽_가운데_r2_20261104_125254_458c2817",
+    "synth": {
+      "version": 3,
+      "scale": 1.1,
+      "grow": true,
+      "edge_radius_cells": 1,
+      "edge_depth_fraction": 0.5,
+      "shift": {
+        "tof1": [
+          0,
+          0
+        ],
+        "tof2": [
+          0,
+          0
+        ]
+      },
+      "body_threshold": "max(80mm,3*empty_cell_MAD)",
+      "invalid_preserved": true,
+      "baseline_source": "source_capture_group_empty_median",
+      "minimum_simulated_range_mm": 40
+    },
+    "trim_start_unix": 1793764378.026,
+    "trim_end_unix": 1793764439.119,
+    "source_sha256": "1a7d836c7f75c48ed33a54bd40ea8de61be2c57ce8d6d0e88c64ff082dd712bb",
+    "selected_pairs": 135
+  },
+  {
+    "session": "S04syn_v3_110_from_S02_edge_sit_보이는쪽_발가까이_r3_20261104_125453_51142e87",
+    "label": "edge_sit",
+    "subject": "S04syn",
+    "collection_subject": "S02",
+    "pairs": 151,
+    "rep": 3,
+    "synthetic": true,
+    "source_session": "S02_edge_sit_보이는쪽_발가까이_r3_20261104_125453_51142e87",
+    "synth": {
+      "version": 3,
+      "scale": 1.1,
+      "grow": true,
+      "edge_radius_cells": 1,
+      "edge_depth_fraction": 0.5,
+      "shift": {
+        "tof1": [
+          0,
+          0
+        ],
+        "tof2": [
+          0,
+          0
+        ]
+      },
+      "body_threshold": "max(80mm,3*empty_cell_MAD)",
+      "invalid_preserved": true,
+      "baseline_source": "source_capture_group_empty_median",
+      "minimum_simulated_range_mm": 40
+    },
+    "trim_start_unix": 1793764497.244,
+    "trim_end_unix": 1793764571.329,
+    "source_sha256": "0bd7af429873c7d171344886489d7d963decb8762d33c802e7c223e7d8982959",
+    "selected_pairs": 135
+  }
+]

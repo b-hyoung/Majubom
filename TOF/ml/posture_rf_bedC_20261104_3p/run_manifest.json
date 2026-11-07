@@ -1,0 +1,20 @@
+{
+  "seed": 42,
+  "baseline_sha256": "23f2e8acddadd3111c1b87ad211af8d8237ea6ff98d4b69de1fa6e8af6cacead",
+  "sessions_csv_sha256": "f867e2217c855199209f8acf88f019913e6bb02fa4d9bd75f1befc438fec1a4d",
+  "synthetic_sessions_csv_sha256": null,
+  "orientation_sha256": null,
+  "camera_sha256": {
+    "camera-pose/data/paired/bedC-S01-retake/camera.jsonl": "43ef59d7bd461db7c8ccb20a01c3afe167693009420630a8ff2191a25224f86b",
+    "camera-pose/data/paired/bedC-S02-20261104-counted/camera.jsonl": "b8a2d0234e7c9f155cd6e69b6b28f32c59cca3880170e94dd997058db5f25d9b",
+    "camera-pose/data/paired/bedC-S02-20261104-postures/camera.jsonl": "7cc3678308bbbc0e5c0dff0ea00373702130be781379e66f36a6e7b6f80fffb6",
+    "camera-pose/data/paired/bedC-S05-20261104-postures/camera.jsonl": "6e28fe0f9803a0b166050c079fdc3f3c2b110248865ea5552c55efe72d80bb07"
+  },
+  "packages": {
+    "torch": "2.6.0+cu124",
+    "numpy": "2.5.4",
+    "scikit-learn": "1.9.1",
+    "xgboost": "3.4.1",
+    "lightgbm": "4.7.0"
+  }
+}

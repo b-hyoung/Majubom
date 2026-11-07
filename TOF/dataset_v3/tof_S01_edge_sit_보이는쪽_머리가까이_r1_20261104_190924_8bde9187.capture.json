@@ -1,0 +1,12 @@
+{
+  "session": "S01_edge_sit_보이는쪽_머리가까이_r1_20261104_190924_8bde9187",
+  "file": "tof_S01_edge_sit_보이는쪽_머리가까이_r1_20261104_190924_8bde9187.jsonl",
+  "rep": 1,
+  "complete": true,
+  "error": null,
+  "target_pairs": 150,
+  "retained_pairs": 151,
+  "elapsed_s": 34.52799790195422,
+  "tof1": 169,
+  "tof2": 276
+}

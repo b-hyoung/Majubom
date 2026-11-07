@@ -1,0 +1,12 @@
+{
+  "session": "S01_edge_sit_보이는쪽_발가까이_r3_20261104_191146_a341d8df",
+  "file": "tof_S01_edge_sit_보이는쪽_발가까이_r3_20261104_191146_a341d8df.jsonl",
+  "rep": 3,
+  "complete": true,
+  "error": null,
+  "target_pairs": 150,
+  "retained_pairs": 150,
+  "elapsed_s": 43.22871663200203,
+  "tof1": 190,
+  "tof2": 185
+}

@@ -1,0 +1,12 @@
+{
+  "session": "S05_side_left_가운데_r1_20261104_175552_b8857636",
+  "file": "tof_S05_side_left_가운데_r1_20261104_175552_b8857636.jsonl",
+  "rep": 1,
+  "complete": true,
+  "error": null,
+  "target_pairs": 150,
+  "retained_pairs": 151,
+  "elapsed_s": 28.572934059018735,
+  "tof1": 202,
+  "tof2": 192
+}

@@ -1,0 +1,22 @@
+{
+  "original_real_pairs": 8106,
+  "retained_sitting_pairs": 2103,
+  "new_edge_pairs": 2271,
+  "time_holdout_pairs": 476,
+  "evaluation_train_new_pairs": 1754,
+  "previous_holdout_predictions": {
+    "empty": 413,
+    "sitting": 63
+  },
+  "updated_holdout_predictions": {
+    "edge_sit": 476
+  },
+  "edge_final_training_predictions": {
+    "edge_sit": 2271
+  },
+  "sitting_final_training_predictions": {
+    "sitting": 2103
+  },
+  "final_fit_includes_holdout": true,
+  "holdout_is_same_person_same_capture": true
+}

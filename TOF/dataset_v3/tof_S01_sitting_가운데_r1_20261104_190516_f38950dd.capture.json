@@ -1,0 +1,12 @@
+{
+  "session": "S01_sitting_가운데_r1_20261104_190516_f38950dd",
+  "file": "tof_S01_sitting_가운데_r1_20261104_190516_f38950dd.jsonl",
+  "rep": 1,
+  "complete": true,
+  "error": null,
+  "target_pairs": 150,
+  "retained_pairs": 150,
+  "elapsed_s": 39.93170577904675,
+  "tof1": 176,
+  "tof2": 241
+}

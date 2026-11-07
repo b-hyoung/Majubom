@@ -1,0 +1,17 @@
+{
+  "device": "Raspberry Pi 5 Model B Rev 1.1",
+  "architecture": "aarch64",
+  "python": "3.13.5",
+  "scikit_learn": "1.9.1",
+  "model": "raw_rf",
+  "n_jobs": 1,
+  "repetitions": 120,
+  "warmup_calls": 10,
+  "mean_ms": 11.915650933333332,
+  "median_ms": 11.614012500000001,
+  "p95_ms": 14.8786564,
+  "minimum_ms": 11.212852,
+  "maximum_ms": 15.335047,
+  "probability_max_abs_diff": 0.0,
+  "scope": "predict_proba for one received sensor pair; excludes network and acquisition"
+}
