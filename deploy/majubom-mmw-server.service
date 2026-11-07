@@ -1,0 +1,20 @@
+# 마주봄 mmWave 수신 서버(mmw_server.py, 포트 5002) 자동 실행·재시작 (2026-11-07)
+# 리더(majubom-mmw-reader)가 보행 지표와 낙상을 이 서버로 보낸다. 서버가 없으면 리더는 계속 돌지만 기록이 남지 않는다.
+# 설치: sudo cp deploy/majubom-mmw-server.service /etc/systemd/system/ && sudo systemctl daemon-reload
+#       sudo systemctl enable --now majubom-mmw-server
+# 로그: journalctl -u majubom-mmw-server -f
+[Unit]
+Description=Majubom mmWave server (mmw_server.py, port 5002)
+After=network-online.target
+Before=majubom-mmw-reader.service
+StartLimitIntervalSec=0
+
+[Service]
+User=pi
+WorkingDirectory=/home/pi/Documents/Github/Majubom
+ExecStart=/home/pi/Documents/Github/Majubom/.venv/bin/python -u server/mmw_server.py
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
