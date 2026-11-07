@@ -599,8 +599,80 @@ class StrideExcludedTests(unittest.TestCase):
         r = L.evaluate(MmwPriorPathTests().payload(speed=0.45, stride=0.1), store, persist=False,
                        prior=MmwPriorPathTests.PRIOR)
         self.assertNotIn("stride_length", r["zscore"])
-        self.assertEqual((r["zscore"]["metrics_used"], r["zscore"]["threshold_scale"]), (4, 1.0))
+        self.assertEqual(r["zscore"]["metrics_used"], 4)
         self.assertEqual(r["alert_level"], "normal")
+
+
+class GaitScoreTests(unittest.TestCase):
+    """A+S 큰 쪽(2026-11-05): A = 위험 방향 z 합, S = 느려진 정도. 본인 평소 분포로 표준화한 뒤 큰 쪽. 문턱 2/3/4.
+    기준선: 속도 0.5, 속도 변동 0.15, 흔들림 0.05, 멈춤 0.1이 5건(분산 0) → 표준편차는 하한(0.05, 0.03, 0.02, 0.03)."""
+
+    def window(self, speed=0.5, speed_cv=0.15, sway=0.05, freeze=0.1):
+        p = MmwLegacyPathTests().payload(speed)
+        p["raw"].update(speed_cv=speed_cv, sway=sway, freeze_ratio=freeze)
+        return p
+
+    def run_one(self, **kw):
+        store = MmwLegacyPathTests().store_with(5, days_ago=20)
+        return L.evaluate(self.window(**kw), store, persist=False), store
+
+    def test_better_walking_is_normal(self):
+        # 속도 z +2, 나머지 z −1 → 지금 방식 |z| 합 5(주의)였지만 위험 방향은 없음
+        r, _ = self.run_one(speed=0.6, speed_cv=0.12, sway=0.03, freeze=0.07)
+        self.assertEqual(r["zscore"]["total_abs"], 5.0)
+        self.assertEqual(r["alert_level"], "normal")
+
+    def test_slower_only_is_caution_by_speed(self):
+        r, _ = self.run_one(speed=0.38)                       # 속도 z −2.4 → S 2.4
+        self.assertEqual(r["alert_level"], "caution")
+        self.assertEqual(r["zscore"]["gait_driver"], "speed")
+        self.assertAlmostEqual(r["zscore"]["gait_score"], 2.4, places=2)
+
+    def test_more_sway_alone_is_caution_by_sway(self):
+        r, _ = self.run_one(sway=0.15)                        # 흔들림 z +5 → A 5 → (5 − 1.6) / 1.17 ≈ 2.91
+        self.assertEqual(r["alert_level"], "caution")
+        self.assertEqual(r["zscore"]["gait_driver"], "sway")
+
+    def test_faster_but_swaying_is_not_cancelled(self):
+        # 속도 z +2(빨라짐)와 흔들림 z +5: 둘을 더하면 상쇄되지만 큰 쪽은 흔들림을 그대로 본다
+        r, _ = self.run_one(speed=0.6, sway=0.15)
+        self.assertEqual(r["alert_level"], "caution")
+        self.assertEqual(r["zscore"]["gait_driver"], "sway")
+
+    def test_levels_and_urgent_alarm(self):
+        cases = {0.42: "normal", 0.39: "caution", 0.34: "warning", 0.29: "critical"}   # S = 1.6, 2.2, 3.2, 4.2
+        for speed, level in cases.items():
+            r, _ = self.run_one(speed=speed)
+            self.assertEqual(r["alert_level"], level, speed)
+        self.assertTrue(r["alarm"] and r["alarm_urgent"])   # 보행 '위험'도 긴급(사용자 결정)
+
+    def test_score_stats_build_up_and_take_over_defaults(self):
+        r, store = self.run_one(speed=0.38)
+        self.assertEqual(store["room_y"]["gait_score"]["S"]["n"], 1)   # 비교한 뒤 쌓는다
+        bed = {"gait_score": {"A": {"sum": 20.0, "sumsq": 25.0, "n": 20}, "S": {"sum": 0.0, "sumsq": 20.0, "n": 20}}}
+        sc = L.gait_score({"speed": 0.0, "speed_cv": 3.0, "sway": 0.0, "freeze_ratio": 0.0}, bed)
+        self.assertAlmostEqual(sc["n_a"], (3.0 - 1.0) / 0.5)          # 본인 A: 평균 1, 표준편차 0.5
+        few = {"gait_score": {"A": {"sum": 1.0, "sumsq": 1.0, "n": 1}, "S": {"sum": 0.0, "sumsq": 0.0, "n": 1}}}
+        sc = L.gait_score({"speed": 0.0, "speed_cv": 3.0, "sway": 0.0, "freeze_ratio": 0.0}, few)
+        self.assertAlmostEqual(sc["n_a"], (3.0 - L.A_DEFAULT[0]) / L.A_DEFAULT[1])   # 기록이 적으면 이론값
+
+    def test_prior_path_uses_same_score(self):
+        store = {}
+        for s in (0.40, 0.50, 0.45, 0.55, 0.35):
+            L.evaluate(MmwPriorPathTests().payload(speed=s), store, persist=False, prior=MmwPriorPathTests.PRIOR)
+        r = L.evaluate(MmwPriorPathTests().payload(speed=0.30), store, persist=False, prior=MmwPriorPathTests.PRIOR)
+        self.assertEqual(r["zscore"]["gait_driver"], "speed")       # z = (0.30 − 0.45) / 0.0707 ≈ −2.12
+        self.assertEqual(r["alert_level"], "caution")
+
+    def test_gait_columns_are_stored(self):
+        with tempfile.TemporaryDirectory() as d, patch.object(db, "DB_PATH", os.path.join(d, "t.db")):
+            db.init_db()
+            db.init_db()                                             # 두 번 불러도 열을 다시 추가하지 않는다
+            db.insert_mmw("room_y", "2026-11-05T12:00:00", {"speed": 0.4}, {}, {}, total_abs=1.0, alert_level="caution",
+                          gait_score=2.4, gait_a=0.7, gait_s=2.4, gait_driver="speed")
+            with db.get_conn() as conn:
+                row = dict(conn.execute("SELECT gait_score, gait_a, gait_s, gait_driver FROM mmw_readings").fetchone())
+        self.assertEqual(row, {"gait_score": 2.4, "gait_a": 0.7, "gait_s": 2.4, "gait_driver": "speed"})
 
 
 class RiskScoreTests(unittest.TestCase):
@@ -612,6 +684,12 @@ class RiskScoreTests(unittest.TestCase):
         self.assertEqual(fall["combined_risk_score"], integrated_analysis.RISK_LEVEL_SCORE["critical"])
         formal = integrated_analysis.compute_risk_score({"mmw_latest": {"alert_level": "warning"}})
         self.assertEqual(formal["combined_risk_score"], integrated_analysis.RISK_LEVEL_SCORE["warning"])
+
+    def test_warming_critical_counts_only_from_fall_rule(self):   # 2026-11-05: 보행 점수로도 critical이 나온다
+        gait = integrated_analysis.compute_risk_score({"mmw_latest": {"alert_level": "critical", "warming": True}})
+        self.assertIsNone(gait["combined_risk_score"])
+        fall = integrated_analysis.compute_risk_score({"mmw_latest": {"alert_level": "critical", "warming": True, "fall_rule": True}})
+        self.assertEqual(fall["combined_risk_score"], integrated_analysis.RISK_LEVEL_SCORE["critical"])
 
 
 class DashboardGaitPriorApiTests(unittest.TestCase):

@@ -213,6 +213,8 @@ def receive_mmw():
                 raw, data.get("quality") or {}, data.get("presence") or {},
                 total_abs=z.get("total_abs"),
                 alert_level=result.get("alert_level"),
+                gait_score=z.get("gait_score"), gait_a=z.get("gait_a"),
+                gait_s=z.get("gait_s"), gait_driver=z.get("gait_driver"),
                 labels={'target_id': result['target_id'], 'alert_level': result.get('alert_level'),
                         'total_abs': z.get('total_abs'), 'note': '각 지표 z/보행 라벨 전체는 이 테이블에 저장하지 않음'},
             )

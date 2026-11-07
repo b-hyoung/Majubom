@@ -65,8 +65,11 @@ def compute_risk_score(patient_state: dict) -> dict:
     # 개인 기준이 생기기 전의 '잠정' 보행 판정(문헌 기대 범위 비교)과 기준선 학습 기간(warming)의 판정은
     # 정식 위험 점수에 넣지 않고 따로 보여준다. 둘 다 정식 알람을 보류하는 판정이기 때문이다.
     # 단 높이 급강하(낙상) 절대 규칙에서 나온 critical은 잠정 여부와 관계없이 반영한다.
+    # 2026-11-05: 보행 점수로도 critical이 나오므로, 학습 기간에는 낙상 규칙 표시(fall_rule)가 있는 critical만 반영한다.
+    # 잠정 판정은 보행 critical을 만들지 않으므로 예전처럼 critical이면 반영한다.
     provisional = {}
-    if mmw_level and (mmw.get("provisional") or mmw.get("warming")) and mmw_level != "critical":
+    held = (mmw.get("provisional") and mmw_level != "critical") or (mmw.get("warming") and not mmw.get("fall_rule"))
+    if mmw_level and held:
         provisional["mmwave_gait"] = mmw_level
         mmw_level = None
 

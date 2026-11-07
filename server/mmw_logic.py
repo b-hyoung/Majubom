@@ -45,10 +45,23 @@ SIGMA_FLOOR = {
     "freeze_ratio": 0.03, "stride_length": 0.03, "stride_cv": 0.02,
 }
 
-# alert_level 임계 (total_abs 기준)
-# 지표 4개→6개로 늘어나 total_abs가 자연히 커지므로 비례 조정 (×1.5)
-# 2026-11-05 C안으로 판정 지표가 다시 4개가 됐지만 문턱은 낮추지 않는다(지표 4개·문턱 3에서도 평소 걷기의 42%가 주의 이상).
+# alert_level 임계 (total_abs 기준) — 2026-11-05부터 보행 단계는 아래 '보행 점수'로 정한다.
+# total_abs(양방향 |z| 합)와 이 문턱은 기록(DB total_abs 열)과 코드 안내 문서(tools/build_code_guide.py)용으로만 남긴다.
 TH_CAUTION, TH_WARNING, TH_CRITICAL = 3.0, 6.0, 9.0
+
+# ── 보행 점수: A+S 큰 쪽 (2026-11-05) ──────────────────────────────────
+# 비교 근거: Downloads/majubom-reports/gait_algo_compare_20261105.html. 양방향 |z| 합은 서서히 생기는 저하를 찍기 수준
+# (AUC 0.46~0.48)으로만 가려냈고, 좋아진 걸음에 경보 쪽으로 반응했다.
+#  A = 위험한 방향으로 벗어난 z만 더한 값,  S = 속도가 느려진 정도(−z_speed)
+#  둘을 본인 평소 점수 분포로 표준화한 뒤 큰 쪽을 점수로 쓴다(한쪽이 나빠지면 다른 쪽에 상쇄되지 않고, 경보 이유를 말할 수 있다).
+GAIT_DIR = {"speed": -1, "speed_cv": 1, "sway": 1, "freeze_ratio": 1}   # 속도는 낮아지면, 나머지는 높아지면 위험
+TH_GAIT_CAUTION, TH_GAIT_WARNING, TH_GAIT_CRITICAL = 2.0, 3.0, 4.0     # 본인 점수 표준편차 단위(사용자 결정)
+SCORE_MIN = 20              # 본인 A·S 분포를 믿기 시작하는 기록 수
+SCORE_SD_FLOOR = 0.3        # 본인 점수 표준편차 하한(기록이 거의 같을 때 점수가 폭발하지 않게)
+A_DEFAULT = (1.6, 1.17)     # 그 전에는 이론값: 지표 4개가 독립 표준정규일 때 A의 평균 4·φ(0), 표준편차 √(4·0.341)
+S_DEFAULT = (0.0, 1.0)      # S는 z 자체라 평균 0, 표준편차 1
+GAIT_DRIVER_KO = {"speed": "속도가 평소보다 느림", "speed_cv": "속도 변동 증가", "sway": "흔들림 증가",
+                  "freeze_ratio": "멈칫거림 증가"}
 
 # 절대 임계 (baseline 무관 즉시 위험) — 2026-10-12 변경
 #  low_z: 추적 중인 사람의 최근 1초 몸 높이(z, 바닥 기준 m) 중앙값(send_mmw가 계산).
@@ -189,6 +202,7 @@ def compute_zscore(raw: dict, stats: dict) -> dict:
 
 
 def classify_alert(total_abs: float) -> str:
+    """예전 판정(total_abs 기준). 2026-11-05부터 보행 단계에는 쓰지 않는다(classify_gait)."""
     if total_abs >= TH_CRITICAL:
         return "critical"
     if total_abs >= TH_WARNING:
@@ -196,6 +210,67 @@ def classify_alert(total_abs: float) -> str:
     if total_abs >= TH_CAUTION:
         return "caution"
     return "normal"
+
+
+def _score_mean_sd(bed: dict | None, key: str, default: tuple[float, float]) -> tuple[float, float]:
+    st = ((bed or {}).get("gait_score") or {}).get(key) or {}
+    n = st.get("n", 0)
+    if n < SCORE_MIN:
+        return default
+    mean = st["sum"] / n
+    var = st["sumsq"] / n - mean * mean
+    return mean, max(math.sqrt(var) if var > 0 else 0.0, SCORE_SD_FLOOR)
+
+
+def gait_score(z: dict, bed: dict | None) -> dict:
+    """지표별 z(JUDGED_METRICS) → A, S, 본인 분포로 표준화한 n_a·n_s, 큰 쪽 점수(combined), 경보 이유(driver)."""
+    parts = {m: max(0.0, GAIT_DIR[m] * z[m]) for m in JUDGED_METRICS if z.get(m) is not None}
+    a = sum(parts.values())
+    s = -z["speed"] if z.get("speed") is not None else None
+    a_m, a_s = _score_mean_sd(bed, "A", A_DEFAULT)
+    n_a = (a - a_m) / a_s
+    n_s = None
+    if s is not None:
+        s_m, s_s = _score_mean_sd(bed, "S", S_DEFAULT)
+        n_s = (s - s_m) / s_s
+    combined = n_a if n_s is None else max(n_a, n_s)
+    if n_s is not None and n_s >= n_a:
+        driver = "speed"
+    else:
+        driver = max(parts, key=parts.get) if parts else "speed"
+    return {"a": a, "s": s, "n_a": n_a, "n_s": n_s, "combined": combined, "driver": driver}
+
+
+def update_gait_score(bed: dict, sc: dict) -> None:
+    """비교가 끝난 구간의 A·S를 본인 점수 분포에 쌓는다(자기 자신과 비교하지 않게, 비교 뒤에 부른다)."""
+    acc = bed.setdefault("gait_score", {})
+    for key, v in (("A", sc["a"]), ("S", sc["s"])):
+        if v is None:
+            continue
+        st = acc.setdefault(key, {"sum": 0.0, "sumsq": 0.0, "n": 0})
+        st["sum"] += v
+        st["sumsq"] += v * v
+        st["n"] += 1
+
+
+def classify_gait(combined: float) -> str:
+    if combined >= TH_GAIT_CRITICAL:
+        return "critical"
+    if combined >= TH_GAIT_WARNING:
+        return "warning"
+    if combined >= TH_GAIT_CAUTION:
+        return "caution"
+    return "normal"
+
+
+def _gait_fields(sc: dict) -> dict:
+    return {"gait_score": round(sc["combined"], 2), "gait_a": round(sc["n_a"], 2),
+            "gait_s": None if sc["n_s"] is None else round(sc["n_s"], 2), "gait_driver": sc["driver"]}
+
+
+def _gait_reason(zscore: dict, level: str, alarm: bool) -> str:
+    return (f"보행 점수 {zscore['gait_score']}({GAIT_DRIVER_KO.get(zscore['gait_driver'], zscore['gait_driver'])}) "
+            f"→ {LEVEL_KO[level]}{' 알람' if alarm else ''} · 참고 |z| 합 {zscore['total_abs']}")
 
 
 # ── 메인: 측정 1건 평가 (tof_logic.evaluate 와 동일 시그니처) ───────────
@@ -319,9 +394,12 @@ def evaluate(payload: dict, store: dict, persist: bool = True, prior: dict | Non
     level = "normal"
     warming = (stats_before is None) or (stats_before["n"] < MIN_SAMPLES) or (stats_before["age_days"] < WARMUP_DAYS)
 
+    score = None
     if stats_before and stats_before["n"] >= MIN_SAMPLES:
         zscore = compute_zscore(raw, stats_before)
-        level = classify_alert(zscore["total_abs"])
+        score = gait_score(zscore, store.get(target_id))
+        zscore.update(_gait_fields(score))
+        level = classify_gait(score["combined"])
 
     if warming:
         if stats_before is None or stats_before["n"] < MIN_SAMPLES:
@@ -334,16 +412,17 @@ def evaluate(payload: dict, store: dict, persist: bool = True, prior: dict | Non
         if level in ("warning", "critical"):
             alarm = True
             alarm_urgent = (level == "critical")
-            reasons.append(f"z-score 종합 {zscore['total_abs']} → {LEVEL_KO[level]} 알람")
-        else:
-            reasons.append(f"z-score 종합 {zscore['total_abs']} → {LEVEL_KO[level]}")
+        reasons.append(_gait_reason(zscore, level, alarm))
 
     # 절대 임계(낙상)는 학습 여부와 무관하게 즉시 위험
     if abs_critical:
         level = "critical"
         alarm, alarm_urgent = True, True
+        extra["fall_rule"] = True   # 학습 기간이어도 통합 위험 점수에 넣는 critical(integrated_analysis)
         reasons.append(f"바닥 근처 몸 높이(z={low_z}m < {FLOOR_FALL_Z}m) → 즉시 위험(베이스라인 무관)")
 
+    if score is not None:
+        update_gait_score(store[target_id], score)
     update_baseline(store, target_id, raw)
     update_done = True
     stats = baseline_stats(store.get(target_id))
@@ -397,15 +476,6 @@ def _posterior(mu0: float, tau0: float, n: int, mean: float | None, s_w: float) 
     prec = 1.0 / tau0 ** 2 + n / s_w ** 2
     return (mu0 / tau0 ** 2 + n * mean / s_w ** 2) / prec, 1.0 / prec
 
-
-def _classify_scaled(total_abs: float, scale: float) -> str:
-    if total_abs >= TH_CRITICAL * scale:
-        return "critical"
-    if total_abs >= TH_WARNING * scale:
-        return "warning"
-    if total_abs >= TH_CAUTION * scale:
-        return "caution"
-    return "normal"
 
 
 def _within_sd(n: int, sd: float | None, prior_sd: float, floor: float) -> float:
@@ -462,13 +532,14 @@ def _evaluate_with_prior(payload, raw, quality, presence, store, target_id, prio
 
     n_before = int((bed or {}).get("n", 0))
     identity_note = None
+    score = None
     if len(z) >= MIN_METRICS_FOR_S:
         provisional = False
-        scale = len(z) / len(JUDGED_METRICS)
         total = sum(abs(v) for v in z.values())
-        level = _classify_scaled(total, scale)
+        score = gait_score(z, bed)
+        level = classify_gait(score["combined"])
         zscore = {m: round(v, 2) for m, v in z.items()}
-        zscore.update(total_abs=round(total, 2), metrics_used=len(z), threshold_scale=round(scale, 3))
+        zscore.update(total_abs=round(total, 2), metrics_used=len(z), **_gait_fields(score))
         source = "blended"
     else:
         provisional = True
@@ -498,12 +569,11 @@ def _evaluate_with_prior(payload, raw, quality, presence, store, target_id, prio
         reasons.append("잠정 판정 — 개인 기준이 생기기 전이라 정식 알람을 보내지 않음")
     elif n_before < MIN_SAMPLES or age_days < WARMUP_DAYS:
         reasons.append(f"베이스라인 학습 중: 누적 {age_days:.1f}/{WARMUP_DAYS}일 — 정식 알람 보류")
-    elif level in ("warning", "critical"):
-        alarm = True
-        alarm_urgent = (level == "critical")
-        reasons.append(f"z-score 종합 {zscore['total_abs']} (지표 {zscore['metrics_used']}개) → {LEVEL_KO[level]} 알람")
     else:
-        reasons.append(f"z-score 종합 {zscore['total_abs']} (지표 {zscore['metrics_used']}개) → {LEVEL_KO[level]}")
+        if level in ("warning", "critical"):
+            alarm = True
+            alarm_urgent = (level == "critical")
+        reasons.append(_gait_reason(zscore, level, alarm))
 
     if abs_critical:
         level = "critical"
@@ -527,6 +597,8 @@ def _evaluate_with_prior(payload, raw, quality, presence, store, target_id, prio
             stat["v_n"] += 1
     bed["n"] += 1
     bed[VALID_KEY] = bed["n"]
+    if score is not None:
+        update_gait_score(bed, score)
     if persist:
         save_baseline(store)
     stats = baseline_stats(bed)
@@ -535,6 +607,8 @@ def _evaluate_with_prior(payload, raw, quality, presence, store, target_id, prio
              "prior_id": prior.get("id")}
     if not provisional and (n_before < MIN_SAMPLES or age_days < WARMUP_DAYS):
         extra["warming"] = True   # 학습 기간 판정은 통합 위험 점수에 넣지 않는다(integrated_analysis)
+    if abs_critical:
+        extra["fall_rule"] = True   # 학습 기간이어도 통합 위험 점수에 넣는 critical(integrated_analysis)
     if identity_note:
         extra["identity_note"] = identity_note
     return _result(payload, raw, quality, presence, stats, zscore,
