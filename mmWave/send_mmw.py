@@ -28,6 +28,7 @@ TLV 구조 (3D People Counting/Tracking, little-endian):
 """
 import argparse
 import math
+import socket
 import struct
 import threading
 import time
@@ -630,7 +631,45 @@ def send_fall_event(ev, target_id, do_send):
             pass  # 서버가 잠시 꺼져 있어도 수신은 계속한다
 
 
-def run(cli_port, data_port, cfg_path, do_send=True, target_id="room_01", height=2.7, tilt=90.0, room_filter=True, max_people=3):
+class RawTap:
+    """DATA 포트에서 읽은 바이트를 127.0.0.1:port에 접속한 프로그램(테스트 뷰어)에 그대로 복사한다.
+    포트는 리더 혼자 열고, 뷰어는 이 복사본을 읽는다. 복사에 실패해도 리더는 멈추지 않는다."""
+
+    def __init__(self, port):
+        self.clients, self.lock = [], threading.Lock()
+        self.sock = socket.create_server(("127.0.0.1", port))
+        self.port = self.sock.getsockname()[1]
+        threading.Thread(target=self._accept, daemon=True, name="mmw-tap").start()
+
+    def _accept(self):
+        while True:
+            try:
+                conn, _ = self.sock.accept()
+            except OSError:
+                return   # close() 뒤
+            conn.setblocking(False)
+            with self.lock:
+                self.clients.append(conn)
+
+    def send(self, chunk):
+        with self.lock:
+            for c in list(self.clients):
+                try:
+                    c.sendall(chunk)
+                except OSError:   # 끊겼거나 느려서 버퍼가 찬 뷰어는 내보낸다
+                    self.clients.remove(c)
+                    c.close()
+
+    def close(self):
+        self.sock.close()
+        with self.lock:
+            for c in self.clients:
+                c.close()
+            self.clients.clear()
+
+
+def run(cli_port, data_port, cfg_path, do_send=True, target_id="room_01", height=2.7, tilt=90.0, room_filter=True, max_people=3,
+        raw_tap=0):
     if serial is None:
         raise RuntimeError("pyserial 미설치: pip install pyserial")
     if do_send and requests is None:
@@ -652,6 +691,9 @@ def run(cli_port, data_port, cfg_path, do_send=True, target_id="room_01", height
     click = {"tid": None, "seq": None}
     applied_seq = None
     clock = FrameClock(frame_period_from_cfg(cfg_path))
+    tap = RawTap(raw_tap) if raw_tap else None
+    if tap:
+        print(f"[tap] 원본 바이트 복사 127.0.0.1:{tap.port} (테스트 뷰어용)")
     if do_send:
         threading.Thread(target=poll_patient_clicks, args=(target_id, window_start, click), daemon=True, name="mmw-click").start()
 
@@ -660,6 +702,8 @@ def run(cli_port, data_port, cfg_path, do_send=True, target_id="room_01", height
         while True:
             chunk = data.read(4096)
             if chunk:
+                if tap:
+                    tap.send(chunk)
                 buf += chunk
                 frames, buf = iter_frames(buf)
                 read_at = time.time()
@@ -744,6 +788,8 @@ def run(cli_port, data_port, cfg_path, do_send=True, target_id="room_01", height
         print("\n[run] 종료")
     finally:
         data.close()
+        if tap:
+            tap.close()
 
 
 # ── 존 캡처 (측정 도구) ────────────────────────────────────────────────
@@ -814,6 +860,8 @@ if __name__ == "__main__":
     ap.add_argument("--upright", action="store_true", help="레이더를 바로 달았을 때")
     ap.add_argument("--no-room-filter", action="store_true", help="측정 범위 밖 추적도 전부 사용(범위를 다시 잴 때)")
     ap.add_argument("--max-people", type=int, default=3, help="사람 ID를 줄 최대 인원")
+    ap.add_argument("--raw-tap", type=int, default=0, metavar="PORT",
+                    help="읽은 원본 바이트를 127.0.0.1:PORT로도 내보냄(테스트 뷰어용, 0이면 끔)")
     args = ap.parse_args()
     MOUNT_UPSIDE_DOWN = not args.upright
     if args.capture_zone > 0:
@@ -823,4 +871,5 @@ if __name__ == "__main__":
         capture_zone(args.data, args.capture_zone, args.capture_label, height=args.height, tilt=args.tilt)
     else:
         run(args.cli, args.data, args.cfg, do_send=not args.no_send, target_id=args.target,
-            height=args.height, tilt=args.tilt, room_filter=not args.no_room_filter, max_people=args.max_people)
+            height=args.height, tilt=args.tilt, room_filter=not args.no_room_filter, max_people=args.max_people,
+            raw_tap=args.raw_tap)

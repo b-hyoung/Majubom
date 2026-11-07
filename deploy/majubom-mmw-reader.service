@@ -6,6 +6,7 @@
 # 2026-10-31 천장 설치(2.5m, 바닥을 봄): AOP_ceiling_2m5.cfg, --tilt 90. 예전 벽 설치는 AOP_diag_2m5_d50.cfg --tilt 30.
 # 2026-11-05: 실측 높이 2.7m로 --height를 고침(뷰어에서 바닥에 누운 사람 z≈0.007 확인). 바닥 좌표는 리더의
 #   track_to_world가 --height로 계산한다. cfg(sensorPosition 2.5)는 지금 레이더에 들어간 설정과 같게 두려고 바꾸지 않았다.
+# 2026-11-07: --raw-tap 5003. 리더가 읽은 원본 바이트를 127.0.0.1:5003으로도 내보내서, 테스트 뷰어가 리더와 함께 돌 수 있다.
 [Unit]
 Description=Majubom mmWave reader (send_mmw.py)
 After=network-online.target
@@ -17,7 +18,7 @@ WorkingDirectory=/home/pi/Documents/Github/Majubom
 ExecStart=/home/pi/Documents/Github/Majubom/.venv/bin/python -u mmWave/send_mmw.py \
   --cli /dev/serial/by-id/usb-Silicon_Labs_CP2105_Dual_USB_to_UART_Bridge_Controller_011D1AD6-if00-port0 \
   --data /dev/serial/by-id/usb-Silicon_Labs_CP2105_Dual_USB_to_UART_Bridge_Controller_011D1AD6-if01-port0 \
-  --cfg mmWave/AOP_ceiling_2m5.cfg --target room_01 --height 2.7 --tilt 90
+  --cfg mmWave/AOP_ceiling_2m5.cfg --target room_01 --height 2.7 --tilt 90 --raw-tap 5003
 Restart=always
 RestartSec=5
 
