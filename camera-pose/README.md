@@ -1,5 +1,11 @@
 # 카메라 기반 침대 자세·움직임 분석 AI
 
+**Windows로 옮겨 사용:** C920은 Pi에 두고 USB2.0만 Windows에 연결한 뒤
+`Start-PiUsb.ps1`을 실행합니다. [처음 설치·모델·Pi 접속 설정·침대 영역·테스트 안내](docs/guides/PI_USB_WINDOWS.md).
+
+Mac USB 카메라 + Pi C920 연결: `Start-MacPi.command`로 두 입력을 자동 연결합니다.
+[Mac 실행과 새 설치 설정](docs/guides/LIVE_MEASUREMENT.md#macos-설치와-실행)을 참고하세요.
+
 [GPU 카메라 실행·즉시 자세 표시·95% 검증](docs/guides/CAMERA_ACCURACY_GATE.md): `Start-CameraGPU.ps1`로 준비된 CUDA CLIP과 두 카메라를 연결합니다. 현재95%는 사용자 목표이며 실측 결과가 아닙니다. 사용자 요청으로 실제 촬영·검증·ToF 재학습은 대기합니다.
 
 카메라 영상으로 침대 위 사람의 관절과 자세를 분석·기록하고, 향후 ToF·mmWave의 독립 측정 결과와 비교하는 프로젝트입니다.

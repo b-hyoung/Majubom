@@ -53,8 +53,47 @@ const $=id=>document.getElementById(id),token=location.hash.slice(1)||sessionSto
 const EDGES=[[5,6],[5,7],[7,9],[6,8],[8,10],[5,11],[6,12],[11,12],[11,13],[13,15],[12,14],[14,16],[0,1],[0,2],[1,3],[2,4]],COLORS=['#36dfb7','#ffb965','#bba0ff'];
 let previewQualityBusy=false;
 let snapshot={sessions:[],scan:{}},active=null,view=null,picture=null,loadingView=false,sourceType='camera',modelAsset=null,videoAsset=null,uploading=false,serverGone=false,regionMode=false,drag=null,draftPoints=[],regionFrame=null,signature='',localPending=false,uiError='';
-let multiCameraMode=false;
-let gridMode=false,gridSignature='';const gridTiles=new Map();
+let multiCameraMode=new URLSearchParams(location.search).get('view')==='multi';
+let gridMode=multiCameraMode,gridSignature='';const gridTiles=new Map();
+if(new URLSearchParams(location.search).get('leg_test')==='1'){
+ const panel=document.createElement('section');panel.className='card panel';panel.style.marginBottom='16px';panel.id='leg-test-panel';
+ const title=document.createElement('h2');title.textContent='걸터앉음 테스트 · 보정판 없음';title.style.fontSize='17px';
+ const label=document.createElement('p');label.id='leg-test-label';label.style.cssText='font-size:28px;font-weight:750;margin:8px 0';label.setAttribute('aria-live','polite');label.textContent='관절 관측 대기';
+ const note=document.createElement('p');note.className='measure-note';note.textContent='현재 영상으로 잡은 임시 침대 영역입니다. 앉음 → 걸터앉음 → 다리를 올린 앉음을 비교해 보세요. 영상을 누르면 영역을 수정할 수 있습니다.';
+ const reference=document.createElement('p');reference.className='measure-note';reference.id='leg-test-reference';
+ const views=document.createElement('div');views.id='leg-test-views';views.style.cssText='display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:12px';
+ const limit=document.createElement('p');limit.className='measure-note';limit.textContent='테스트 결과는 모델 추정입니다. 다리 내려감은 몸통 길이에 대한 비율이며 실제 높이 측정·저장 판정·학습 정답과 별도입니다.';
+ panel.append(title,label,note,reference,views,limit);$('workspace').before(panel);
+ const legacy=$('posture-value')?.closest('.card');if(legacy)legacy.hidden=true;
+ const reasons={bed_region_required:'침대 영역 필요',model_3d_unavailable:'추정 3D 관절 대기',lower_body_joints_missing:'어깨·골반·무릎·발목 관절 부족',invalid_image_joints:'관절 좌표 확인 필요',torso_projection_too_small:'몸통이 작거나 가려짐',model_registration_uncertain:'영상과 추정 3D의 대응 불확실',bed_model_geometry_uncertain:'침대 면 방향 확인 필요',bed_coordinate_unavailable:'침대 좌표 불확실',degenerate_torso:'몸통 관절 불안정',degenerate_legs:'다리 관절 불안정',torso_not_upright:'앉은 몸통 방향이 아님',hip_not_near_bed_edge:'골반 경계 조건 부족',hip_outside_bed:'골반이 침대 범위 밖에 있음',knees_not_bent_for_sitting:'무릎 굽힘 조건 부족',thighs_not_along_bed:'허벅지 방향 조건 부족',calves_not_hanging_down:'종아리·발목 내려감 조건 부족'};
+ function metric(value,decimals=2){return typeof value==='number'&&Number.isFinite(value)?value.toFixed(decimals):'—'}
+ async function legPoll(){
+  try{
+   if(document.hidden){setTimeout(legPoll,500);return}
+   const data=await api('/api/room/status'),current=data.camera_posture;
+   label.textContent=current?.label_ko||'관절 관측 대기';
+   if(current?.label)label.textContent+=(current.status==='stable'?' · 유지 중':' · 추정');
+   const installation=snapshot.installation_reference;
+   reference.textContent=installation?`기존 입력: 카메라 약 ${(installation.camera_height_m||[]).join(' / ')}m · 침대 윗면 ${installation.bed_surface_height_m}m · 침대 영역은 영상에서 추정`:'설치 정보 확인 중';
+   views.replaceChildren();
+   for(const camera of ['A','B']){
+    const view=current?.views?.find(v=>v.camera===camera),g=view?.leg_geometry,observation=current?.observations?.find(v=>v.camera===camera);
+    const card=document.createElement('div');card.style.cssText='border-top:1px solid var(--line);padding-top:10px';
+    const heading=document.createElement('strong');heading.textContent=camera==='A'?'A · Pi C920':'B · 맥 USB2.0';
+    const status=document.createElement('p');status.className='measure-note';status.textContent=g?(g.supported?'다리 내려감 조건 충족':reasons[g.reason]||g.reason||'관절 확인 중'):'현재 사용할 사람 관절 없음';
+    if(!g&&observation?.people_count===1)status.textContent='사람 후보는 있으나 현재 자세 근거가 부족합니다';
+    card.append(heading,status);
+    if(observation?.people_count===1){const row=document.createElement('p');row.className='measure-note';row.textContent=`관측: 머리 ${observation.head_joints}/5 · 몸통 ${observation.torso_joints}/4 · 다리 ${observation.leg_joints}/4 · 머리는 다리 판정의 필수 관절이 아닙니다`;card.append(row)}
+    if(view?.used_for_fusion===false){const row=document.createElement('p');row.className='measure-note';row.textContent='이번 통합 판정에서 제외 · 관절이 더 잘 보이는 시점 사용';card.append(row)}
+    for(const leg of g?.features?.legs||[]){const row=document.createElement('p');row.className='measure-note';row.textContent=`${leg.side==='left'?'왼쪽':'오른쪽'}: 무릎 ${metric(leg.knee_degrees,0)}° · 발목 내려감 ${metric(leg.ankle_drop_torso)}×몸통 · 종아리 아래 방향 ${metric(leg.calf_down_cos)}`;card.append(row)}
+    if(g?.registration){const row=document.createElement('p');row.className='measure-note';row.textContent=`침대 면 방향 추정 · 영상/모델 오차 ${metric(g.registration.reprojection_torso_fraction*100,1)}% 몸통`;card.append(row)}
+    views.append(card);
+   }
+  }catch(error){label.textContent='연결 확인 필요';views.replaceChildren()}
+  setTimeout(legPoll,250);
+ }
+ setTimeout(legPoll,100);
+}
 function notify(text){$('notice').textContent=text||'';$('notice').hidden=!text}
 async function api(path,body){const response=await fetch(path,{method:body===undefined?'GET':'POST',headers:{'X-BedPose-Token':token||'','Content-Type':'application/json'},body:body===undefined?undefined:JSON.stringify(body)});const value=await response.json();if(!response.ok){const error=Error(value.error||'요청에 실패했습니다.');error.status=response.status;throw error}return value}
 function trackingLabel(t){const reasons={target_missing:'미검출',target_ambiguous:'후보 혼동',observation_gap:'관측 공백',motion_or_visibility_gate_failed:'이동/가림',input_closed:'입력 종료',processing_failed:'처리 실패'};return t?.status==='tracking_provisional'?(t.reason==='unique_motion_candidate_after_processing_delay'?'추적 중 (잠정) · 처리 지연':'추적 중 (잠정)'):t?.status==='held'?'보류 · '+(reasons[t.reason]||'관측 불확실')+' / 재지정':'대상 미지정'}
@@ -355,7 +394,7 @@ function render(){
  $('recorded-label').textContent=s?.segmented_recording?'현재 구간 프레임':'기록한 프레임';const storage=s?.retention_status;$('retention-note').hidden=!storage;$('retention-note').textContent=storage?(storage.reason||('블랙박스 사용량 '+(storage.used_bytes/1024**3).toFixed(2)+' GiB · 디스크 여유 '+(storage.free_bytes/1024**3).toFixed(2)+' GiB · 이번 점검 삭제 '+storage.deleted_count+'개')):'';$('saved').hidden=!s?.directory;$('output-path').textContent=s?.directory||'';$('saved-label').textContent=s?.integrity==='verified'?'저장 경로 · 기록 검사 완료':'측정 기록 경로';
  $('step-1').classList.toggle('done',hasImage);$('step-2').classList.toggle('done',!!s?.region);$('step-3').classList.toggle('done',!!s?.recording||!!s?.directory);
  if(s?.error)notify(s.error);else if(!serverGone)notify(uiError||displayError||'');
- const devices=[...(snapshot.scan.devices?.length?snapshot.scan.devices:(snapshot.scan.indices||[]).map(index=>({index,name:"카메라 "+index+" · 이름 미확인"}))),...(snapshot.pi_camera_configured?[{index:"raspberry_pi",name:"라즈베리파이 · 삼성 USB 카메라"}]:[])],usedCameras=new Set(camerasInWorkspace().map(s=>String(s.source_profile?.camera_index??s.camera_index))),deviceSignature=JSON.stringify([devices,Array.from(usedCameras)]);if($('camera-index').dataset.devices!==deviceSignature){const selected=$('camera-index').value;$('camera-index').replaceChildren();if(!devices.length){const placeholder=document.createElement('option');placeholder.value='';placeholder.textContent=snapshot.scan.busy?'카메라 확인 중…':'카메라 목록 새로고침을 눌러주세요';$('camera-index').append(placeholder)}for(const device of devices){const option=document.createElement('option');option.value=String(device.index);option.disabled=usedCameras.has(String(device.index));option.textContent=device.name+' ('+device.index+')'+(option.disabled?' · 사용 중':'');$('camera-index').append(option)}if(devices.some(d=>String(d.index)===selected&&!usedCameras.has(String(d.index))))$('camera-index').value=selected;else $('camera-index').value=devices.find(d=>!usedCameras.has(String(d.index)))?.index?.toString()||'';$('camera-index').dataset.devices=deviceSignature;updatePiCameraSettings()}
+ const devices=[...(snapshot.scan.devices?.length?snapshot.scan.devices:(snapshot.scan.indices||[]).map(index=>({index,name:"카메라 "+index+" · 이름 미확인"}))),...(snapshot.pi_camera_configured?[{index:"raspberry_pi",name:"라즈베리파이 · USB 카메라"}]:[])],usedCameras=new Set(camerasInWorkspace().map(s=>String(s.source_profile?.camera_index??s.camera_index))),deviceSignature=JSON.stringify([devices,Array.from(usedCameras)]);if($('camera-index').dataset.devices!==deviceSignature){const selected=$('camera-index').value;$('camera-index').replaceChildren();if(!devices.length){const placeholder=document.createElement('option');placeholder.value='';placeholder.textContent=snapshot.scan.busy?'카메라 확인 중…':'카메라 목록 새로고침을 눌러주세요';$('camera-index').append(placeholder)}for(const device of devices){const option=document.createElement('option');option.value=String(device.index);option.disabled=usedCameras.has(String(device.index));option.textContent=device.name+' ('+device.index+')'+(option.disabled?' · 사용 중':'');$('camera-index').append(option)}if(devices.some(d=>String(d.index)===selected&&!usedCameras.has(String(d.index))))$('camera-index').value=selected;else $('camera-index').value=devices.find(d=>!usedCameras.has(String(d.index)))?.index?.toString()||'';$('camera-index').dataset.devices=deviceSignature;updatePiCameraSettings()}
  $('scan').disabled=!!snapshot.scan.busy||uploading;$('scan-note').textContent=snapshot.scan.busy?'장치 확인 중입니다. 사용 중인 카메라는 건너뜁니다.':snapshot.scan.error|| (snapshot.scan.indices?.length?'확인된 카메라 '+devices.length+'개 · 위 목록에서 선택하세요.':'내장·USB 카메라, PC에서 웹캠으로 인식되는 휴대폰을 사용할 수 있습니다.');
  if(!modelAsset)$('model-name').textContent=snapshot.model+(snapshot.model_available?' · 선택된 모델':snapshot.model_error?' · 다시 선택하세요':' · 파일을 선택하세요');
  const cp=s?.source_profile,req=cp?.requested_capture;

@@ -21,6 +21,7 @@
 | 입력별 수명주기 | `live_engine.py`: Worker가 수신·SDK·기록 소유 |
 | 관절·영역·대상 | `mapping.py`, `bed_geometry.py`, `target_tracking.py` |
 | 자세 | `posture.py` 인터페이스, `automatic_posture.py` 버전별 규칙, `weighted_posture.py` 적합도 |
+| 보정판 없는 다리 근거 | `bed_leg_geometry.py`: 기존 침대 법선 추정 + 현재 모델3D PnP, 허벅지/무릎/종아리/발목 조건. `camera_posture.py`의 화면 추정과 작업실 `leg_test=1` 패널에 연결. 실제 높이 실측·저장 판정과 구분 |
 | 실시간 카메라 표시·95% 평가 | `camera_posture.py`: 현재 CLIP/침대/관절 추정, `camera_validation.py`: 별도 검토 정답 평가. 기존 엄격3D·학습 라벨과 분리. [실행](../guides/CAMERA_ACCURACY_GATE.md) |
 | 신체·침대 관계 분리 | `separated_posture.py`: 영역 없는 `BodyInput`, 독립 형태 후보, 영상상 영역 관계와 해석 후보 |
 | 독립 영상 근거 연결 | `body_state.py`: 대상 crop·근거 제공자 계약·현재 프레임 검증·0.8 조합. CLIP은 별도 제공자이며 사전학습 자산/정확도 검증은 별도 |

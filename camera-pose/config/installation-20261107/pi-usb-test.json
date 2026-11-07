@@ -1,0 +1,68 @@
+{
+  "installation": "mac-pi-20261107",
+  "camera_height_m": [
+    2.1,
+    2.1
+  ],
+  "bed_surface_height_m": 0.65,
+  "height_source": "user_reported_approx_camera_and_existing_bed_reference",
+  "region_source": "current_live_mattress_regions_with_mac_reselected",
+  "physical_verification": false,
+  "regions": [
+    {
+      "selector": "Pi C920",
+      "resolution": [
+        640,
+        480
+      ],
+      "points": [
+        [
+          271,
+          145
+        ],
+        [
+          434,
+          159
+        ],
+        [
+          426,
+          479
+        ],
+        [
+          100,
+          439
+        ]
+      ]
+    },
+    {
+      "selector": "USB2.0 PC CAMERA",
+      "resolution": [
+        640,
+        480
+      ],
+      "points": [
+        [
+          183,
+          111
+        ],
+        [
+          422,
+          94
+        ],
+        [
+          535,
+          469
+        ],
+        [
+          143,
+          479
+        ]
+      ],
+      "source": "current_visible_mattress_surface_approximation",
+      "lower_edge_clipped_by_image": true,
+      "updated_at": "2026-11-07T10:09:31.945091+00:00"
+    }
+  ],
+  "reuse_requires_same_placement": true,
+  "installation_note": "2026-11-07 interim image regions; reference only, no room calibration"
+}

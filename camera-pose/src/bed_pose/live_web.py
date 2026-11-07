@@ -187,7 +187,7 @@ class WebWorkspace:
                 if any(s.kind == 'camera' and not s.state['closed'] and s.worker.engine.source.index == 'raspberry_pi'
                        for s in self.sessions.values()):
                     raise ValueError('라즈베리파이 카메라가 이미 연결되어 있습니다.')
-                source, title, kind = PiCameraSource(), '라즈베리파이 · 삼성 USB 카메라', 'camera'
+                source, title, kind = PiCameraSource(), '라즈베리파이 · USB 카메라', 'camera'
             elif kind == 'camera':
                 index = values.get('camera')
                 if type(index) is not int or index < 0:
@@ -281,6 +281,7 @@ class WebWorkspace:
                 groups.append(current)
             result={'sessions':sessions,'groups':groups,
                     'scan':self.scan_state,'closing':self.stop_requested.is_set(),
+                    'installation_reference':getattr(self,'installation_reference',None),
                     'preview_quality':self.preview_quality,'model':self.model_name,
                     'model_available':self.model.is_file() and self.model_error is None,'model_error':self.model_error,'clip':self.clip_status,'person_crop':self.person_crop_status,
                     'pi_camera_configured':(Path.home()/'.config'/'bed-pose'/'pi-camera-url.txt').is_file()}

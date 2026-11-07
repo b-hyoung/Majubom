@@ -1,5 +1,20 @@
 # AI 작업 시작 안내
 
+2026-11-07 Windows 이전: C920은 Pi에 두고 USB2.0만 Windows에 옮겨 분석한다.
+`camera-pose/Start-PiUsb.ps1`과 `camera-pose/docs/guides/PI_USB_WINDOWS.md`가 진입점이다.
+Pi URL/토큰은 사용자 설정 파일로 별도 이전하며 Git에 넣지 않는다.
+
+2026-11-07 보정판 없는 걸터앉음 시험: `camera-pose/src/bed_pose/bed_leg_geometry.py`가
+침대 법선/모델3D 다리 근거를 계산해 화면 추정0.6에 연결한다. `Start-MacPi.command`는
+같은 설치의 로컬 `outputs/mac-pi-installation.json`을 복원한다. 임시 영역과 높이 참조,
+골반 대비 발목 비율을 실제 관절 높이/보정/학습 정답으로 보고하지 않는다.
+
+2026-11-07 Mac+Pi 카메라: `camera-pose/Start-MacPi.command` →
+`tools/start_mac_monitor.py`가 이름으로 찾은 Mac USB와 Pi MJPEG를 기존 작업실에 연결한다.
+새 설치는 `recordings/mac-pi-20261107`에서 시작하며 이전 보정/침대 영역을 복사하지 않는다.
+장치 입력·추론 확인과 자세 정확도·3D 실측 검증은 구분한다.
+[실행 안내](../camera-pose/docs/guides/LIVE_MEASUREMENT.md#macos-설치와-실행).
+
 Bed C 실시간 보강 실험은 신선한 ToF 쌍과 안정된 두 카메라가 지속적으로 다르게 판정할 때 의사 라벨을 모아 로컬 RF 후보를 갱신한다. [실행과 판정 기준](../camera-pose/docs/guides/TOF_TRAINING.md#실시간-카메라-불일치-후보-학습).
 
 2026-11-03 카메라 시각: live_engine은 최신 카메라의 수신 ns가 증가하나 ms가 겹칠 때 SDK용 시각만 증가시키고 원시 수신 시각을 보존한다. [시간 처리](../camera-pose/docs/guides/LIVE_MEASUREMENT.md).

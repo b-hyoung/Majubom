@@ -17,7 +17,7 @@ from test_web_workspace import factory
 class BlackboxStorageTests(unittest.TestCase):
     def setUp(self):
         temp=tempfile.TemporaryDirectory();self.addCleanup(temp.cleanup)
-        self.root=Path(temp.name)
+        self.root=Path(temp.name).resolve()
         self.workspace=WebWorkspace(output_root=self.root/'records',engine_factory=factory,model_store=self.root/'models')
         self.addCleanup(self.workspace.close)
 

@@ -20,6 +20,42 @@ ANNOTATION=dict(resolutions=[[200,200],[200,200]],points=[[[20,20],[180,20],[180
 
 
 class CameraPostureTests(unittest.TestCase):
+    def test_occluded_head_and_legs_are_unknown_not_on_bed_sitting(self):
+        p=packet()
+        for i in (0,1,2,3,4,13,14,15,16):p['joints'][i]=None
+        r=LivePostureEstimator().update([p,None],ANNOTATION,None,1_010_000_000)
+        self.assertEqual(r['label'],'seated_unknown')
+        self.assertEqual(r['observations'][0]['head_joints'],0)
+        self.assertEqual(r['observations'][0]['leg_joints'],0)
+        self.assertFalse(r['observations'][0]['head_required_for_leg_split'])
+
+    def test_partial_other_image_cannot_override_visible_hanging_legs(self):
+        a=packet(camera='A');b=packet(camera='B',state='other')
+        for i in (0,1,2,3,4,13,14,15,16):b['joints'][i]=None
+        observed=dict(status='observed',supported=True,reason=None)
+        missing=dict(status='held',supported=False,reason='lower_body_joints_missing')
+        with patch('bed_pose.bed_leg_geometry.inspect',side_effect=[observed,missing]):
+            r=LivePostureEstimator().update([a,b],ANNOTATION,None,1_010_000_000)
+        self.assertEqual(r['label'],'edge_sitting')
+        self.assertFalse(r['views'][1]['used_for_fusion'])
+
+    def test_missing_legs_in_second_view_do_not_negate_observed_hanging_legs(self):
+        a=packet(camera='A');b=packet(camera='B')
+        for j in a['joints']:j[2]=.6
+        b['joints']=[[100.,100.,.99] for _ in range(17)]
+        b['joints'][5]=[90.,50.,.99];b['joints'][6]=[110.,50.,.99]
+        observed=dict(status='observed',supported=True,reason=None)
+        missing=dict(status='held',supported=False,reason='lower_body_joints_missing')
+        with patch('bed_pose.bed_leg_geometry.inspect',side_effect=[observed,missing]):
+            r=LivePostureEstimator().update([a,b],ANNOTATION,None,1_010_000_000)
+        self.assertEqual(r['label'],'edge_sitting')
+        self.assertIn('partial_view_not_used_for_leg_split',r['warnings'])
+        conflict=dict(status='observed',supported=False,on_bed_supported=True,reason='calves_not_hanging_down')
+        with patch('bed_pose.bed_leg_geometry.inspect',side_effect=[observed,conflict]):
+            r=LivePostureEstimator().update([a,b],ANNOTATION,None,1_010_000_000)
+        self.assertEqual(r['label'],'sitting')
+        self.assertIn('cross_view_disagreement',r['warnings'])
+
     def test_sparse_geometry_cannot_override_image_direction(self):
         p=packet(state='lying')
         for i in (1,2,3,4,9,10):p['joints'][i]=None
@@ -57,7 +93,7 @@ class CameraPostureTests(unittest.TestCase):
 
     def test_no_bed_does_not_suppress_visible_sitting(self):
         r=LivePostureEstimator().update([packet(),None],None,None,1_010_000_000)
-        self.assertEqual(r['label'],'sitting');self.assertIn('bed_region_unavailable',r['warnings'])
+        self.assertEqual(r['label'],'seated_unknown');self.assertIn('bed_region_unavailable',r['warnings'])
 
     def test_lying_prone_and_standing_are_not_forced_to_sitting(self):
         for expected in ('supine','prone','standing','other'):
@@ -93,7 +129,7 @@ class CameraPostureTests(unittest.TestCase):
 
     def test_malformed_or_other_resolution_annotation_is_ignored(self):
         for a in ({'resolutions':[]},{'resolutions':[[640,480]]*2,'points':[]},dict(ANNOTATION,points=[[]]*2)):
-            self.assertEqual(LivePostureEstimator().update([packet(),None],a,None,1_010_000_000)['label'],'sitting')
+            self.assertEqual(LivePostureEstimator().update([packet(),None],a,None,1_010_000_000)['label'],'seated_unknown')
 
     def test_empty_camera_b_does_not_block_camera_a(self):
         b=packet(camera='B');b['people_count']=0

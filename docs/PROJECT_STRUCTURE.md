@@ -20,6 +20,9 @@ PlatformIO/Python 빌드, node_modules, 로그, LanceDB 저장 엔진 내부 파
 | 경로 | 책임/진입점 |
 |---|---|
 | camera-pose/ | 독립 카메라 자세 연구·MediaPipe/CLIP·Three.js 3D 침상 모니터. 자체 AGENTS.md 적용. src/bed_pose/tof_learning은 읽기 전용 Pi 스트림+카메라 동기 수집·라벨 검토·CNN/CNN+GRU·LightGBM/RF/XGBoost 비교. training/의 PowerShell 도구와 docs/guides/TOF_TRAINING.md가 진입점. 실측 검증 전 운영 모델로 사용하지 않음 |
+| camera-pose/Start-MacPi.command · tools/start_mac_monitor.py | Mac USB 이름 선택 + Pi MJPEG의 기존 측정 작업실 실행. 새 설치별 기록 경로, 보정 미승인/3D 미리보기 꺼짐, 로컬 접속 정보만 저장. 실행 절차는 LIVE_MEASUREMENT.md |
+| camera-pose/Start-PiUsb.ps1 · docs/guides/PI_USB_WINDOWS.md | C920은 Pi, USB2.0은 Windows 분석 컴퓨터에 연결하는 실행/이전 경로. 설치별 임시 영역 설정은 config/installation-20261107에 두며 접속 토큰·영상·모델은 별도 로컬 파일 |
+| camera-pose/src/bed_pose/bed_leg_geometry.py | 보정판 없는 침대 법선·모델3D 등록과 다리 내려감 근거. camera_posture 화면 추정0.6·작업실 leg_test 패널에서 사용하며 실제 높이 실측·저장 정답과 별개 |
 | camera-pose/src/bed_pose/pose/ | MediaPipe/browser GPU 어댑터, 원본 좌표 복원·부분 관절 재탐색·IMAGE 확인·GPU 연결 복구. person_guard.py는 명시적 로컬 설정의 근접 촬영용 CUDA 사람 검증. tools/pose_candidates.py·.venv-pose/는 후보 비교/검증기 설정, tools/check_pose_recovery.py는 실제 GPU 빈 장면/응답 소실 검사. ROI·모델 점수·실제 정답은 구분하며 관절 모델 자동 교체와 분리한다 |
 | camera-pose/src/bed_pose/camera_diagnostics.py | RGB 표본의 밝기/클리핑 표시용 진단. live_engine의 프레임 부가정보→live_web→카메라 패널로 전달하며 원본/노출/관절/정답 기록을 변경하지 않음. 입력 대기와 추론 지연은 기존 processing_ms와 함께 표시 |
 | camera-pose/src/bed_pose/camera_posture.py · camera_validation.py | 주 모니터의 즉시 CLIP/관절/침대 추정과 별도 검토 정답의95% 평가. 단일 시점·신선도·대상 변경·누락/좌우 미확정 처리, 설정 서명·원본 해시·coverage 포함. 기존 posture_3d와 학습 정답 승인은 분리. Start-CameraGPU.ps1과 docs/guides/CAMERA_ACCURACY_GATE.md가 진입점 |
@@ -75,81 +78,15 @@ Majubom/
 │   │   └── workflows/
 │   │       └── tests.yml
 │   ├── config/
-│   │   └── installation-20261103/
-│   │       ├── camera-pitch-reference.json
-│   │       ├── guided-calibration-candidate-20.json
-│   │       ├── manifest.json
-│   │       ├── physical-measurements.json
-│   │       ├── preview-axis-reference.json
-│   │       └── preview-bed.json
-│   ├── data/
-│   │   └── paired/
-│   │       ├── bedC-20261103-camera-check/
-│   │       │   ├── camera.jsonl
-│   │       │   ├── manifest.json
-│   │       │   ├── pairs.jsonl
-│   │       │   ├── status.json
-│   │       │   └── tof.jsonl
-│   │       ├── bedC-20261103-main/
-│   │       │   ├── camera.jsonl
-│   │       │   ├── experiment_conditions.json
-│   │       │   ├── manifest.json
-│   │       │   ├── orientation-candidate.json
-│   │       │   ├── pairs.jsonl
-│   │       │   ├── recording_journal.jsonl
-│   │       │   ├── restart-cleanup-report.json
-│   │       │   ├── status.json
-│   │       │   ├── STOP
-│   │       │   └── tof.jsonl
-│   │       ├── bedC-S01-retake/
-│   │       │   ├── camera.jsonl
-│   │       │   ├── manifest.json
-│   │       │   ├── pairs.jsonl
-│   │       │   ├── recording_journal.jsonl
-│   │       │   ├── status.json
-│   │       │   ├── STOP
-│   │       │   └── tof.jsonl
-│   │       ├── bedC-S02-20261104/
-│   │       │   ├── camera.jsonl
-│   │       │   ├── manifest.json
-│   │       │   ├── pairs.jsonl
-│   │       │   ├── recording_journal.jsonl
-│   │       │   ├── status.json
-│   │       │   ├── STOP
-│   │       │   └── tof.jsonl
-│   │       ├── bedC-S02-20261104-counted/
-│   │       │   ├── camera.jsonl
-│   │       │   ├── empty-counted-report.json
-│   │       │   ├── manifest.json
-│   │       │   ├── pairs.jsonl
-│   │       │   ├── status.json
-│   │       │   ├── STOP
-│   │       │   └── tof.jsonl
-│   │       ├── bedC-S02-20261104-postures/
-│   │       │   ├── camera.jsonl
-│   │       │   ├── manifest.json
-│   │       │   ├── pairs.jsonl
-│   │       │   ├── recording_journal.jsonl
-│   │       │   ├── status.json
-│   │       │   ├── STOP
-│   │       │   └── tof.jsonl
-│   │       ├── bedC-S03-20261104-counted/
-│   │       │   ├── camera.jsonl
-│   │       │   ├── empty-counted-report.json
-│   │       │   ├── manifest.json
-│   │       │   ├── pairs.jsonl
-│   │       │   ├── status.json
-│   │       │   ├── STOP
-│   │       │   └── tof.jsonl
-│   │       └── bedC-S05-20261104-postures/
-│   │           ├── camera.jsonl
-│   │           ├── empty-counted-report.json
-│   │           ├── manifest.json
-│   │           ├── pairs.jsonl
-│   │           ├── recording_journal.jsonl
-│   │           ├── status.json
-│   │           ├── STOP
-│   │           └── tof.jsonl
+│   │   ├── installation-20261103/
+│   │   │   ├── camera-pitch-reference.json
+│   │   │   ├── guided-calibration-candidate-20.json
+│   │   │   ├── manifest.json
+│   │   │   ├── physical-measurements.json
+│   │   │   ├── preview-axis-reference.json
+│   │   │   └── preview-bed.json
+│   │   └── installation-20261107/
+│   │       └── pi-usb-test.json
 │   ├── docs/
 │   │   ├── archive/
 │   │   │   ├── IMPLEMENTATION_HISTORY.md
@@ -199,6 +136,7 @@ Majubom/
 │   │   │   ├── EXPERIMENTAL_3D_PREVIEW.md
 │   │   │   ├── LIVE_MEASUREMENT.md
 │   │   │   ├── NEW_LAPTOP.md
+│   │   │   ├── PI_USB_WINDOWS.md
 │   │   │   ├── PREVIEW_EXCEPTION_HANDLING.md
 │   │   │   ├── PREVIEW_QUALITY.md
 │   │   │   ├── README.md
@@ -277,6 +215,7 @@ Majubom/
 │   │       ├── automatic_posture.py
 │   │       ├── bed_association.py
 │   │       ├── bed_geometry.py
+│   │       ├── bed_leg_geometry.py
 │   │       ├── bed_posture_3d.py
 │   │       ├── blackbox_retention.py
 │   │       ├── blackbox_storage.py
@@ -369,6 +308,7 @@ Majubom/
 │   │   ├── test_automatic_rule_review.py
 │   │   ├── test_bed_association.py
 │   │   ├── test_bed_geometry.py
+│   │   ├── test_bed_leg_geometry.py
 │   │   ├── test_bed_posture_3d.py
 │   │   ├── test_blackbox_api.py
 │   │   ├── test_blackbox_retention.py
@@ -400,6 +340,7 @@ Majubom/
 │   │   ├── test_knee_edge.py
 │   │   ├── test_live.py
 │   │   ├── test_lying_orientation.py
+│   │   ├── test_mac_launcher.py
 │   │   ├── test_measurement_plan.py
 │   │   ├── test_mediapipe_adapter.py
 │   │   ├── test_multiview_posture.py
@@ -484,6 +425,7 @@ Majubom/
 │   │   ├── pose_candidates.py
 │   │   ├── restore_laptop.py
 │   │   ├── start_gpu_monitor.py
+│   │   ├── start_mac_monitor.py
 │   │   └── workspace_backup.py
 │   ├── training/
 │   │   ├── Check-Connection.ps1
@@ -506,7 +448,9 @@ Majubom/
 │   ├── README.md
 │   ├── ROADMAP.md
 │   ├── Setup-NewLaptop.ps1
-│   └── Start-CameraGPU.ps1
+│   ├── Start-CameraGPU.ps1
+│   ├── Start-MacPi.command
+│   └── Start-PiUsb.ps1
 ├── deploy/
 │   ├── cloudflare/
 │   │   ├── code-guide-worker.js
@@ -538,6 +482,7 @@ Majubom/
 │   ├── related_work_gait_fall.md
 │   ├── research-results-2026-11-03.md
 │   ├── research-results-2026-11-04.md
+│   ├── research-results-2026-11-05.md
 │   ├── SENSOR_CHECK_2026-10-06.md
 │   ├── SENSOR_DIAGNOSTICS.md
 │   ├── SYSTEM_ARCHITECTURE.html

@@ -11,8 +11,8 @@ from .bed_posture_3d import LABELS, classify
 from .posture_decision import scores_valid
 from .separated_posture import bed_relation
 
-METHOD='camera-six-live-0.3'
-NAMES=dict(LABELS,side='옆으로 누움 · 좌우 확인 중',standing='서 있음',other='기타 자세')
+METHOD='camera-six-live-0.6'
+NAMES=dict(LABELS,seated_unknown='앉음 · 다리 위치 확인 중',side='옆으로 누움 · 좌우 확인 중',standing='서 있음',other='기타 자세')
 
 
 def geometry(pose,bed,relation):
@@ -48,6 +48,8 @@ def geometry(pose,bed,relation):
 def estimate_view(packet,region,bed):
     points=tuple(tuple(j[:2]) if j else None for j in packet['joints'])
     relation=bed_relation(points,region,FORCED_DEFAULTS,packet['width'],packet['height'])
+    from .bed_leg_geometry import inspect as inspect_legs
+    leg_geometry=inspect_legs(points,packet.get('world_joints'),region,packet['width'],packet['height'])
     geo,strict=geometry(packet.get('mono_preview'),bed,relation)
     visible=sum(j is not None for j in packet['joints'])
     if strict and visible<14:
@@ -70,9 +72,18 @@ def estimate_view(packet,region,bed):
                 strict='sitting';warnings.append('seated_support_from_projected_knees')
     if scores_valid(states,('lying','sitting','standing','other')):
         image.update(standing=states['standing'],other=states['other'])
-        edge=relation.get('relation')=='edge' or relation.get('edge_posture_evidence',{}).get('supported',False)
-        image['edge_sitting']=states['sitting']*(.94 if edge else .06)
-        image['sitting']=states['sitting']*(.06 if edge else .94)
+        edge=any(relation.get(key,{}).get('supported',False) for key in
+                 ('edge_posture_evidence','foot_edge_evidence','knee_edge_evidence'))
+        # Projected image membership alone cannot establish legs resting on the bed.
+        inside=False
+        if leg_geometry['status']=='observed':
+            edge=leg_geometry['supported']
+            inside=leg_geometry.get('on_bed_supported',inside)
+            warnings.append('uncalibrated_bed_leg_geometry')
+        seated_label='edge_sitting' if edge else 'sitting' if inside else 'seated_unknown'
+        for label in ('edge_sitting','sitting','seated_unknown'):
+            image[label]=states['sitting']*(.94 if label==seated_label else .03)
+        if seated_label=='seated_unknown':warnings.append('seated_leg_position_unconfirmed')
         if scores_valid(directions,('supine','side','prone')):
             image.update(supine=states['lying']*directions['supine'],prone=states['lying']*directions['prone'])
             side=states['lying']*directions['side']
@@ -107,7 +118,7 @@ def estimate_view(packet,region,bed):
                 source=source,quality_score=quality,joints=len(valid),relation=relation,
                 warnings=warnings,frame_id=packet['frame_id'],strict_geometry_label=strict,
                 torso_xy=torso_xy,received_ns=packet['time_ns'],track_id=packet.get('track_id'),
-                input_id=packet.get('input_id'))
+                input_id=packet.get('input_id'),leg_geometry=leg_geometry)
 
 
 class LivePostureEstimator:
@@ -122,6 +133,15 @@ class LivePostureEstimator:
                   eligible_for_recording=False,labels=deepcopy(NAMES),warnings=[],views=[],scores={},
                   accuracy_target=.95,accuracy_status='not_evaluated')
         fresh=[(i,p) for i,p in enumerate(packets) if p and 0<=now-p['time_ns']<=350e6]
+        base['observations']=[]
+        for i,p in fresh:
+            visible={j for j,v in enumerate(p['joints']) if v is not None}
+            base['observations'].append(dict(camera=p.get('source_camera','AB'[i]),
+                input_id=p.get('input_id'),people_count=p.get('people_count'),
+                head_joints=sum(j in visible for j in (0,1,2,3,4)),
+                torso_joints=sum(j in visible for j in (5,6,11,12)),
+                leg_joints=sum(j in visible for j in (13,14,15,16)),
+                head_required_for_leg_split=False,frame_id=p['frame_id']))
         base['observation_id']=str(tuple((p.get('input_id'),p['frame_id']) for _,p in fresh)) if fresh else None
         views=[]
         for i,p in fresh:
@@ -141,10 +161,21 @@ class LivePostureEstimator:
             elif fresh:base.update(status='observing',label_ko='관절 추적 중 · 자세 분석 중')
             return base
         # Prefer a visible bed target when another view contains a bystander.
-        in_bed=[v for v in views if v['relation'].get('relation') in ('inside','edge')]
+        in_bed=[v for v in views if v['relation'].get('relation') in ('inside','edge')
+                or v.get('leg_geometry',{}).get('supported')]
         selected=in_bed or views
+        # A view missing leg joints cannot negate observed hanging-leg geometry
+        # merely by contributing the generic CLIP 'sitting' class.
+        supported_legs=[v for v in selected if v.get('leg_geometry',{}).get('supported')
+                        and max(v['scores'],key=v['scores'].get)=='edge_sitting']
+        conflicting_legs=[v for v in selected if v.get('leg_geometry',{}).get('status')=='observed'
+                          and not v['leg_geometry']['supported']]
+        leg_view_selection=bool(supported_legs and not conflicting_legs)
+        if leg_view_selection:selected=supported_legs
+        for v in views:v['used_for_fusion']=any(v is chosen for chosen in selected)
         winners=[max(v['scores'],key=v['scores'].get) for v in selected]
         warnings=list(dict.fromkeys(w for v in selected for w in v['warnings']))
+        if leg_view_selection and len(selected)<len(views):warnings.append('partial_view_not_used_for_leg_split')
         if len(set(winners))>1:warnings.append('cross_view_disagreement')
         scores={}
         for v in selected:
