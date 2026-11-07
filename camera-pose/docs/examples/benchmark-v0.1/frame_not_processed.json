@@ -1,0 +1,36 @@
+{
+  "record_type": "frame_result",
+  "schema_version": "benchmark-0.1-draft",
+  "run_id": "example_run",
+  "video_id": "example_video",
+  "frame_id": 2,
+  "segment_id": 0,
+  "source_pts": "100",
+  "time_base_num": 1,
+  "time_base_den": 1000,
+  "source_duration_pts": null,
+  "timestamp_source": "pts",
+  "model_timestamp_ms": null,
+  "sdk_call_started": false,
+  "processing_status": "not_processed",
+  "failure_stage": "runner",
+  "failure_code": "ABORTED_AFTER_ERROR",
+  "error_message": null,
+  "candidate_count": null,
+  "target": {
+    "status": "not_configured",
+    "candidate_id": null,
+    "reason": null
+  },
+  "raw_ref": null,
+  "keypoints_ref": null,
+  "timing": {
+    "clock_id": "example_process_clock",
+    "decode_start_ns": null,
+    "decode_end_ns": null,
+    "adapter_start_ns": null,
+    "adapter_end_ns": null,
+    "mapping_start_ns": null,
+    "mapping_end_ns": null
+  }
+}

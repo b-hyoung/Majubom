@@ -1,0 +1,12 @@
+{
+  "accuracy_verified": false,
+  "pitch_degrees": [
+    37,
+    27
+  ],
+  "primary_camera": "A",
+  "roll_assumed_zero": true,
+  "source": "manual_camera_pitch",
+  "up_disagreement_degrees": 8.220181922171067,
+  "used_for_training": false
+}

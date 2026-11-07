@@ -1,0 +1,16 @@
+{
+  "record_type": "run_config",
+  "schema_version": "benchmark-0.1-draft",
+  "input_manifest_path": "data/example/input_manifest.json",
+  "input_manifest_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+  "output_root": "runs",
+  "adapter_id": "fake",
+  "execution_mode": "independent_frames",
+  "requested_device": "none",
+  "assets": [],
+  "adapter_options_path": null,
+  "adapter_options_sha256": null,
+  "warmup_frames": 0,
+  "target_policy": "none",
+  "error_policy": "abort"
+}

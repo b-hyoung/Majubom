@@ -1,0 +1,11 @@
+[Unit]
+Description=Bed pose Raspberry Pi camera stream
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/python3 -u %h/.local/share/bed-pose-camera/stream.py --token-file %h/.local/share/bed-pose-camera/token
+Restart=on-failure
+RestartSec=2
+
+[Install]
+WantedBy=default.target
