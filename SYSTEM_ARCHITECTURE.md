@@ -1,5 +1,14 @@
 # 마주봄 시스템 구성도
 
+## 독립 카메라 자세 시험 · 2026-11-07
+
+`Pi C920 → 토큰 보호 MJPEG → Windows/Mac 분석 프로그램 ← 로컬 USB2.0` 경로를
+`camera-pose/`에서 제공한다. 두 영상의 MediaPipe 관절·CLIP·실험적 자세 판정은
+분석 컴퓨터에서 실행한다. Pi의 ToF/mmWave 운영 서버와 DB 입력을 카메라 예측으로
+대체하지 않는다. [Windows 설치와 실행](camera-pose/docs/guides/PI_USB_WINDOWS.md).
+걸터앉음은 침대 면 방향/모델3D 다리 근거를 이용한 추정이며, 관절 가림은 미확인으로
+분리한다. 실제 높이·방 좌표 보정·자세 정확도·학습 정답 검증은 별도다.
+
 > **2026-10-31:** `main`의 `mmWave/`는 새 작업을 위해 비워졌습니다. 기존 수집기·설정·실험 데이터는 `backup/mmwave-before-reset` 브랜치에 보관되어 있으며, 아래 mmWave 실행 경로는 복원 전까지 사용할 수 없습니다. 서버의 mmWave 수신 코드는 남아 있지만 해당 수집기가 없어 독립적으로 실측을 수집하지 않습니다. 이후 Pi에서 실제로 돌리는 최신 mmWave 코드(천장 2.5m·하향 90° 설정, 노트북 스트림, 낙상 판정 `fall_detect.py`)는 `claude/sensor-remount-posture-v2` 브랜치에 있습니다(2026-10-31). main의 server/·tools/ 일부(예: `tools/set_bed_center.py`, `server/bed_position.py`가 읽는 `mmWave/bed_center.json`, 노트북 스트림 `/api/stream`)는 그 수집기와 함께 쓸 때 동작합니다.
 
 어르신의 움직임을 숫자로 살피고, 평소와 달라진 점을 찾아 간호사에게 보여주는 구조입니다.

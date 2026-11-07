@@ -1,0 +1,1182 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:bed-pose:benchmark:0.1:draft",
+  "title": "First benchmark draft exchange contracts",
+  "description": "Design-time schema; run configuration, frame result and metric record. Cross-record and arithmetic invariants require semantic validation.",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/RunConfig"
+    },
+    {
+      "$ref": "#/$defs/FrameResult"
+    },
+    {
+      "$ref": "#/$defs/MetricResult"
+    }
+  ],
+  "$defs": {
+    "RunConfig": {
+      "type": "object",
+      "properties": {
+        "record_type": {
+          "const": "run_config"
+        },
+        "schema_version": {
+          "const": "benchmark-0.1-draft"
+        },
+        "input_manifest_path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "input_manifest_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "output_root": {
+          "type": "string",
+          "minLength": 1
+        },
+        "adapter_id": {
+          "enum": [
+            "fake",
+            "mediapipe_pose",
+            "yolo_pose",
+            "rtmpose"
+          ]
+        },
+        "execution_mode": {
+          "enum": [
+            "independent_frames",
+            "ordered_sequence"
+          ]
+        },
+        "requested_device": {
+          "type": "string",
+          "minLength": 1
+        },
+        "assets": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "role": {
+                "type": "string",
+                "minLength": 1
+              },
+              "path": {
+                "type": "string",
+                "minLength": 1
+              },
+              "sha256": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              }
+            },
+            "required": [
+              "role",
+              "path",
+              "sha256"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "adapter_options_path": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "adapter_options_sha256": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "warmup_frames": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 0
+        },
+        "target_policy": {
+          "const": "none"
+        },
+        "error_policy": {
+          "const": "abort"
+        }
+      },
+      "required": [
+        "record_type",
+        "schema_version",
+        "input_manifest_path",
+        "input_manifest_sha256",
+        "output_root",
+        "adapter_id",
+        "execution_mode",
+        "requested_device",
+        "assets",
+        "adapter_options_path",
+        "adapter_options_sha256",
+        "warmup_frames",
+        "target_policy",
+        "error_policy"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "adapter_options_path": {
+                "type": "null"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "adapter_options_sha256": {
+                "type": "null"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "adapter_options_sha256": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "adapter_id": {
+                "const": "fake"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "requested_device": {
+                "const": "none"
+              },
+              "assets": {
+                "maxItems": 0
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "assets": {
+                "minItems": 1
+              },
+              "adapter_options_path": {
+                "type": "string",
+                "minLength": 1
+              },
+              "adapter_options_sha256": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "FrameResult": {
+      "type": "object",
+      "properties": {
+        "record_type": {
+          "const": "frame_result"
+        },
+        "schema_version": {
+          "const": "benchmark-0.1-draft"
+        },
+        "run_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "video_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "frame_id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "segment_id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "source_pts": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^-?(0|[1-9][0-9]*)$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "time_base_num": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "time_base_den": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "source_duration_pts": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^(0|[1-9][0-9]*)$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "timestamp_source": {
+          "enum": [
+            "pts",
+            "unavailable"
+          ]
+        },
+        "model_timestamp_ms": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^(0|[1-9][0-9]*)$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "sdk_call_started": {
+          "type": "boolean"
+        },
+        "processing_status": {
+          "enum": [
+            "ok",
+            "failed",
+            "not_processed"
+          ]
+        },
+        "failure_stage": {
+          "anyOf": [
+            {
+              "enum": [
+                "decode",
+                "inference",
+                "mapping",
+                "target",
+                "quality",
+                "recording",
+                "runner"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "failure_code": {
+          "anyOf": [
+            {
+              "enum": [
+                "DECODE_ERROR",
+                "INFERENCE_ERROR",
+                "MAPPING_ERROR",
+                "TARGET_ERROR",
+                "QUALITY_ERROR",
+                "ABORTED_AFTER_ERROR",
+                "USER_CANCELLED",
+                "RECORDING_ERROR",
+                "INTEGRITY_ERROR"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "error_message": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "candidate_count": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "target": {
+          "$ref": "#/$defs/TargetResolution"
+        },
+        "raw_ref": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RawReference"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "keypoints_ref": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/MappedReference"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "timing": {
+          "$ref": "#/$defs/FrameTiming"
+        }
+      },
+      "required": [
+        "record_type",
+        "schema_version",
+        "run_id",
+        "video_id",
+        "frame_id",
+        "segment_id",
+        "source_pts",
+        "time_base_num",
+        "time_base_den",
+        "source_duration_pts",
+        "timestamp_source",
+        "model_timestamp_ms",
+        "sdk_call_started",
+        "processing_status",
+        "failure_stage",
+        "failure_code",
+        "error_message",
+        "candidate_count",
+        "target",
+        "raw_ref",
+        "keypoints_ref",
+        "timing"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "timestamp_source": {
+                "const": "unavailable"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "source_pts": {
+                "type": "null"
+              },
+              "time_base_num": {
+                "type": "null"
+              },
+              "time_base_den": {
+                "type": "null"
+              },
+              "source_duration_pts": {
+                "type": "null"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "source_pts": {
+                "type": "string",
+                "pattern": "^-?(0|[1-9][0-9]*)$"
+              },
+              "time_base_num": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "time_base_den": {
+                "type": "integer",
+                "minimum": 1
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "processing_status": {
+                "const": "ok"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "failure_stage": {
+                "type": "null"
+              },
+              "failure_code": {
+                "type": "null"
+              },
+              "error_message": {
+                "type": "null"
+              },
+              "candidate_count": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "raw_ref": {
+                "$ref": "#/$defs/RawReference"
+              },
+              "keypoints_ref": {
+                "$ref": "#/$defs/MappedReference"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "failure_stage": {
+                "type": "string"
+              },
+              "failure_code": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "processing_status": {
+                "const": "not_processed"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "failure_stage": {
+                "const": "runner"
+              },
+              "failure_code": {
+                "enum": [
+                  "ABORTED_AFTER_ERROR",
+                  "USER_CANCELLED"
+                ]
+              },
+              "candidate_count": {
+                "type": "null"
+              },
+              "raw_ref": {
+                "type": "null"
+              },
+              "keypoints_ref": {
+                "type": "null"
+              },
+              "model_timestamp_ms": {
+                "type": "null"
+              },
+              "sdk_call_started": {
+                "const": false
+              },
+              "timing": {
+                "properties": {
+                  "decode_start_ns": {
+                    "type": "null"
+                  },
+                  "decode_end_ns": {
+                    "type": "null"
+                  },
+                  "adapter_start_ns": {
+                    "type": "null"
+                  },
+                  "adapter_end_ns": {
+                    "type": "null"
+                  },
+                  "mapping_start_ns": {
+                    "type": "null"
+                  },
+                  "mapping_end_ns": {
+                    "type": "null"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "processing_status": {
+                "const": "failed"
+              },
+              "failure_stage": {
+                "const": "decode"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "failure_code": {
+                "const": "DECODE_ERROR"
+              },
+              "candidate_count": {
+                "type": "null"
+              },
+              "raw_ref": {
+                "type": "null"
+              },
+              "keypoints_ref": {
+                "type": "null"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "processing_status": {
+                "const": "failed"
+              },
+              "failure_stage": {
+                "const": "inference"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "failure_code": {
+                "const": "INFERENCE_ERROR"
+              },
+              "candidate_count": {
+                "type": "null"
+              },
+              "raw_ref": {
+                "type": "null"
+              },
+              "keypoints_ref": {
+                "type": "null"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "processing_status": {
+                "const": "failed"
+              },
+              "failure_stage": {
+                "const": "mapping"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "failure_code": {
+                "const": "MAPPING_ERROR"
+              },
+              "candidate_count": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "raw_ref": {
+                "$ref": "#/$defs/RawReference"
+              },
+              "keypoints_ref": {
+                "type": "null"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "processing_status": {
+                "const": "failed"
+              },
+              "failure_stage": {
+                "const": "target"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "failure_code": {
+                "const": "TARGET_ERROR"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "processing_status": {
+                "const": "failed"
+              },
+              "failure_stage": {
+                "const": "quality"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "failure_code": {
+                "const": "QUALITY_ERROR"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "MetricResult": {
+      "type": "object",
+      "properties": {
+        "record_type": {
+          "const": "metric_result"
+        },
+        "schema_version": {
+          "const": "benchmark-0.1-draft"
+        },
+        "evaluation_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "run_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "metric_name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "status": {
+          "enum": [
+            "computed",
+            "unavailable",
+            "invalid"
+          ]
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "unit": {
+          "type": "string",
+          "minLength": 1
+        },
+        "scope": {
+          "enum": [
+            "full",
+            "diagnostic_partial"
+          ]
+        },
+        "numerator": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "denominator": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "n_samples": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "elapsed_seconds": {
+          "anyOf": [
+            {
+              "type": "number",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "excluded_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "enum": [
+                "NO_VERIFIED_GT",
+                "NO_TARGET_ASSOCIATION",
+                "NO_SCALE",
+                "NO_ALPHA",
+                "ZERO_DENOMINATOR",
+                "INCOMPLETE_RUN",
+                "CLOCK_INVALID",
+                "INPUT_INTEGRITY_ERROR",
+                "NOT_IMPLEMENTED",
+                "NO_TIME",
+                "INSUFFICIENT_SAMPLES",
+                "GT_INCOMPLETE"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "input_manifest_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "gt_sha256": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "policy_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      },
+      "required": [
+        "record_type",
+        "schema_version",
+        "evaluation_id",
+        "run_id",
+        "metric_name",
+        "status",
+        "value",
+        "unit",
+        "scope",
+        "numerator",
+        "denominator",
+        "n_samples",
+        "elapsed_seconds",
+        "excluded_count",
+        "reason",
+        "input_manifest_sha256",
+        "gt_sha256",
+        "policy_sha256"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "computed"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "type": "number"
+              },
+              "reason": {
+                "type": "null"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "value": {
+                "type": "null"
+              },
+              "reason": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "computed"
+              },
+              "unit": {
+                "const": "ratio"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "numerator": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "denominator": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "elapsed_seconds": {
+                "type": "null"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "computed"
+              },
+              "metric_name": {
+                "const": "successful_pipeline_fps"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "unit": {
+                "const": "frames_per_second"
+              },
+              "numerator": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "denominator": {
+                "type": "null"
+              },
+              "elapsed_seconds": {
+                "type": "number",
+                "exclusiveMinimum": 0
+              },
+              "scope": {
+                "const": "full"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "TargetResolution": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "enum": [
+            "not_configured",
+            "resolved",
+            "unresolved",
+            "ambiguous"
+          ]
+        },
+        "candidate_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "status",
+        "candidate_id",
+        "reason"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "resolved"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "candidate_id": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "candidate_id": {
+                "type": "null"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "RawReference": {
+      "type": "object",
+      "properties": {
+        "file": {
+          "const": "raw_results.jsonl"
+        },
+        "record_id": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "file",
+        "record_id"
+      ],
+      "additionalProperties": false
+    },
+    "MappedReference": {
+      "type": "object",
+      "properties": {
+        "file": {
+          "const": "keypoints.jsonl"
+        },
+        "record_id": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "file",
+        "record_id"
+      ],
+      "additionalProperties": false
+    },
+    "FrameTiming": {
+      "type": "object",
+      "properties": {
+        "clock_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "decode_start_ns": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^(0|[1-9][0-9]*)$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "decode_end_ns": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^(0|[1-9][0-9]*)$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "adapter_start_ns": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^(0|[1-9][0-9]*)$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "adapter_end_ns": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^(0|[1-9][0-9]*)$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "mapping_start_ns": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^(0|[1-9][0-9]*)$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "mapping_end_ns": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^(0|[1-9][0-9]*)$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "clock_id",
+        "decode_start_ns",
+        "decode_end_ns",
+        "adapter_start_ns",
+        "adapter_end_ns",
+        "mapping_start_ns",
+        "mapping_end_ns"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "decode_start_ns": {
+                "type": "null"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "decode_end_ns": {
+                "type": "null"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "decode_end_ns": {
+                "type": "string",
+                "pattern": "^(0|[1-9][0-9]*)$"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "adapter_start_ns": {
+                "type": "null"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "adapter_end_ns": {
+                "type": "null"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "adapter_end_ns": {
+                "type": "string",
+                "pattern": "^(0|[1-9][0-9]*)$"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "mapping_start_ns": {
+                "type": "null"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "mapping_end_ns": {
+                "type": "null"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "mapping_end_ns": {
+                "type": "string",
+                "pattern": "^(0|[1-9][0-9]*)$"
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

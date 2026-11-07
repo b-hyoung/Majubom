@@ -1,0 +1,36 @@
+{
+  "record_type": "frame_result",
+  "schema_version": "benchmark-0.1-draft",
+  "run_id": "example_sequence_run",
+  "video_id": "example_video",
+  "frame_id": 1,
+  "segment_id": 0,
+  "source_pts": "40",
+  "time_base_num": 1,
+  "time_base_den": 1000,
+  "source_duration_pts": null,
+  "timestamp_source": "pts",
+  "model_timestamp_ms": "40",
+  "sdk_call_started": true,
+  "processing_status": "failed",
+  "failure_stage": "inference",
+  "failure_code": "INFERENCE_ERROR",
+  "error_message": "Synthetic adapter failure example.",
+  "candidate_count": null,
+  "target": {
+    "status": "not_configured",
+    "candidate_id": null,
+    "reason": null
+  },
+  "raw_ref": null,
+  "keypoints_ref": null,
+  "timing": {
+    "clock_id": "example_process_clock",
+    "decode_start_ns": "5040000000",
+    "decode_end_ns": "5041000000",
+    "adapter_start_ns": "5041000000",
+    "adapter_end_ns": "5042000000",
+    "mapping_start_ns": null,
+    "mapping_end_ns": null
+  }
+}

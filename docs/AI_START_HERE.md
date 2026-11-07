@@ -1,5 +1,16 @@
 # AI 작업 시작 안내
 
+## 카메라 연구 프로그램 · 2026-11-07
+
+`camera-pose/`는 Pi C920의 MJPEG와 분석 컴퓨터의 로컬 USB2.0을 입력으로 받는 독립
+연구 프로그램이다. Windows는 `camera-pose/Start-PiUsb.ps1`, Mac은
+`camera-pose/Start-MacPi.command`를 사용한다. 수정 전 `camera-pose/AGENTS.md`와
+[현재 상태](../camera-pose/docs/PROJECT_STATUS.md), [Windows 사용 안내](../camera-pose/docs/guides/PI_USB_WINDOWS.md)를 읽는다.
+관절/CLIP/자세 분석은 분석 컴퓨터에서 실행하고 Pi는 카메라 영상을 제공한다.
+현재 높이와 침대 모서리는 참조/임시 입력이며 모델3D 다리 비율을 실제 관절 높이 실측이나
+정답·학습 승인으로 해석하지 않는다. 원본 영상·모델·카메라 URL/토큰·실측 데이터는
+별도 로컬 파일이다. `camera-pose` 추가는 Pi 운영 서버/펌웨어의 배포 변경이 아니다.
+
 > **2026-10-31:** `main`의 `mmWave/`는 새 작업을 위해 비워졌습니다. 기존 수집기·설정·실험 데이터는 `backup/mmwave-before-reset` 브랜치에 보관되어 있으며, 아래 mmWave 실행 경로는 복원 전까지 사용할 수 없습니다. 서버의 mmWave 수신 코드는 남아 있지만 해당 수집기가 없어 독립적으로 실측을 수집하지 않습니다. 이후 Pi에서 실제로 돌리는 최신 mmWave 코드(천장 2.5m·하향 90° 설정, 노트북 스트림, 낙상 판정 `fall_detect.py`)는 `claude/sensor-remount-posture-v2` 브랜치에 있습니다(2026-10-31). main의 server/·tools/ 일부(예: `tools/set_bed_center.py`, `server/bed_position.py`가 읽는 `mmWave/bed_center.json`, 노트북 스트림 `/api/stream`)는 그 수집기와 함께 쓸 때 동작합니다.
 
 이 문서는 루트 AGENTS.md에서 필독으로 지정한다. 먼저 이 문서, PROJECT_STRUCTURE.md,

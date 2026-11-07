@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>프레임 검토 · BedPose</title>
+<style>
+:root{color-scheme:light;--ink:#172538;--muted:#58677b;--line:#dce3ec;--blue:#245dd8;--green:#08745e;--amber:#865300;--red:#b3333b;--surface:#fff;--bg:#f3f6fa}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI","Malgun Gothic",sans-serif}button,input{font:inherit}button{cursor:pointer}button:disabled{cursor:default;opacity:.42}button:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid #2469e8;outline-offset:4px}button{touch-action:manipulation}svg{display:block}.wrap{max-width:1440px;margin:auto;padding:0 36px}.topbar{border-bottom:1px solid var(--line);background:white}.topbar .wrap{min-height:76px;display:flex;align-items:center;justify-content:space-between;gap:16px}.brand{display:flex;align-items:center;gap:12px;font-weight:750;font-size:19px;letter-spacing:-.5px}.brand-icon{display:grid;place-items:center;width:36px;height:36px;border-radius:11px;background:var(--ink);color:white}.brand small{font-weight:400;color:var(--muted);font-size:14px;margin-left:14px;letter-spacing:0}.badge{display:inline-flex;align-items:center;gap:7px;border:1px solid #ead39d;border-radius:30px;background:#fff5db;color:#704600;padding:7px 12px;font-size:13px;font-weight:650;white-space:nowrap}.badge .dot{width:6px;height:6px;border-radius:50%;background:currentColor}.heading{padding:30px 0 24px;display:flex;justify-content:space-between;align-items:end;gap:24px}h1{margin:0 0 6px;font-size:29px;line-height:1.3;letter-spacing:-1.1px}.subtitle{margin:0;color:var(--muted);font-size:15px}.run-overview{display:flex;gap:22px;align-items:center;font-size:14px;white-space:nowrap}.run-overview span{display:block;color:var(--muted);font-size:12px;margin-bottom:3px}.run-overview strong{font-size:15px;font-weight:650}.workspace{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:20px;align-items:start}.viewer-column{min-width:0}.card{border:1px solid var(--line);border-radius:15px;background:var(--surface);overflow:hidden;box-shadow:0 4px 16px #182b4405}.viewer-head{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:17px 20px;border-bottom:1px solid var(--line)}.viewer-title{font-size:15px;font-weight:650;display:flex;align-items:center;gap:9px}.small-square{width:8px;height:8px;background:var(--blue);border-radius:2px}.switch{display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;min-height:30px}.switch input{accent-color:var(--blue);width:18px;height:18px;margin:0}.stage{position:relative;display:grid;place-items:center;background:#0c1420;aspect-ratio:16/10;min-height:280px;max-height:570px;overflow:hidden}.frame-picture{width:100%;height:100%;position:absolute;inset:0;display:grid;place-items:center}.frame-picture>svg,.frame-picture>img{width:100%;height:100%;object-fit:contain}.stage-label{position:absolute;top:16px;left:16px;border-radius:7px;background:#111d2fe8;color:#f2f6fc;padding:6px 10px;font-size:12px;border:1px solid #ffffff23;pointer-events:none}.stage-status{position:absolute;right:16px;bottom:16px;background:#111d2fe8;border:1px solid #ffffff23;color:#eef5ff;border-radius:7px;padding:6px 10px;font-size:12px}.empty-state{position:absolute;inset:0;display:none;align-items:center;justify-content:center;flex-direction:column;background:#0c1420aa;color:#fff;text-align:center;padding:30px;pointer-events:none}.empty-state strong{font-size:21px;font-weight:600}.empty-state span{font-size:14px;color:#d0d9e5;margin-top:8px;max-width:380px}.viewer-caption{display:flex;justify-content:space-between;gap:12px;padding:14px 20px;font-size:13px;color:var(--muted)}.legend{display:flex;gap:14px;flex-wrap:wrap}.legend span{display:flex;align-items:center;gap:6px}.legend i{width:7px;height:7px;border-radius:50%}.info-head{padding:19px 20px;border-bottom:1px solid var(--line);font-size:15px;font-weight:650}.info-content{padding:20px}.label{font-size:13px;color:var(--muted);margin:0 0 8px}.status{display:inline-flex;align-items:center;gap:7px;border-radius:7px;padding:7px 10px;font-size:14px;font-weight:650;background:#e6f5ef;color:var(--green)}.status::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}.status[data-tone=empty]{background:#fff3d8;color:var(--amber)}.status[data-tone=error]{background:#fdecef;color:var(--red)}.status[data-tone=pending]{background:#edf0f5;color:#58677b}.stats{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:22px 0;border-bottom:1px solid var(--line)}.stat strong{font-size:29px;font-weight:650;letter-spacing:-1px;font-variant-numeric:tabular-nums}.stat .unit{font-size:13px;color:var(--muted);margin-left:4px}.stat small{display:block;color:var(--muted);font-size:11px;margin-top:4px;line-height:1.5}.time-block{padding:18px 0;border-bottom:1px solid var(--line)}.time-value{font-size:23px;font-variant-numeric:tabular-nums;letter-spacing:-.5px}.time-note{color:var(--muted);font-size:12px;margin-top:3px}.candidate-section{padding:18px 0}.candidates{display:flex;gap:7px;flex-wrap:wrap;min-height:28px}.candidate{font-size:13px;padding:4px 9px;border-radius:5px;border:1px solid var(--line);display:flex;align-items:center;gap:7px}.candidate i{width:7px;height:7px;border-radius:50%}.no-candidate{font-size:13px;color:var(--muted)}.info-note{font-size:12px;line-height:1.6;color:var(--muted);padding:12px;background:#f5f7fa;border-radius:8px;margin:0}.details{border-top:1px solid var(--line);padding:14px 20px;font-size:13px}.details summary{cursor:pointer;font-weight:550;min-height:28px;display:list-item}.details dl{display:grid;grid-template-columns:74px minmax(0,1fr);gap:9px 12px;line-height:1.6;margin:12px 0 4px}.details dt{color:var(--muted)}.details dd{margin:0;overflow-wrap:anywhere;font-size:12px;font-family:ui-monospace,monospace}.timeline{margin-top:20px;padding:20px}.timeline-head{display:flex;justify-content:space-between;align-items:center;gap:15px;margin-bottom:16px}.timeline-title{font-size:15px;font-weight:650}.navigation{display:flex;gap:7px;align-items:center}.nav-button{min-width:44px;height:44px;display:grid;place-items:center;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--ink)}.position{font-size:14px;min-width:88px;text-align:center;font-variant-numeric:tabular-nums}.range{display:block;width:100%;height:24px;margin:0;accent-color:var(--blue);cursor:pointer}.frame-strip{display:flex;gap:9px;overflow-x:auto;padding:10px 1px 8px;scroll-snap-type:x proximity}.frame-button{flex:0 0 90px;min-height:70px;padding:10px;text-align:left;border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:9px;scroll-snap-align:start}.frame-button[aria-current=true]{border:2px solid var(--blue);padding:9px;background:#eff4ff}.frame-number{font-size:16px;font-weight:650;font-variant-numeric:tabular-nums}.frame-state{display:flex;align-items:center;gap:5px;font-size:11px;margin-top:5px;color:var(--muted)}.frame-state i{width:5px;height:5px;border-radius:50%;background:var(--green)}.frame-state[data-tone=empty] i{background:#a36a09}.frame-state[data-tone=error] i{background:var(--red)}.frame-state[data-tone=pending] i{background:#718097}.timeline-foot{font-size:12px;color:var(--muted);display:flex;justify-content:space-between;gap:12px;margin-top:8px}.footer{padding:19px 0 28px;display:flex;justify-content:space-between;color:var(--muted);font-size:12px;gap:14px}.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}kbd{font:12px system-ui;border:1px solid var(--line);border-radius:3px;padding:0 4px;background:#fff}
+@media(min-width:1550px){.wrap{padding-left:48px;padding-right:48px}.heading{padding-top:38px}}
+@media(max-width:1050px){.wrap{padding:0 22px}.workspace{grid-template-columns:minmax(0,1fr) 270px;gap:15px}.run-overview{gap:14px}.viewer-caption{flex-direction:column;gap:7px}.stage{aspect-ratio:4/3}.stat strong{font-size:26px}}
+@media(max-width:760px){.wrap{padding:0 16px}.topbar .wrap{min-height:66px}.brand small{display:none}.brand{font-size:17px}.badge{font-size:11px;padding:6px 9px}.heading{padding:24px 0 20px;display:block}h1{font-size:25px}.subtitle{font-size:14px}.run-overview{margin-top:18px;gap:26px}.workspace{grid-template-columns:1fr}.stage{min-height:220px;aspect-ratio:4/3}.info-content{display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:18px}.status-block{grid-column:1/-1}.stats{padding:0 0 14px;grid-column:1/-1}.time-block{padding:0;border:0}.candidate-section{padding:0}.info-note{grid-column:1/-1}.timeline{padding:16px;margin-top:16px}.timeline-foot{flex-direction:column;gap:5px}.footer{flex-direction:column;gap:5px}.frame-button{flex-basis:82px}.viewer-head{padding:13px 16px}.viewer-caption{padding:12px 16px}.stage-label{top:12px;left:12px;font-size:11px}.empty-state strong{font-size:18px}.stage-status{bottom:12px;right:12px}}
+@media(prefers-reduced-motion:no-preference){button{transition:background .15s,border-color .15s}}
+.viewer-controls{display:flex;align-items:center;gap:16px;flex-wrap:wrap}.joint-inspector{grid-column:1/-1;border-bottom:1px solid var(--line);padding:16px 0}.joint-inspector h2{font-size:15px;margin:0 0 14px}.inspection-fields{display:grid;gap:12px}.inspection-fields label{font-size:13px;color:var(--muted);display:grid;gap:6px}.inspection-fields select{font:inherit;font-size:14px;min-height:40px;padding:7px 9px;border:1px solid var(--line);border-radius:7px;background:white;color:var(--ink);width:100%;min-width:0}.inspection-fields select:focus-visible{outline:3px solid var(--blue);outline-offset:2px}.joint-scores{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:16px 0 10px}.joint-scores dt{font-size:12px;color:var(--muted)}.joint-scores dd{margin:5px 0 0;font-size:22px;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}.inspection-note{font-size:12px;line-height:1.6;color:var(--muted);margin:10px 0 0}.joint-location{font-size:12px;line-height:1.7;color:var(--muted);overflow-wrap:anywhere}.joint-point,.joint-label{cursor:pointer}.joint-point.is-selected{stroke:#fff;stroke-width:3px;vector-effect:non-scaling-stroke}.joint-table{margin-top:20px;padding:18px 20px}.joint-table summary{font-size:15px;font-weight:650;cursor:pointer;min-height:28px}.joint-table-scroll{overflow-x:auto;margin-top:14px}.joint-table table{width:100%;min-width:570px;border-collapse:collapse;font-size:14px}.joint-table th{text-align:left;color:var(--muted);font-size:12px;font-weight:600}.joint-table th,.joint-table td{padding:10px 12px;border-bottom:1px solid var(--line)}.joint-table tr[aria-selected=true]{background:#eff4ff}.joint-table button{background:none;border:0;padding:5px 0;font:inherit;color:var(--blue);text-align:left;min-height:36px}.joint-table td{font-variant-numeric:tabular-nums}.joint-table caption{text-align:left;font-size:12px;color:var(--muted);padding:0 0 10px}.joint-table-note{margin-top:10px;color:var(--muted);font-size:12px}
+@media(max-width:760px){.viewer-head{align-items:start;flex-wrap:wrap}.viewer-controls{gap:12px}.joint-inspector{padding:16px 0}.inspection-fields{grid-template-columns:1fr 1fr}.joint-table{padding:16px}.joint-scores{max-width:300px}}
+</style>
+</head>
+<body>
+<header class="topbar"><div class="wrap"><div class="brand"><span class="brand-icon" aria-hidden="true"><svg width="21" height="21" viewBox="0 0 24 24" fill="none"><path d="M3 17V9m0 5h18v5m-18-2v2m0-9h5a3 3 0 0 1 3 3v1m0-6h7a3 3 0 0 1 3 3v3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg></span>BedPose <small>프레임 검토</small></div><span class="badge"><span class="dot"></span><span id="data-badge">__DATA_BADGE__</span></span></div></header>
+<main class="wrap">
+<section class="heading"><div><h1>관절 분석 결과</h1><p class="subtitle">영상과 관절 출력을 프레임별로 확인합니다.</p></div><div class="run-overview"><div><span>실행 상태</span><strong id="run-status">—</strong></div><div><span>표시 / 전체 프레임</span><strong id="frame-total">—</strong></div><div><span>원본 해상도</span><strong id="source-size">—</strong></div></div></section>
+<div class="workspace">
+<div class="viewer-column"><section class="card" aria-label="영상과 프레임 선택">
+<div class="viewer-head"><div class="viewer-title"><span class="small-square"></span>프레임 뷰어</div><div class="viewer-controls"><label class="switch"><input id="overlay-toggle" type="checkbox" checked>관절 표시</label><label class="switch"><input id="joint-label-toggle" type="checkbox">관절 이름</label></div></div>
+<div class="stage"><div class="frame-picture" id="frame-picture"><img alt="첫 번째 저장 프레임" src="data:image/svg+xml;base64,__FIRST_FRAME__"></div><span class="stage-status" id="stage-status">프레임 01</span><div class="empty-state" id="empty-state"><strong id="empty-title"></strong><span id="empty-description"></span></div></div>
+<div class="viewer-caption"><div class="legend" id="legend"></div><span>연결선은 관절 출력의 시각화입니다.</span></div>
+</section>
+<section class="timeline card" aria-label="프레임 탐색"><div class="timeline-head"><div class="timeline-title">프레임 목록</div><div class="navigation"><button class="nav-button" id="previous" aria-label="이전 프레임" disabled><svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m14 6-6 6 6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button><span class="position" id="position">— / —</span><button class="nav-button" id="next" aria-label="다음 프레임" disabled><svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m10 6 6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div></div><label class="sr-only" for="frame-range">표시할 프레임 선택</label><input class="range" id="frame-range" type="range" min="0" max="0" value="0" disabled><div class="frame-strip" id="frame-strip" aria-label="각 프레임의 처리 상태"></div><div class="timeline-foot"><span>프레임을 선택하거나 <kbd>←</kbd> <kbd>→</kbd> 키로 이동하세요.</span><span>수동 탐색 · 자동 재생하지 않음</span></div></section></div>
+<aside class="card" aria-label="현재 프레임 정보"><div class="info-head">프레임 정보</div><div class="info-content">
+<div class="status-block"><p class="label">처리 상태</p><span class="status" id="frame-status">—</span></div>
+<div class="stats"><div class="stat"><p class="label">출력 후보</p><strong id="candidate-count">—</strong><span class="unit" id="candidate-unit">개</span><small>측정 대상 연결 전</small></div><div class="stat"><p class="label">표시 가능 관절</p><strong id="joint-count">—</strong><small>화면 내 좌표 · 전체 후보 합계<br>후보당 공통 17점 기준</small></div></div>
+<section class="joint-inspector" aria-labelledby="joint-inspector-title"><h2 id="joint-inspector-title">관절 살펴보기</h2><div class="inspection-fields"><label for="inspection-candidate">이 프레임의 후보<select id="inspection-candidate" disabled></select></label><label for="inspection-joint">확인할 관절<select id="inspection-joint" disabled></select></label></div><p class="inspection-note" id="inspection-state">JavaScript를 켜면 관절 상세를 확인할 수 있습니다.</p><dl class="joint-scores"><div><dt>visibility · 가시성</dt><dd id="joint-visibility">—</dd></div><div><dt>presence · 장면 내 존재</dt><dd id="joint-presence">—</dd></div></dl><div class="joint-location" id="joint-location">좌표 정보 없음</div><p class="inspection-note">모델의 원본 가시성·존재 점수이며 정확도나 실제 가림 정답이 아닙니다. 합격 기준은 적용하지 않았습니다. 흰 테두리는 선택한 점입니다. 이름은 선택 후보에 표시하며, 좌우는 신체 기준입니다.</p></section>
+<div class="time-block"><p class="label">원본 영상 시각</p><div class="time-value" id="source-time">—</div><div class="time-note">소수 셋째 자리 반올림 · 정확한 PTS는 상세에 표시</div></div>
+<div class="candidate-section"><p class="label">이 프레임의 후보</p><div class="candidates" id="candidates"></div></div>
+<p class="info-note" id="context-note">__CONTEXT_NOTE__</p></div>
+
+<details class="details"><summary>기록 상세</summary><dl><dt>프레임 ID</dt><dd id="record-frame">—</dd><dt>원본 PTS</dt><dd id="record-pts">—</dd><dt>Time base</dt><dd id="record-timebase">—</dd><dt>실패 코드</dt><dd id="record-failure">—</dd><dt>실행 ID</dt><dd id="record-run">—</dd></dl></details></aside>
+</div>
+
+<details class="joint-table card"><summary>전체 관절의 원본 점수 보기</summary><div class="joint-table-scroll" tabindex="0" role="region" aria-label="관절별 점수 표"><table><caption id="joint-table-caption">선택한 후보의 공통 17점 · image 블록 점수</caption><thead><tr><th scope="col">관절</th><th scope="col">좌표 상태</th><th scope="col">visibility</th><th scope="col">presence</th><th scope="col">원본 인덱스</th></tr></thead><tbody id="joint-table-body"></tbody></table></div><p class="joint-table-note">점수는 소수 셋째 자리로 표시합니다. 값에 마우스를 올리면 원본 숫자를 확인할 수 있습니다. 미제공·0·비유한값을 구분하며, world 블록 점수와 섞지 않습니다.</p></details>
+<noscript><p>프레임·관절 선택을 사용하려면 JavaScript를 켜세요. 위에는 첫 번째 저장 프레임이 표시됩니다.</p></noscript>
+<footer class="footer"><span id="footer-note">저장 결과를 불러오는 중입니다.</span><span>BedPose · 결과 검토</span></footer><p id="announcement" class="sr-only" aria-live="polite"></p>
+</main>
+<script id="frame-data" type="application/json">__VIEWER_DATA__</script>
+<script>
+'use strict';
+(() => {
+const data = JSON.parse(document.getElementById('frame-data').textContent);
+const $ = id => document.getElementById(id);
+const frames = data.frames;
+const colors = ['#00ffb3','#ffbf00','#90b7ff','#ff81e3'];
+let selected = 0;
+let selectedCandidate = null;
+let selectedJoint = 13;
+const pad = value => String(value).padStart(2,'0');
+const synthetic = data.execution_kind === 'synthetic';
+function state(frame) {
+ if (frame.processing_status === 'not_processed') return {label:'미처리',tone:'pending',description:'실행이 중단되어 이 프레임은 처리하지 않았습니다.'};
+ if (frame.processing_status === 'failed') {
+  const labels = {INFERENCE_ERROR:'추론 실패',DECODE_ERROR:'입력 오류',MAPPING_ERROR:'좌표 변환 실패',USER_CANCELLED:'처리 중단'};
+  return {label:labels[frame.failure_code] || '처리 실패',tone:'error',description:'이 프레임의 분석 결과를 확인할 수 없습니다.'};
+ }
+ if (frame.candidate_count === 0) return {label:'후보 없음',tone:'empty',description:'출력된 후보가 없습니다. 원본 프레임은 그대로 표시합니다.'};
+ return {label:'처리 완료',tone:'ok',description:''};
+}
+function text(id, value) { $(id).textContent = value; }
+function sourceTime(frame) {
+ if (frame.source_pts === null) return '확인 불가';
+ // Display-only decimal approximation; original integer PTS/time base stay in the details.
+ const seconds = Number(frame.source_pts)*frame.time_base_num/frame.time_base_den;
+ return Number.isFinite(seconds) ? seconds.toFixed(3)+' 초' : '상세 기록 참고';
+}
+text('data-badge',synthetic?'합성 데이터 · 실제 인식 아님':'모델 출력 · 정답 미확인');
+text('run-status',({succeeded:'정상 종료',failed:'오류로 종료',cancelled:'사용자 중단'})[data.run_status] || data.run_status);
+text('frame-total',frames.length+' / '+data.total_source_frames+'개');
+text('source-size',data.width+' × '+data.height);
+text('context-note',synthetic?'생성 영상에 합성 관절을 표시한 예시입니다. 실제 사람의 자세 인식 결과가 아닙니다.':'관절 출력은 자세 판정이나 정확도 검증 결과가 아닙니다. 후보 ID는 프레임 안에서만 유효합니다.');
+text('footer-note',(frames.length<data.total_source_frames?'전체 '+data.total_source_frames+'개 중 처음 '+frames.length+'개를 표시합니다. ':'')+'자세 분류 · 침대 이탈/복귀 판정은 아직 제공하지 않습니다.');
+text('record-run',data.run_id);
+
+const buttons = frames.map((frame,index) => {
+ const button=document.createElement('button'); button.className='frame-button';
+ const status=state(frame); button.setAttribute('aria-label','프레임 '+(index+1)+', '+status.label);
+ const number=document.createElement('div');number.className='frame-number';number.textContent=pad(index+1);
+ const label=document.createElement('div');label.className='frame-state';label.dataset.tone=status.tone;
+ const dot=document.createElement('i');dot.setAttribute('aria-hidden','true');label.append(dot,document.createTextNode(status.label));
+ button.append(number,label); button.addEventListener('click',()=>show(index)); $('frame-strip').append(button); return button;
+});
+$('frame-range').max=frames.length-1;$('frame-range').disabled=frames.length===1;
+function setOverlay() {
+ const layer=$('frame-picture').querySelector('#pose-layer');
+ if (layer) layer.style.display=$('overlay-toggle').checked?'':'none';
+ $('frame-picture').querySelectorAll('.joint-label').forEach(label=>{
+  label.style.display=$('joint-label-toggle').checked && label.dataset.candidateId===selectedCandidate?'':'none';
+ });
+ $('frame-picture').querySelectorAll('.joint-point').forEach(point=>{
+  point.classList.toggle('is-selected',point.dataset.candidateId===selectedCandidate && Number(point.dataset.jointIndex)===selectedJoint);
+ });
+}
+function scoreText(score) {
+ if (score && score.status==='reported' && typeof score.value==='number') return score.value.toFixed(3);
+ return ({not_output:'미제공',non_finite:'비유한값',invalid:'형식 불일치',mapping_undefined:'매핑 없음'})[score && score.status] || '미제공';
+}
+function coordinateState(joint) {
+ if (!joint) return '관절 결과 없음';
+ if (joint.availability==='not_applicable') return '매핑 없음';
+ if (joint.availability!=='predicted') return '관절 좌표 누락';
+ return joint.flags.includes('outside_image')?'화면 밖 좌표':'좌표 출력 · 정확도 미확인';
+}
+function inspectionPerson() {
+ return (frames[selected].joint_inspection || []).find(person=>person.candidate_id===selectedCandidate);
+}
+function updateInspection() {
+ const person=inspectionPerson(), joints=person?person.joints:[];
+ const control=$('inspection-joint');control.replaceChildren();
+ joints.forEach(joint=>{const option=document.createElement('option');option.value=joint.joint_index;option.textContent=joint.label;control.append(option);});
+ control.disabled=!joints.length;
+ if (joints.length) control.value=selectedJoint;
+ const joint=joints.find(j=>j.joint_index===selectedJoint);
+ text('inspection-state',coordinateState(joint));
+ for (const name of ['visibility','presence']) {
+  const score=joint && joint[name];text('joint-'+name,scoreText(score));
+  $('joint-'+name).title=score && score.status==='reported'?'원본 값: '+String(score.value):scoreText(score);
+ }
+ text('joint-location',joint?'좌표(px·반올림): '+(joint.x_px===null?'없음':joint.x_px.toFixed(2)+', '+joint.y_px.toFixed(2))+' · 원본 인덱스: '+(joint.source_index===null?'없음':joint.source_index):'좌표 정보 없음');
+ text('joint-table-caption',person?'후보 '+person.candidate_id+' · 공통 17점 · '+person.score_source_block+' 블록 점수':'이 프레임에는 공통 관절 결과가 없습니다.');
+ const body=$('joint-table-body');body.replaceChildren();
+ joints.forEach(item=>{
+  const row=document.createElement('tr');row.setAttribute('aria-selected',String(item.joint_index===selectedJoint));
+  const nameCell=document.createElement('td'), button=document.createElement('button');button.textContent=item.label;
+  button.addEventListener('click',()=>{selectedJoint=item.joint_index;updateInspection();});nameCell.append(button);row.append(nameCell);
+  const stateCell=document.createElement('td');stateCell.textContent=coordinateState(item);row.append(stateCell);
+  for (const scoreName of ['visibility','presence']) {const cell=document.createElement('td');cell.textContent=scoreText(item[scoreName]);cell.title=item[scoreName].status==='reported'?'원본 값: '+String(item[scoreName].value):scoreText(item[scoreName]);row.append(cell);}
+  const sourceCell=document.createElement('td');sourceCell.textContent=item.source_index===null?'없음':item.source_index;row.append(sourceCell);body.append(row);
+ });
+ setOverlay();
+}
+function resetInspection() {
+ const people=frames[selected].joint_inspection || [];
+ selectedCandidate=people.length?people[0].candidate_id:null;
+ const control=$('inspection-candidate');control.replaceChildren();
+ people.forEach(person=>{const option=document.createElement('option');option.value=person.candidate_id;option.textContent=person.candidate_id;control.append(option);});
+ control.disabled=!people.length;
+ updateInspection();
+}
+function show(index) {
+ selected=Math.max(0,Math.min(frames.length-1,index));
+ const frame=frames[selected], status=state(frame);
+ const xml=new DOMParser().parseFromString(new TextDecoder().decode(Uint8Array.from(atob(frame.svg),c=>c.charCodeAt(0))),'image/svg+xml');
+ const svg=document.importNode(xml.documentElement,true);
+ svg.setAttribute('role','img');svg.setAttribute('aria-label','프레임 '+(selected+1)+'의 '+(synthetic?'합성 관절 표시':'관절 출력'));
+ $('frame-picture').replaceChildren(svg);setOverlay();
+ text('frame-status',status.label);$('frame-status').dataset.tone=status.tone;
+ text('candidate-count',frame.candidate_count===null?'—':frame.candidate_count);
+ text('candidate-unit',frame.candidate_count===null?'확인 불가':'개');
+ text('joint-count',frame.drawable_joint_count===null?'—':frame.drawable_joint_count);
+ text('source-time',sourceTime(frame));text('stage-status','프레임 '+pad(selected+1)+' / '+pad(frames.length));
+ text('position',pad(selected+1)+' / '+pad(frames.length));
+ $('previous').disabled=selected===0;$('next').disabled=selected===frames.length-1;
+ $('frame-range').value=selected;$('frame-range').setAttribute('aria-valuetext',(selected+1)+' / '+frames.length);
+ buttons.forEach((button,i)=>button.setAttribute('aria-current',String(i===selected)));
+ const strip=$('frame-strip'), active=buttons[selected];
+ const relativeLeft=active.getBoundingClientRect().left-strip.getBoundingClientRect().left+strip.scrollLeft;
+ if (relativeLeft < strip.scrollLeft || relativeLeft+active.offsetWidth > strip.scrollLeft+strip.clientWidth) {
+  strip.scrollLeft=Math.max(0,relativeLeft-(strip.clientWidth-active.offsetWidth)/2);
+ }
+ $('empty-state').style.display=status.tone==='ok'?'none':'flex';
+ text('empty-title',status.label==='후보 없음'?'출력된 후보가 없습니다':status.label==='미처리'?'처리하지 않은 프레임입니다':status.label);
+ text('empty-description',status.description);
+ text('record-frame',frame.frame_id);text('record-pts',frame.source_pts===null?'없음':frame.source_pts);
+ text('record-timebase',frame.time_base_num===null?'없음':frame.time_base_num+' / '+frame.time_base_den+' 초');
+ text('record-failure',frame.failure_code || '없음');
+ $('candidates').replaceChildren();$('legend').replaceChildren();
+ (frame.candidate_ids || []).forEach((id,i)=>{
+  const color=colors[i%colors.length];
+  const chip=document.createElement('span');chip.className='candidate';
+  const dot=document.createElement('i');dot.style.background=color;chip.append(dot,document.createTextNode(id));$('candidates').append(chip);
+  const label=document.createElement('span');const marker=document.createElement('i');marker.style.background=color;label.append(marker,document.createTextNode(id));$('legend').append(label);
+ });
+ if (!frame.candidate_ids || !frame.candidate_ids.length) {
+  const span=document.createElement('span');span.className='no-candidate';span.textContent=frame.candidate_count===0?'출력 후보 없음':'확인 가능한 출력 없음';$('candidates').append(span);
+ }
+ const note=document.createElement('span');note.textContent='후보 색상 · 동일 인물 추적 아님';$('legend').append(note);
+ resetInspection();
+ text('announcement','프레임 '+(selected+1)+', '+status.label);
+}
+$('previous').addEventListener('click',()=>show(selected-1));
+$('next').addEventListener('click',()=>show(selected+1));
+$('frame-range').addEventListener('input',event=>show(Number(event.target.value)));
+$('overlay-toggle').addEventListener('change',setOverlay);
+$('joint-label-toggle').addEventListener('change',setOverlay);
+$('inspection-candidate').addEventListener('change',event=>{selectedCandidate=event.target.value;updateInspection();});
+$('inspection-joint').addEventListener('change',event=>{selectedJoint=Number(event.target.value);updateInspection();});
+$('frame-picture').addEventListener('click',event=>{
+ const target=event.target.closest('[data-joint-index]');
+ if (!target) return;
+ selectedCandidate=target.dataset.candidateId;selectedJoint=Number(target.dataset.jointIndex);
+ $('inspection-candidate').value=selectedCandidate;updateInspection();
+});
+document.addEventListener('keydown',event=>{
+ if (event.altKey || event.ctrlKey || event.metaKey || event.isComposing || ['INPUT','TEXTAREA','SELECT','SUMMARY'].includes(event.target.tagName)) return;
+ if (event.key==='ArrowLeft' || event.key==='ArrowRight') {event.preventDefault();show(selected+(event.key==='ArrowLeft'?-1:1));}
+});
+show(0);
+})();
+</script>
+</body></html>

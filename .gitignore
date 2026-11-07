@@ -76,6 +76,11 @@ assets/*
 !docs/captures/
 !docs/CODE_GUIDE_LIVE.html
 .venv/
+.venv-training/
+.venv-pose/
+!camera-pose/training/requirements.txt
+!camera-pose/training/requirements.lock.txt
+!camera-pose/training/requirements-pose.txt
 
 TOF/src/secrets.h
 !docs/SENSOR_DIAGNOSTICS.md

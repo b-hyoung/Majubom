@@ -1,0 +1,20 @@
+{
+  "record_type": "metric_result",
+  "schema_version": "benchmark-0.1-draft",
+  "evaluation_id": "example_evaluation",
+  "run_id": "example_run",
+  "metric_name": "pck_end_to_end",
+  "status": "unavailable",
+  "value": null,
+  "unit": "ratio",
+  "scope": "full",
+  "numerator": null,
+  "denominator": null,
+  "n_samples": 0,
+  "elapsed_seconds": null,
+  "excluded_count": 0,
+  "reason": "NO_VERIFIED_GT",
+  "input_manifest_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+  "gt_sha256": null,
+  "policy_sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+}
