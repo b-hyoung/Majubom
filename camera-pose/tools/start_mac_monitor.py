@@ -130,7 +130,8 @@ def main():
         connection = output/'mac-pi-connection.json'
         workspace_url = server.origin+'/?view=multi'+('&leg_test=1' if profile else '')+'#'+server.token
         fd = os.open(connection, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
-        os.fchmod(fd, 0o600)
+        if hasattr(os, 'fchmod'):   # Windows Python 3.12 has no os.fchmod (added in 3.13)
+            os.fchmod(fd, 0o600)
         with os.fdopen(fd, 'w') as stream:
             json.dump(dict(origin=server.origin, token=server.token,
                            url=workspace_url, monitor_url=server.origin+'/monitor#'+server.token,
