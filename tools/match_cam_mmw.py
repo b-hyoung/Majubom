@@ -17,6 +17,8 @@ perf->UTC offset from control_events.jsonl (same as tools/cam_mmw_join.py).
 mmWave frames.jsonl already has PC epoch seconds in "t".
 Truth comes from the spoken-cue times in marks.json; the first 3 s after each cue
 are marked transition=1 so they can be excluded.
+A cued segment the person did not actually hold can be listed in marks.json as
+"exclude": ["<cue label>", ...]; its rows get truth=제외 and stay out of the summary.
 """
 import argparse
 import bisect
@@ -35,12 +37,17 @@ JOINTS = ["nose", "left_eye_inner", "left_eye", "left_eye_outer", "right_eye_inn
           "left_foot_index", "right_foot_index"]
 TRANSITION_S = 3.0
 MAX_GAP_S = 0.15
+EXCLUDED = "제외"
 
 
 def load_marks(path, day):
     data = json.loads(Path(path).read_text(encoding="utf-8-sig"))
     marks = [(k, datetime.strptime(f"{day} {v}", "%Y-%m-%d %H:%M:%S.%f").timestamp()) for k, v in data["marks"].items()]
-    return sorted(marks, key=lambda m: m[1])
+    excluded = set(data.get("exclude") or [])
+    unknown = excluded - set(data["marks"])
+    if unknown:
+        raise SystemExit(f"exclude has labels not in marks: {sorted(unknown)}")
+    return sorted(marks, key=lambda m: m[1]), excluded
 
 
 def truth_at(marks, t):
@@ -142,7 +149,7 @@ def main():
     mm = load_mmwave(args.mmwave)
     mm_t = [f["t"] for f in mm]
     day = datetime.fromtimestamp(mm_t[0]).strftime("%Y-%m-%d")
-    marks = load_marks(args.marks, day)
+    marks, excluded = load_marks(args.marks, day)
 
     header = ["camera", "time", "truth", "transition", "cam_stable", "cam_instant", "cam_people",
               "mmw_dt_ms", "mmw_frame", "mmw_presence", "mmw_tracks", "mmw_tid", "mmw_bed_dist", "mmw_x", "mmw_y", "mmw_z",
@@ -163,6 +170,8 @@ def main():
                 f = mm[j]
                 tr = main_track(f.get("tracks"), bed)
                 truth, transition = truth_at(marks, c["t"])
+                if truth in excluded:
+                    truth = EXCLUDED
                 wx, wy, wz = tr["world"] if tr else (None, None, None)
                 row = [name, datetime.fromtimestamp(c["t"]).strftime("%H:%M:%S.%f")[:-3], truth, transition,
                        c["stable"], c["instant"], c["people"], round(dt * 1000, 1), f.get("frame"),
@@ -173,7 +182,7 @@ def main():
                 for n in JOINTS:
                     row += list(c["joints"].get(n, (None, None)))
                 w.writerow(row)
-                if truth and not transition:
+                if truth and truth != EXCLUDED and not transition:
                     s = summary[(name, truth)]
                     s["n"].append(1)
                     s["mmw_z"].append(wz)
