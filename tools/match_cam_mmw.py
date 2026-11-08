@@ -9,8 +9,12 @@ Usage:
          --bed <mmw_viewer>/bed_corners.json [--out matched.csv]
   marks.json is written by tools/Record-CamMmw.ps1 into the mmWave session folder.
 
-The person track is the one closest to the bed polygon. Picking the track with the most points
-chose a static reflection near the door on 2026-11-08 (tid 10, same place for the whole session).
+Person track, per posture segment: among tracks within 1 m of the bed, the one that moved (or
+appeared) when the posture changed; if none moved >= 0.3 m, the previous segment's track is kept.
+Frames where that track is missing fall back to the track closest to the bed (mmw_pick=fallback).
+Why: when the person gets up, the radar often keeps the old track at the spot they left, still with
+points, so "closest to the bed" picked a leftover track (2026-11-08 TEST_20261108_162145, 섬: z 0.80 m
+instead of 1.56 m). Picking by point count chose a static reflection near the door (tid 10).
 
 Times: camera received_ns (perf_counter) is turned into PC epoch seconds with the
 perf->UTC offset from control_events.jsonl (same as tools/cam_mmw_join.py).
@@ -94,6 +98,58 @@ def main_track(tracks, bed):
     return min(tracks, key=lambda t: (round(bed_distance(bed, t["world"][0], t["world"][1]), 2), -(t.get("npts") or 0)))
 
 
+NEAR_BED_M = 1.0
+MOVED_M = 0.3
+
+
+def segment_tracks(frames, a, b):
+    """Median position of each track seen in at least half the frames of [a, b)."""
+    per, n = defaultdict(list), 0
+    for f in frames:
+        if a <= f["t"] < b:
+            n += 1
+            for t in f.get("tracks") or []:
+                if t.get("world"):
+                    per[t["tid"]].append(t["world"])
+    return {tid: [statistics.median(p[i] for p in ws) for i in range(3)]
+            for tid, ws in per.items() if len(ws) >= 0.5 * max(n, 1)}
+
+
+def segment_person_tids(frames, marks, bed):
+    """[(start, end, tid or None, reason)] for each posture segment (see module docstring)."""
+    out, person = [], None
+    prev = segment_tracks(frames, marks[0][1] - 8, marks[0][1])
+    for (_, a), (_, b) in zip(marks, marks[1:]):
+        cur = segment_tracks(frames, a + TRANSITION_S, b)
+        best = None
+        for tid, (x, y, z) in cur.items():
+            if bed_distance(bed, x, y) > NEAR_BED_M:
+                continue
+            p = prev.get(tid)
+            moved = float("inf") if p is None else ((x - p[0]) ** 2 + (y - p[1]) ** 2) ** 0.5 + abs(z - p[2])
+            if best is None or moved > best[0]:
+                best = (moved, tid)
+        if best and best[0] >= MOVED_M:
+            person = best[1]
+            out.append((a, b, person, "new" if best[0] == float("inf") else "moved"))
+        elif person in cur:
+            out.append((a, b, person, "kept"))
+        else:
+            out.append((a, b, None, "none"))
+        prev = cur
+    return out
+
+
+def pick_track(tracks, bed, segments, t):
+    for a, b, tid, _ in segments:
+        if a <= t < b and tid is not None:
+            for tr in tracks or []:
+                if tr.get("tid") == tid and tr.get("world"):
+                    return tr, "segment"
+            return main_track(tracks, bed), "fallback"
+    return main_track(tracks, bed), "nearest"
+
+
 def people_list(value):
     if value is None:
         return []
@@ -150,9 +206,12 @@ def main():
     mm_t = [f["t"] for f in mm]
     day = datetime.fromtimestamp(mm_t[0]).strftime("%Y-%m-%d")
     marks, excluded = load_marks(args.marks, day)
+    segments = segment_person_tids(mm, marks, bed)
+    for (name, _), (a, b, tid, why) in zip(marks, segments):
+        print(f"person track {name}: tid {tid} ({why})")
 
     header = ["camera", "time", "truth", "transition", "cam_stable", "cam_instant", "cam_people",
-              "mmw_dt_ms", "mmw_frame", "mmw_presence", "mmw_tracks", "mmw_tid", "mmw_bed_dist", "mmw_x", "mmw_y", "mmw_z",
+              "mmw_dt_ms", "mmw_frame", "mmw_presence", "mmw_tracks", "mmw_tid", "mmw_pick", "mmw_bed_dist", "mmw_x", "mmw_y", "mmw_z",
               "mmw_head_z", "mmw_speed", "mmw_vz", "mmw_npts"]
     header += [f"{n}_{a}" for n in JOINTS for a in ("x", "y")]
     summary = defaultdict(lambda: defaultdict(list))
@@ -168,14 +227,14 @@ def main():
                 if abs(dt) > MAX_GAP_S:
                     continue
                 f = mm[j]
-                tr = main_track(f.get("tracks"), bed)
+                tr, pick = pick_track(f.get("tracks"), bed, segments, c["t"])
                 truth, transition = truth_at(marks, c["t"])
                 if truth in excluded:
                     truth = EXCLUDED
                 wx, wy, wz = tr["world"] if tr else (None, None, None)
                 row = [name, datetime.fromtimestamp(c["t"]).strftime("%H:%M:%S.%f")[:-3], truth, transition,
                        c["stable"], c["instant"], c["people"], round(dt * 1000, 1), f.get("frame"),
-                       f.get("presence"), len(f.get("tracks") or []), tr.get("tid") if tr else None,
+                       f.get("presence"), len(f.get("tracks") or []), tr.get("tid") if tr else None, pick,
                        round(bed_distance(bed, wx, wy), 3) if tr else None, wx, wy, wz,
                        tr.get("head_z") if tr else None, tr.get("speed") if tr else None,
                        tr.get("vz") if tr else None, tr.get("npts") if tr else None]
@@ -191,6 +250,7 @@ def main():
                     s["mmw_npts"].append(tr.get("npts") if tr else None)
                     s["has_track"].append(1 if tr else 0)
                     s["tid"].append(tr.get("tid") if tr else None)
+                    s["segment_pick"].append(1 if pick == "segment" else 0)
                     s["has_pose"].append(1 if c["joints"] else 0)
                     hips = [c["joints"][k][1] for k in ("left_hip", "right_hip") if k in c["joints"]]
                     sh = [c["joints"][k][1] for k in ("left_shoulder", "right_shoulder") if k in c["joints"]]
@@ -211,7 +271,7 @@ def main():
         for tid in s["tid"]:
             tids[tid] += 1
         top_tid = max(tids, key=tids.get)
-        top += f" | mmw tid {top_tid} {100 * tids[top_tid] // n}%"
+        top += f" | mmw tid {top_tid} {100 * tids[top_tid] // n}%, segment track {100 * sum(s['segment_pick']) // n}%"
         print(f"[{name}] {truth}: frames {n}, pose {100*sum(s['has_pose'])//n}%, mmw track {100*sum(s['has_track'])//n}% | "
               f"mmw z {med(s['mmw_z'])} head_z {med(s['mmw_head_z'])} speed {med(s['mmw_speed'])} npts {med(s['mmw_npts'])} | "
               f"MP hip_y {med(s['hip_y'])} shoulder_y {med(s['shoulder_y'])} | cam {top}")
