@@ -1,0 +1,42 @@
+{
+  "record_type": "frame_result",
+  "schema_version": "benchmark-0.1-draft",
+  "run_id": "example_run",
+  "video_id": "example_video",
+  "frame_id": 0,
+  "segment_id": 0,
+  "source_pts": "0",
+  "time_base_num": 1,
+  "time_base_den": 1000,
+  "source_duration_pts": null,
+  "timestamp_source": "pts",
+  "model_timestamp_ms": null,
+  "sdk_call_started": false,
+  "processing_status": "ok",
+  "failure_stage": null,
+  "failure_code": null,
+  "error_message": null,
+  "candidate_count": 0,
+  "target": {
+    "status": "not_configured",
+    "candidate_id": null,
+    "reason": null
+  },
+  "raw_ref": {
+    "file": "raw_results.jsonl",
+    "record_id": "frame:0"
+  },
+  "keypoints_ref": {
+    "file": "keypoints.jsonl",
+    "record_id": "frame:0"
+  },
+  "timing": {
+    "clock_id": "example_process_clock",
+    "decode_start_ns": "5000000000",
+    "decode_end_ns": "5001000000",
+    "adapter_start_ns": "5001000000",
+    "adapter_end_ns": "5003000000",
+    "mapping_start_ns": "5003000000",
+    "mapping_end_ns": "5003100000"
+  }
+}

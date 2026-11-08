@@ -1,0 +1,20 @@
+{
+  "record_type": "metric_result",
+  "schema_version": "benchmark-0.1-draft",
+  "evaluation_id": "example_evaluation",
+  "run_id": "example_run",
+  "metric_name": "successful_pipeline_fps",
+  "status": "computed",
+  "value": 1.5,
+  "unit": "frames_per_second",
+  "scope": "full",
+  "numerator": 3,
+  "denominator": null,
+  "n_samples": 3,
+  "elapsed_seconds": 2.0,
+  "excluded_count": 0,
+  "reason": null,
+  "input_manifest_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+  "gt_sha256": null,
+  "policy_sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+}

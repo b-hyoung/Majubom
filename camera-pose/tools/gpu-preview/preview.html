@@ -1,0 +1,10 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MediaPipe GPU 카메라 검증</title>
+<style>body{font-family:system-ui,sans-serif;background:#121820;color:#ecf2f7;margin:2rem}main{max-width:950px;margin:auto}button,select{font:inherit;padding:.5rem;margin:.4rem .4rem .4rem 0}canvas{max-width:100%;background:#000}#status{white-space:pre-wrap;line-height:1.5}video{display:none}</style></head>
+<body><main><h1>MediaPipe GPU 카메라 검증</h1>
+<p>카메라 영상을 이 컴퓨터에서 처리합니다. 이 화면은 GPU 검증용이며 기존 측정·기록 작업실과 연결되지 않습니다.</p>
+<label for="camera">카메라</label> <select id="camera"></select>
+<button id="start">카메라 시작</button><button id="stop" disabled>중지</button>
+<p id="status">시작을 누르면 카메라 접근 권한을 요청합니다.</p><video id="video" autoplay playsinline muted></video><canvas id="view"></canvas>
+</main><script type="module" src="./preview.js"></script></body></html>

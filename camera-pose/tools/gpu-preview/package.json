@@ -1,0 +1,13 @@
+{
+  "name": "bed-pose-gpu-preview",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Experimental local MediaPipe GPU camera preview",
+  "scripts": {
+    "start": "node server.cjs"
+  },
+  "dependencies": {
+    "@mediapipe/tasks-vision": "0.10.35",
+    "playwright-core": "1.56.1"
+  }
+}

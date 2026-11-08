@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="ko"><meta charset="utf-8"><title>카메라 보정판 · 내부 코너 9×6 · 칸 25mm</title>
+<style>
+@page {size:A4 landscape;margin:10mm}
+*{box-sizing:border-box}body{margin:0;font-family:"Malgun Gothic",sans-serif;color:#000;background:#fff}
+.board{width:250mm;height:175mm;display:grid;grid-template-columns:repeat(10,25mm);grid-template-rows:repeat(7,25mm);border:0}
+.cell{width:25mm;height:25mm;print-color-adjust:exact;-webkit-print-color-adjust:exact}
+.black{background:#000}.white{background:#fff}
+.notes{font-size:10pt;margin-bottom:3mm}.screen{font-size:14px;max-width:950px;padding:16px;background:#eef3fa;margin-bottom:15px}
+button{padding:8px 20px}h1{font-size:18px}.ruler{margin-top:3mm;width:100mm;border-bottom:1px solid #000;display:flex;justify-content:space-between;font-size:8pt}
+@media print{.screen{display:none}.notes{margin-top:0}}
+</style>
+<section class="screen"><h1>두 카메라 보정용 체커보드</h1><p>A4 가로 · 배율 <b>100% / 실제 크기</b>로 출력하세요. ‘페이지에 맞춤’은 끄세요. 출력한 뒤 자로 한 칸과 아래 100mm 선을 재서 실제 크기를 확인해야 합니다.</p><p>검출할 <b>내부 코너는 가로 9 × 세로 6</b>, 사각형은 가로 10 × 세로 7입니다. 한 칸의 설계 크기는 25mm이며 실제 출력값을 사용해야 합니다. 평평한 단단한 판에 붙이고, 두 카메라에 같은 면이 보이게 두세요.</p><p>서로 다른 기울기·거리로 10쌍 이상, 그리고 바닥에 놓은 기준 쌍이 필요합니다. 보드 첫 내부 코너 위치와 행/열 방향도 확인하세요.</p><button onclick="window.print()">보정판 인쇄</button></section>
+<p class="notes">CAMERA CALIBRATION · 내부 코너 9 × 6 · 설계 칸 25mm · 인쇄 후 실측 필수 · A4 가로 / 100%</p>
+<div class="board" id="board"></div><div class="ruler"><span>0</span><span>100 mm 확인선</span></div>
+<script>for(let y=0;y<7;y++)for(let x=0;x<10;x++){const el=document.createElement('div');el.className='cell '+((x+y)%2?'white':'black');document.getElementById('board').append(el)}</script>
+</html>
