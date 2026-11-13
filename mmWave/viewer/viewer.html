@@ -1,0 +1,673 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>mmWave 테스트 뷰어</title>
+<style>
+  :root {
+    --bg: #f5f6f8; --panel: #ffffff; --text: #1c2430; --muted: #667085; --line: #d9dee6; --grid: #e7eaf0;
+    --person: #1f6feb; --still: #7a5af8; --floor: #d97706; --above: #d92d20; --point: #a0a8b5; --ref: #12805c;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #12161c; --panel: #1b212a; --text: #e6e9ee; --muted: #98a2b3; --line: #313a46; --grid: #252c36;
+      --person: #58a6ff; --still: #a48afb; --floor: #f5a524; --above: #f97066; --point: #5d6776; --ref: #3ccf9b;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 16px; background: var(--bg); color: var(--text);
+         font: 14px/1.5 "Malgun Gothic", "Apple SD Gothic Neo", system-ui, sans-serif; }
+  h1 { font-size: 18px; margin: 0 0 8px; }
+  h2 { font-size: 14px; margin: 0 0 8px; }
+  .status { display: flex; flex-wrap: wrap; gap: 8px 18px; margin-bottom: 12px; color: var(--muted); }
+  .status b { color: var(--text); font-variant-numeric: tabular-nums; }
+  .error { color: var(--above); font-weight: 700; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 12px; margin-bottom: 12px; }
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 12px; min-width: 0; }
+  canvas { width: 100%; display: block; }
+  #top { touch-action: none; }
+  .scroll { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  th, td { padding: 5px 8px; border-bottom: 1px solid var(--line); text-align: right; }
+  th:last-child, td:last-child, th:first-child, td:first-child { text-align: left; }
+  th { color: var(--muted); font-weight: 600; }
+  .dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 6px; }
+  .legend { display: flex; flex-wrap: wrap; gap: 4px 14px; color: var(--muted); font-size: 12px; margin-top: 8px; }
+  .note { color: var(--muted); font-size: 12px; margin: 8px 0 0; }
+  .bar { display: grid; grid-template-columns: 90px 1fr 56px; gap: 8px; align-items: center; font-size: 12px; font-variant-numeric: tabular-nums; }
+  .bar i { display: block; height: 9px; background: var(--point); border-radius: 2px; }
+  .bar.zero i { background: var(--ref); }
+  .rec { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: end; }
+  .rec label { display: grid; gap: 2px; color: var(--muted); font-size: 12px; }
+  .rec select, .rec input { font: inherit; color: var(--text); background: var(--bg); border: 1px solid var(--line);
+                            border-radius: 6px; padding: 5px 8px; min-width: 110px; max-width: 100%; }
+  button { font: inherit; color: var(--text); background: var(--bg); border: 1px solid var(--line);
+           border-radius: 6px; padding: 4px 10px; cursor: pointer; }
+  button:hover { border-color: var(--muted); }
+  button.start { background: var(--person); border-color: var(--person); color: #fff; font-weight: 700; padding: 6px 16px; }
+  button.stop { background: var(--above); border-color: var(--above); color: #fff; font-weight: 700; padding: 6px 16px; }
+  button.on-person { background: var(--person); border-color: var(--person); color: #fff; }
+  button.on-object { background: var(--floor); border-color: var(--floor); color: #fff; }
+  button.on-unknown { background: var(--muted); border-color: var(--muted); color: #fff; }
+  button:disabled { opacity: .45; cursor: default; }
+  tr.selected td { background: var(--grid); }
+  .events { display: grid; gap: 2px; font-size: 13px; max-height: 150px; overflow-y: auto; font-variant-numeric: tabular-nums; }
+  .event { display: grid; grid-template-columns: 74px 1fr; gap: 8px; padding: 2px 6px; border-radius: 4px; color: var(--muted); }
+  .event.check { color: var(--text); font-weight: 700; border-left: 4px solid var(--above); background: var(--grid); }
+  .tag-new { display: inline-block; margin-left: 6px; padding: 0 5px; border-radius: 4px; background: var(--floor); color: #fff; font-size: 11px; font-weight: 700; }
+  .corners { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 6px; font-variant-numeric: tabular-nums; }
+  .corners button { text-align: left; }
+  #viewTabs button { padding: 8px 22px; font-weight: 700; }
+  #viewTabs button.active { background: var(--person); border-color: var(--person); color: #fff; }
+  #shapeTabs button.active { background: var(--person); border-color: var(--person); color: #fff; font-weight: 700; }
+  .corners button.active { border-color: var(--person); border-width: 2px; font-weight: 700; }
+  #recStatus { font-variant-numeric: tabular-nums; }
+  #recStatus .live { color: var(--above); font-weight: 700; }
+</style>
+</head>
+<body>
+<h1>mmWave 테스트 뷰어</h1>
+<div class="status" id="status">연결 중입니다.</div>
+
+<div class="panel" style="margin-bottom:12px">
+  <h2>세션 녹화</h2>
+  <div class="rec">
+    <label>세션<select id="recSession"></select></label>
+    <label>참가자<select id="recParticipant">
+      <option value="">없음</option><option>P1</option><option>P2</option><option>P3</option><option>P4</option><option>여러 명</option>
+    </select></label>
+    <label>동작<input id="recActivity" maxlength="80" placeholder="예: 앉기"></label>
+    <label>메모<input id="recNote" maxlength="200" placeholder="예: 의자 위치 변경"></label>
+    <button class="start" id="recButton">녹화 시작</button>
+    <span id="recStatus">녹화 중이 아닙니다.</span>
+  </div>
+  <p class="note" id="recHelp">녹화 중에 아래 표의 버튼을 누르면 해당 추적에 정답을 표시합니다. 화면의 점을 클릭한 뒤 P(사람), O(물체), U(모름) 키를 눌러도 됩니다.</p>
+</div>
+
+<div class="panel" style="margin-bottom:12px">
+  <h2>사람 ID</h2>
+  <div class="rec" style="margin-bottom:10px">
+    <span id="people">표에서 사람을 누르면 ID가 생깁니다.</span>
+    <label style="display:flex;flex-direction:row;align-items:center;gap:6px">최대 인원
+      <input id="peopleMax" type="number" min="1" max="8" step="1" style="min-width:64px;width:64px">
+    </label>
+    <button id="peopleReset">사람 ID 초기화</button>
+    <span id="peopleNote" class="note" style="margin:0"></span>
+  </div>
+  <h2 id="eventTitle">번호 변화 알림</h2>
+  <div id="events" class="events">아직 변화가 없습니다.</div>
+  <p class="note">레이더는 누구인지 구별하지 못합니다. "추정"이 붙은 연결은 틀릴 수 있으니, 틀리면 표에서 사람을 다시 눌러 주세요.</p>
+</div>
+
+<div class="rec" id="viewTabs" style="margin-bottom:8px">
+  <button data-view="raw" class="active">원본</button>
+  <button data-view="legacy">기존</button>
+  <button data-view="processed">전처리</button>
+  <button data-view="gemini">제미나이</button>
+  <span id="viewInfo" class="note" style="margin:0"></span>
+</div>
+
+<div class="grid">
+  <div class="panel">
+    <h2>위에서 본 모습 (x, y)</h2>
+    <canvas id="top" width="640" height="640"></canvas>
+    <div class="legend" id="legend"></div>
+    <div class="rec" style="margin-top:14px" id="shapeTabs">
+      <button data-shape="room">범위 꼭짓점</button>
+      <button data-shape="bed">침상 꼭짓점</button>
+      <button data-shape="door">문 구역 꼭짓점</button>
+    </div>
+    <div class="corners" id="corners" style="margin-top:8px"></div>
+    <p class="note" id="shapeInfo"></p>
+    <div class="rec" style="margin-top:8px">
+      <button id="cornerFromTrack">고른 꼭짓점을 추적 위치로</button>
+      <button class="start" id="cornerConfirm">확정</button>
+      <button id="cornerReset">되돌리기</button>
+    </div>
+    <p class="note" id="cornerHelp">방법 1: 범위 또는 침상을 고르고 꼭짓점 번호를 고른 뒤 그 자리로 걸어가 2초 멈춥니다. 위 화면에서 본인 점을 클릭하고 "고른 꼭짓점을 추적 위치로"를 누릅니다. 방법 2: 화면의 번호 점을 끌어서 옮깁니다. 확정을 눌러야 저장됩니다. 침상은 1·2번이 머리 쪽, 3·4번이 다리 쪽입니다.</p>
+  </div>
+  <div class="panel">
+    <h2>옆에서 본 모습 (y, 높이 z)</h2>
+    <canvas id="side" width="640" height="420"></canvas>
+    <p class="note" id="floorNote"></p>
+    <h2 style="margin-top:14px">최근 10초 반사점 높이 분포</h2>
+    <div id="hist"></div>
+  </div>
+</div>
+
+<div class="panel">
+  <h2 id="trackTitle">추적 목록</h2>
+  <div class="rec" style="margin-bottom:10px">
+    <button id="hideTrack" type="button">선택한 번호 지우기 (Delete)</button>
+    <button id="unhideTracks" type="button">지운 번호 다시 보이기</button>
+    <span id="hiddenNote" class="note"></span>
+  </div>
+  <div class="scroll">
+    <table>
+      <thead><tr>
+        <th>ID</th><th>x (m)</th><th>y (m)</th><th>머리 높이 추정 (m)</th><th>몸 중심 z (m)</th><th>속도 (m/s)</th><th>수직 속도</th><th>5초 이동 (m)</th>
+        <th>반사점</th><th>레이더 원본 (x, y, z)</th><th>1012 값</th><th>화면 분류(추정)</th><th style="text-align:left">정답 표시</th>
+      </tr></thead>
+      <tbody id="tracks"></tbody>
+    </table>
+  </div>
+  <p class="note">머리 높이는 추적에 연결된 반사점의 상위 10% 지점(1초 중앙값)이며, 측정값을 키에 맞춰 보정하지 않습니다. 반사점이 적으면 "-"로 표시하고 옆 화면에는 몸 중심 z를 표시합니다.</p>
+  <p class="note">화면 분류는 높이와 움직임만 본 추정이며, 사람 수를 확정하지 않습니다. 회색 점은 레이더 반사점입니다.</p>
+</div>
+
+<script>
+const css = name => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+const KIND = { person: ["--person", "사람 후보"], still: ["--still", "정지"], floor: ["--floor", "바닥 높이"], above: ["--above", "천장 위"] };
+document.getElementById("legend").innerHTML = Object.values(KIND)
+  .map(([c, t]) => `<span><span class="dot" style="background:var(${c})"></span>${t}</span>`).join("")
+  + `<span><span class="dot" style="background:var(--point)"></span>반사점</span>`
+  + `<span><span class="dot" style="background:var(--ref)"></span>걸어 다닌 범위(실선)</span>`
+  + `<span><span class="dot" style="background:var(--person)"></span>확정한 범위(파란 사각형)</span>`
+  + `<span><span class="dot" style="background:var(--floor)"></span>침상(끌어서 조정 가능)</span>`;
+
+function view(canvas, x0, x1, y0, y1) {
+  const ctx = canvas.getContext("2d"), pad = 34;
+  const sx = v => pad + (v - x0) / (x1 - x0) * (canvas.width - pad - 10);
+  const sy = v => canvas.height - pad - (v - y0) / (y1 - y0) * (canvas.height - pad - 10);
+  return { ctx, sx, sy, pad };
+}
+
+function axes(v, canvas, x0, x1, y0, y1) {
+  const { ctx, sx, sy } = v;
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.font = "12px sans-serif"; ctx.lineWidth = 1;
+  for (let x = Math.ceil(x0); x <= x1; x++) {
+    ctx.strokeStyle = css("--grid"); ctx.beginPath(); ctx.moveTo(sx(x), sy(y0)); ctx.lineTo(sx(x), sy(y1)); ctx.stroke();
+    ctx.fillStyle = css("--muted"); ctx.textAlign = "center"; ctx.fillText(x, sx(x), sy(y0) + 16);
+  }
+  for (let y = Math.ceil(y0); y <= y1; y++) {
+    ctx.strokeStyle = css("--grid"); ctx.beginPath(); ctx.moveTo(sx(x0), sy(y)); ctx.lineTo(sx(x1), sy(y)); ctx.stroke();
+    ctx.fillStyle = css("--muted"); ctx.textAlign = "right"; ctx.fillText(y, sx(x0) - 6, sy(y) + 4);
+  }
+}
+
+function hline(v, x0, x1, y, color, label) {
+  const { ctx, sx, sy } = v;
+  ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(sx(x0), sy(y)); ctx.lineTo(sx(x1), sy(y)); ctx.stroke();
+  ctx.fillStyle = color; ctx.textAlign = "left"; ctx.fillText(label, sx(x0) + 6, sy(y) - 5);
+}
+
+function marker(v, x, y, color, label, selected) {
+  const { ctx, sx, sy } = v;
+  ctx.fillStyle = color; ctx.beginPath(); ctx.arc(sx(x), sy(y), 7, 0, 7); ctx.fill();
+  if (selected) { ctx.strokeStyle = css("--text"); ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(sx(x), sy(y), 11, 0, 7); ctx.stroke(); }
+  ctx.fillStyle = css("--text"); ctx.textAlign = "left"; ctx.font = "bold 13px sans-serif";
+  ctx.fillText(label, sx(x) + 10, sy(y) + 4); ctx.font = "12px sans-serif";
+}
+
+function dots(v, points, ix, iy) {
+  const { ctx, sx, sy } = v;
+  ctx.fillStyle = css("--point");
+  for (const p of points) ctx.fillRect(sx(p[ix]) - 1.5, sy(p[iy]) - 1.5, 3, 3);
+}
+
+const TRUTH = { person: ["사람", "사"], object: ["물체", "물"], unknown: ["모름", "?"] };
+let selectedTid = null, lastTracks = [], topView = null, recording = null;
+
+const markerText = tr => currentView === "legacy" ? (tr.role === "patient" ? `환자 (${tr.tid})` : `${tr.tid}`) : tr.pid ? `${tr.pid} (${tr.tid})` : tr.truth ? `${tr.tid} ${TRUTH[tr.truth][1]}` : `${tr.tid}`;
+
+function labelButtons(tr) {
+  return Object.entries(TRUTH).map(([key, [text]]) =>
+    `<button data-tid="${tr.tid}" data-truth="${key}" class="${tr.truth === key || (key === "person" && tr.pid) ? "on-" + key : ""}">${text}</button>`).join(" ");
+}
+
+async function post(path, body) {
+  const res = await fetch(path, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || "요청에 실패했습니다.");
+  return data;
+}
+
+function showHelp(message, isError) {
+  const el = document.getElementById("recHelp");
+  el.textContent = message;
+  el.style.color = isError ? "var(--above)" : "";
+}
+
+async function setTruth(tid, truth) {
+  try { await post("/api/label", { tid, truth }); showHelp(`${tid}번 추적을 ${TRUTH[truth][0]}(으)로 표시했습니다.`); }
+  catch (e) { showHelp(e.message, true); }
+}
+
+// 표를 자주 다시 그리므로 click 대신 pointerdown을 부모에서 받는다.
+document.getElementById("tracks").addEventListener("pointerdown", e => {
+  const b = e.target.closest("button[data-tid]");
+  if (b && !b.disabled) { setTruth(Number(b.dataset.tid), b.dataset.truth); return; }
+  const row = e.target.closest("tr[data-row]");   // 버튼 밖의 줄을 누르면 그 번호를 고른다
+  if (row) { selectedTid = Number(row.dataset.row); showHelp(`${selectedTid}번 추적을 골랐습니다. Delete 키나 '선택한 번호 지우기'로 화면에서 지울 수 있습니다.`); redraw(); }
+});
+document.getElementById("hideTrack").addEventListener("click", hideSelected);
+document.getElementById("unhideTracks").addEventListener("click", () => { userHidden.clear(); showHelp("지운 번호를 다시 보이게 했습니다."); redraw(); });
+
+document.getElementById("top").addEventListener("pointerdown", e => {
+  if (!topView) return;
+  const c = e.currentTarget, r = c.getBoundingClientRect();
+  const px = (e.clientX - r.left) * c.width / r.width, py = (e.clientY - r.top) * c.height / r.height;
+  // 고른 도형의 꼭짓점을 먼저 찾고, 없으면 다른 도형의 꼭짓점을 찾는다
+  for (const name of [activeShape, ...["room", "bed", "door"].filter(n => n !== activeShape)]) {
+    const pts = shapes[name].draft;
+    const hit = pts ? pts.findIndex(q => Math.hypot(topView.sx(q[0]) - px, topView.sy(q[1]) - py) <= 14) : -1;
+    if (hit >= 0) { activeShape = name; dragging = hit; activeCorner = hit; c.setPointerCapture(e.pointerId); e.preventDefault(); redraw(); return; }
+  }
+  let best = null, bestD = 24;
+  for (const tr of lastTracks) {
+    const d = Math.hypot(topView.sx(tr.world[0]) - px, topView.sy(tr.world[1]) - py);
+    if (d < bestD) { best = tr.tid; bestD = d; }
+  }
+  selectedTid = best;
+  if (best !== null) showHelp(`${best}번 추적을 골랐습니다. P(사람), O(물체), U(모름) 키를 누르세요.`);
+});
+
+document.addEventListener("keydown", e => {
+  if (selectedTid === null || /INPUT|SELECT/.test(e.target.tagName)) return;
+  if (e.key === "Delete") { hideSelected(); return; }
+  const truth = { p: "person", o: "object", u: "unknown" }[e.key.toLowerCase()];
+  if (truth) setTruth(selectedTid, truth);
+});
+
+document.getElementById("recButton").addEventListener("click", async () => {
+  try {
+    if (recording) {
+      const r = await post("/api/record/stop", {});
+      showHelp(`녹화를 저장했습니다: sessions\\${r.name}`);
+    } else {
+      await post("/api/record/start", {
+        session: document.getElementById("recSession").value,
+        participant: document.getElementById("recParticipant").value,
+        activity: document.getElementById("recActivity").value,
+        note: document.getElementById("recNote").value,
+      });
+      showHelp("녹화를 시작했습니다.");
+    }
+  } catch (e) { showHelp(e.message, true); }
+});
+
+function showRecording(d) {
+  const select = document.getElementById("recSession");
+  if (!select.options.length) {
+    select.innerHTML = Object.entries(d.meta.sessions).map(([k, v]) => `<option value="${k}">${k}: ${v}</option>`).join("");
+  }
+  recording = d.recording;
+  const button = document.getElementById("recButton"), status = document.getElementById("recStatus");
+  button.textContent = recording ? "녹화 종료" : "녹화 시작";
+  button.className = recording ? "stop" : "start";
+  for (const id of ["recSession", "recParticipant", "recActivity", "recNote"]) document.getElementById(id).disabled = !!recording;
+  if (!recording) { status.textContent = "녹화 중이 아닙니다."; return; }
+  const sec = Math.floor(recording.elapsed), mb = (recording.bytes / 1048576).toFixed(1);
+  status.innerHTML = `<span class="live">● 녹화 중</span> ${recording.name} · ${Math.floor(sec / 60)}분 ${String(sec % 60).padStart(2, "0")}초 · 프레임 ${recording.frames} · 손상 ${recording.corrupt} · 라벨 변경 ${recording.label_changes} · ${mb} MB · 기본 정답 ${TRUTH[recording.default_truth][0]}`;
+}
+
+// 2026-11-01 실측값. 범위는 몸 중심이 지나간 위치이므로 실제 벽은 조금 더 바깥에 있다.
+const ROOM = {
+  walked: [[-1.41, 0.11], [-0.93, -1.13], [0.64, -2.65], [0.98, -2.53], [1.84, 0.79], [1.6, 1.02], [0.89, 1.45], [-0.22, 1.85], [-1.08, 1.72], [-1.3, 1.12]],
+  labels: [
+    { at: [0.61, 1.24], text: "책상" },
+    { at: [1.47, 0.67], text: "벽" },
+    { at: [-1.10, 1.06], text: "벽" },
+    { at: [0.8, -2.6], text: "레이더 한계" },
+  ],
+};
+
+function polygonPath(ctx, v, pts) {
+  ctx.beginPath();
+  pts.forEach((p, i) => i ? ctx.lineTo(v.sx(p[0]), v.sy(p[1])) : ctx.moveTo(v.sx(p[0]), v.sy(p[1])));
+  ctx.closePath();
+}
+
+function drawRoom(v) {
+  const { ctx, sx, sy } = v, ref = css("--ref"), bed = css("--floor");
+  ctx.save();
+  ctx.lineWidth = 2.5; ctx.strokeStyle = ref;
+  polygonPath(ctx, v, ROOM.walked);
+  ctx.globalAlpha = 0.08; ctx.fillStyle = ref; ctx.fill();
+  ctx.globalAlpha = 1; ctx.stroke();
+
+  const bedPts = shapes.bed.draft;
+  if (bedPts) {
+    polygonPath(ctx, v, bedPts);
+    ctx.globalAlpha = 0.28; ctx.fillStyle = bed; ctx.fill();
+    ctx.globalAlpha = 1; ctx.strokeStyle = bed; ctx.lineWidth = 2; ctx.stroke();
+    const mid = (p, q) => [(p[0] + q[0]) / 2, (p[1] + q[1]) / 2];
+    const head = mid(bedPts[0], bedPts[1]), foot = mid(bedPts[2], bedPts[3]), center = mid(head, foot);
+    ctx.font = "bold 13px sans-serif"; ctx.textAlign = "center"; ctx.fillStyle = css("--text");
+    ctx.fillText("침상", sx(center[0]), sy(center[1]));
+    ctx.font = "12px sans-serif";
+    ctx.fillText("머리 쪽", sx(head[0]), sy(head[1]) + 4);
+    ctx.fillText("다리 쪽", sx(foot[0]), sy(foot[1]) + 4);
+  }
+
+  for (const l of ROOM.labels) {
+    ctx.fillStyle = l.door ? ref : css("--text");
+    ctx.textAlign = "center";
+    if (l.door) { ctx.strokeStyle = ref; ctx.lineWidth = 2; ctx.strokeRect(sx(l.at[0]) - 7, sy(l.at[1]) - 7, 14, 14); }
+    ctx.fillText(l.text, sx(l.at[0]), sy(l.at[1]) - (l.door ? 11 : 6));
+  }
+  for (const name of ["room", "bed", "door"]) {
+    const pts = shapes[name].draft, active = name === activeShape;
+    if (!pts) continue;
+    const color = name === "bed" ? bed : name === "door" ? ref : css("--person");
+    if (name === "room") { ctx.lineWidth = 3; ctx.strokeStyle = color; polygonPath(ctx, v, pts); ctx.stroke(); }
+    if (name === "door") {
+      ctx.lineWidth = 2; ctx.strokeStyle = color; ctx.setLineDash([5, 4]); polygonPath(ctx, v, pts); ctx.stroke(); ctx.setLineDash([]);
+      ctx.fillStyle = color; ctx.font = "bold 13px sans-serif"; ctx.textAlign = "center";
+      ctx.fillText("문 구역", sx(pts.reduce((a, c) => a + c[0], 0) / 4), sy(pts.reduce((a, c) => a + c[1], 0) / 4));
+    }
+    pts.forEach((c, i) => {
+      ctx.globalAlpha = active ? 1 : 0.55;
+      ctx.fillStyle = active && i === activeCorner ? css("--above") : color;
+      ctx.beginPath(); ctx.arc(sx(c[0]), sy(c[1]), active ? 11 : 8, 0, 7); ctx.fill();
+      ctx.fillStyle = "#fff"; ctx.font = "bold 12px sans-serif"; ctx.textAlign = "center";
+      ctx.fillText(i + 1, sx(c[0]), sy(c[1]) + 4);
+      ctx.globalAlpha = 1;
+    });
+  }
+  ctx.restore();
+}
+
+const shapes = { room: { draft: null, saved: null, dirty: false }, bed: { draft: null, saved: null, dirty: false }, door: { draft: null, saved: null, dirty: false } };
+const SHAPE_NAME = { room: "범위", bed: "침상", door: "문 구역" };
+let activeShape = "room", activeCorner = 0, dragging = null, lastFrame = null, lastMeta = null;
+
+function inQuad(x, y, q) {
+  let inside = false;
+  for (let i = 0; i < q.length; i++) {
+    const [x1, y1] = q[i], [x2, y2] = q[(i + q.length - 1) % q.length];
+    if ((y1 > y) !== (y2 > y) && x < x1 + (y - y1) * (x2 - x1) / (y2 - y1)) inside = !inside;
+  }
+  return inside;
+}
+
+function showCorners() {
+  const shape = shapes[activeShape];
+  if (!shape.draft) return;
+  document.querySelectorAll("#shapeTabs button").forEach(b => b.classList.toggle("active", b.dataset.shape === activeShape));
+  document.getElementById("corners").innerHTML = shape.draft.map((c, i) =>
+    `<button data-corner="${i}" class="${i === activeCorner ? "active" : ""}">${i + 1}번 (${c[0].toFixed(2)}, ${c[1].toFixed(2)})</button>`).join("");
+  const tracks = lastTracks || [], inside = tracks.filter(t => inQuad(t.world[0], t.world[1], shape.draft)).length;
+  const state = shape.dirty ? "확정 안 됨" : shape.saved && shape.saved.confirmed_at ? `${shape.saved.confirmed_at} 확정` : "초안(확정 전)";
+  document.getElementById("cornerConfirm").textContent = `${SHAPE_NAME[activeShape]} 확정 (${state} · 추적 ${inside}/${tracks.length}개 안)`;
+  const p = shape.draft, mid = (a, b) => [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2], dist = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1]);
+  const info = document.getElementById("shapeInfo");
+  if (activeShape === "bed") {
+    const head = mid(p[0], p[1]), foot = mid(p[2], p[3]), center = mid(head, foot);
+    info.textContent = `침상 가운데 (${center[0].toFixed(2)}, ${center[1].toFixed(2)}) · 길이 ${dist(head, foot).toFixed(2)}m · 폭 ${((dist(p[0], p[1]) + dist(p[2], p[3])) / 2).toFixed(2)}m`;
+  } else if (activeShape === "door") {
+    info.textContent = "문 구역 안에서만 움직인 번호는 문으로 보고 사람에서 제외합니다. 문이 열리고 닫히는 범위까지 포함해 주세요.";
+  } else {
+    const outside = shapes.bed.draft ? shapes.bed.draft.filter(c => !inQuad(c[0], c[1], p)).length : 0;
+    info.textContent = outside ? `주의: 침상 꼭짓점 ${outside}개가 범위 밖에 있습니다.` : "침상 꼭짓점이 모두 범위 안에 있습니다.";
+  }
+}
+
+let currentView = "raw";
+
+// 전처리 탭은 같은 화면에 전처리 결과만 넣어 그린다
+// 사용자가 화면에서 지운 번호(2026-11-05). 화면 표시만 바꾸고 서버·녹화·판정에는 보내지 않는다.
+// 레이더는 끝난 번호를 다시 쓰므로, 지운 번호가 프레임에서 사라지면 목록에서도 뺀다(같은 번호의 새 추적은 보인다).
+const userHidden = new Set();
+function forgetEndedHidden(f) {
+  const alive = new Set(f.tracks.map(t => t.tid));
+  for (const tid of userHidden) if (!alive.has(tid)) userHidden.delete(tid);
+  document.getElementById("hiddenNote").textContent = userHidden.size ? `화면에서 지운 번호: ${[...userHidden].sort((a, b) => a - b).join(", ")}` : "";
+}
+function hideSelected() {
+  if (selectedTid === null) { showHelp("먼저 화면의 점이나 표의 줄을 눌러 번호를 고르세요.", true); return; }
+  userHidden.add(selectedTid);
+  showHelp(`${selectedTid}번을 화면에서 지웠습니다. 레이더에서 이 번호가 끝나면 목록에서도 빠집니다.`);
+  selectedTid = null;
+  redraw();
+}
+const viewOf = f => {
+  const v = viewOfRaw(f);
+  return userHidden.size ? { ...v, tracks: v.tracks.filter(t => !userHidden.has(t.tid)) } : v;
+};
+const viewOfRaw = f => {
+  if (currentView === "processed") return { ...f, ...f.processed };
+  if (currentView === "legacy") return { ...f, tracks: f.legacy.tracks };
+  if (currentView === "gemini") return { ...f, tracks: f.gemini.tracks, points: f.gemini.points, z_hist: f.gemini.z_hist || f.z_hist };
+  return f;
+};
+const VIEW_NAME = { raw: "원본", legacy: "기존", processed: "전처리", gemini: "제미나이" };
+const ROLE_NAME = { patient: "환자", other: "다른 사람", dup: "빈 껍데기", shadow: "바닥 반사", still: "제자리" };
+
+function showViewInfo(f) {
+  const info = document.getElementById("viewInfo");
+  if (currentView === "raw") {
+    info.textContent = "레이더가 보낸 값을 그대로 보여 줍니다. 녹화 파일에는 항상 원본을 저장합니다.";
+    return;
+  }
+  if (currentView === "gemini") {
+    info.textContent = `제미나이: ${f.gemini.note}`;
+    return;
+  }
+  if (currentView === "legacy") {
+    const l = f.legacy;
+    if (l.error) { info.textContent = `기존 판정 오류: ${l.error}`; return; }
+    const roles = Object.entries(l.roles).map(([k, v]) => `${ROLE_NAME[k] || k} ${v}개`).join(", ") || "추적 없음";
+    const falls = l.falls.length ? ` | 낙상 단계: ${l.falls.map(x => `${x.tid}번 ${x.stage}`).join(", ")}` : "";
+    info.textContent = `기존 브랜치의 fall_detect.py를 그대로 실행합니다. 위치 평활화와 범위 필터는 없습니다. 환자는 표의 사람 버튼으로 지정합니다 | ${roles}${falls}`;
+    return;
+  }
+  const r = f.processed.removed;
+  info.textContent = `근거리 제거 → 범위 필터 → 문·남은 번호 제외 → 이동 이력 → EMA 0.3 | 지운 점: 근거리 ${r.point_near}개, 범위 밖 ${r.point_room}개 | 지운 추적: 문·남은 번호 ${r.track_hidden}개, 범위 밖 ${r.track_room}개, 움직인 적 없음 ${r.track_not_moved}개${f.people_full ? ` | 최대 인원 도달: 나머지 추적 ${r.track_full}개, 점 ${r.point_full}개 숨김` : ""}`;
+}
+
+const PERSON_STATE = { in: "방 안", out: "나감", lost: "끊김" };
+
+function showPeople(f) {
+  const el = document.getElementById("people");
+  const people = f.persons || [];
+  el.innerHTML = people.length ? people.map(p =>
+    `<b>${p.pid}</b> ${PERSON_STATE[p.state]}${p.state === "in" ? ` (${p.tid}번${p.guess ? ", 추정" : ""})` : p.exit_kind ? ` (${p.exit_kind})` : ""}${p.fall ? ` <b style="color:var(--above)">${p.fall.stage === "fallen" ? "낙상" : p.fall.stage}${p.fall.on_bed ? " (침상 위)" : ""}</b>` : ""}`).join(" · ")
+    : "표에서 사람을 누르면 ID가 생깁니다.";
+}
+
+function drawPeople(f) {
+  if (!topView || currentView === "legacy" || currentView === "gemini") return;
+  const { ctx, sx, sy } = topView;
+  ctx.save();
+  for (const p of f.persons || []) {
+    if (p.state === "in") continue;
+    ctx.strokeStyle = css("--person"); ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(sx(p.pos[0]), sy(p.pos[1]), 8, 0, 7); ctx.stroke();
+    ctx.fillStyle = css("--text"); ctx.font = "12px sans-serif"; ctx.textAlign = "left";
+    ctx.fillText(`${p.pid} ${PERSON_STATE[p.state]}`, sx(p.pos[0]) + 11, sy(p.pos[1]) + 4);
+  }
+  ctx.restore();
+}
+
+document.getElementById("peopleReset").addEventListener("click", () => post("/api/people/reset", {}));
+document.getElementById("peopleMax").addEventListener("change", async e => {
+  const note = document.getElementById("peopleNote");
+  try { const r = await post("/api/people/max", { max: Number(e.target.value) }); note.textContent = `최대 인원을 ${r.max}명으로 저장했습니다.`; }
+  catch (err) { note.textContent = err.message; }
+});
+
+function redraw() {
+  if (lastFrame) { draw(viewOf(lastFrame), lastMeta); drawPeople(lastFrame); showViewInfo(lastFrame); showPeople(lastFrame); }
+  showCorners();
+}
+
+document.getElementById("viewTabs").addEventListener("pointerdown", e => {
+  const b = e.target.closest("button[data-view]");
+  if (!b) return;
+  currentView = b.dataset.view;
+  document.querySelectorAll("#viewTabs button").forEach(x => x.classList.toggle("active", x === b));
+  selectedTid = null;
+  redraw();
+});
+
+document.getElementById("shapeTabs").addEventListener("pointerdown", e => {
+  const b = e.target.closest("button[data-shape]");
+  if (b) { activeShape = b.dataset.shape; activeCorner = 0; redraw(); }
+});
+
+document.getElementById("corners").addEventListener("pointerdown", e => {
+  const b = e.target.closest("button[data-corner]");
+  if (b) { activeCorner = Number(b.dataset.corner); redraw(); }
+});
+
+document.getElementById("cornerFromTrack").addEventListener("click", () => {
+  const help = document.getElementById("cornerHelp");
+  const moving = lastTracks.filter(t => t.npts > 0);
+  const track = lastTracks.find(t => t.tid === selectedTid) || (moving.length === 1 ? moving[0] : null);
+  if (!track) { help.textContent = "어느 추적인지 알 수 없습니다. 위 화면에서 본인 점을 클릭한 뒤 다시 눌러 주세요."; return; }
+  // 추적의 최근 궤적 중앙값을 써서 순간 튐을 줄인다
+  const med = values => values.slice().sort((a, b) => a - b)[Math.floor(values.length / 2)];
+  const trail = track.trail.length ? track.trail : [track.world];
+  const shape = shapes[activeShape];
+  shape.draft[activeCorner] = [Number(med(trail.map(p => p[0])).toFixed(2)), Number(med(trail.map(p => p[1])).toFixed(2))];
+  shape.dirty = true;
+  help.textContent = `${SHAPE_NAME[activeShape]} ${activeCorner + 1}번 꼭짓점을 ${track.tid}번 추적 위치로 옮겼습니다. 확정을 눌러야 저장됩니다.`;
+  activeCorner = (activeCorner + 1) % 4;
+  redraw();
+});
+
+document.getElementById("cornerConfirm").addEventListener("click", async () => {
+  const help = document.getElementById("cornerHelp"), shape = shapes[activeShape];
+  try {
+    const r = await post(`/api/${activeShape}`, { corners: shape.draft });
+    shape.saved = r.shape; shape.draft = r.shape.corners.map(c => c.slice()); shape.dirty = false;
+    help.textContent = `${SHAPE_NAME[activeShape]}를 확정해 저장했습니다: ${r.shape.confirmed_at}`;
+    redraw();
+  } catch (e) { help.textContent = e.message; }
+});
+
+document.getElementById("cornerReset").addEventListener("click", () => {
+  const shape = shapes[activeShape];
+  shape.draft = shape.saved.corners.map(c => c.slice()); shape.dirty = false;
+  document.getElementById("cornerHelp").textContent = `${SHAPE_NAME[activeShape]}를 마지막 저장 상태로 되돌렸습니다.`;
+  redraw();
+});
+
+function canvasPos(e) {
+  const c = document.getElementById("top"), r = c.getBoundingClientRect();
+  return [(e.clientX - r.left) * c.width / r.width, (e.clientY - r.top) * c.height / r.height];
+}
+
+document.addEventListener("pointermove", e => {
+  if (dragging === null || !topView) return;
+  const [px, py] = canvasPos(e), c = document.getElementById("top"), pad = topView.pad;
+  const x = -4 + (px - pad) / (c.width - pad - 10) * 8, y = -4 + (c.height - pad - py) / (c.height - pad - 10) * 8;
+  const shape = shapes[activeShape];
+  shape.draft[dragging] = [Number(Math.max(-4, Math.min(4, x)).toFixed(2)), Number(Math.max(-4, Math.min(4, y)).toFixed(2))];
+  shape.dirty = true;
+  redraw();
+});
+document.addEventListener("pointerup", () => { dragging = null; });
+
+let shownEventKey = "";
+function showEvents(events) {
+  const key = events.length ? `${events.length}:${events[events.length - 1].t}` : "";
+  if (key === shownEventKey) return;
+  shownEventKey = key;
+  const checks = events.filter(e => e.check).length;
+  document.getElementById("eventTitle").textContent = `번호 변화 알림: 전체 ${events.length}건, 확인 필요 ${checks}건`;
+  if (!events.length) return;
+  const clock = t => new Date(t * 1000).toTimeString().slice(0, 8);
+  document.getElementById("events").innerHTML = events.slice().reverse().map(e =>
+    `<div class="event ${e.check ? "check" : ""}"><span>${clock(e.t)}</span><span>${e.text} (${e.pos[0].toFixed(1)}, ${e.pos[1].toFixed(1)})</span></div>`).join("");
+}
+
+function draw(frame, meta) {
+  const top = document.getElementById("top"), side = document.getElementById("side");
+  const t = view(top, -4, 4, -4, 4);
+  axes(t, top, -4, 4, -4, 4);
+  drawRoom(t);
+  dots(t, frame.points, 0, 1);
+  t.ctx.strokeStyle = css("--ref"); t.ctx.lineWidth = 2;
+  t.ctx.beginPath(); t.ctx.moveTo(t.sx(-0.15), t.sy(0)); t.ctx.lineTo(t.sx(0.15), t.sy(0));
+  t.ctx.moveTo(t.sx(0), t.sy(-0.15)); t.ctx.lineTo(t.sx(0), t.sy(0.15)); t.ctx.stroke();
+  t.ctx.fillStyle = css("--ref"); t.ctx.textAlign = "left"; t.ctx.fillText("레이더 바로 아래", t.sx(0.2), t.sy(0.2));
+  for (const tr of frame.tracks) {
+    const color = css(KIND[tr.kind][0]);
+    t.ctx.strokeStyle = color; t.ctx.lineWidth = 1.5; t.ctx.beginPath();
+    tr.trail.forEach((p, i) => i ? t.ctx.lineTo(t.sx(p[0]), t.sy(p[1])) : t.ctx.moveTo(t.sx(p[0]), t.sy(p[1])));
+    t.ctx.stroke();
+    marker(t, tr.world[0], tr.world[1], color, markerText(tr), tr.tid === selectedTid);
+  }
+  lastTracks = frame.tracks; topView = t;
+
+  const s = view(side, -4, 4, -1, 4);
+  axes(s, side, -4, 4, -1, 4);
+  dots(s, frame.points, 1, 2);
+  hline(s, -4, 4, 0, css("--ref"), "바닥 z = 0 (누운 위치로 확인)");
+  hline(s, -4, 4, meta.height, css("--above"), `레이더 z = ${meta.height} m`);
+  hline(s, -4, 4, meta.bed_top, css("--muted"), `매트리스 윗면 ${meta.bed_top} m`);
+  hline(s, -4, 4, meta.person_height, css("--person"), `측정자 키 ${meta.person_height} m`);
+  for (const tr of frame.tracks) {
+    const color = css(KIND[tr.kind][0]);
+    if (tr.head_z === null) {
+      marker(s, tr.world[1], tr.world[2], color, markerText(tr), tr.tid === selectedTid);
+    } else {
+      // 몸 중심에서 머리 높이까지 세로선으로 잇고, 점은 머리 높이에 표시한다
+      s.ctx.strokeStyle = color; s.ctx.lineWidth = 3; s.ctx.beginPath();
+      s.ctx.moveTo(s.sx(tr.world[1]), s.sy(tr.world[2])); s.ctx.lineTo(s.sx(tr.world[1]), s.sy(tr.head_z)); s.ctx.stroke();
+      marker(s, tr.world[1], tr.head_z, color, markerText(tr), tr.tid === selectedTid);
+    }
+  }
+
+  document.getElementById("trackTitle").textContent = `추적 목록: ${frame.tracks.length}개`;
+  document.getElementById("tracks").innerHTML = frame.tracks.map(tr => `<tr data-row="${tr.tid}" style="cursor:pointer" class="${tr.tid === selectedTid ? "selected" : ""}">
+    <td><span class="dot" style="background:var(${KIND[tr.kind][0]})"></span>${tr.pid ? `<b>${tr.pid}</b> · ` : ""}${tr.tid}${tr.hidden_reason ? ` <small>(${tr.hidden_reason})</small>` : ""}${tr.is_new ? '<span class="tag-new">새</span>' : ""}</td>
+    <td>${tr.world[0].toFixed(2)}</td><td>${tr.world[1].toFixed(2)}</td><td><b>${tr.head_z === null ? "-" : tr.head_z.toFixed(2)}</b></td><td>${tr.world[2].toFixed(2)}</td>
+    <td>${tr.speed.toFixed(2)}</td><td>${tr.vz.toFixed(2)}</td><td>${tr.moved_5s.toFixed(2)}</td><td>${tr.npts}</td>
+    <td>${tr.raw.map(v => v.toFixed(2)).join(", ")}</td>
+    <td>${tr.fw_height ? tr.fw_height.map(v => v.toFixed(2)).join(", ") : "-"}</td>
+    <td>${currentView === "legacy" ? (ROLE_NAME[tr.role] || "-") : tr.label}</td><td style="text-align:left">${labelButtons(tr)}</td></tr>`).join("") || `<tr><td colspan="13">현재 추적이 없습니다.</td></tr>`;
+
+  const hist = frame.z_hist.filter(([z]) => z >= -1 && z < 4).reverse();
+  const peak = Math.max(1, ...hist.map(h => h[1]));
+  document.getElementById("hist").innerHTML = hist.map(([z, n]) =>
+    `<div class="bar ${z === 0 ? "zero" : ""}"><span>${z.toFixed(2)}~${(z + 0.25).toFixed(2)} m</span><i style="width:${n / peak * 100}%"></i><span>${n}</span></div>`).join("");
+  document.getElementById("floorNote").textContent =
+    `레이더 높이를 ${meta.height} m로 두어 그 아래 ${meta.height} m 지점을 z = 0으로 정합니다. 바닥에 누운 사람의 z가 0.007 m로 나온 한 위치의 측정으로 확인했습니다.`;
+}
+
+async function poll() {
+  try {
+    const d = await (await fetch("/api/state")).json();
+    const f = d.frame, status = document.getElementById("status");
+    showRecording(d);
+    const maxInput = document.getElementById("peopleMax");
+    if (document.activeElement !== maxInput) maxInput.value = d.max_people;
+    showEvents(d.events);
+    for (const name of ["room", "bed", "door"]) {
+      const shape = shapes[name];
+      shape.saved = d.shapes[name];
+      if (!shape.draft || (!shape.dirty && dragging === null)) shape.draft = d.shapes[name].corners.map(c => c.slice());
+    }
+    lastFrame = f; lastMeta = d.meta;
+    const age = f ? d.now - f.at : null;
+    const parts = [];
+    if (d.error) parts.push(`<span class="error">오류: ${d.error.replace(/</g, "&lt;")}</span>`);
+    if (!f) parts.push("프레임을 기다리고 있습니다.");
+    else {
+      if (age > 2) parts.push(`<span class="error">${age.toFixed(0)}초째 새 프레임이 없습니다.</span>`);
+      forgetEndedHidden(f);
+      const shown = viewOf(f);
+      parts.push(`<b>${VIEW_NAME[currentView]}</b>`, `프레임 <b>${f.number}</b>`, `<b>${f.fps}</b> 프레임/초`, `반사점 <b>${shown.points.length}</b>개`,
+        `추적 <b>${shown.tracks.length}</b>개`, `재실 값 <b>${f.presence}</b>`, `손상 프레임 <b>${d.corrupt}</b> / ${d.frames}`,
+        `설치 <b>${d.meta.height} m, ${d.meta.tilt}°, ${d.meta.upside_down ? "뒤집힘" : "정방향"}</b>`);
+      draw(shown, d.meta);
+      drawPeople(f);
+      showPeople(f);
+      showViewInfo(f);
+      showCorners();
+    }
+    status.innerHTML = parts.join("<span>·</span>");
+  } catch (e) {
+    document.getElementById("status").innerHTML = `<span class="error">뷰어 서버에 연결할 수 없습니다.</span>`;
+  }
+  setTimeout(poll, 200);
+}
+poll();
+</script>
+</body>
+</html>
