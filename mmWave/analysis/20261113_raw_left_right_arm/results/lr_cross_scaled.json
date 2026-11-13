@@ -1,0 +1,18 @@
+{
+ "park->lee logistic scaled": {
+  "window_acc": 0.781,
+  "segments_correct": "8/8"
+ },
+ "park->lee random_forest scaled": {
+  "window_acc": 0.714,
+  "segments_correct": "6/8"
+ },
+ "lee->park logistic scaled": {
+  "window_acc": 0.781,
+  "segments_correct": "8/8"
+ },
+ "lee->park random_forest scaled": {
+  "window_acc": 0.719,
+  "segments_correct": "7/8"
+ }
+}

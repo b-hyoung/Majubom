@@ -1,0 +1,475 @@
+{
+ "session": "TEST_20261113_194649",
+ "participant": "lee",
+ "bed_box": [
+  -1.7,
+  0.19,
+  -1.78,
+  1.05
+ ],
+ "windows": {
+  "left": 120,
+  "right": 72
+ },
+ "segments": {},
+ "left_right": {
+  "logistic": {
+   "window_acc": 0.781,
+   "segments_correct": "7/8",
+   "per_segment": {
+    "1": {
+     "label": "왼쪽",
+     "acc": 1.0,
+     "n": 24
+    },
+    "3": {
+     "label": "오른쪽",
+     "acc": 0.958,
+     "n": 24
+    },
+    "5": {
+     "label": "왼쪽",
+     "acc": 1.0,
+     "n": 24
+    },
+    "7": {
+     "label": "오른쪽",
+     "acc": 0.5,
+     "n": 24
+    },
+    "9": {
+     "label": "왼쪽",
+     "acc": 0.417,
+     "n": 24
+    },
+    "11": {
+     "label": "오른쪽",
+     "acc": 0.625,
+     "n": 24
+    },
+    "13": {
+     "label": "왼쪽",
+     "acc": 0.792,
+     "n": 24
+    },
+    "15": {
+     "label": "왼쪽",
+     "acc": 0.958,
+     "n": 24
+    }
+   }
+  },
+  "random_forest": {
+   "window_acc": 0.797,
+   "segments_correct": "8/8",
+   "per_segment": {
+    "1": {
+     "label": "왼쪽",
+     "acc": 1.0,
+     "n": 24
+    },
+    "3": {
+     "label": "오른쪽",
+     "acc": 0.792,
+     "n": 24
+    },
+    "5": {
+     "label": "왼쪽",
+     "acc": 1.0,
+     "n": 24
+    },
+    "7": {
+     "label": "오른쪽",
+     "acc": 0.667,
+     "n": 24
+    },
+    "9": {
+     "label": "왼쪽",
+     "acc": 0.583,
+     "n": 24
+    },
+    "11": {
+     "label": "오른쪽",
+     "acc": 0.625,
+     "n": 24
+    },
+    "13": {
+     "label": "왼쪽",
+     "acc": 0.833,
+     "n": 24
+    },
+    "15": {
+     "label": "왼쪽",
+     "acc": 0.875,
+     "n": 24
+    }
+   }
+  }
+ },
+ "feature_means_by_segment": {
+  "n": {
+   "L1": 412.125,
+   "R3": 422.708,
+   "L5": 427.792,
+   "R7": 341.958,
+   "L9": 529.625,
+   "R11": 526.0,
+   "L13": 586.417,
+   "L15": 463.458
+  },
+  "x_mean": {
+   "L1": -1.014,
+   "R3": -0.931,
+   "L5": -1.02,
+   "R7": -0.981,
+   "L9": -1.0,
+   "R11": -0.931,
+   "L13": -0.983,
+   "L15": -1.005
+  },
+  "y_mean": {
+   "L1": 0.103,
+   "R3": 0.354,
+   "L5": 0.296,
+   "R7": 0.478,
+   "L9": 0.273,
+   "R11": 0.292,
+   "L13": 0.216,
+   "L15": 0.313
+  },
+  "z_mean": {
+   "L1": 0.983,
+   "R3": 0.937,
+   "L5": 0.969,
+   "R7": 0.958,
+   "L9": 0.914,
+   "R11": 0.922,
+   "L13": 0.941,
+   "L15": 0.926
+  },
+  "x_std": {
+   "L1": 0.274,
+   "R3": 0.332,
+   "L5": 0.325,
+   "R7": 0.285,
+   "L9": 0.292,
+   "R11": 0.283,
+   "L13": 0.26,
+   "L15": 0.253
+  },
+  "y_std": {
+   "L1": 0.675,
+   "R3": 0.452,
+   "L5": 0.651,
+   "R7": 0.37,
+   "L9": 0.394,
+   "R11": 0.463,
+   "L13": 0.586,
+   "L15": 0.523
+  },
+  "z_std": {
+   "L1": 0.25,
+   "R3": 0.217,
+   "L5": 0.265,
+   "R7": 0.235,
+   "L9": 0.206,
+   "R11": 0.2,
+   "L13": 0.229,
+   "L15": 0.215
+  },
+  "x_snrw": {
+   "L1": -1.047,
+   "R3": -0.868,
+   "L5": -0.952,
+   "R7": -0.918,
+   "L9": -0.988,
+   "R11": -0.948,
+   "L13": -0.964,
+   "L15": -0.941
+  },
+  "z_snrw": {
+   "L1": 0.974,
+   "R3": 1.012,
+   "L5": 0.994,
+   "R7": 0.966,
+   "L9": 0.948,
+   "R11": 1.006,
+   "L13": 1.037,
+   "L15": 0.972
+  },
+  "cov_xz": {
+   "L1": -0.015,
+   "R3": -0.01,
+   "L5": -0.012,
+   "R7": -0.011,
+   "L9": -0.024,
+   "R11": -0.016,
+   "L13": -0.01,
+   "L15": -0.016
+  },
+  "cov_xy": {
+   "L1": -0.091,
+   "R3": -0.067,
+   "L5": -0.129,
+   "R7": -0.024,
+   "L9": -0.04,
+   "R11": -0.054,
+   "L13": -0.071,
+   "L15": -0.057
+  },
+  "x_skew": {
+   "L1": -0.591,
+   "R3": -0.589,
+   "L5": -0.315,
+   "R7": -0.48,
+   "L9": -0.456,
+   "R11": -0.694,
+   "L13": -0.539,
+   "L15": -0.501
+  },
+  "z_max": {
+   "L1": 1.541,
+   "R3": 1.504,
+   "L5": 1.546,
+   "R7": 1.512,
+   "L9": 1.545,
+   "R11": 1.52,
+   "L13": 1.548,
+   "L15": 1.512
+  },
+  "z_p90": {
+   "L1": 1.329,
+   "R3": 1.197,
+   "L5": 1.306,
+   "R7": 1.262,
+   "L9": 1.17,
+   "R11": 1.178,
+   "L13": 1.251,
+   "L15": 1.226
+  },
+  "log_snr": {
+   "L1": 5.288,
+   "R3": 4.073,
+   "L5": 5.285,
+   "R7": 4.353,
+   "L9": 4.635,
+   "R11": 4.036,
+   "L13": 4.514,
+   "L15": 4.691
+  },
+  "frac_left_of_bed_center": {
+   "L1": 0.793,
+   "R3": 0.62,
+   "L5": 0.733,
+   "R7": 0.708,
+   "L9": 0.767,
+   "R11": 0.616,
+   "L13": 0.756,
+   "L15": 0.802
+  }
+ },
+ "x_shift_from_previous_supine_m": {
+  "L1": 0.092,
+  "R3": 0.025,
+  "L5": 0.019,
+  "R7": 0.022,
+  "L9": 0.04,
+  "R11": 0.052,
+  "L13": 0.029,
+  "L15": -0.112
+ },
+ "turns": [
+  {
+   "cue": 1,
+   "from_": "누움",
+   "to": "왼쪽 옆누움",
+   "kind": "supine→L",
+   "moving_points": 7567,
+   "all_points": 9281,
+   "doppler_mean": 0.023,
+   "doppler_x_corr": -0.032,
+   "cloud_x_shift": 0.276,
+   "track_x_shift": 0.066
+  },
+  {
+   "cue": 2,
+   "from_": "왼쪽 옆누움",
+   "to": "누움",
+   "kind": "L→supine",
+   "moving_points": 6028,
+   "all_points": 7891,
+   "doppler_mean": 0.001,
+   "doppler_x_corr": 0.135,
+   "cloud_x_shift": 0.182,
+   "track_x_shift": 0.081
+  },
+  {
+   "cue": 3,
+   "from_": "누움",
+   "to": "오른쪽 옆누움",
+   "kind": "supine→R",
+   "moving_points": 7121,
+   "all_points": 8846,
+   "doppler_mean": 0.012,
+   "doppler_x_corr": 0.268,
+   "cloud_x_shift": 0.201,
+   "track_x_shift": 0.236
+  },
+  {
+   "cue": 4,
+   "from_": "오른쪽 옆누움",
+   "to": "누움",
+   "kind": "R→supine",
+   "moving_points": 5940,
+   "all_points": 7586,
+   "doppler_mean": 0.026,
+   "doppler_x_corr": -0.04,
+   "cloud_x_shift": 0.102,
+   "track_x_shift": -0.153
+  },
+  {
+   "cue": 5,
+   "from_": "누움",
+   "to": "왼쪽 옆누움",
+   "kind": "supine→L",
+   "moving_points": 8918,
+   "all_points": 10421,
+   "doppler_mean": 0.018,
+   "doppler_x_corr": -0.036,
+   "cloud_x_shift": 0.266,
+   "track_x_shift": -0.07
+  },
+  {
+   "cue": 6,
+   "from_": "왼쪽 옆누움",
+   "to": "누움",
+   "kind": "L→supine",
+   "moving_points": 5282,
+   "all_points": 6943,
+   "doppler_mean": -0.029,
+   "doppler_x_corr": 0.152,
+   "cloud_x_shift": 0.238,
+   "track_x_shift": 0.012
+  },
+  {
+   "cue": 7,
+   "from_": "누움",
+   "to": "오른쪽 옆누움",
+   "kind": "supine→R",
+   "moving_points": 6734,
+   "all_points": 8277,
+   "doppler_mean": 0.003,
+   "doppler_x_corr": 0.166,
+   "cloud_x_shift": 0.272,
+   "track_x_shift": 0.086
+  },
+  {
+   "cue": 8,
+   "from_": "오른쪽 옆누움",
+   "to": "누움",
+   "kind": "R→supine",
+   "moving_points": 4696,
+   "all_points": 6199,
+   "doppler_mean": 0.023,
+   "doppler_x_corr": -0.217,
+   "cloud_x_shift": 0.139,
+   "track_x_shift": 0.0
+  },
+  {
+   "cue": 9,
+   "from_": "누움",
+   "to": "왼쪽 옆누움",
+   "kind": "supine→L",
+   "moving_points": 8612,
+   "all_points": 10101,
+   "doppler_mean": -0.0,
+   "doppler_x_corr": 0.061,
+   "cloud_x_shift": 0.354,
+   "track_x_shift": 0.0
+  },
+  {
+   "cue": 10,
+   "from_": "왼쪽 옆누움",
+   "to": "누움",
+   "kind": "L→supine",
+   "moving_points": 5698,
+   "all_points": 7333,
+   "doppler_mean": -0.017,
+   "doppler_x_corr": 0.208,
+   "cloud_x_shift": 0.442,
+   "track_x_shift": -0.22
+  },
+  {
+   "cue": 11,
+   "from_": "누움",
+   "to": "오른쪽 옆누움",
+   "kind": "supine→R",
+   "moving_points": 7299,
+   "all_points": 8880,
+   "doppler_mean": -0.015,
+   "doppler_x_corr": 0.083,
+   "cloud_x_shift": 0.399,
+   "track_x_shift": -0.318
+  },
+  {
+   "cue": 12,
+   "from_": "오른쪽 옆누움",
+   "to": "누움",
+   "kind": "R→supine",
+   "moving_points": 6470,
+   "all_points": 7971,
+   "doppler_mean": 0.009,
+   "doppler_x_corr": -0.184,
+   "cloud_x_shift": 0.164,
+   "track_x_shift": 0.101
+  },
+  {
+   "cue": 13,
+   "from_": "누움",
+   "to": "왼쪽 옆누움",
+   "kind": "supine→L",
+   "moving_points": 8693,
+   "all_points": 10206,
+   "doppler_mean": 0.009,
+   "doppler_x_corr": 0.005,
+   "cloud_x_shift": 0.34,
+   "track_x_shift": -0.031
+  },
+  {
+   "cue": 14,
+   "from_": "왼쪽 옆누움",
+   "to": "누움",
+   "kind": "L→supine",
+   "moving_points": 4538,
+   "all_points": 6329,
+   "doppler_mean": -0.025,
+   "doppler_x_corr": 0.248,
+   "cloud_x_shift": 0.415,
+   "track_x_shift": -0.15
+  },
+  {
+   "cue": 15,
+   "from_": "누움",
+   "to": "왼쪽 옆누움",
+   "kind": "supine→L",
+   "moving_points": 6291,
+   "all_points": 7930,
+   "doppler_mean": 0.023,
+   "doppler_x_corr": -0.008,
+   "cloud_x_shift": 0.122,
+   "track_x_shift": -0.079
+  },
+  {
+   "cue": 16,
+   "from_": "왼쪽 옆누움",
+   "to": "누움",
+   "kind": "L→supine",
+   "moving_points": 6193,
+   "all_points": 7732,
+   "doppler_mean": 0.0,
+   "doppler_x_corr": 0.065,
+   "cloud_x_shift": 0.383,
+   "track_x_shift": 0.18
+  }
+ ]
+}

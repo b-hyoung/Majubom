@@ -1,0 +1,1964 @@
+{
+ "about": "Raw radar fields behind the 8 posture inputs for one frame (vic, cue 누움, track 23). Values are exactly as the radar sent them; 'check' recomputes each input from these fields.",
+ "frame": {
+  "recording": "TEST_20261112_155312",
+  "frame_number": 219477,
+  "received_at_unix": 1794466643.252,
+  "raw_file": "raw.bin",
+  "byte_offset": 6820736,
+  "byte_length": 1312
+ },
+ "settings_used_by_formulas": {
+  "radar_height_m": 2.7,
+  "tilt_deg": 90.0,
+  "mounted_upside_down": true,
+  "bed_corners_xy_m": [
+   [
+    -1.39,
+    -1.44
+   ],
+   [
+    -0.12,
+    -1.48
+   ],
+   [
+    -0.11,
+    0.75
+   ],
+   [
+    -1.4,
+    0.72
+   ]
+  ],
+  "head_rules": {
+   "min_points": 8,
+   "top_fraction": 0.9,
+   "window_sec": 1.0,
+   "exclude_points_above_m": 2.3000000000000003
+  }
+ },
+ "inputs": {
+  "z": {
+   "raw": {
+    "source": "TLV 1010 target list, slot tid 23 (float32 as sent)",
+    "posX": 0.755222499370575,
+    "posY": 2.037559747695923,
+    "posZ": 0.11618362367153168
+   },
+   "formula": "height − posY·sin(tilt) + (−posZ)·cos(tilt)"
+  },
+  "x": {
+   "raw": {
+    "source": "TLV 1010 target list, slot tid 23 (float32 as sent)",
+    "posX": 0.755222499370575,
+    "posY": 2.037559747695923,
+    "posZ": 0.11618362367153168
+   },
+   "formula": "−posX (upside-down mount)"
+  },
+  "y": {
+   "raw": {
+    "source": "TLV 1010 target list, slot tid 23 (float32 as sent)",
+    "posX": 0.755222499370575,
+    "posY": 2.037559747695923,
+    "posZ": 0.11618362367153168
+   },
+   "formula": "posY·cos(tilt) + (−posZ)·sin(tilt)"
+  },
+  "speed": {
+   "raw": {
+    "source": "TLV 1010 target list, slot tid 23",
+    "velX": -0.0227680541574955,
+    "velY": 0.003870151937007904,
+    "velZ": 0.06244058907032013
+   },
+   "formula": "√(vx² + vy²) after rotating velocities like positions"
+  },
+  "vz": {
+   "raw": {
+    "source": "TLV 1010 target list, slot tid 23",
+    "velY": 0.003870151937007904,
+    "velZ": 0.06244058907032013
+   },
+   "formula": "−velY·sin(tilt) + (−velZ)·cos(tilt)"
+  },
+  "npts": {
+   "raw": {
+    "source": "TLV 1011 target index of this frame (owner of each previous-frame point)",
+    "index": [
+     255,
+     254,
+     255,
+     255,
+     255,
+     255,
+     255,
+     255,
+     254,
+     255,
+     255,
+     255,
+     255,
+     255,
+     254,
+     2,
+     2,
+     255,
+     255,
+     255,
+     255,
+     255,
+     255,
+     255,
+     255,
+     254,
+     254,
+     2,
+     2,
+     2,
+     255,
+     255,
+     255,
+     255,
+     255,
+     255,
+     255,
+     254,
+     2,
+     2,
+     255,
+     2,
+     2,
+     255,
+     255,
+     255,
+     255,
+     255,
+     23,
+     255,
+     255,
+     255,
+     254,
+     255,
+     255,
+     255,
+     255,
+     2,
+     255,
+     2,
+     255,
+     255,
+     255,
+     255,
+     2,
+     23,
+     255,
+     255,
+     255,
+     255,
+     255,
+     255,
+     255,
+     255,
+     255,
+     2,
+     255,
+     255,
+     255,
+     23,
+     23,
+     2,
+     23,
+     23,
+     255,
+     255,
+     255,
+     255,
+     255,
+     255,
+     255,
+     2
+    ]
+   },
+   "formula": "count of entries equal to 23"
+  },
+  "bed_dist": {
+   "raw": {
+    "source": "TLV 1010 target list, slot tid 23 (float32 as sent)",
+    "posX": 0.755222499370575,
+    "posY": 2.037559747695923,
+    "posZ": 0.11618362367153168,
+    "plus": "bed_corners_xy_m (setting, not radar)"
+   },
+   "formula": "0 if (x, y) is inside the bed polygon, else distance to nearest bed edge"
+  },
+  "head_z": {
+   "raw": {
+    "source": "TLV 1020 points of the previous frame + TLV 1011 owners of the current frame, for every frame in the last 1 s",
+    "frames": [
+     {
+      "frame": 219460,
+      "received_at_unix": 1794466642.33,
+      "points_from_frame": 219459,
+      "units": {
+       "elevationUnit": 0.009999999776482582,
+       "azimuthUnit": 0.009999999776482582,
+       "dopplerUnit": 0.0002800000074785203,
+       "rangeUnit": 0.0002500000118743628,
+       "snrUnit": 0.03999999910593033
+      },
+      "track23_points": [
+       {
+        "elevation": 3,
+        "azimuth": 113,
+        "doppler": 0,
+        "range": 1012,
+        "snr": 2394
+       },
+       {
+        "elevation": 3,
+        "azimuth": 113,
+        "doppler": 0,
+        "range": 1012,
+        "snr": 1797
+       },
+       {
+        "elevation": 3,
+        "azimuth": 113,
+        "doppler": 0,
+        "range": 1012,
+        "snr": 1069
+       },
+       {
+        "elevation": 3,
+        "azimuth": 113,
+        "doppler": 0,
+        "range": 1012,
+        "snr": 1034
+       },
+       {
+        "elevation": 5,
+        "azimuth": 114,
+        "doppler": 0,
+        "range": 2529,
+        "snr": 238
+       },
+       {
+        "elevation": 5,
+        "azimuth": 107,
+        "doppler": 0,
+        "range": 2529,
+        "snr": 175
+       },
+       {
+        "elevation": 8,
+        "azimuth": 75,
+        "doppler": 0,
+        "range": 8093,
+        "snr": 2409
+       },
+       {
+        "elevation": 8,
+        "azimuth": 65,
+        "doppler": 0,
+        "range": 8093,
+        "snr": 2178
+       },
+       {
+        "elevation": 36,
+        "azimuth": 61,
+        "doppler": 0,
+        "range": 8093,
+        "snr": 447
+       },
+       {
+        "elevation": -30,
+        "azimuth": 51,
+        "doppler": 0,
+        "range": 9863,
+        "snr": 5969
+       },
+       {
+        "elevation": 36,
+        "azimuth": 51,
+        "doppler": 0,
+        "range": 8093,
+        "snr": 541
+       },
+       {
+        "elevation": 26,
+        "azimuth": 50,
+        "doppler": 0,
+        "range": 14163,
+        "snr": 26759
+       },
+       {
+        "elevation": -23,
+        "azimuth": 39,
+        "doppler": 0,
+        "range": 9358,
+        "snr": 19738
+       },
+       {
+        "elevation": -29,
+        "azimuth": 42,
+        "doppler": 0,
+        "range": 9863,
+        "snr": 3484
+       },
+       {
+        "elevation": -18,
+        "azimuth": 37,
+        "doppler": 0,
+        "range": 11128,
+        "snr": 466
+       },
+       {
+        "elevation": 16,
+        "azimuth": 41,
+        "doppler": 0,
+        "range": 13910,
+        "snr": 7959
+       }
+      ],
+      "count": 16,
+      "sample_z": 1.15
+     },
+     {
+      "frame": 219461,
+      "received_at_unix": 1794466642.336,
+      "points_from_frame": 219460,
+      "units": {
+       "elevationUnit": 0.009999999776482582,
+       "azimuthUnit": 0.009999999776482582,
+       "dopplerUnit": 0.0002800000074785203,
+       "rangeUnit": 0.0002500000118743628,
+       "snrUnit": 0.03999999910593033
+      },
+      "track23_points": [
+       {
+        "elevation": 4,
+        "azimuth": 113,
+        "doppler": 0,
+        "range": 1012,
+        "snr": 13713
+       },
+       {
+        "elevation": 4,
+        "azimuth": 113,
+        "doppler": 0,
+        "range": 1012,
+        "snr": 7050
+       },
+       {
+        "elevation": 4,
+        "azimuth": 113,
+        "doppler": 0,
+        "range": 1012,
+        "snr": 3041
+       },
+       {
+        "elevation": 4,
+        "azimuth": 113,
+        "doppler": 0,
+        "range": 1012,
+        "snr": 1966
+       },
+       {
+        "elevation": 9,
+        "azimuth": 76,
+        "doppler": 0,
+        "range": 8093,
+        "snr": 3256
+       },
+       {
+        "elevation": 9,
+        "azimuth": 65,
+        "doppler": 0,
+        "range": 8093,
+        "snr": 2706
+       },
+       {
+        "elevation": 35,
+        "azimuth": 60,
+        "doppler": 0,
+        "range": 8093,
+        "snr": 450
+       },
+       {
+        "elevation": -30,
+        "azimuth": 51,
+        "doppler": 0,
+        "range": 9863,
+        "snr": 6863
+       },
+       {
+        "elevation": 34,
+        "azimuth": 51,
+        "doppler": 0,
+        "range": 8093,
+        "snr": 534
+       },
+       {
+        "elevation": 26,
+        "azimuth": 50,
+        "doppler": 0,
+        "range": 14163,
+        "snr": 27322
+       }
+      ],
+      "count": 10,
+      "sample_z": null
+     },
+     {
+      "frame": 219462,
+      "received_at_unix": 1794466642.434,
+      "points_from_frame": 219461,
+      "units": {
+       "elevationUnit": 0.009999999776482582,
+       "azimuthUnit": 0.009999999776482582,
+       "dopplerUnit": 0.0002800000074785203,
+       "rangeUnit": 0.0002500000118743628,
+       "snrUnit": 0.03999999910593033
+      },
+      "track23_points": [
+       {
+        "elevation": 5,
+        "azimuth": 113,
+        "doppler": 0,
+        "range": 1012,
+        "snr": 12800
+       },
+       {
+        "elevation": 5,
+        "azimuth": 113,
+        "doppler": 0,
+        "range": 1012,
+        "snr": 5600
+       },
+       {
+        "elevation": 5,
+        "azimuth": 113,
+        "doppler": 0,
+        "range": 1012,
+        "snr": 1384
+       },
+       {
+        "elevation": 5,
+        "azimuth": 113,
+        "doppler": 0,
+        "range": 1012,
+        "snr": 1209
+       },
+       {
+        "elevation": 11,
+        "azimuth": 76,
+        "doppler": 0,
+        "range": 8093,
+        "snr": 2650
+       },
+       {
+        "elevation": 13,
+        "azimuth": 65,
+        "doppler": 0,
+        "range": 8093,
+        "snr": 2425
+       },
+       {
+        "elevation": 34,
+        "azimuth": 60,
+        "doppler": 0,
+        "range": 8093,
+        "snr": 450
+       },
+       {
+        "elevation": -30,
+        "azimuth": 51,
+        "doppler": 0,
+        "range": 9863,
+        "snr": 10506
+       },
+       {
+        "elevation": 33,
+        "azimuth": 50,
+        "doppler": 0,
+        "range": 8093,
+        "snr": 538
+       },
+       {
+        "elevation": 26,
+        "azimuth": 50,
+        "doppler": 0,
+        "range": 14163,
+        "snr": 27638
+       },
+       {
+        "elevation": -23,
+        "azimuth": 39,
+        "doppler": 0,
+        "range": 9358,
+        "snr": 19950
+       },
+       {
+        "elevation": -29,
+        "azimuth": 42,
+        "doppler": 0,
+        "range": 9863,
+        "snr": 5666
+       },
+       {
+        "elevation": -18,
+        "azimuth": 37,
+        "doppler": 0,
+        "range": 11128,
+        "snr": 497
+       },
+       {
+        "elevation": 16,
+        "azimuth": 41,
+        "doppler": 0,
+        "range": 13910,
+        "snr": 7728
+       }
+      ],
+      "count": 14,
+      "sample_z": 1.13
+     },
+     {
+      "frame": 219463,
+      "received_at_unix": 1794466642.44,
+      "points_from_frame": 219462,
+      "units": {
+       "elevationUnit": 0.009999999776482582,
+       "azimuthUnit": 0.009999999776482582,
+       "dopplerUnit": 0.0002800000074785203,
+       "rangeUnit": 0.0002500000118743628,
+       "snrUnit": 0.03999999910593033
+      },
+      "track23_points": [
+       {
+        "elevation": 7,
+        "azimuth": 113,
+        "doppler": 0,
+        "range": 1012,
+        "snr": 5591
+       },
+       {
+        "elevation": 7,
+        "azimuth": 113,
+        "doppler": 0,
+        "range": 1012,
+        "snr": 3694
+       },
+       {
+        "elevation": 7,
+        "azimuth": 113,
+        "doppler": 0,
+        "range": 1012,
+        "snr": 1306
+       },
+       {
+        "elevation": 7,
+        "azimuth": 113,
+        "doppler": 0,
+        "range": 1012,
+        "snr": 1284
+       },
+       {
+        "elevation": 12,
+        "azimuth": 115,
+        "doppler": 0,
+        "range": 2529,
+        "snr": 216
+       },
+       {
+        "elevation": 11,
+        "azimuth": 76,
+        "doppler": 0,
+        "range": 8093,
+        "snr": 2584
+       },
+       {
+        "elevation": 14,
+        "azimuth": 66,
+        "doppler": 0,
+        "range": 8093,
+        "snr": 2431
+       },
+       {
+        "elevation": 33,
+        "azimuth": 60,
+        "doppler": 0,
+        "range": 8093,
+        "snr": 469
+       },
+       {
+        "elevation": -30,
+        "azimuth": 51,
+        "doppler": 0,
+        "range": 9863,
+        "snr": 13056
+       },
+       {
+        "elevation": 32,
+        "azimuth": 50,
+        "doppler": 0,
+        "range": 8093,
+        "snr": 553
+       },
+       {
+        "elevation": 26,
+        "azimuth": 50,
+        "doppler": 0,
+        "range": 14163,
+        "snr": 28991
+       }
+      ],
+      "count": 11,
+      "sample_z": null
+     },
+     {
+      "frame": 219464,
+      "received_at_unix": 1794466642.533,
+      "points_from_frame": 219463,
+      "units": {
+       "elevationUnit": 0.009999999776482582,
+       "azimuthUnit": 0.009999999776482582,
+       "dopplerUnit": 0.0002800000074785203,
+       "rangeUnit": 0.0002500000118743628,
+       "snrUnit": 0.03999999910593033
+      },
+      "track23_points": [
+       {
+        "elevation": 3,
+        "azimuth": 113,
+        "doppler": 0,
+        "range": 1012,
+        "snr": 1888
+       },
+       {
+        "elevation": 3,
+        "azimuth": 113,
+        "doppler": 0,
+        "range": 1012,
+        "snr": 1622
+       },
+       {
+        "elevation": 3,
+        "azimuth": 113,
+        "doppler": 0,
+        "range": 1012,
+        "snr": 672
+       },
+       {
+        "elevation": 3,
+        "azimuth": 113,
+        "doppler": 0,
+        "range": 1012,
+        "snr": 488
+       },
+       {
+        "elevation": 58,
+        "azimuth": 126,
+        "doppler": 0,
+        "range": 5311,
+        "snr": 291
+       },
+       {
+        "elevation": 10,
+        "azimuth": 76,
+        "doppler": 0,
+        "range": 8093,
+        "snr": 2463
+       },
+       {
+        "elevation": 12,
+        "azimuth": 65,
+        "doppler": 0,
+        "range": 8093,
+        "snr": 2388
+       },
+       {
+        "elevation": 36,
+        "azimuth": 60,
+        "doppler": 0,
+        "range": 8093,
+        "snr": 459
+       },
+       {
+        "elevation": -30,
+        "azimuth": 51,
+        "doppler": 0,
+        "range": 9863,
+        "snr": 10519
+       },
+       {
+        "elevation": 35,
+        "azimuth": 51,
+        "doppler": 0,
+        "range": 8093,
+        "snr": 550
+       },
+       {
+        "elevation": 26,
+        "azimuth": 50,
+        "doppler": 0,
+        "range": 14163,
+        "snr": 30144
+       }
+      ],
+      "count": 11,
+      "sample_z": null
+     },
+     {
+      "frame": 219465,
+      "received_at_unix": 1794466642.639,
+      "points_from_frame": 219464,
+      "units": {
+       "elevationUnit": 0.009999999776482582,
+       "azimuthUnit": 0.009999999776482582,
+       "dopplerUnit": 0.0002800000074785203,
+       "rangeUnit": 0.0002500000118743628,
+       "snrUnit": 0.03999999910593033
+      },
+      "track23_points": [
+       {
+        "elevation": 5,
+        "azimuth": 113,
+        "doppler": 0,
+        "range": 1012,
+        "snr": 3950
+       },
+       {
+        "elevation": 5,
+        "azimuth": 113,
+        "doppler": 0,
+        "range": 1012,
+        "snr": 2044
+       },
+       {
+        "elevation": 5,
+        "azimuth": 113,
+        "doppler": 0,
+        "range": 1012,
+        "snr": 1291
+       },
+       {
+        "elevation": 5,
+        "azimuth": 113,
+        "doppler": 0,
+        "range": 1012,
+        "snr": 1184
+       },
+       {
+        "elevation": 7,
+        "azimuth": 75,
+        "doppler": 0,
+        "range": 8093,
+        "snr": 2381
+       },
+       {
+        "elevation": -30,
+        "azimuth": 51,
+        "doppler": 0,
+        "range": 9863,
+        "snr": 8547
+       },
+       {
+        "elevation": 37,
+        "azimuth": 51,
+        "doppler": 0,
+        "range": 8093,
+        "snr": 578
+       },
+       {
+        "elevation": 26,
+        "azimuth": 50,
+        "doppler": 0,
+        "range": 14163,
+        "snr": 29191
+       },
+       {
+        "elevation": -22,
+        "azimuth": 39,
+        "doppler": 0,
+        "range": 9358,
+        "snr": 18113
+       },
+       {
+        "elevation": -28,
+        "azimuth": 42,
+        "doppler": 0,
+        "range": 9863,
+        "snr": 4944
+       },
+       {
+        "elevation": -18,
+        "azimuth": 37,
+        "doppler": 0,
+        "range": 11128,
+        "snr": 488
+       },
+       {
+        "elevation": 16,
+        "azimuth": 41,
+        "doppler": 0,
+        "range": 13910,
+        "snr": 7075
+       }
+      ],
+      "count": 12,
+      "sample_z": 1.05
+     },
+     {
+      "frame": 219466,
+      "received_at_unix": 1794466642.644,
+      "points_from_frame": 219465,
+      "units": {
+       "elevationUnit": 0.009999999776482582,
+       "azimuthUnit": 0.009999999776482582,
+       "dopplerUnit": 0.0002800000074785203,
+       "rangeUnit": 0.0002500000118743628,
+       "snrUnit": 0.03999999910593033
+      },
+      "track23_points": [
+       {
+        "elevation": 5,
+        "azimuth": 113,
+        "doppler": 0,
+        "range": 1012,
+        "snr": 7897
+       },
+       {
+        "elevation": 5,
+        "azimuth": 113,
+        "doppler": 0,
+        "range": 1012,
+        "snr": 2688
+       },
+       {
+        "elevation": 5,
+        "azimuth": 113,
+        "doppler": 0,
+        "range": 1012,
+        "snr": 1466
+       },
+       {
+        "elevation": 5,
+        "azimuth": 113,
+        "doppler": 0,
+        "range": 1012,
+        "snr": 1281
+       },
+       {
+        "elevation": 5,
+        "azimuth": 75,
+        "doppler": 0,
+        "range": 8093,
+        "snr": 2506
+       },
+       {
+        "elevation": -30,
+        "azimuth": 51,
+        "doppler": 0,
+        "range": 9863,
+        "snr": 5766
+       },
+       {
+        "elevation": 40,
+        "azimuth": 52,
+        "doppler": 0,
+        "range": 8093,
+        "snr": 622
+       },
+       {
+        "elevation": 26,
+        "azimuth": 50,
+        "doppler": 0,
+        "range": 14163,
+        "snr": 28863
+       }
+      ],
+      "count": 8,
+      "sample_z": null
+     },
+     {
+      "frame": 219467,
+      "received_at_unix": 1794466642.739,
+      "points_from_frame": 219466,
+      "units": {
+       "elevationUnit": 0.009999999776482582,
+       "azimuthUnit": 0.009999999776482582,
+       "dopplerUnit": 0.0002800000074785203,
+       "rangeUnit": 0.0002500000118743628,
+       "snrUnit": 0.03999999910593033
+      },
+      "track23_points": [
+       {
+        "elevation": 4,
+        "azimuth": 113,
+        "doppler": 0,
+        "range": 1012,
+        "snr": 2550
+       },
+       {
+        "elevation": 4,
+        "azimuth": 113,
+        "doppler": 0,
+        "range": 1012,
+        "snr": 1766
+       },
+       {
+        "elevation": 4,
+        "azimuth": 113,
+        "doppler": 0,
+        "range": 1012,
+        "snr": 713
+       },
+       {
+        "elevation": 4,
+        "azimuth": 113,
+        "doppler": 0,
+        "range": 1012,
+        "snr": 622
+       },
+       {
+        "elevation": 3,
+        "azimuth": 75,
+        "doppler": 0,
+        "range": 8093,
+        "snr": 2778
+       },
+       {
+        "elevation": -30,
+        "azimuth": 51,
+        "doppler": 0,
+        "range": 9863,
+        "snr": 4697
+       },
+       {
+        "elevation": 43,
+        "azimuth": 53,
+        "doppler": 0,
+        "range": 8093,
+        "snr": 684
+       },
+       {
+        "elevation": 26,
+        "azimuth": 50,
+        "doppler": 0,
+        "range": 14163,
+        "snr": 27491
+       },
+       {
+        "elevation": -22,
+        "azimuth": 39,
+        "doppler": 0,
+        "range": 9358,
+        "snr": 18988
+       },
+       {
+        "elevation": -28,
+        "azimuth": 42,
+        "doppler": 0,
+        "range": 9863,
+        "snr": 2931
+       },
+       {
+        "elevation": -18,
+        "azimuth": 37,
+        "doppler": 0,
+        "range": 11128,
+        "snr": 478
+       },
+       {
+        "elevation": 16,
+        "azimuth": 41,
+        "doppler": 0,
+        "range": 13910,
+        "snr": 7006
+       }
+      ],
+      "count": 12,
+      "sample_z": 1.11
+     },
+     {
+      "frame": 219468,
+      "received_at_unix": 1794466642.745,
+      "points_from_frame": 219467,
+      "units": {
+       "elevationUnit": 0.009999999776482582,
+       "azimuthUnit": 0.009999999776482582,
+       "dopplerUnit": 0.0002800000074785203,
+       "rangeUnit": 0.0002500000118743628,
+       "snrUnit": 0.03999999910593033
+      },
+      "track23_points": [
+       {
+        "elevation": 3,
+        "azimuth": 113,
+        "doppler": 0,
+        "range": 1012,
+        "snr": 4259
+       },
+       {
+        "elevation": 3,
+        "azimuth": 113,
+        "doppler": 0,
+        "range": 1012,
+        "snr": 2566
+       },
+       {
+        "elevation": 3,
+        "azimuth": 113,
+        "doppler": 0,
+        "range": 1012,
+        "snr": 1238
+       },
+       {
+        "elevation": 3,
+        "azimuth": 113,
+        "doppler": 0,
+        "range": 1012,
+        "snr": 1188
+       },
+       {
+        "elevation": 7,
+        "azimuth": 75,
+        "doppler": 0,
+        "range": 8093,
+        "snr": 2144
+       },
+       {
+        "elevation": 43,
+        "azimuth": 62,
+        "doppler": 0,
+        "range": 8093,
+        "snr": 656
+       },
+       {
+        "elevation": -29,
+        "azimuth": 51,
+        "doppler": 0,
+        "range": 9863,
+        "snr": 7844
+       },
+       {
+        "elevation": 42,
+        "azimuth": 52,
+        "doppler": 0,
+        "range": 8093,
+        "snr": 794
+       },
+       {
+        "elevation": 26,
+        "azimuth": 50,
+        "doppler": 0,
+        "range": 14163,
+        "snr": 26544
+       },
+       {
+        "elevation": -21,
+        "azimuth": 39,
+        "doppler": 0,
+        "range": 9358,
+        "snr": 15466
+       },
+       {
+        "elevation": -33,
+        "azimuth": 42,
+        "doppler": 0,
+        "range": 10116,
+        "snr": 1225
+       },
+       {
+        "elevation": -18,
+        "azimuth": 37,
+        "doppler": 0,
+        "range": 11128,
+        "snr": 538
+       },
+       {
+        "elevation": 16,
+        "azimuth": 41,
+        "doppler": 0,
+        "range": 13910,
+        "snr": 6613
+       }
+      ],
+      "count": 13,
+      "sample_z": 1.2
+     },
+     {
+      "frame": 219469,
+      "received_at_unix": 1794466642.842,
+      "points_from_frame": 219468,
+      "units": {
+       "elevationUnit": 0.009999999776482582,
+       "azimuthUnit": 0.009999999776482582,
+       "dopplerUnit": 0.0002800000074785203,
+       "rangeUnit": 0.0002500000118743628,
+       "snrUnit": 0.03999999910593033
+      },
+      "track23_points": [
+       {
+        "elevation": 3,
+        "azimuth": 113,
+        "doppler": 0,
+        "range": 1012,
+        "snr": 5028
+       },
+       {
+        "elevation": 3,
+        "azimuth": 113,
+        "doppler": 0,
+        "range": 1012,
+        "snr": 3256
+       },
+       {
+        "elevation": 3,
+        "azimuth": 113,
+        "doppler": 0,
+        "range": 1012,
+        "snr": 1591
+       },
+       {
+        "elevation": 3,
+        "azimuth": 113,
+        "doppler": 0,
+        "range": 1012,
+        "snr": 1069
+       },
+       {
+        "elevation": 9,
+        "azimuth": 114,
+        "doppler": 0,
+        "range": 2529,
+        "snr": 166
+       },
+       {
+        "elevation": 42,
+        "azimuth": 62,
+        "doppler": 0,
+        "range": 8093,
+        "snr": 656
+       },
+       {
+        "elevation": -29,
+        "azimuth": 51,
+        "doppler": 0,
+        "range": 9863,
+        "snr": 9184
+       },
+       {
+        "elevation": 41,
+        "azimuth": 52,
+        "doppler": 0,
+        "range": 8093,
+        "snr": 784
+       },
+       {
+        "elevation": 26,
+        "azimuth": 50,
+        "doppler": 0,
+        "range": 14163,
+        "snr": 27775
+       },
+       {
+        "elevation": -20,
+        "azimuth": 39,
+        "doppler": 0,
+        "range": 9358,
+        "snr": 15394
+       },
+       {
+        "elevation": -33,
+        "azimuth": 42,
+        "doppler": 0,
+        "range": 10116,
+        "snr": 1594
+       },
+       {
+        "elevation": -18,
+        "azimuth": 37,
+        "doppler": 0,
+        "range": 11128,
+        "snr": 634
+       },
+       {
+        "elevation": -9,
+        "azimuth": 40,
+        "doppler": 0,
+        "range": 9610,
+        "snr": 9897
+       },
+       {
+        "elevation": 16,
+        "azimuth": 41,
+        "doppler": 0,
+        "range": 13910,
+        "snr": 6409
+       }
+      ],
+      "count": 14,
+      "sample_z": 1.09
+     },
+     {
+      "frame": 219470,
+      "received_at_unix": 1794466642.849,
+      "points_from_frame": 219469,
+      "units": {
+       "elevationUnit": 0.009999999776482582,
+       "azimuthUnit": 0.009999999776482582,
+       "dopplerUnit": 0.0002800000074785203,
+       "rangeUnit": 0.0002500000118743628,
+       "snrUnit": 0.03999999910593033
+      },
+      "track23_points": [
+       {
+        "elevation": 3,
+        "azimuth": 113,
+        "doppler": 0,
+        "range": 1012,
+        "snr": 2984
+       },
+       {
+        "elevation": 3,
+        "azimuth": 113,
+        "doppler": 0,
+        "range": 1012,
+        "snr": 2253
+       },
+       {
+        "elevation": 3,
+        "azimuth": 113,
+        "doppler": 0,
+        "range": 1012,
+        "snr": 1459
+       },
+       {
+        "elevation": 3,
+        "azimuth": 113,
+        "doppler": 0,
+        "range": 1012,
+        "snr": 1344
+       },
+       {
+        "elevation": 3,
+        "azimuth": 107,
+        "doppler": 0,
+        "range": 2529,
+        "snr": 178
+       },
+       {
+        "elevation": 40,
+        "azimuth": 72,
+        "doppler": 0,
+        "range": 8093,
+        "snr": 556
+       },
+       {
+        "elevation": 40,
+        "azimuth": 61,
+        "doppler": 0,
+        "range": 8093,
+        "snr": 647
+       },
+       {
+        "elevation": -29,
+        "azimuth": 51,
+        "doppler": 0,
+        "range": 9863,
+        "snr": 9756
+       },
+       {
+        "elevation": 39,
+        "azimuth": 52,
+        "doppler": 0,
+        "range": 8093,
+        "snr": 759
+       },
+       {
+        "elevation": 26,
+        "azimuth": 50,
+        "doppler": 0,
+        "range": 14163,
+        "snr": 27891
+       },
+       {
+        "elevation": -18,
+        "azimuth": 38,
+        "doppler": 0,
+        "range": 9358,
+        "snr": 14331
+       },
+       {
+        "elevation": -32,
+        "azimuth": 42,
+        "doppler": 0,
+        "range": 10116,
+        "snr": 1938
+       },
+       {
+        "elevation": -18,
+        "azimuth": 37,
+        "doppler": 0,
+        "range": 11128,
+        "snr": 716
+       },
+       {
+        "elevation": -9,
+        "azimuth": 39,
+        "doppler": 0,
+        "range": 9610,
+        "snr": 9738
+       },
+       {
+        "elevation": 16,
+        "azimuth": 41,
+        "doppler": 0,
+        "range": 13910,
+        "snr": 6447
+       }
+      ],
+      "count": 15,
+      "sample_z": 1.17
+     },
+     {
+      "frame": 219471,
+      "received_at_unix": 1794466642.94,
+      "points_from_frame": 219470,
+      "units": {
+       "elevationUnit": 0.009999999776482582,
+       "azimuthUnit": 0.009999999776482582,
+       "dopplerUnit": 0.0002800000074785203,
+       "rangeUnit": 0.0002500000118743628,
+       "snrUnit": 0.03999999910593033
+      },
+      "track23_points": [
+       {
+        "elevation": 2,
+        "azimuth": 113,
+        "doppler": 0,
+        "range": 1012,
+        "snr": 2634
+       },
+       {
+        "elevation": 2,
+        "azimuth": 113,
+        "doppler": 0,
+        "range": 1012,
+        "snr": 1844
+       },
+       {
+        "elevation": 2,
+        "azimuth": 113,
+        "doppler": 0,
+        "range": 1012,
+        "snr": 1028
+       },
+       {
+        "elevation": 2,
+        "azimuth": 113,
+        "doppler": 0,
+        "range": 1012,
+        "snr": 919
+       },
+       {
+        "elevation": 38,
+        "azimuth": 71,
+        "doppler": 0,
+        "range": 8093,
+        "snr": 528
+       },
+       {
+        "elevation": 38,
+        "azimuth": 61,
+        "doppler": 0,
+        "range": 8093,
+        "snr": 622
+       },
+       {
+        "elevation": -28,
+        "azimuth": 51,
+        "doppler": 0,
+        "range": 9863,
+        "snr": 11578
+       },
+       {
+        "elevation": 36,
+        "azimuth": 51,
+        "doppler": 0,
+        "range": 8093,
+        "snr": 731
+       },
+       {
+        "elevation": 26,
+        "azimuth": 50,
+        "doppler": 0,
+        "range": 14163,
+        "snr": 26653
+       },
+       {
+        "elevation": -17,
+        "azimuth": 38,
+        "doppler": 0,
+        "range": 9358,
+        "snr": 12531
+       },
+       {
+        "elevation": -32,
+        "azimuth": 42,
+        "doppler": 0,
+        "range": 10116,
+        "snr": 2975
+       },
+       {
+        "elevation": -18,
+        "azimuth": 37,
+        "doppler": 0,
+        "range": 11128,
+        "snr": 778
+       },
+       {
+        "elevation": 16,
+        "azimuth": 41,
+        "doppler": 0,
+        "range": 13910,
+        "snr": 6928
+       }
+      ],
+      "count": 13,
+      "sample_z": 1.16
+     },
+     {
+      "frame": 219472,
+      "received_at_unix": 1794466642.95,
+      "points_from_frame": 219471,
+      "units": {
+       "elevationUnit": 0.009999999776482582,
+       "azimuthUnit": 0.009999999776482582,
+       "dopplerUnit": 0.0002800000074785203,
+       "rangeUnit": 0.0002500000118743628,
+       "snrUnit": 0.03999999910593033
+      },
+      "track23_points": [
+       {
+        "elevation": 18,
+        "azimuth": 77,
+        "doppler": 0,
+        "range": 8093,
+        "snr": 1944
+       },
+       {
+        "elevation": 34,
+        "azimuth": 70,
+        "doppler": 0,
+        "range": 8093,
+        "snr": 463
+       },
+       {
+        "elevation": 34,
+        "azimuth": 59,
+        "doppler": 0,
+        "range": 8093,
+        "snr": 544
+       },
+       {
+        "elevation": -28,
+        "azimuth": 51,
+        "doppler": 0,
+        "range": 9863,
+        "snr": 12825
+       },
+       {
+        "elevation": 32,
+        "azimuth": 50,
+        "doppler": 0,
+        "range": 8093,
+        "snr": 644
+       },
+       {
+        "elevation": 26,
+        "azimuth": 50,
+        "doppler": 0,
+        "range": 14163,
+        "snr": 27628
+       },
+       {
+        "elevation": -32,
+        "azimuth": 42,
+        "doppler": 0,
+        "range": 10116,
+        "snr": 3831
+       },
+       {
+        "elevation": -18,
+        "azimuth": 37,
+        "doppler": 0,
+        "range": 11128,
+        "snr": 809
+       },
+       {
+        "elevation": -6,
+        "azimuth": 38,
+        "doppler": 0,
+        "range": 9358,
+        "snr": 17628
+       },
+       {
+        "elevation": 16,
+        "azimuth": 41,
+        "doppler": 0,
+        "range": 13910,
+        "snr": 6778
+       },
+       {
+        "elevation": 29,
+        "azimuth": 41,
+        "doppler": 0,
+        "range": 8093,
+        "snr": 747
+       },
+       {
+        "elevation": 46,
+        "azimuth": 39,
+        "doppler": 0,
+        "range": 13404,
+        "snr": 12694
+       },
+       {
+        "elevation": 23,
+        "azimuth": 41,
+        "doppler": 0,
+        "range": 14163,
+        "snr": 21416
+       },
+       {
+        "elevation": 36,
+        "azimuth": 40,
+        "doppler": 0,
+        "range": 15427,
+        "snr": 375
+       }
+      ],
+      "count": 14,
+      "sample_z": 1.12
+     },
+     {
+      "frame": 219473,
+      "received_at_unix": 1794466643.051,
+      "points_from_frame": 219472,
+      "units": {
+       "elevationUnit": 0.009999999776482582,
+       "azimuthUnit": 0.009999999776482582,
+       "dopplerUnit": 0.0002800000074785203,
+       "rangeUnit": 0.0002500000118743628,
+       "snrUnit": 0.03999999910593033
+      },
+      "track23_points": [
+       {
+        "elevation": 5,
+        "azimuth": 113,
+        "doppler": 0,
+        "range": 1012,
+        "snr": 10222
+       },
+       {
+        "elevation": 5,
+        "azimuth": 113,
+        "doppler": 0,
+        "range": 1012,
+        "snr": 2647
+       },
+       {
+        "elevation": 5,
+        "azimuth": 113,
+        "doppler": 0,
+        "range": 1012,
+        "snr": 975
+       },
+       {
+        "elevation": 5,
+        "azimuth": 113,
+        "doppler": 0,
+        "range": 1012,
+        "snr": 938
+       },
+       {
+        "elevation": 18,
+        "azimuth": 77,
+        "doppler": 0,
+        "range": 8093,
+        "snr": 1544
+       },
+       {
+        "elevation": 32,
+        "azimuth": 69,
+        "doppler": 0,
+        "range": 8093,
+        "snr": 441
+       },
+       {
+        "elevation": 31,
+        "azimuth": 59,
+        "doppler": 0,
+        "range": 8093,
+        "snr": 522
+       },
+       {
+        "elevation": -28,
+        "azimuth": 51,
+        "doppler": 0,
+        "range": 9863,
+        "snr": 14844
+       }
+      ],
+      "count": 8,
+      "sample_z": null
+     },
+     {
+      "frame": 219474,
+      "received_at_unix": 1794466643.057,
+      "points_from_frame": 219473,
+      "units": {
+       "elevationUnit": 0.009999999776482582,
+       "azimuthUnit": 0.009999999776482582,
+       "dopplerUnit": 0.0002800000074785203,
+       "rangeUnit": 0.0002500000118743628,
+       "snrUnit": 0.03999999910593033
+      },
+      "track23_points": [
+       {
+        "elevation": 5,
+        "azimuth": 113,
+        "doppler": 0,
+        "range": 1012,
+        "snr": 2953
+       },
+       {
+        "elevation": 5,
+        "azimuth": 113,
+        "doppler": 0,
+        "range": 1012,
+        "snr": 2181
+       },
+       {
+        "elevation": 5,
+        "azimuth": 113,
+        "doppler": 0,
+        "range": 1012,
+        "snr": 888
+       },
+       {
+        "elevation": 5,
+        "azimuth": 113,
+        "doppler": 0,
+        "range": 1012,
+        "snr": 719
+       },
+       {
+        "elevation": 17,
+        "azimuth": 76,
+        "doppler": 0,
+        "range": 8093,
+        "snr": 1794
+       },
+       {
+        "elevation": 30,
+        "azimuth": 68,
+        "doppler": 0,
+        "range": 8093,
+        "snr": 441
+       },
+       {
+        "elevation": 29,
+        "azimuth": 58,
+        "doppler": 0,
+        "range": 8093,
+        "snr": 516
+       },
+       {
+        "elevation": -28,
+        "azimuth": 51,
+        "doppler": 0,
+        "range": 9863,
+        "snr": 16744
+       },
+       {
+        "elevation": 27,
+        "azimuth": 49,
+        "doppler": 0,
+        "range": 8093,
+        "snr": 606
+       },
+       {
+        "elevation": 26,
+        "azimuth": 50,
+        "doppler": 0,
+        "range": 14163,
+        "snr": 28109
+       },
+       {
+        "elevation": -32,
+        "azimuth": 42,
+        "doppler": 0,
+        "range": 10116,
+        "snr": 6850
+       },
+       {
+        "elevation": -18,
+        "azimuth": 37,
+        "doppler": 0,
+        "range": 11128,
+        "snr": 834
+       }
+      ],
+      "count": 12,
+      "sample_z": 1.2
+     },
+     {
+      "frame": 219475,
+      "received_at_unix": 1794466643.146,
+      "points_from_frame": 219474,
+      "units": {
+       "elevationUnit": 0.009999999776482582,
+       "azimuthUnit": 0.009999999776482582,
+       "dopplerUnit": 0.0002800000074785203,
+       "rangeUnit": 0.0002500000118743628,
+       "snrUnit": 0.03999999910593033
+      },
+      "track23_points": [
+       {
+        "elevation": 31,
+        "azimuth": 68,
+        "doppler": 0,
+        "range": 8093,
+        "snr": 475
+       },
+       {
+        "elevation": 29,
+        "azimuth": 58,
+        "doppler": 0,
+        "range": 8093,
+        "snr": 563
+       },
+       {
+        "elevation": -27,
+        "azimuth": 51,
+        "doppler": 0,
+        "range": 9863,
+        "snr": 10650
+       },
+       {
+        "elevation": -9,
+        "azimuth": 48,
+        "doppler": 0,
+        "range": 9610,
+        "snr": 7484
+       },
+       {
+        "elevation": 26,
+        "azimuth": 49,
+        "doppler": 0,
+        "range": 8093,
+        "snr": 672
+       },
+       {
+        "elevation": 26,
+        "azimuth": 50,
+        "doppler": 0,
+        "range": 14163,
+        "snr": 28319
+       },
+       {
+        "elevation": -32,
+        "azimuth": 42,
+        "doppler": 0,
+        "range": 10116,
+        "snr": 4500
+       },
+       {
+        "elevation": -18,
+        "azimuth": 37,
+        "doppler": 0,
+        "range": 11128,
+        "snr": 784
+       },
+       {
+        "elevation": -6,
+        "azimuth": 38,
+        "doppler": 0,
+        "range": 9358,
+        "snr": 17516
+       },
+       {
+        "elevation": 16,
+        "azimuth": 41,
+        "doppler": 0,
+        "range": 13910,
+        "snr": 6553
+       }
+      ],
+      "count": 10,
+      "sample_z": 1.08
+     },
+     {
+      "frame": 219476,
+      "received_at_unix": 1794466643.151,
+      "points_from_frame": 219475,
+      "units": {
+       "elevationUnit": 0.009999999776482582,
+       "azimuthUnit": 0.009999999776482582,
+       "dopplerUnit": 0.0002800000074785203,
+       "rangeUnit": 0.0002500000118743628,
+       "snrUnit": 0.03999999910593033
+      },
+      "track23_points": [
+       {
+        "elevation": 7,
+        "azimuth": 113,
+        "doppler": 0,
+        "range": 1012,
+        "snr": 4266
+       },
+       {
+        "elevation": 7,
+        "azimuth": 113,
+        "doppler": 0,
+        "range": 1012,
+        "snr": 2969
+       },
+       {
+        "elevation": 7,
+        "azimuth": 113,
+        "doppler": 0,
+        "range": 1012,
+        "snr": 2150
+       },
+       {
+        "elevation": 7,
+        "azimuth": 113,
+        "doppler": 0,
+        "range": 1012,
+        "snr": 1772
+       },
+       {
+        "elevation": 34,
+        "azimuth": 69,
+        "doppler": 0,
+        "range": 8093,
+        "snr": 488
+       },
+       {
+        "elevation": 31,
+        "azimuth": 58,
+        "doppler": 0,
+        "range": 8093,
+        "snr": 609
+       },
+       {
+        "elevation": -27,
+        "azimuth": 51,
+        "doppler": 0,
+        "range": 9863,
+        "snr": 4803
+       },
+       {
+        "elevation": -8,
+        "azimuth": 48,
+        "doppler": 0,
+        "range": 9610,
+        "snr": 8469
+       }
+      ],
+      "count": 8,
+      "sample_z": null
+     },
+     {
+      "frame": 219477,
+      "received_at_unix": 1794466643.252,
+      "points_from_frame": 219476,
+      "units": {
+       "elevationUnit": 0.009999999776482582,
+       "azimuthUnit": 0.009999999776482582,
+       "dopplerUnit": 0.0002800000074785203,
+       "rangeUnit": 0.0002500000118743628,
+       "snrUnit": 0.03999999910593033
+      },
+      "track23_points": [
+       {
+        "elevation": 35,
+        "azimuth": 69,
+        "doppler": 0,
+        "range": 8093,
+        "snr": 528
+       },
+       {
+        "elevation": 32,
+        "azimuth": 58,
+        "doppler": 0,
+        "range": 8093,
+        "snr": 644
+       },
+       {
+        "elevation": -27,
+        "azimuth": 51,
+        "doppler": 0,
+        "range": 9863,
+        "snr": 5294
+       },
+       {
+        "elevation": -8,
+        "azimuth": 48,
+        "doppler": 0,
+        "range": 9610,
+        "snr": 8266
+       },
+       {
+        "elevation": 29,
+        "azimuth": 49,
+        "doppler": 0,
+        "range": 8093,
+        "snr": 788
+       },
+       {
+        "elevation": 26,
+        "azimuth": 50,
+        "doppler": 0,
+        "range": 14163,
+        "snr": 29725
+       }
+      ],
+      "count": 6,
+      "sample_z": null
+     }
+    ]
+   },
+   "formula": "per frame: points owned by 23 → height; drop above limit; if ≥ 8 points take the 90% value; head_z = median over 1 s"
+  }
+ },
+ "check": {
+  "recomputed": {
+   "x": -0.755,
+   "y": -0.116,
+   "z": 0.662,
+   "speed": 0.066,
+   "vz": -0.004,
+   "npts": 6,
+   "bed_dist": 0.0,
+   "head_z": 1.13
+  },
+  "site_values": {
+   "z": 0.662,
+   "head_z": 1.13,
+   "speed": 0.066,
+   "vz": -0.004,
+   "npts": 6,
+   "bed_dist": 0.0,
+   "x": -0.755,
+   "y": -0.116
+  },
+  "all_match": true
+ }
+}

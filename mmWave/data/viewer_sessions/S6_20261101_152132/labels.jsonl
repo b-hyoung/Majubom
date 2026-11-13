@@ -1,0 +1,76 @@
+{"t": 1793514093.422, "tid": 27, "event": "label", "truth": "person"}
+{"t": 1793514093.427, "tid": 2, "event": "label", "truth": "person"}
+{"t": 1793514093.429, "tid": 28, "event": "label", "truth": "person"}
+{"t": 1793514098.737, "event": "person_no_points", "tid": 27, "pos": [0.97, 1.02], "text": "사람으로 표시한 27번에 반사점이 없습니다. 사람이 떠난 자리일 수 있습니다.", "check": true}
+{"t": 1793514104.779, "event": "track_new", "tid": 13, "pos": [3.1, -1.16], "text": "새 번호 13번이 생겼습니다.", "check": false}
+{"t": 1793514106.808, "tid": 13, "event": "track_end", "truth": null}
+{"t": 1793514106.808, "event": "track_gone", "tid": 13, "pos": [3.11, -1.17], "text": "13번이 사라졌습니다.", "check": false}
+{"t": 1793514108.569, "event": "track_new", "tid": 11, "pos": [3.12, -1.04], "text": "새 번호 11번이 생겼습니다.", "check": false}
+{"t": 1793514111.027, "tid": 11, "event": "track_end", "truth": null}
+{"t": 1793514111.027, "event": "track_gone", "tid": 11, "pos": [3.13, -1.05], "text": "11번이 사라졌습니다.", "check": false}
+{"t": 1793514112.157, "event": "person_no_points", "tid": 27, "pos": [0.85, 1.22], "text": "사람으로 표시한 27번에 반사점이 없습니다. 사람이 떠난 자리일 수 있습니다.", "check": true}
+{"t": 1793514122.344, "event": "person_no_points", "tid": 28, "pos": [1.77, -0.63], "text": "사람으로 표시한 28번에 반사점이 없습니다. 사람이 떠난 자리일 수 있습니다.", "check": true}
+{"t": 1793514128.231, "event": "person_no_points", "tid": 27, "pos": [0.83, 1.26], "text": "사람으로 표시한 27번에 반사점이 없습니다. 사람이 떠난 자리일 수 있습니다.", "check": true}
+{"t": 1793514128.442, "event": "person_no_points", "tid": 2, "pos": [0.73, 0.54], "text": "사람으로 표시한 2번에 반사점이 없습니다. 사람이 떠난 자리일 수 있습니다.", "check": true}
+{"t": 1793514137.755, "event": "person_no_points", "tid": 27, "pos": [0.83, 1.26], "text": "사람으로 표시한 27번에 반사점이 없습니다. 사람이 떠난 자리일 수 있습니다.", "check": true}
+{"t": 1793514154.751, "event": "person_no_points", "tid": 27, "pos": [0.83, 1.26], "text": "사람으로 표시한 27번에 반사점이 없습니다. 사람이 떠난 자리일 수 있습니다.", "check": true}
+{"t": 1793514158.725, "event": "person_no_points", "tid": 2, "pos": [0.93, 0.59], "text": "사람으로 표시한 2번에 반사점이 없습니다. 사람이 떠난 자리일 수 있습니다.", "check": true}
+{"t": 1793514169.293, "event": "person_no_points", "tid": 2, "pos": [0.91, 0.57], "text": "사람으로 표시한 2번에 반사점이 없습니다. 사람이 떠난 자리일 수 있습니다.", "check": true}
+{"t": 1793514188.758, "event": "track_new", "tid": 14, "pos": [2.97, -0.89], "text": "새 번호 14번이 생겼습니다.", "check": false}
+{"t": 1793514191.208, "tid": 14, "event": "track_end", "truth": null}
+{"t": 1793514191.208, "event": "track_gone", "tid": 14, "pos": [2.97, -0.89], "text": "14번이 사라졌습니다.", "check": false}
+{"t": 1793514196.95, "event": "person_no_points", "tid": 28, "pos": [1.44, -0.66], "text": "사람으로 표시한 28번에 반사점이 없습니다. 사람이 떠난 자리일 수 있습니다.", "check": true}
+{"t": 1793514200.221, "event": "person_no_points", "tid": 27, "pos": [0.83, 1.25], "text": "사람으로 표시한 27번에 반사점이 없습니다. 사람이 떠난 자리일 수 있습니다.", "check": true}
+{"t": 1793514210.833, "event": "person_no_points", "tid": 28, "pos": [2.26, -0.44], "text": "사람으로 표시한 28번에 반사점이 없습니다. 사람이 떠난 자리일 수 있습니다.", "check": true}
+{"t": 1793514212.505, "event": "person_no_points", "tid": 27, "pos": [0.83, 1.25], "text": "사람으로 표시한 27번에 반사점이 없습니다. 사람이 떠난 자리일 수 있습니다.", "check": true}
+{"t": 1793514221.155, "tid": 2, "event": "label", "truth": "person"}
+{"t": 1793514222.63, "tid": 27, "event": "label", "truth": "person"}
+{"t": 1793514223.359, "tid": 28, "event": "label", "truth": "person"}
+{"t": 1793514224.078, "tid": 28, "event": "label", "truth": "person"}
+{"t": 1793514229.092, "event": "person_no_points", "tid": 28, "pos": [1.98, -0.46], "text": "사람으로 표시한 28번에 반사점이 없습니다. 사람이 떠난 자리일 수 있습니다.", "check": true}
+{"t": 1793514244.838, "event": "track_new", "tid": 16, "pos": [3.15, 1.37], "text": "새 번호 16번이 생겼습니다.", "check": false}
+{"t": 1793514247.321, "tid": 16, "event": "track_end", "truth": null}
+{"t": 1793514247.321, "event": "track_gone", "tid": 16, "pos": [3.17, 1.38], "text": "16번이 사라졌습니다.", "check": false}
+{"t": 1793514267.279, "event": "person_no_points", "tid": 27, "pos": [0.77, 0.8], "text": "사람으로 표시한 27번에 반사점이 없습니다. 사람이 떠난 자리일 수 있습니다.", "check": true}
+{"t": 1793514268.109, "event": "person_no_points", "tid": 2, "pos": [0.9, -0.33], "text": "사람으로 표시한 2번에 반사점이 없습니다. 사람이 떠난 자리일 수 있습니다.", "check": true}
+{"t": 1793514270.869, "event": "person_no_points", "tid": 28, "pos": [1.74, -0.65], "text": "사람으로 표시한 28번에 반사점이 없습니다. 사람이 떠난 자리일 수 있습니다.", "check": true}
+{"t": 1793514278.456, "event": "track_new", "tid": 15, "pos": [3.26, 1.48], "text": "새 번호 15번이 생겼습니다.", "check": false}
+{"t": 1793514278.661, "event": "track_new", "tid": 19, "pos": [0.69, 1.2], "text": "새 번호 19번이 생겼습니다.", "check": false}
+{"t": 1793514280.786, "tid": 15, "event": "track_end", "truth": null}
+{"t": 1793514280.786, "event": "track_gone", "tid": 15, "pos": [3.23, 1.48], "text": "15번이 사라졌습니다.", "check": false}
+{"t": 1793514282.385, "event": "person_no_points", "tid": 28, "pos": [1.76, -0.63], "text": "사람으로 표시한 28번에 반사점이 없습니다. 사람이 떠난 자리일 수 있습니다.", "check": true}
+{"t": 1793514282.657, "event": "person_no_points", "tid": 2, "pos": [0.9, -0.33], "text": "사람으로 표시한 2번에 반사점이 없습니다. 사람이 떠난 자리일 수 있습니다.", "check": true}
+{"t": 1793514295.176, "tid": 27, "event": "label", "truth": "person"}
+{"t": 1793514296.893, "event": "person_no_points", "tid": 28, "pos": [1.92, -0.61], "text": "사람으로 표시한 28번에 반사점이 없습니다. 사람이 떠난 자리일 수 있습니다.", "check": true}
+{"t": 1793514310.503, "event": "person_no_points", "tid": 27, "pos": [1.53, -0.55], "text": "사람으로 표시한 27번에 반사점이 없습니다. 사람이 떠난 자리일 수 있습니다.", "check": true}
+{"t": 1793514312.864, "event": "person_no_points", "tid": 28, "pos": [2.01, -0.51], "text": "사람으로 표시한 28번에 반사점이 없습니다. 사람이 떠난 자리일 수 있습니다.", "check": true}
+{"t": 1793514316.445, "event": "person_no_points", "tid": 2, "pos": [-0.41, 1.96], "text": "사람으로 표시한 2번에 반사점이 없습니다. 사람이 떠난 자리일 수 있습니다.", "check": true}
+{"t": 1793514324.436, "event": "person_no_points", "tid": 2, "pos": [-0.41, 1.96], "text": "사람으로 표시한 2번에 반사점이 없습니다. 사람이 떠난 자리일 수 있습니다.", "check": true}
+{"t": 1793514341.941, "event": "person_no_points", "tid": 2, "pos": [-0.41, 1.96], "text": "사람으로 표시한 2번에 반사점이 없습니다. 사람이 떠난 자리일 수 있습니다.", "check": true}
+{"t": 1793514353.102, "event": "person_no_points", "tid": 28, "pos": [2.19, -0.74], "text": "사람으로 표시한 28번에 반사점이 없습니다. 사람이 떠난 자리일 수 있습니다.", "check": true}
+{"t": 1793514353.721, "event": "person_no_points", "tid": 2, "pos": [-0.41, 1.96], "text": "사람으로 표시한 2번에 반사점이 없습니다. 사람이 떠난 자리일 수 있습니다.", "check": true}
+{"t": 1793514358.635, "event": "track_new", "tid": 21, "pos": [-0.74, 1.64], "text": "새 번호 21번이 사람으로 표시한 2번 근처에서 생겼습니다. 같은 사람인지 확인하세요.", "check": true}
+{"t": 1793514366.216, "tid": 2, "event": "track_end", "truth": "person"}
+{"t": 1793514366.216, "event": "track_gone", "tid": 2, "pos": [2.26, 1.01], "text": "사람으로 표시한 2번이 사라졌습니다.", "check": true}
+{"t": 1793514367.351, "event": "person_no_points", "tid": 28, "pos": [2.27, -0.73], "text": "사람으로 표시한 28번에 반사점이 없습니다. 사람이 떠난 자리일 수 있습니다.", "check": true}
+{"t": 1793514380.847, "event": "person_no_points", "tid": 28, "pos": [2.53, -0.98], "text": "사람으로 표시한 28번에 반사점이 없습니다. 사람이 떠난 자리일 수 있습니다.", "check": true}
+{"t": 1793514397.505, "event": "track_new", "tid": 20, "pos": [1.1, -0.66], "text": "새 번호 20번이 생겼습니다.", "check": false}
+{"t": 1793514407.165, "event": "person_no_points", "tid": 28, "pos": [2.32, -1.08], "text": "사람으로 표시한 28번에 반사점이 없습니다. 사람이 떠난 자리일 수 있습니다.", "check": true}
+{"t": 1793514460.344, "event": "person_no_points", "tid": 28, "pos": [2.35, -1.07], "text": "사람으로 표시한 28번에 반사점이 없습니다. 사람이 떠난 자리일 수 있습니다.", "check": true}
+{"t": 1793514472.247, "event": "person_no_points", "tid": 28, "pos": [2.36, -1.07], "text": "사람으로 표시한 28번에 반사점이 없습니다. 사람이 떠난 자리일 수 있습니다.", "check": true}
+{"t": 1793514503.179, "event": "person_no_points", "tid": 27, "pos": [-0.18, -1.64], "text": "사람으로 표시한 27번에 반사점이 없습니다. 사람이 떠난 자리일 수 있습니다.", "check": true}
+{"t": 1793514510.706, "event": "person_no_points", "tid": 28, "pos": [2.36, -1.07], "text": "사람으로 표시한 28번에 반사점이 없습니다. 사람이 떠난 자리일 수 있습니다.", "check": true}
+{"t": 1793514523.175, "event": "track_new", "tid": 17, "pos": [-0.17, 1.45], "text": "새 번호 17번이 생겼습니다.", "check": false}
+{"t": 1793514528.112, "event": "person_no_points", "tid": 28, "pos": [2.47, -0.54], "text": "사람으로 표시한 28번에 반사점이 없습니다. 사람이 떠난 자리일 수 있습니다.", "check": true}
+{"t": 1793514540.298, "event": "person_no_points", "tid": 28, "pos": [2.39, -0.67], "text": "사람으로 표시한 28번에 반사점이 없습니다. 사람이 떠난 자리일 수 있습니다.", "check": true}
+{"t": 1793514559.442, "event": "person_no_points", "tid": 28, "pos": [2.44, -0.63], "text": "사람으로 표시한 28번에 반사점이 없습니다. 사람이 떠난 자리일 수 있습니다.", "check": true}
+{"t": 1793514567.54, "event": "person_no_points", "tid": 28, "pos": [2.44, -0.63], "text": "사람으로 표시한 28번에 반사점이 없습니다. 사람이 떠난 자리일 수 있습니다.", "check": true}
+{"t": 1793514574.606, "event": "person_no_points", "tid": 28, "pos": [2.44, -0.63], "text": "사람으로 표시한 28번에 반사점이 없습니다. 사람이 떠난 자리일 수 있습니다.", "check": true}
+{"t": 1793514597.822, "event": "person_no_points", "tid": 28, "pos": [2.44, -0.66], "text": "사람으로 표시한 28번에 반사점이 없습니다. 사람이 떠난 자리일 수 있습니다.", "check": true}
+{"t": 1793514606.555, "event": "person_no_points", "tid": 28, "pos": [2.44, -0.66], "text": "사람으로 표시한 28번에 반사점이 없습니다. 사람이 떠난 자리일 수 있습니다.", "check": true}
+{"t": 1793514628.054, "event": "person_no_points", "tid": 28, "pos": [2.44, -0.66], "text": "사람으로 표시한 28번에 반사점이 없습니다. 사람이 떠난 자리일 수 있습니다.", "check": true}
+{"t": 1793514635.419, "event": "person_no_points", "tid": 28, "pos": [2.43, -0.67], "text": "사람으로 표시한 28번에 반사점이 없습니다. 사람이 떠난 자리일 수 있습니다.", "check": true}
+{"t": 1793514648.642, "event": "person_no_points", "tid": 28, "pos": [2.41, -0.79], "text": "사람으로 표시한 28번에 반사점이 없습니다. 사람이 떠난 자리일 수 있습니다.", "check": true}
+{"t": 1793514666.073, "event": "track_new", "tid": 23, "pos": [3.31, -1.36], "text": "새 번호 23번이 사람으로 표시한 28번 근처에서 생겼습니다. 같은 사람인지 확인하세요.", "check": true}
+{"t": 1793514668.291, "tid": 23, "event": "track_end", "truth": null}
+{"t": 1793514668.291, "event": "track_gone", "tid": 23, "pos": [3.3, -1.35], "text": "23번이 사라졌습니다.", "check": false}

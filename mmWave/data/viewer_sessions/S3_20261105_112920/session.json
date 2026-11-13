@@ -1,0 +1,18 @@
+{
+ "session": "S3",
+ "description": "한 명씩 서 있기, 걷기",
+ "default_truth": "unknown",
+ "participant": "측정자 1명",
+ "activity": "y 방향 직선 왕복 걷기: 평소 속도 4번, 천천히 4번, 끝점마다 3초 정지, 걸음 수 직접 셈",
+ "note": "x 약 1.0m, y -1.5~+1.5 직선(실측 거리는 측정자가 알려 줌). 시작 시점 방 안 사람 없음. 원본 남은 트랙 11, 28, 13 등 있음.",
+ "started_at": 1793845760.3920326,
+ "stopped_at": 1793846046.2922873,
+ "stop_reason": "user",
+ "height_m": 2.7,
+ "tilt_deg": 90.0,
+ "upside_down": true,
+ "reader_commit": "56021f3",
+ "frames": 5172,
+ "corrupt": 24,
+ "label_changes": 1
+}

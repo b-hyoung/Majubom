@@ -1,0 +1,13 @@
+{"t": 1794465839.441, "event": "person_link", "tid": "P1", "pos": [1.1, 1.29], "text": "P1 번호 연결: 23번 (사용자 표시)", "check": false}
+{"t": 1794465839.441, "tid": 23, "event": "label", "truth": "person"}
+{"t": 1794465872.387, "event": "track_new", "tid": 25, "pos": [3.04, -0.13], "text": "새 번호 25번이 생겼습니다.", "check": false}
+{"t": 1794465874.732, "tid": 25, "event": "track_end", "truth": null}
+{"t": 1794465874.732, "event": "track_gone", "tid": 25, "pos": [3.04, -0.13], "text": "25번이 사라졌습니다.", "check": false}
+{"t": 1794465963.002, "event": "track_new", "tid": 26, "pos": [-0.51, 1.64], "text": "새 번호 26번이 생겼습니다.", "check": false}
+{"t": 1794466045.87, "event": "person_fall", "tid": "P1", "pos": [0.12, -0.37], "text": "P1 낙상 감지: z=0.264 기준 높이=1.1", "check": true}
+{"t": 1794466045.87, "event": "legacy_fall", "tid": 23, "pos": [0.12, -0.37], "text": "기존 판정 fallen: 23번 z=0.264 기준 높이=1.1", "check": true}
+{"t": 1794466052.613, "event": "person_fall", "tid": "P1", "pos": [-0.31, -0.47], "text": "P1 바닥에서 일어남 (침상 위, 경보 제외): z=0.853 기준 높이=1.1", "check": false}
+{"t": 1794466052.613, "event": "legacy_fall", "tid": 23, "pos": [-0.31, -0.47], "text": "기존 판정 recovered: 23번 z=0.853 기준 높이=1.1", "check": false}
+{"t": 1794466118.748, "event": "track_new", "tid": 27, "pos": [2.92, 0.0], "text": "새 번호 27번이 생겼습니다.", "check": false}
+{"t": 1794466121.022, "tid": 27, "event": "track_end", "truth": null}
+{"t": 1794466121.022, "event": "track_gone", "tid": 27, "pos": [2.93, 0.0], "text": "27번이 사라졌습니다.", "check": false}

@@ -1,0 +1,10 @@
+﻿person track ������: tid 2 (moved)
+person track ����: tid 2 (moved)
+person track ħ�� �� ����: tid 19 (moved)
+person track ���;���: tid None (none)
+person track ��: tid None (none)
+wrote C:\Majubom\camera-pose\recordings\cam-mmw\TEST_20261108_163448\matched.csv
+[A_PiC920] ������: frames 858, pose 99%, mmw track 99% | mmw z 0.845 head_z 1.1 speed 0.002 npts 12.0 | MP hip_y 0.484 shoulder_y 0.746 | cam side:512, None:341, standing:5 | mmw tid 2 99%, segment track 99%
+[A_PiC920] ����: frames 889, pose 99%, mmw track 98% | mmw z 0.701 head_z 0.99 speed 0.032 npts 11.0 | MP hip_y 0.48 shoulder_y 0.749 | cam None:874, side:15 | mmw tid 2 98%, segment track 98%
+[B_USB] ������: frames 1053, pose 87%, mmw track 99% | mmw z 0.845 head_z 1.11 speed 0.002 npts 12 | MP hip_y 0.475 shoulder_y 0.261 | cam None:783, prone:163, other:106 | mmw tid 2 99%, segment track 99%
+[B_USB] ����: frames 786, pose 99%, mmw track 98% | mmw z 0.701 head_z 0.99 speed 0.032 npts 12.0 | MP hip_y 0.543 shoulder_y 0.309 | cam side:429, None:242, prone:110 | mmw tid 2 98%, segment track 98%

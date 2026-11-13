@@ -1,0 +1,18 @@
+{
+ "session": "S3",
+ "description": "한 명씩 서 있기, 걷기",
+ "default_truth": "unknown",
+ "participant": "측정자 1명",
+ "activity": "감지 범위 안 y 방향 직선 왕복 걷기: 평소 속도 4번, 천천히 4번, 끝점마다 3초 정지, 걸음 수 직접 셈",
+ "note": "x 약 0.3m, y 약 -1.3~+1.6 직선(약 2.9m, 실측 거리는 측정자가 알려 줌). 앞 녹화 S3_20261105_112920에서 y -1.6 바깥은 반사점이 거의 없어서 시작점을 앞당김.",
+ "started_at": 1793846455.879634,
+ "stopped_at": 1793846609.9429362,
+ "stop_reason": "user",
+ "height_m": 2.7,
+ "tilt_deg": 90.0,
+ "upside_down": true,
+ "reader_commit": "56021f3",
+ "frames": 2783,
+ "corrupt": 17,
+ "label_changes": 1
+}

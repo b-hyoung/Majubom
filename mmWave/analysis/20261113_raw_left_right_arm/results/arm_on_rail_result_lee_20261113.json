@@ -1,0 +1,253 @@
+{
+ "recording": "TEST_20261113_201751 (lee, lying on right side, rail on radar-side bed edge, 5 up/down cycles)",
+ "mmwave_static_arm_on_rail": {
+  "windows": {
+   "on_rail": 70,
+   "down": 70
+  },
+  "leave_one_cycle_out_acc": 0.607,
+  "segments_correct": "7/10",
+  "per_segment": {
+   "2": {
+    "label": "안전바",
+    "acc": 0.571
+   },
+   "3": {
+    "label": "내림",
+    "acc": 0.857
+   },
+   "4": {
+    "label": "안전바",
+    "acc": 1.0
+   },
+   "5": {
+    "label": "내림",
+    "acc": 0.071
+   },
+   "6": {
+    "label": "안전바",
+    "acc": 0.857
+   },
+   "7": {
+    "label": "내림",
+    "acc": 0.786
+   },
+   "8": {
+    "label": "안전바",
+    "acc": 0.0
+   },
+   "9": {
+    "label": "내림",
+    "acc": 0.5
+   },
+   "10": {
+    "label": "안전바",
+    "acc": 0.429
+   },
+   "11": {
+    "label": "내림",
+    "acc": 1.0
+   }
+  }
+ },
+ "mmwave_moment_of_moving_arm": {
+  "rule": "corr(x, doppler) of moving points within 30 cm of the radar-side edge, 0-8 s after cue: + = arm going out to the rail, − = arm coming back",
+  "arm_up_corr": [
+   0.878,
+   0.789,
+   0.764,
+   0.663,
+   0.736
+  ],
+  "arm_down_corr": [
+   -0.271,
+   -0.096,
+   -0.141,
+   -0.381,
+   -0.215
+  ],
+  "correct": "10/10",
+  "per_cue": [
+   {
+    "cue": 2,
+    "label": "팔 안전바",
+    "moving_points": 1250,
+    "moving_near_edge": 158,
+    "doppler_mean_near_edge": 0.333,
+    "corr_x_doppler_near_edge": 0.878,
+    "corr_x_doppler_all": 0.45
+   },
+   {
+    "cue": 3,
+    "label": "팔 내림",
+    "moving_points": 998,
+    "moving_near_edge": 54,
+    "doppler_mean_near_edge": -0.1018,
+    "corr_x_doppler_near_edge": -0.271,
+    "corr_x_doppler_all": -0.041
+   },
+   {
+    "cue": 4,
+    "label": "팔 안전바",
+    "moving_points": 555,
+    "moving_near_edge": 169,
+    "doppler_mean_near_edge": 0.1795,
+    "corr_x_doppler_near_edge": 0.789,
+    "corr_x_doppler_all": 0.549
+   },
+   {
+    "cue": 5,
+    "label": "팔 내림",
+    "moving_points": 550,
+    "moving_near_edge": 72,
+    "doppler_mean_near_edge": -0.03,
+    "corr_x_doppler_near_edge": -0.096,
+    "corr_x_doppler_all": -0.062
+   },
+   {
+    "cue": 6,
+    "label": "팔 안전바",
+    "moving_points": 703,
+    "moving_near_edge": 293,
+    "doppler_mean_near_edge": 0.3043,
+    "corr_x_doppler_near_edge": 0.764,
+    "corr_x_doppler_all": 0.572
+   },
+   {
+    "cue": 7,
+    "label": "팔 내림",
+    "moving_points": 3557,
+    "moving_near_edge": 453,
+    "doppler_mean_near_edge": 0.0214,
+    "corr_x_doppler_near_edge": -0.141,
+    "corr_x_doppler_all": 0.112
+   },
+   {
+    "cue": 8,
+    "label": "팔 안전바",
+    "moving_points": 1242,
+    "moving_near_edge": 225,
+    "doppler_mean_near_edge": 0.4324,
+    "corr_x_doppler_near_edge": 0.663,
+    "corr_x_doppler_all": 0.597
+   },
+   {
+    "cue": 9,
+    "label": "팔 내림",
+    "moving_points": 569,
+    "moving_near_edge": 113,
+    "doppler_mean_near_edge": -0.117,
+    "corr_x_doppler_near_edge": -0.381,
+    "corr_x_doppler_all": -0.337
+   },
+   {
+    "cue": 10,
+    "label": "팔 안전바",
+    "moving_points": 752,
+    "moving_near_edge": 238,
+    "doppler_mean_near_edge": 0.1947,
+    "corr_x_doppler_near_edge": 0.736,
+    "corr_x_doppler_all": 0.469
+   },
+   {
+    "cue": 11,
+    "label": "팔 내림",
+    "moving_points": 1389,
+    "moving_near_edge": 56,
+    "doppler_mean_near_edge": 0.01,
+    "corr_x_doppler_near_edge": -0.215,
+    "corr_x_doppler_all": 0.023
+   }
+  ]
+ },
+ "tof_static_arm_on_rail": {
+  "windows": {
+   "on_rail": 70,
+   "down": 70
+  },
+  "logistic": {
+   "acc": 0.914,
+   "segments_correct": "10/10",
+   "per_segment": {
+    "2": 0.5,
+    "3": 1.0,
+    "4": 1.0,
+    "5": 1.0,
+    "6": 1.0,
+    "7": 0.929,
+    "8": 1.0,
+    "9": 0.929,
+    "10": 0.857,
+    "11": 0.929
+   }
+  },
+  "random_forest": {
+   "acc": 0.879,
+   "segments_correct": "9/10",
+   "per_segment": {
+    "2": 0.0,
+    "3": 1.0,
+    "4": 1.0,
+    "5": 1.0,
+    "6": 1.0,
+    "7": 1.0,
+    "8": 1.0,
+    "9": 0.929,
+    "10": 1.0,
+    "11": 0.857
+   }
+  },
+  "zones_fully_separating": [
+   {
+    "sensor": "tof2",
+    "zone": 36,
+    "row": 4,
+    "col": 4,
+    "up_minus_down_mm": -69.1
+   },
+   {
+    "sensor": "tof2",
+    "zone": 37,
+    "row": 4,
+    "col": 5,
+    "up_minus_down_mm": -343.0
+   },
+   {
+    "sensor": "tof2",
+    "zone": 38,
+    "row": 4,
+    "col": 6,
+    "up_minus_down_mm": -295.6
+   },
+   {
+    "sensor": "tof2",
+    "zone": 44,
+    "row": 5,
+    "col": 4,
+    "up_minus_down_mm": -72.6
+   },
+   {
+    "sensor": "tof2",
+    "zone": 45,
+    "row": 5,
+    "col": 5,
+    "up_minus_down_mm": -34.8
+   },
+   {
+    "sensor": "tof2",
+    "zone": 46,
+    "row": 5,
+    "col": 6,
+    "up_minus_down_mm": -11.2
+   },
+   {
+    "sensor": "tof2",
+    "zone": 52,
+    "row": 6,
+    "col": 4,
+    "up_minus_down_mm": -22.9
+   }
+  ]
+ },
+ "clock_offset_pi_minus_laptop_s": 0.29
+}

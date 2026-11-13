@@ -1,0 +1,10 @@
+{"t": 1793846501.279, "event": "track_new", "tid": 6, "pos": [0.23, -1.91], "text": "새 번호 6번이 생겼습니다.", "check": false}
+{"t": 1793846507.424, "event": "person_link", "tid": "P1", "pos": [0.17, -1.07], "text": "P1 다시 들어옴: 6번 (나간 곳으로 들어옴)", "check": false}
+{"t": 1793846513.489, "tid": 6, "event": "label", "truth": "person"}
+{"t": 1793846517.95, "event": "person_exit", "tid": "P1", "pos": [0.77, -2.3], "text": "P1 나감 (열린 쪽)", "check": false}
+{"t": 1793846521.887, "event": "person_link", "tid": "P1", "pos": [0.48, -1.58], "text": "P1 다시 들어옴: 6번 (옛 번호로 돌아옴)", "check": false}
+{"t": 1793846536.488, "event": "person_exit", "tid": "P1", "pos": [0.76, -2.45], "text": "P1 나감 (열린 쪽)", "check": false}
+{"t": 1793846544.882, "event": "person_link", "tid": "P1", "pos": [0.32, -1.57], "text": "P1 다시 들어옴: 6번 (옛 번호로 돌아옴)", "check": false}
+{"t": 1793846567.517, "event": "person_exit", "tid": "P1", "pos": [0.63, -2.06], "text": "P1 나감 (열린 쪽)", "check": false}
+{"t": 1793846570.636, "event": "person_link", "tid": "P1", "pos": [0.29, -1.47], "text": "P1 다시 들어옴: 6번 (옛 번호로 돌아옴)", "check": false}
+{"t": 1793846595.776, "event": "person_exit", "tid": "P1", "pos": [0.67, -2.29], "text": "P1 나감 (열린 쪽)", "check": false}

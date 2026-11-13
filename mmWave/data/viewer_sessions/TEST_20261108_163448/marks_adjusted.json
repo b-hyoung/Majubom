@@ -1,0 +1,25 @@
+{
+    "mmwave_session":  "TEST_20261108_163448",
+    "hold_seconds":  60,
+    "order":  [
+                  "옆누움",
+                  "누움",
+                  "침대 위 앉음",
+                  "걸터앉음",
+                  "섬"
+              ],
+    "marks":  {
+                  "옆누움":  "16:35:16.905",
+                  "누움":  "16:36:19.844",
+                  "침대 위 앉음":  "16:37:22.610",
+                  "걸터앉음":  "16:38:25.766",
+                  "섬":  "16:39:29.391",
+                  "끝":  "16:40:32.050"
+              },
+    "exclude":  [
+                    "침대 위 앉음",
+                    "걸터앉음",
+                    "섬"
+                ],
+    "note":  "mmWave sensor dropped off the Pi USB at 16:37:26 (cp210x disconnect), so mmWave stops 4 s into 침대 위 앉음. Only 옆누움 and 누움 have mmWave data."
+}

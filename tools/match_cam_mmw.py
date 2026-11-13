@@ -51,7 +51,13 @@ def load_marks(path, day):
     unknown = excluded - set(data["marks"])
     if unknown:
         raise SystemExit(f"exclude has labels not in marks: {sorted(unknown)}")
-    return sorted(marks, key=lambda m: m[1]), excluded
+    # Optional "track": {"<cue label>": tid} pins a segment to a track checked by hand
+    # (e.g. another person walking near the bed was picked as "moved").
+    pinned = {k: int(v) for k, v in (data.get("track") or {}).items()}
+    unknown = set(pinned) - set(data["marks"])
+    if unknown:
+        raise SystemExit(f"track has labels not in marks: {sorted(unknown)}")
+    return sorted(marks, key=lambda m: m[1]), excluded, pinned
 
 
 def truth_at(marks, t):
@@ -205,8 +211,10 @@ def main():
     mm = load_mmwave(args.mmwave)
     mm_t = [f["t"] for f in mm]
     day = datetime.fromtimestamp(mm_t[0]).strftime("%Y-%m-%d")
-    marks, excluded = load_marks(args.marks, day)
+    marks, excluded, pinned = load_marks(args.marks, day)
     segments = segment_person_tids(mm, marks, bed)
+    segments = [(a, b, pinned[name], "pinned") if name in pinned else (a, b, tid, why)
+                for (name, _), (a, b, tid, why) in zip(marks, segments)]
     for (name, _), (a, b, tid, why) in zip(marks, segments):
         print(f"person track {name}: tid {tid} ({why})")
 

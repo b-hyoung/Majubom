@@ -1,0 +1,10 @@
+﻿person track ���;���: tid 20 (moved)
+person track ħ�� �� ����: tid 20 (moved)
+person track ��: tid 20 (moved)
+wrote C:\Majubom\camera-pose\recordings\cam-mmw\TEST_20261108_150809\matched.csv
+[A_PiC920] ���;���: frames 265, pose 100%, mmw track 98% | mmw z 0.749 head_z 0.85 speed 0.082 npts 7.0 | MP hip_y 0.564 shoulder_y 0.289 | cam edge_sitting:221, None:35, standing:5 | mmw tid 20 98%, segment track 98%
+[A_PiC920] ħ�� �� ����: frames 750, pose 100%, mmw track 99% | mmw z 1.279 head_z 1.36 speed 0.043 npts 10 | MP hip_y 0.547 shoulder_y 0.296 | cam other:457, None:182, sitting:99 | mmw tid 20 99%, segment track 99%
+[A_PiC920] ��: frames 865, pose 99%, mmw track 98% | mmw z 1.576 head_z 1.57 speed 0.038 npts 9.0 | MP hip_y 0.498 shoulder_y 0.138 | cam standing:797, None:48, other:17 | mmw tid 20 98%, segment track 98%
+[B_USB] ���;���: frames 264, pose 100%, mmw track 99% | mmw z 0.749 head_z 0.85 speed 0.091 npts 7.0 | MP hip_y 0.558 shoulder_y 0.213 | cam None:129, sitting:77, edge_sitting:51 | mmw tid 20 99%, segment track 99%
+[B_USB] ħ�� �� ����: frames 754, pose 100%, mmw track 99% | mmw z 1.279 head_z 1.36 speed 0.043 npts 10 | MP hip_y 0.557 shoulder_y 0.214 | cam sitting:530, None:141, other:71 | mmw tid 20 99%, segment track 99%
+[B_USB] ��: frames 1639, pose 3%, mmw track 99% | mmw z 1.581 head_z 1.585 speed 0.035 npts 9 | MP hip_y 0.562 shoulder_y 0.226 | cam None:1608, other:25, standing:6 | mmw tid 20 99%, segment track 99%

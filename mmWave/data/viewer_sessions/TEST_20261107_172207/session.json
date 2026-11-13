@@ -1,0 +1,18 @@
+{
+ "session": "TEST",
+ "description": "기능 시험(비교에 쓰지 않음)",
+ "default_truth": "unknown",
+ "participant": "측정자 1명 (+ x+ 책상 쪽 팀원 1명)",
+ "activity": "낙상 시험: 열린 바닥 낙상, 침대 옆 낙상, x+ 가장자리 걸터앉기 반복",
+ "note": "2026-11-07 리더 test_bed. 각 동작 시각은 posture_marks.txt",
+ "started_at": 1794039727.906289,
+ "stopped_at": 1794040437.6960738,
+ "stop_reason": "user",
+ "height_m": 2.7,
+ "tilt_deg": 90.0,
+ "upside_down": true,
+ "reader_commit": "9e54265",
+ "frames": 12751,
+ "corrupt": 71,
+ "label_changes": 0
+}

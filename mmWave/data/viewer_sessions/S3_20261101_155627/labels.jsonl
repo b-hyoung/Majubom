@@ -1,0 +1,23 @@
+{"t": 1793516220.417, "event": "track_new", "tid": 22, "pos": [0.82, -1.58], "text": "새 번호 22번이 생겼습니다.", "check": false}
+{"t": 1793516229.622, "event": "person_link", "tid": "P3", "pos": [-0.23, -0.45], "text": "P3 번호 연결: 22번 (사용자 표시)", "check": false}
+{"t": 1793516229.622, "tid": 22, "event": "label", "truth": "person"}
+{"t": 1793516274.063, "event": "person_exit", "tid": "P3", "pos": [-0.73, 2.31], "text": "P3 나감 (문)", "check": false}
+{"t": 1793516292.614, "event": "person_no_points", "tid": 22, "pos": [-0.52, 1.82], "text": "사람으로 표시한 22번에 반사점이 없습니다. 사람이 떠난 자리일 수 있습니다.", "check": true}
+{"t": 1793516330.268, "event": "person_link", "tid": "P3", "pos": [-0.28, 0.11], "text": "P3 다시 들어옴: 22번 (사용자 표시)", "check": false}
+{"t": 1793516330.268, "tid": 22, "event": "label", "truth": "person"}
+{"t": 1793516355.58, "event": "person_exit", "tid": "P3", "pos": [1.26, -2.32], "text": "P3 나감 (열린 쪽)", "check": false}
+{"t": 1793516379.622, "event": "track_new", "tid": 5, "pos": [1.0, -1.74], "text": "새 번호 5번이 생겼습니다.", "check": false}
+{"t": 1793516381.499, "event": "person_link", "tid": "P3", "pos": [0.32, -0.94], "text": "P3 다시 들어옴: 5번 (나간 곳으로 들어옴)", "check": false}
+{"t": 1793516384.932, "event": "person_no_points", "tid": 22, "pos": [1.71, -2.6], "text": "사람으로 표시한 22번에 반사점이 없습니다. 사람이 떠난 자리일 수 있습니다.", "check": true}
+{"t": 1793516413.656, "event": "track_new", "tid": 18, "pos": [0.6, -0.95], "text": "새 번호 18번이 생겼습니다.", "check": false}
+{"t": 1793516445.081, "event": "person_no_points", "tid": 22, "pos": [1.72, -2.59], "text": "사람으로 표시한 22번에 반사점이 없습니다. 사람이 떠난 자리일 수 있습니다.", "check": true}
+{"t": 1793516470.369, "tid": 26, "event": "track_end", "truth": null}
+{"t": 1793516470.369, "event": "track_gone", "tid": 26, "pos": [0.04, -2.59], "text": "26번이 사라졌습니다.", "check": false}
+{"t": 1793516470.541, "tid": 22, "event": "track_end", "truth": "person"}
+{"t": 1793516470.541, "event": "track_gone", "tid": 22, "pos": [1.72, -2.59], "text": "사람으로 표시한 22번이 사라졌습니다.", "check": true}
+{"t": 1793516490.753, "event": "person_lost", "tid": "P3", "pos": [1.8, -2.72], "text": "P3 추적 끊김: 5번이 벽 밖으로 튐. 같은 사람을 다시 표시해 주세요.", "check": true}
+{"t": 1793516493.737, "event": "track_new", "tid": 3, "pos": [-0.41, 1.93], "text": "새 번호 3번이 생겼습니다.", "check": false}
+{"t": 1793516494.762, "tid": 5, "event": "track_end", "truth": null}
+{"t": 1793516494.762, "event": "track_gone", "tid": 5, "pos": [3.08, -4.41], "text": "5번이 사라졌습니다.", "check": false}
+{"t": 1793516496.362, "tid": 3, "event": "track_end", "truth": null}
+{"t": 1793516496.362, "event": "track_gone", "tid": 3, "pos": [-0.46, 1.98], "text": "3번이 사라졌습니다.", "check": false}

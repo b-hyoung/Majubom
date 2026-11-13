@@ -1,0 +1,1734 @@
+{
+ "rows": [
+  [
+   "평소",
+   {
+    "t0": 76.5,
+    "t1": 82.7,
+    "n": 109,
+    "path": 4.66,
+    "disp": 1.41,
+    "sp_min": 0.2,
+    "sp_max": 1.28,
+    "g": {
+     "speed": 0.77,
+     "speed_cv": 0.316,
+     "sway": 0.503,
+     "freeze_ratio": 0.0
+    }
+   },
+   {
+    "z": {
+     "speed": 0.08,
+     "speed_cv": 0.07,
+     "sway": 0.6,
+     "freeze_ratio": -0.31,
+     "total_abs": 1.05
+    },
+    "a": 0.67,
+    "s": -0.08,
+    "n_a": -0.79,
+    "n_s": -0.08,
+    "score": -0.08,
+    "driver": "speed",
+    "level": "normal",
+    "old": "normal"
+   }
+  ],
+  [
+   "평소",
+   {
+    "t0": 79.6,
+    "t1": 85.5,
+    "n": 109,
+    "path": 5.18,
+    "disp": 1.49,
+    "sp_min": 0.45,
+    "sp_max": 1.25,
+    "g": {
+     "speed": 0.826,
+     "speed_cv": 0.246,
+     "sway": 0.457,
+     "freeze_ratio": 0.0
+    }
+   },
+   {
+    "z": {
+     "speed": 0.71,
+     "speed_cv": -0.41,
+     "sway": 0.17,
+     "freeze_ratio": -0.32,
+     "total_abs": 1.62
+    },
+    "a": 0.17,
+    "s": -0.71,
+    "n_a": -1.22,
+    "n_s": -0.71,
+    "score": -0.71,
+    "driver": "speed",
+    "level": "normal",
+    "old": "normal"
+   }
+  ],
+  [
+   "평소",
+   {
+    "t0": 82.7,
+    "t1": 88.5,
+    "n": 109,
+    "path": 4.91,
+    "disp": 1.51,
+    "sp_min": 0.39,
+    "sp_max": 1.25,
+    "g": {
+     "speed": 0.808,
+     "speed_cv": 0.263,
+     "sway": 0.425,
+     "freeze_ratio": 0.0
+    }
+   },
+   {
+    "z": {
+     "speed": 0.55,
+     "speed_cv": -0.34,
+     "sway": -0.12,
+     "freeze_ratio": -0.32,
+     "total_abs": 1.33
+    },
+    "a": 0.0,
+    "s": -0.55,
+    "n_a": -1.37,
+    "n_s": -0.55,
+    "score": -0.55,
+    "driver": "speed",
+    "level": "normal",
+    "old": "normal"
+   }
+  ],
+  [
+   "평소",
+   {
+    "t0": 85.7,
+    "t1": 91.5,
+    "n": 109,
+    "path": 4.87,
+    "disp": 1.4,
+    "sp_min": 0.39,
+    "sp_max": 1.15,
+    "g": {
+     "speed": 0.818,
+     "speed_cv": 0.24,
+     "sway": 0.481,
+     "freeze_ratio": 0.0
+    }
+   },
+   {
+    "z": {
+     "speed": 0.63,
+     "speed_cv": -0.47,
+     "sway": 0.46,
+     "freeze_ratio": -0.32,
+     "total_abs": 1.88
+    },
+    "a": 0.46,
+    "s": -0.63,
+    "n_a": -0.97,
+    "n_s": -0.63,
+    "score": -0.63,
+    "driver": "speed",
+    "level": "normal",
+    "old": "normal"
+   }
+  ],
+  [
+   "평소",
+   {
+    "t0": 88.5,
+    "t1": 94.7,
+    "n": 109,
+    "path": 4.66,
+    "disp": 1.18,
+    "sp_min": 0.32,
+    "sp_max": 1.15,
+    "g": {
+     "speed": 0.79,
+     "speed_cv": 0.277,
+     "sway": 0.581,
+     "freeze_ratio": 0.0
+    }
+   },
+   {
+    "z": {
+     "speed": 0.28,
+     "speed_cv": -0.23,
+     "sway": 1.41,
+     "freeze_ratio": -0.32,
+     "total_abs": 2.25
+    },
+    "a": 1.41,
+    "s": -0.28,
+    "n_a": -0.16,
+    "n_s": -0.28,
+    "score": -0.16,
+    "driver": "sway",
+    "level": "normal",
+    "old": "normal"
+   }
+  ],
+  [
+   "평소",
+   {
+    "t0": 91.7,
+    "t1": 97.9,
+    "n": 109,
+    "path": 4.83,
+    "disp": 1.27,
+    "sp_min": 0.32,
+    "sp_max": 1.07,
+    "g": {
+     "speed": 0.747,
+     "speed_cv": 0.265,
+     "sway": 0.484,
+     "freeze_ratio": 0.0
+    }
+   },
+   {
+    "z": {
+     "speed": -0.22,
+     "speed_cv": -0.33,
+     "sway": 0.46,
+     "freeze_ratio": -0.32,
+     "total_abs": 1.33
+    },
+    "a": 0.68,
+    "s": 0.22,
+    "n_a": -0.79,
+    "n_s": 0.22,
+    "score": 0.22,
+    "driver": "speed",
+    "level": "normal",
+    "old": "normal"
+   }
+  ],
+  [
+   "평소",
+   {
+    "t0": 94.7,
+    "t1": 100.9,
+    "n": 109,
+    "path": 5.0,
+    "disp": 1.35,
+    "sp_min": 0.42,
+    "sp_max": 1.04,
+    "g": {
+     "speed": 0.75,
+     "speed_cv": 0.199,
+     "sway": 0.379,
+     "freeze_ratio": 0.0
+    }
+   },
+   {
+    "z": {
+     "speed": -0.21,
+     "speed_cv": -0.77,
+     "sway": -0.57,
+     "freeze_ratio": -0.32,
+     "total_abs": 1.87
+    },
+    "a": 0.21,
+    "s": 0.21,
+    "n_a": -1.19,
+    "n_s": 0.21,
+    "score": 0.21,
+    "driver": "speed",
+    "level": "normal",
+    "old": "normal"
+   }
+  ],
+  [
+   "평소",
+   {
+    "t0": 98.1,
+    "t1": 104.0,
+    "n": 109,
+    "path": 4.61,
+    "disp": 1.26,
+    "sp_min": 0.28,
+    "sp_max": 1.17,
+    "g": {
+     "speed": 0.756,
+     "speed_cv": 0.286,
+     "sway": 0.41,
+     "freeze_ratio": 0.0
+    }
+   },
+   {
+    "z": {
+     "speed": -0.09,
+     "speed_cv": -0.18,
+     "sway": -0.27,
+     "freeze_ratio": -0.32,
+     "total_abs": 0.86
+    },
+    "a": 0.09,
+    "s": 0.09,
+    "n_a": -1.29,
+    "n_s": 0.09,
+    "score": 0.09,
+    "driver": "speed",
+    "level": "normal",
+    "old": "normal"
+   }
+  ],
+  [
+   "평소",
+   {
+    "t0": 101.0,
+    "t1": 107.1,
+    "n": 109,
+    "path": 4.92,
+    "disp": 0.96,
+    "sp_min": 0.28,
+    "sp_max": 1.17,
+    "g": {
+     "speed": 0.84,
+     "speed_cv": 0.271,
+     "sway": 0.543,
+     "freeze_ratio": 0.0
+    }
+   },
+   {
+    "z": {
+     "speed": 0.96,
+     "speed_cv": -0.27,
+     "sway": 0.96,
+     "freeze_ratio": -0.32,
+     "total_abs": 2.51
+    },
+    "a": 0.96,
+    "s": -0.96,
+    "n_a": -0.55,
+    "n_s": -0.96,
+    "score": -0.55,
+    "driver": "sway",
+    "level": "normal",
+    "old": "normal"
+   }
+  ],
+  [
+   "평소",
+   {
+    "t0": 104.0,
+    "t1": 110.0,
+    "n": 109,
+    "path": 5.21,
+    "disp": 1.3,
+    "sp_min": 0.44,
+    "sp_max": 1.21,
+    "g": {
+     "speed": 0.877,
+     "speed_cv": 0.223,
+     "sway": 0.469,
+     "freeze_ratio": 0.0
+    }
+   },
+   {
+    "z": {
+     "speed": 1.38,
+     "speed_cv": -0.55,
+     "sway": 0.28,
+     "freeze_ratio": -0.29,
+     "total_abs": 2.51
+    },
+    "a": 0.28,
+    "s": -1.38,
+    "n_a": -1.13,
+    "n_s": -1.38,
+    "score": -1.13,
+    "driver": "sway",
+    "level": "normal",
+    "old": "normal"
+   }
+  ],
+  [
+   "평소",
+   {
+    "t0": 107.1,
+    "t1": 113.0,
+    "n": 109,
+    "path": 4.68,
+    "disp": 2.16,
+    "sp_min": 0.11,
+    "sp_max": 1.21,
+    "g": {
+     "speed": 0.763,
+     "speed_cv": 0.388,
+     "sway": 0.364,
+     "freeze_ratio": 0.037
+    }
+   },
+   {
+    "z": {
+     "speed": 0.01,
+     "speed_cv": 0.59,
+     "sway": -0.67,
+     "freeze_ratio": 0.17,
+     "total_abs": 1.45
+    },
+    "a": 0.76,
+    "s": -0.01,
+    "n_a": -0.72,
+    "n_s": -0.01,
+    "score": -0.01,
+    "driver": "speed",
+    "level": "normal",
+    "old": "normal"
+   }
+  ],
+  [
+   "평소",
+   {
+    "t0": 110.1,
+    "t1": 116.2,
+    "n": 109,
+    "path": 4.86,
+    "disp": 1.34,
+    "sp_min": 0.11,
+    "sp_max": 1.13,
+    "g": {
+     "speed": 0.73,
+     "speed_cv": 0.349,
+     "sway": 0.504,
+     "freeze_ratio": 0.037
+    }
+   },
+   {
+    "z": {
+     "speed": -0.39,
+     "speed_cv": 0.34,
+     "sway": 0.6,
+     "freeze_ratio": 0.17,
+     "total_abs": 1.5
+    },
+    "a": 1.5,
+    "s": 0.39,
+    "n_a": -0.09,
+    "n_s": 0.39,
+    "score": 0.39,
+    "driver": "speed",
+    "level": "normal",
+    "old": "normal"
+   }
+  ],
+  [
+   "평소",
+   {
+    "t0": 113.2,
+    "t1": 119.6,
+    "n": 109,
+    "path": 5.04,
+    "disp": 1.49,
+    "sp_min": 0.35,
+    "sp_max": 1.16,
+    "g": {
+     "speed": 0.819,
+     "speed_cv": 0.241,
+     "sway": 0.524,
+     "freeze_ratio": 0.0
+    }
+   },
+   {
+    "z": {
+     "speed": 0.56,
+     "speed_cv": -0.4,
+     "sway": 0.78,
+     "freeze_ratio": -0.29,
+     "total_abs": 2.04
+    },
+    "a": 0.78,
+    "s": -0.56,
+    "n_a": -0.7,
+    "n_s": -0.56,
+    "score": -0.56,
+    "driver": "speed",
+    "level": "normal",
+    "old": "normal"
+   }
+  ],
+  [
+   "평소",
+   {
+    "t0": 116.4,
+    "t1": 122.6,
+    "n": 109,
+    "path": 4.67,
+    "disp": 1.81,
+    "sp_min": 0.3,
+    "sp_max": 1.16,
+    "g": {
+     "speed": 0.751,
+     "speed_cv": 0.345,
+     "sway": 0.364,
+     "freeze_ratio": 0.0
+    }
+   },
+   {
+    "z": {
+     "speed": -0.16,
+     "speed_cv": 0.26,
+     "sway": -0.69,
+     "freeze_ratio": -0.32,
+     "total_abs": 1.42
+    },
+    "a": 0.42,
+    "s": 0.16,
+    "n_a": -1.01,
+    "n_s": 0.16,
+    "score": 0.16,
+    "driver": "speed",
+    "level": "normal",
+    "old": "normal"
+   }
+  ],
+  [
+   "평소",
+   {
+    "t0": 119.6,
+    "t1": 125.8,
+    "n": 109,
+    "path": 4.84,
+    "disp": 1.87,
+    "sp_min": 0.3,
+    "sp_max": 1.12,
+    "g": {
+     "speed": 0.749,
+     "speed_cv": 0.277,
+     "sway": 0.435,
+     "freeze_ratio": 0.0
+    }
+   },
+   {
+    "z": {
+     "speed": -0.18,
+     "speed_cv": -0.2,
+     "sway": -0.03,
+     "freeze_ratio": -0.32,
+     "total_abs": 0.73
+    },
+    "a": 0.18,
+    "s": 0.18,
+    "n_a": -1.21,
+    "n_s": 0.18,
+    "score": 0.18,
+    "driver": "speed",
+    "level": "normal",
+    "old": "normal"
+   }
+  ],
+  [
+   "평소",
+   {
+    "t0": 122.7,
+    "t1": 128.8,
+    "n": 109,
+    "path": 4.67,
+    "disp": 1.17,
+    "sp_min": 0.37,
+    "sp_max": 1.19,
+    "g": {
+     "speed": 0.818,
+     "speed_cv": 0.226,
+     "sway": 0.569,
+     "freeze_ratio": 0.0
+    }
+   },
+   {
+    "z": {
+     "speed": 0.57,
+     "speed_cv": -0.58,
+     "sway": 1.19,
+     "freeze_ratio": -0.32,
+     "total_abs": 2.66
+    },
+    "a": 1.19,
+    "s": -0.57,
+    "n_a": -0.35,
+    "n_s": -0.57,
+    "score": -0.35,
+    "driver": "sway",
+    "level": "normal",
+    "old": "normal"
+   }
+  ],
+  [
+   "평소",
+   {
+    "t0": 125.8,
+    "t1": 131.6,
+    "n": 109,
+    "path": 4.59,
+    "disp": 1.95,
+    "sp_min": 0.37,
+    "sp_max": 1.19,
+    "g": {
+     "speed": 0.765,
+     "speed_cv": 0.262,
+     "sway": 0.387,
+     "freeze_ratio": 0.0
+    }
+   },
+   {
+    "z": {
+     "speed": 0.01,
+     "speed_cv": -0.36,
+     "sway": -0.46,
+     "freeze_ratio": -0.31,
+     "total_abs": 1.14
+    },
+    "a": 0.0,
+    "s": -0.01,
+    "n_a": -1.37,
+    "n_s": -0.01,
+    "score": -0.01,
+    "driver": "speed",
+    "level": "normal",
+    "old": "normal"
+   }
+  ],
+  [
+   "평소",
+   {
+    "t0": 128.8,
+    "t1": 134.6,
+    "n": 109,
+    "path": 4.58,
+    "disp": 1.9,
+    "sp_min": 0.0,
+    "sp_max": 1.02,
+    "g": {
+     "speed": 0.756,
+     "speed_cv": 0.226,
+     "sway": 0.421,
+     "freeze_ratio": 0.009
+    }
+   },
+   {
+    "z": {
+     "speed": -0.65,
+     "speed_cv": -1.0,
+     "sway": -0.71,
+     "freeze_ratio": 0.15,
+     "total_abs": 2.51
+    },
+    "a": 0.8,
+    "s": 0.65,
+    "n_a": -0.68,
+    "n_s": 0.65,
+    "score": 0.65,
+    "driver": "speed",
+    "level": "normal",
+    "old": "normal"
+   }
+  ],
+  [
+   "평소",
+   {
+    "t0": 131.7,
+    "t1": 137.9,
+    "n": 109,
+    "path": 2.82,
+    "disp": 1.55,
+    "sp_min": 0.0,
+    "sp_max": 1.01,
+    "g": {
+     "speed": 0.437,
+     "speed_cv": 0.86,
+     "sway": 0.081,
+     "freeze_ratio": 0.349
+    }
+   },
+   {
+    "z": {
+     "speed": -7.0,
+     "speed_cv": 12.14,
+     "sway": -5.69,
+     "freeze_ratio": 11.49,
+     "total_abs": 36.31
+    },
+    "a": 30.63,
+    "s": 7.0,
+    "n_a": 24.81,
+    "n_s": 7.0,
+    "score": 24.81,
+    "driver": "speed_cv",
+    "level": "critical",
+    "old": "critical"
+   }
+  ],
+  [
+   "천천히",
+   {
+    "t0": 163.5,
+    "t1": 169.3,
+    "n": 109,
+    "path": 3.57,
+    "disp": 1.14,
+    "sp_min": 0.12,
+    "sp_max": 0.93,
+    "g": {
+     "speed": 0.522,
+     "speed_cv": 0.345,
+     "sway": 0.355,
+     "freeze_ratio": 0.018
+    }
+   },
+   {
+    "z": {
+     "speed": -2.82,
+     "speed_cv": 0.3,
+     "sway": -0.81,
+     "freeze_ratio": -0.06,
+     "total_abs": 3.99
+    },
+    "a": 3.12,
+    "s": 2.82,
+    "n_a": 1.3,
+    "n_s": 2.82,
+    "score": 2.82,
+    "driver": "speed",
+    "level": "caution",
+    "old": "caution"
+   }
+  ],
+  [
+   "천천히",
+   {
+    "t0": 166.4,
+    "t1": 172.3,
+    "n": 109,
+    "path": 3.77,
+    "disp": 2.43,
+    "sp_min": 0.28,
+    "sp_max": 0.75,
+    "g": {
+     "speed": 0.511,
+     "speed_cv": 0.243,
+     "sway": 0.183,
+     "freeze_ratio": 0.0
+    }
+   },
+   {
+    "z": {
+     "speed": -2.95,
+     "speed_cv": -0.43,
+     "sway": -2.42,
+     "freeze_ratio": -0.29,
+     "total_abs": 6.1
+    },
+    "a": 2.95,
+    "s": 2.95,
+    "n_a": 1.15,
+    "n_s": 2.95,
+    "score": 2.95,
+    "driver": "speed",
+    "level": "caution",
+    "old": "warning"
+   }
+  ],
+  [
+   "천천히",
+   {
+    "t0": 169.4,
+    "t1": 175.4,
+    "n": 109,
+    "path": 3.47,
+    "disp": 1.2,
+    "sp_min": 0.31,
+    "sp_max": 0.75,
+    "g": {
+     "speed": 0.468,
+     "speed_cv": 0.248,
+     "sway": 0.275,
+     "freeze_ratio": 0.0
+    }
+   },
+   {
+    "z": {
+     "speed": -3.45,
+     "speed_cv": -0.4,
+     "sway": -1.56,
+     "freeze_ratio": -0.29,
+     "total_abs": 5.69
+    },
+    "a": 3.45,
+    "s": 3.45,
+    "n_a": 1.58,
+    "n_s": 3.45,
+    "score": 3.45,
+    "driver": "speed",
+    "level": "warning",
+    "old": "caution"
+   }
+  ],
+  [
+   "천천히",
+   {
+    "t0": 172.4,
+    "t1": 178.4,
+    "n": 109,
+    "path": 2.94,
+    "disp": 2.11,
+    "sp_min": 0.09,
+    "sp_max": 0.74,
+    "g": {
+     "speed": 0.432,
+     "speed_cv": 0.309,
+     "sway": 0.128,
+     "freeze_ratio": 0.028
+    }
+   },
+   {
+    "z": {
+     "speed": -3.86,
+     "speed_cv": 0.04,
+     "sway": -2.94,
+     "freeze_ratio": 0.07,
+     "total_abs": 6.91
+    },
+    "a": 3.97,
+    "s": 3.86,
+    "n_a": 2.03,
+    "n_s": 3.86,
+    "score": 3.86,
+    "driver": "speed",
+    "level": "warning",
+    "old": "warning"
+   }
+  ],
+  [
+   "천천히",
+   {
+    "t0": 175.6,
+    "t1": 181.6,
+    "n": 109,
+    "path": 3.69,
+    "disp": 1.52,
+    "sp_min": 0.09,
+    "sp_max": 0.91,
+    "g": {
+     "speed": 0.523,
+     "speed_cv": 0.349,
+     "sway": 0.278,
+     "freeze_ratio": 0.028
+    }
+   },
+   {
+    "z": {
+     "speed": -2.81,
+     "speed_cv": 0.33,
+     "sway": -1.53,
+     "freeze_ratio": 0.07,
+     "total_abs": 4.74
+    },
+    "a": 3.21,
+    "s": 2.81,
+    "n_a": 1.38,
+    "n_s": 2.81,
+    "score": 2.81,
+    "driver": "speed",
+    "level": "caution",
+    "old": "caution"
+   }
+  ],
+  [
+   "천천히",
+   {
+    "t0": 178.5,
+    "t1": 184.8,
+    "n": 109,
+    "path": 4.19,
+    "disp": 1.77,
+    "sp_min": 0.27,
+    "sp_max": 0.91,
+    "g": {
+     "speed": 0.566,
+     "speed_cv": 0.268,
+     "sway": 0.323,
+     "freeze_ratio": 0.0
+    }
+   },
+   {
+    "z": {
+     "speed": -2.32,
+     "speed_cv": -0.25,
+     "sway": -1.11,
+     "freeze_ratio": -0.29,
+     "total_abs": 3.97
+    },
+    "a": 2.32,
+    "s": 2.32,
+    "n_a": 0.62,
+    "n_s": 2.32,
+    "score": 2.32,
+    "driver": "speed",
+    "level": "caution",
+    "old": "caution"
+   }
+  ],
+  [
+   "천천히",
+   {
+    "t0": 181.6,
+    "t1": 187.9,
+    "n": 109,
+    "path": 3.74,
+    "disp": 1.66,
+    "sp_min": 0.21,
+    "sp_max": 0.85,
+    "g": {
+     "speed": 0.504,
+     "speed_cv": 0.281,
+     "sway": 0.222,
+     "freeze_ratio": 0.0
+    }
+   },
+   {
+    "z": {
+     "speed": -3.03,
+     "speed_cv": -0.16,
+     "sway": -2.06,
+     "freeze_ratio": -0.29,
+     "total_abs": 5.54
+    },
+    "a": 3.03,
+    "s": 3.03,
+    "n_a": 1.22,
+    "n_s": 3.03,
+    "score": 3.03,
+    "driver": "speed",
+    "level": "warning",
+    "old": "caution"
+   }
+  ],
+  [
+   "천천히",
+   {
+    "t0": 184.9,
+    "t1": 190.8,
+    "n": 109,
+    "path": 3.12,
+    "disp": 1.42,
+    "sp_min": 0.21,
+    "sp_max": 0.73,
+    "g": {
+     "speed": 0.48,
+     "speed_cv": 0.272,
+     "sway": 0.211,
+     "freeze_ratio": 0.0
+    }
+   },
+   {
+    "z": {
+     "speed": -3.31,
+     "speed_cv": -0.22,
+     "sway": -2.16,
+     "freeze_ratio": -0.29,
+     "total_abs": 5.99
+    },
+    "a": 3.31,
+    "s": 3.31,
+    "n_a": 1.46,
+    "n_s": 3.31,
+    "score": 3.31,
+    "driver": "speed",
+    "level": "warning",
+    "old": "caution"
+   }
+  ],
+  [
+   "천천히",
+   {
+    "t0": 187.9,
+    "t1": 193.9,
+    "n": 109,
+    "path": 3.33,
+    "disp": 1.74,
+    "sp_min": 0.22,
+    "sp_max": 0.86,
+    "g": {
+     "speed": 0.5,
+     "speed_cv": 0.318,
+     "sway": 0.247,
+     "freeze_ratio": 0.0
+    }
+   },
+   {
+    "z": {
+     "speed": -3.08,
+     "speed_cv": 0.11,
+     "sway": -1.82,
+     "freeze_ratio": -0.29,
+     "total_abs": 5.3
+    },
+    "a": 3.19,
+    "s": 3.08,
+    "n_a": 1.36,
+    "n_s": 3.08,
+    "score": 3.08,
+    "driver": "speed",
+    "level": "warning",
+    "old": "caution"
+   }
+  ],
+  [
+   "천천히",
+   {
+    "t0": 191.1,
+    "t1": 197.0,
+    "n": 109,
+    "path": 3.79,
+    "disp": 1.7,
+    "sp_min": 0.22,
+    "sp_max": 0.86,
+    "g": {
+     "speed": 0.523,
+     "speed_cv": 0.301,
+     "sway": 0.302,
+     "freeze_ratio": 0.0
+    }
+   },
+   {
+    "z": {
+     "speed": -2.81,
+     "speed_cv": -0.02,
+     "sway": -1.31,
+     "freeze_ratio": -0.29,
+     "total_abs": 4.43
+    },
+    "a": 2.81,
+    "s": 2.81,
+    "n_a": 1.03,
+    "n_s": 2.81,
+    "score": 2.81,
+    "driver": "speed",
+    "level": "caution",
+    "old": "caution"
+   }
+  ],
+  [
+   "천천히",
+   {
+    "t0": 194.0,
+    "t1": 200.0,
+    "n": 109,
+    "path": 3.92,
+    "disp": 1.86,
+    "sp_min": 0.16,
+    "sp_max": 0.92,
+    "g": {
+     "speed": 0.546,
+     "speed_cv": 0.304,
+     "sway": 0.231,
+     "freeze_ratio": 0.0
+    }
+   },
+   {
+    "z": {
+     "speed": -2.55,
+     "speed_cv": 0.01,
+     "sway": -1.97,
+     "freeze_ratio": -0.29,
+     "total_abs": 4.82
+    },
+    "a": 2.56,
+    "s": 2.55,
+    "n_a": 0.82,
+    "n_s": 2.55,
+    "score": 2.55,
+    "driver": "speed",
+    "level": "caution",
+    "old": "caution"
+   }
+  ],
+  [
+   "천천히",
+   {
+    "t0": 197.0,
+    "t1": 203.0,
+    "n": 109,
+    "path": 3.67,
+    "disp": 1.78,
+    "sp_min": 0.16,
+    "sp_max": 0.92,
+    "g": {
+     "speed": 0.554,
+     "speed_cv": 0.29,
+     "sway": 0.38,
+     "freeze_ratio": 0.0
+    }
+   },
+   {
+    "z": {
+     "speed": -2.45,
+     "speed_cv": -0.09,
+     "sway": -0.57,
+     "freeze_ratio": -0.29,
+     "total_abs": 3.42
+    },
+    "a": 2.45,
+    "s": 2.45,
+    "n_a": 0.73,
+    "n_s": 2.45,
+    "score": 2.45,
+    "driver": "speed",
+    "level": "caution",
+    "old": "caution"
+   }
+  ],
+  [
+   "천천히",
+   {
+    "t0": 200.0,
+    "t1": 206.4,
+    "n": 109,
+    "path": 3.33,
+    "disp": 2.21,
+    "sp_min": 0.19,
+    "sp_max": 0.74,
+    "g": {
+     "speed": 0.489,
+     "speed_cv": 0.262,
+     "sway": 0.234,
+     "freeze_ratio": 0.0
+    }
+   },
+   {
+    "z": {
+     "speed": -3.2,
+     "speed_cv": -0.3,
+     "sway": -1.94,
+     "freeze_ratio": -0.29,
+     "total_abs": 5.74
+    },
+    "a": 3.2,
+    "s": 3.2,
+    "n_a": 1.37,
+    "n_s": 3.2,
+    "score": 3.2,
+    "driver": "speed",
+    "level": "warning",
+    "old": "caution"
+   }
+  ],
+  [
+   "천천히",
+   {
+    "t0": 203.0,
+    "t1": 209.6,
+    "n": 109,
+    "path": 3.63,
+    "disp": 1.44,
+    "sp_min": 0.19,
+    "sp_max": 0.74,
+    "g": {
+     "speed": 0.443,
+     "speed_cv": 0.286,
+     "sway": 0.344,
+     "freeze_ratio": 0.0
+    }
+   },
+   {
+    "z": {
+     "speed": -3.74,
+     "speed_cv": -0.12,
+     "sway": -0.91,
+     "freeze_ratio": -0.29,
+     "total_abs": 5.06
+    },
+    "a": 3.74,
+    "s": 3.74,
+    "n_a": 1.83,
+    "n_s": 3.74,
+    "score": 3.74,
+    "driver": "speed",
+    "level": "warning",
+    "old": "caution"
+   }
+  ],
+  [
+   "천천히",
+   {
+    "t0": 206.6,
+    "t1": 212.5,
+    "n": 109,
+    "path": 3.85,
+    "disp": 2.41,
+    "sp_min": 0.26,
+    "sp_max": 1.07,
+    "g": {
+     "speed": 0.509,
+     "speed_cv": 0.365,
+     "sway": 0.2,
+     "freeze_ratio": 0.0
+    }
+   },
+   {
+    "z": {
+     "speed": -2.97,
+     "speed_cv": 0.44,
+     "sway": -2.26,
+     "freeze_ratio": -0.29,
+     "total_abs": 5.97
+    },
+    "a": 3.41,
+    "s": 2.97,
+    "n_a": 1.55,
+    "n_s": 2.97,
+    "score": 2.97,
+    "driver": "speed",
+    "level": "caution",
+    "old": "caution"
+   }
+  ],
+  [
+   "천천히",
+   {
+    "t0": 209.6,
+    "t1": 215.6,
+    "n": 109,
+    "path": 3.82,
+    "disp": 1.33,
+    "sp_min": 0.33,
+    "sp_max": 1.07,
+    "g": {
+     "speed": 0.557,
+     "speed_cv": 0.329,
+     "sway": 0.419,
+     "freeze_ratio": 0.0
+    }
+   },
+   {
+    "z": {
+     "speed": -2.42,
+     "speed_cv": 0.19,
+     "sway": -0.21,
+     "freeze_ratio": -0.29,
+     "total_abs": 3.11
+    },
+    "a": 2.61,
+    "s": 2.42,
+    "n_a": 0.86,
+    "n_s": 2.42,
+    "score": 2.42,
+    "driver": "speed",
+    "level": "caution",
+    "old": "caution"
+   }
+  ],
+  [
+   "천천히",
+   {
+    "t0": 212.6,
+    "t1": 218.6,
+    "n": 109,
+    "path": 3.47,
+    "disp": 2.51,
+    "sp_min": 0.15,
+    "sp_max": 0.85,
+    "g": {
+     "speed": 0.476,
+     "speed_cv": 0.348,
+     "sway": 0.119,
+     "freeze_ratio": 0.0
+    }
+   },
+   {
+    "z": {
+     "speed": -3.35,
+     "speed_cv": 0.32,
+     "sway": -3.02,
+     "freeze_ratio": -0.29,
+     "total_abs": 6.99
+    },
+    "a": 3.67,
+    "s": 3.35,
+    "n_a": 1.77,
+    "n_s": 3.35,
+    "score": 3.35,
+    "driver": "speed",
+    "level": "warning",
+    "old": "warning"
+   }
+  ],
+  [
+   "천천히",
+   {
+    "t0": 215.8,
+    "t1": 221.7,
+    "n": 109,
+    "path": 2.05,
+    "disp": 1.35,
+    "sp_min": 0.0,
+    "sp_max": 0.64,
+    "g": {
+     "speed": 0.279,
+     "speed_cv": 0.849,
+     "sway": 0.034,
+     "freeze_ratio": 0.394
+    }
+   },
+   {
+    "z": {
+     "speed": -5.63,
+     "speed_cv": 3.92,
+     "sway": -3.82,
+     "freeze_ratio": 4.78,
+     "total_abs": 18.14
+    },
+    "a": 14.33,
+    "s": 5.63,
+    "n_a": 10.88,
+    "n_s": 5.63,
+    "score": 10.88,
+    "driver": "speed",
+    "level": "critical",
+    "old": "critical"
+   }
+  ],
+  [
+   "천천히",
+   {
+    "t0": 218.6,
+    "t1": 224.6,
+    "n": 109,
+    "path": 1.06,
+    "disp": 0.04,
+    "sp_min": 0.0,
+    "sp_max": 0.6,
+    "g": {
+     "speed": 0.135,
+     "speed_cv": 1.28,
+     "sway": 0.065,
+     "freeze_ratio": 0.633
+    }
+   },
+   {
+    "z": {
+     "speed": -7.29,
+     "speed_cv": 7.01,
+     "sway": -3.53,
+     "freeze_ratio": 7.85,
+     "total_abs": 25.68
+    },
+    "a": 22.15,
+    "s": 7.29,
+    "n_a": 17.56,
+    "n_s": 7.29,
+    "score": 17.56,
+    "driver": "freeze_ratio",
+    "level": "critical",
+    "old": "critical"
+   }
+  ],
+  [
+   "종종걸음",
+   {
+    "t0": 58.8,
+    "t1": 64.8,
+    "n": 109,
+    "path": 1.55,
+    "disp": 0.4,
+    "sp_min": 0.0,
+    "sp_max": 0.46,
+    "g": {
+     "speed": 0.18,
+     "speed_cv": 0.769,
+     "sway": 0.036,
+     "freeze_ratio": 0.385
+    }
+   },
+   {
+    "z": {
+     "speed": -6.77,
+     "speed_cv": 3.34,
+     "sway": -3.8,
+     "freeze_ratio": 4.66,
+     "total_abs": 18.58
+    },
+    "a": 14.77,
+    "s": 6.77,
+    "n_a": 11.26,
+    "n_s": 6.77,
+    "score": 11.26,
+    "driver": "speed",
+    "level": "critical",
+    "old": "critical"
+   }
+  ],
+  [
+   "종종걸음",
+   {
+    "t0": 61.9,
+    "t1": 67.8,
+    "n": 109,
+    "path": 1.88,
+    "disp": 0.74,
+    "sp_min": 0.0,
+    "sp_max": 0.77,
+    "g": {
+     "speed": 0.207,
+     "speed_cv": 1.115,
+     "sway": 0.056,
+     "freeze_ratio": 0.495
+    }
+   },
+   {
+    "z": {
+     "speed": -6.46,
+     "speed_cv": 5.83,
+     "sway": -3.62,
+     "freeze_ratio": 6.08,
+     "total_abs": 21.97
+    },
+    "a": 18.37,
+    "s": 6.46,
+    "n_a": 14.33,
+    "n_s": 6.46,
+    "score": 14.33,
+    "driver": "speed",
+    "level": "critical",
+    "old": "critical"
+   }
+  ],
+  [
+   "종종걸음",
+   {
+    "t0": 64.8,
+    "t1": 71.2,
+    "n": 109,
+    "path": 3.04,
+    "disp": 1.34,
+    "sp_min": 0.0,
+    "sp_max": 0.77,
+    "g": {
+     "speed": 0.31,
+     "speed_cv": 0.612,
+     "sway": 0.123,
+     "freeze_ratio": 0.147
+    }
+   },
+   {
+    "z": {
+     "speed": -5.27,
+     "speed_cv": 2.22,
+     "sway": -2.99,
+     "freeze_ratio": 1.6,
+     "total_abs": 12.07
+    },
+    "a": 9.09,
+    "s": 5.27,
+    "n_a": 6.4,
+    "n_s": 5.27,
+    "score": 6.4,
+    "driver": "speed",
+    "level": "critical",
+    "old": "critical"
+   }
+  ],
+  [
+   "종종걸음",
+   {
+    "t0": 68.0,
+    "t1": 74.2,
+    "n": 109,
+    "path": 3.08,
+    "disp": 1.53,
+    "sp_min": 0.14,
+    "sp_max": 0.64,
+    "g": {
+     "speed": 0.342,
+     "speed_cv": 0.392,
+     "sway": 0.137,
+     "freeze_ratio": 0.028
+    }
+   },
+   {
+    "z": {
+     "speed": -4.9,
+     "speed_cv": 0.64,
+     "sway": -2.86,
+     "freeze_ratio": 0.07,
+     "total_abs": 8.46
+    },
+    "a": 5.61,
+    "s": 4.9,
+    "n_a": 3.43,
+    "n_s": 4.9,
+    "score": 4.9,
+    "driver": "speed",
+    "level": "critical",
+    "old": "warning"
+   }
+  ],
+  [
+   "종종걸음",
+   {
+    "t0": 71.2,
+    "t1": 77.2,
+    "n": 109,
+    "path": 2.9,
+    "disp": 1.55,
+    "sp_min": 0.12,
+    "sp_max": 0.68,
+    "g": {
+     "speed": 0.375,
+     "speed_cv": 0.402,
+     "sway": 0.125,
+     "freeze_ratio": 0.028
+    }
+   },
+   {
+    "z": {
+     "speed": -4.52,
+     "speed_cv": 0.71,
+     "sway": -2.97,
+     "freeze_ratio": 0.07,
+     "total_abs": 8.26
+    },
+    "a": 5.3,
+    "s": 4.52,
+    "n_a": 3.16,
+    "n_s": 4.52,
+    "score": 4.52,
+    "driver": "speed",
+    "level": "critical",
+    "old": "warning"
+   }
+  ],
+  [
+   "종종걸음",
+   {
+    "t0": 74.4,
+    "t1": 80.2,
+    "n": 109,
+    "path": 2.31,
+    "disp": 1.11,
+    "sp_min": 0.11,
+    "sp_max": 0.68,
+    "g": {
+     "speed": 0.299,
+     "speed_cv": 0.426,
+     "sway": 0.135,
+     "freeze_ratio": 0.073
+    }
+   },
+   {
+    "z": {
+     "speed": -5.4,
+     "speed_cv": 0.88,
+     "sway": -2.87,
+     "freeze_ratio": 0.65,
+     "total_abs": 9.8
+    },
+    "a": 6.93,
+    "s": 5.4,
+    "n_a": 4.56,
+    "n_s": 5.4,
+    "score": 5.4,
+    "driver": "speed",
+    "level": "critical",
+    "old": "critical"
+   }
+  ],
+  [
+   "종종걸음",
+   {
+    "t0": 77.3,
+    "t1": 83.2,
+    "n": 109,
+    "path": 2.2,
+    "disp": 1.58,
+    "sp_min": 0.11,
+    "sp_max": 0.59,
+    "g": {
+     "speed": 0.296,
+     "speed_cv": 0.331,
+     "sway": 0.056,
+     "freeze_ratio": 0.046
+    }
+   },
+   {
+    "z": {
+     "speed": -5.43,
+     "speed_cv": 0.2,
+     "sway": -3.62,
+     "freeze_ratio": 0.3,
+     "total_abs": 9.55
+    },
+    "a": 5.93,
+    "s": 5.43,
+    "n_a": 3.7,
+    "n_s": 5.43,
+    "score": 5.43,
+    "driver": "speed",
+    "level": "critical",
+    "old": "critical"
+   }
+  ],
+  [
+   "종종걸음",
+   {
+    "t0": 80.3,
+    "t1": 86.3,
+    "n": 109,
+    "path": 2.31,
+    "disp": 1.38,
+    "sp_min": 0.04,
+    "sp_max": 0.59,
+    "g": {
+     "speed": 0.287,
+     "speed_cv": 0.472,
+     "sway": 0.024,
+     "freeze_ratio": 0.165
+    }
+   },
+   {
+    "z": {
+     "speed": -5.53,
+     "speed_cv": 1.21,
+     "sway": -3.92,
+     "freeze_ratio": 1.83,
+     "total_abs": 12.49
+    },
+    "a": 8.57,
+    "s": 5.53,
+    "n_a": 5.96,
+    "n_s": 5.53,
+    "score": 5.96,
+    "driver": "speed",
+    "level": "critical",
+    "old": "critical"
+   }
+  ],
+  [
+   "종종걸음",
+   {
+    "t0": 83.4,
+    "t1": 89.3,
+    "n": 109,
+    "path": 2.29,
+    "disp": 1.24,
+    "sp_min": 0.04,
+    "sp_max": 0.56,
+    "g": {
+     "speed": 0.285,
+     "speed_cv": 0.431,
+     "sway": 0.097,
+     "freeze_ratio": 0.165
+    }
+   },
+   {
+    "z": {
+     "speed": -5.56,
+     "speed_cv": 0.92,
+     "sway": -3.23,
+     "freeze_ratio": 1.83,
+     "total_abs": 11.54
+    },
+    "a": 8.31,
+    "s": 5.56,
+    "n_a": 5.74,
+    "n_s": 5.56,
+    "score": 5.74,
+    "driver": "speed",
+    "level": "critical",
+    "old": "critical"
+   }
+  ],
+  [
+   "종종걸음",
+   {
+    "t0": 86.3,
+    "t1": 92.3,
+    "n": 109,
+    "path": 2.03,
+    "disp": 1.21,
+    "sp_min": 0.18,
+    "sp_max": 0.46,
+    "g": {
+     "speed": 0.283,
+     "speed_cv": 0.242,
+     "sway": 0.122,
+     "freeze_ratio": 0.0
+    }
+   },
+   {
+    "z": {
+     "speed": -5.58,
+     "speed_cv": -0.44,
+     "sway": -3.0,
+     "freeze_ratio": -0.29,
+     "total_abs": 9.31
+    },
+    "a": 5.58,
+    "s": 5.58,
+    "n_a": 3.4,
+    "n_s": 5.58,
+    "score": 5.58,
+    "driver": "speed",
+    "level": "critical",
+    "old": "critical"
+   }
+  ]
+ ],
+ "acc": {
+  "0 양방향 |z| 합 ≥ 3 (예전)": {
+   "acc": 0.9791666666666666,
+   "평소": "18/19",
+   "천천히": "19/19",
+   "종종걸음": "10/10"
+  },
+  "A 위험 방향 합 ≥ 2": {
+   "acc": 0.6458333333333334,
+   "평소": "18/19",
+   "천천히": "3/19",
+   "종종걸음": "10/10"
+  },
+  "S 속도만 ≥ 2": {
+   "acc": 0.9791666666666666,
+   "평소": "18/19",
+   "천천히": "19/19",
+   "종종걸음": "10/10"
+  },
+  "A+S 큰 쪽 ≥ 2 (지금)": {
+   "acc": 0.9791666666666666,
+   "평소": "18/19",
+   "천천히": "19/19",
+   "종종걸음": "10/10"
+  }
+ },
+ "levels": {
+  "평소": {
+   "normal": 18,
+   "critical": 1
+  },
+  "천천히": {
+   "caution": 9,
+   "warning": 8,
+   "critical": 2
+  },
+  "종종걸음": {
+   "critical": 10
+  }
+ },
+ "baseline": {
+  "speed_mu": 0.7668421052631579,
+  "speed_cv_mu": 0.3031578947368422,
+  "sway_mu": 0.44110526315789467,
+  "freeze_ratio_mu": 0.022736842105263156,
+  "speed_sigma": 0.08670413282075684,
+  "speed_cv_sigma": 0.1393685999362821,
+  "sway_sigma": 0.1064869128291271,
+  "freeze_ratio_sigma": 0.07773019605984141
+ }
+}

@@ -1,0 +1,18 @@
+{
+ "session": "S4",
+ "description": "침대에 눕기",
+ "default_truth": "unknown",
+ "participant": "팀원",
+ "activity": "침상 누움(팀원)",
+ "note": "2026-11-07 리더 test_bed, 유령 13번 x- 벽에 있음",
+ "started_at": 1794032107.712132,
+ "stopped_at": 1794033802.9672427,
+ "stop_reason": "user",
+ "height_m": 2.7,
+ "tilt_deg": 90.0,
+ "upside_down": true,
+ "reader_commit": "9e54265",
+ "frames": 30475,
+ "corrupt": 173,
+ "label_changes": 0
+}

@@ -1,0 +1,18 @@
+{
+ "session": "S0",
+ "description": "빈 방, 의자 평소 위치",
+ "default_truth": "object",
+ "participant": "",
+ "activity": "빈 방",
+ "note": "사용자가 방에 아무도 없다고 확인함. 레이더는 약 10분 전 시작.",
+ "started_at": 1793504423.823091,
+ "stopped_at": 1793504724.2175848,
+ "stop_reason": "user",
+ "height_m": 2.7,
+ "tilt_deg": 90.0,
+ "upside_down": true,
+ "reader_commit": "e4d6725",
+ "frames": 5461,
+ "corrupt": 0,
+ "label_changes": 0
+}

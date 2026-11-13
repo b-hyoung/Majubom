@@ -1,0 +1,16 @@
+﻿person track ħ�� �� ����: tid 0 (moved)
+person track ������: tid 0 (moved)
+person track ����: tid 0 (moved)
+person track ���;���: tid 0 (moved)
+person track ��: tid 0 (moved)
+wrote C:\Majubom\camera-pose\recordings\cam-mmw\TEST_20261108_165436\matched.csv
+[A_PiC920] ħ�� �� ����: frames 896, pose 100%, mmw track 98% | mmw z 1.171 head_z 1.09 speed 0.038 npts 11.0 | MP hip_y 0.532 shoulder_y 0.283 | cam other:795, None:101 | mmw tid 0 98%, segment track 98%
+[A_PiC920] ������: frames 864, pose 99%, mmw track 99% | mmw z 0.964 head_z 0.95 speed 0.076 npts 7.0 | MP hip_y 0.517 shoulder_y 0.747 | cam side:828, None:36 | mmw tid 0 99%, segment track 99%
+[A_PiC920] ����: frames 859, pose 100%, mmw track 98% | mmw z 0.686 head_z 0.96 speed 0.095 npts 13.0 | MP hip_y 0.495 shoulder_y 0.738 | cam None:673, side:158, prone:28 | mmw tid 0 98%, segment track 98%
+[A_PiC920] ���;���: frames 731, pose 100%, mmw track 98% | mmw z 0.781 head_z 1.04 speed 0.069 npts 10 | MP hip_y 0.539 shoulder_y 0.251 | cam sitting:626, None:67, edge_sitting:38 | mmw tid 0 98%, segment track 98%
+[A_PiC920] ��: frames 800, pose 100%, mmw track 98% | mmw z 1.466 head_z 1.59 speed 0.052 npts 8 | MP hip_y 0.528 shoulder_y 0.154 | cam standing:775, None:20, other:5 | mmw tid 0 98%, segment track 98%
+[B_USB] ħ�� �� ����: frames 904, pose 100%, mmw track 99% | mmw z 1.172 head_z 1.12 speed 0.038 npts 11 | MP hip_y 0.567 shoulder_y 0.212 | cam other:354, None:325, sitting:224 | mmw tid 0 99%, segment track 99%
+[B_USB] ������: frames 887, pose 95%, mmw track 99% | mmw z 0.962 head_z 0.955 speed 0.075 npts 7.0 | MP hip_y 0.483 shoulder_y 0.275 | cam None:451, side:424, other:12 | mmw tid 0 99%, segment track 99%
+[B_USB] ����: frames 848, pose 100%, mmw track 98% | mmw z 0.686 head_z 0.96 speed 0.105 npts 13.0 | MP hip_y 0.551 shoulder_y 0.315 | cam side:759, None:89 | mmw tid 0 98%, segment track 98%
+[B_USB] ���;���: frames 731, pose 100%, mmw track 98% | mmw z 0.782 head_z 1.08 speed 0.069 npts 10 | MP hip_y 0.59 shoulder_y 0.229 | cam sitting:670, None:46, edge_sitting:15 | mmw tid 0 98%, segment track 98%
+[B_USB] ��: frames 1613, pose 0%, mmw track 98% | mmw z 1.466 head_z 1.59 speed 0.052 npts 8 | MP hip_y 0.549 shoulder_y 0.288 | cam None:1606, other:7 | mmw tid 0 98%, segment track 98%

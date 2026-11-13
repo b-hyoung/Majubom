@@ -1,0 +1,18 @@
+{
+ "session": "S0",
+ "description": "빈 방, 의자 평소 위치",
+ "default_truth": "object",
+ "participant": "",
+ "activity": "빈 방 장시간",
+ "note": "사용자가 방을 비우고 30분 측정 요청. 12:40 S0와 같은 설정, 재시작 없음.",
+ "started_at": 1793505057.892411,
+ "stopped_at": 1793506858.6772554,
+ "stop_reason": "user",
+ "height_m": 2.7,
+ "tilt_deg": 90.0,
+ "upside_down": true,
+ "reader_commit": "e4d6725",
+ "frames": 32739,
+ "corrupt": 0,
+ "label_changes": 0
+}

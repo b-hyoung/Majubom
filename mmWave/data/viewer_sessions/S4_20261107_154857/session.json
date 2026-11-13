@@ -1,0 +1,18 @@
+{
+ "session": "S4",
+ "description": "침대에 눕기",
+ "default_truth": "unknown",
+ "participant": "팀원 2명",
+ "activity": "침상 누움(팀원1), 팀원2는 x+ 쪽에 앉거나 문으로 드나듦",
+ "note": "2026-11-07 리더 test_bed. 17:10까지 연속 녹화",
+ "started_at": 1794034137.5724113,
+ "stopped_at": 1794037375.2715592,
+ "stop_reason": "user",
+ "height_m": 2.7,
+ "tilt_deg": 90.0,
+ "upside_down": true,
+ "reader_commit": "9e54265",
+ "frames": 58482,
+ "corrupt": 294,
+ "label_changes": 0
+}

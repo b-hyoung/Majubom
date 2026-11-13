@@ -1,0 +1,19 @@
+{
+ "session": "TEST",
+ "description": "기능 시험(비교에 쓰지 않음)",
+ "default_truth": "unknown",
+ "participant": "",
+ "activity": "천천히 눕기, 누워 있기, 퇴실",
+ "note": "사용자가 천천히 바닥에 누움. 이후 누운 채 유지, 일어나 퇴실 예정.",
+ "started_at": 1793508980.9989078,
+ "stopped_at": 1793509254.5359309,
+ "stop_reason": "user",
+ "height_m": 2.7,
+ "tilt_deg": 90.0,
+ "upside_down": true,
+ "reader_commit": "e4d6725",
+ "frames": 4928,
+ "corrupt": 44,
+ "label_changes": 0,
+ "exit_reported_at": 1793509134.478451
+}

@@ -1,0 +1,5 @@
+{"t": 1794118177.027, "event": "track_new", "tid": 14, "pos": [-0.31, -4.43], "text": "새 번호 14번이 생겼습니다.", "check": false}
+{"t": 1794118179.191, "tid": 14, "event": "track_end", "truth": null}
+{"t": 1794118179.191, "event": "track_gone", "tid": 14, "pos": [-0.32, -4.48], "text": "14번이 사라졌습니다.", "check": false}
+{"t": 1794118215.214, "tid": 12, "event": "track_end", "truth": null}
+{"t": 1794118215.214, "event": "track_gone", "tid": 12, "pos": [1.64, 1.4], "text": "12번이 사라졌습니다.", "check": false}

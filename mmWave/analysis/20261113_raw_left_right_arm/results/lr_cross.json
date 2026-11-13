@@ -1,0 +1,190 @@
+{
+ "park->lee logistic": {
+  "window_acc": 0.74,
+  "segments_correct": "6/8"
+ },
+ "park->lee random_forest": {
+  "window_acc": 0.724,
+  "segments_correct": "6/8"
+ },
+ "lee->park logistic": {
+  "window_acc": 0.802,
+  "segments_correct": "8/8"
+ },
+ "lee->park random_forest": {
+  "window_acc": 0.818,
+  "segments_correct": "8/8"
+ },
+ "features": {
+  "x_std": {
+   "park": {
+    "L": [
+     0.23,
+     0.244,
+     0.269,
+     0.286
+    ],
+    "R": [
+     0.309,
+     0.332,
+     0.342,
+     0.348
+    ],
+    "separates": true,
+    "L_lower": true
+   },
+   "lee": {
+    "L": [
+     0.253,
+     0.26,
+     0.274,
+     0.292,
+     0.325
+    ],
+    "R": [
+     0.283,
+     0.285,
+     0.332
+    ],
+    "separates": false,
+    "L_lower": true
+   }
+  },
+  "z_snrw": {
+   "park": {
+    "L": [
+     0.941,
+     0.979,
+     0.982,
+     1.001
+    ],
+    "R": [
+     1.043,
+     1.057,
+     1.092,
+     1.109
+    ],
+    "separates": true,
+    "L_lower": true
+   },
+   "lee": {
+    "L": [
+     0.948,
+     0.972,
+     0.974,
+     0.994,
+     1.037
+    ],
+    "R": [
+     0.966,
+     1.006,
+     1.012
+    ],
+    "separates": false,
+    "L_lower": true
+   }
+  },
+  "n": {
+   "park": {
+    "L": [
+     405.333,
+     771.917,
+     892.083,
+     910.583
+    ],
+    "R": [
+     504.708,
+     514.292,
+     611.667,
+     623.125
+    ],
+    "separates": false,
+    "L_lower": false
+   },
+   "lee": {
+    "L": [
+     412.125,
+     427.792,
+     463.458,
+     529.625,
+     586.417
+    ],
+    "R": [
+     341.958,
+     422.708,
+     526.0
+    ],
+    "separates": false,
+    "L_lower": false
+   }
+  },
+  "log_snr": {
+   "park": {
+    "L": [
+     3.877,
+     4.116,
+     4.125,
+     4.655
+    ],
+    "R": [
+     3.517,
+     3.537,
+     3.802,
+     4.077
+    ],
+    "separates": false,
+    "L_lower": false
+   },
+   "lee": {
+    "L": [
+     4.514,
+     4.635,
+     4.691,
+     5.285,
+     5.288
+    ],
+    "R": [
+     4.036,
+     4.073,
+     4.353
+    ],
+    "separates": true,
+    "L_lower": false
+   }
+  },
+  "frac_left_of_bed_center": {
+   "park": {
+    "L": [
+     0.495,
+     0.619,
+     0.705,
+     0.79
+    ],
+    "R": [
+     0.428,
+     0.486,
+     0.526,
+     0.629
+    ],
+    "separates": false,
+    "L_lower": false
+   },
+   "lee": {
+    "L": [
+     0.733,
+     0.756,
+     0.767,
+     0.793,
+     0.802
+    ],
+    "R": [
+     0.616,
+     0.62,
+     0.708
+    ],
+    "separates": true,
+    "L_lower": false
+   }
+  }
+ }
+}

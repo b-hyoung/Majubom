@@ -1,0 +1,18 @@
+{
+ "session": "S0",
+ "description": "빈 방, 의자 평소 위치",
+ "default_truth": "object",
+ "participant": "없음",
+ "activity": "빈 방, 의자 평소 위치",
+ "note": "감지 범위 안 사람 없음. 측정자 1명은 방 밖 y- 쪽에 있음. 원본 트랙 11, 28(x 약 -2.27, 방 왼쪽 벽 밖), 13(문 영역)이 시작 시점에 보임.",
+ "started_at": 1793844225.9693751,
+ "stopped_at": 1793844836.0470626,
+ "stop_reason": "user",
+ "height_m": 2.7,
+ "tilt_deg": 90.0,
+ "upside_down": true,
+ "reader_commit": "56021f3",
+ "frames": 11029,
+ "corrupt": 62,
+ "label_changes": 0
+}

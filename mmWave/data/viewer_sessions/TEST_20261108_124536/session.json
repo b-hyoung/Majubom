@@ -1,0 +1,18 @@
+{
+ "session": "TEST",
+ "description": "기능 시험(비교에 쓰지 않음)",
+ "default_truth": "unknown",
+ "participant": "측정자 1명",
+ "activity": "카메라+mmWave 동시 녹화 시험: 걸터앉음, 침대 위 앉음, 섬",
+ "note": "2026-11-08 카메라 작업실(Start-PiUsb, D:\\Majubom-main)과 같은 노트북 PC 시계. 리더 test_bed",
+ "started_at": 1794109536.339501,
+ "stopped_at": 1794109794.8160427,
+ "stop_reason": "user",
+ "height_m": 2.7,
+ "tilt_deg": 90.0,
+ "upside_down": true,
+ "reader_commit": "9e54265",
+ "frames": 4666,
+ "corrupt": 34,
+ "label_changes": 0
+}

@@ -1,0 +1,10 @@
+{"t": 1793848349.284, "tid": 8, "event": "track_end", "truth": null}
+{"t": 1793848349.284, "event": "track_gone", "tid": 8, "pos": [2.89, -1.28], "text": "8번이 사라졌습니다.", "check": false}
+{"t": 1793848360.317, "event": "person_link", "tid": "P1", "pos": [1.01, -1.54], "text": "P1 다시 들어옴: 5번 (옛 번호로 돌아옴)", "check": false}
+{"t": 1793848382.454, "event": "track_new", "tid": 26, "pos": [2.32, 1.05], "text": "새 번호 26번이 생겼습니다.", "check": false}
+{"t": 1793848384.79, "tid": 26, "event": "track_end", "truth": null}
+{"t": 1793848384.79, "event": "track_gone", "tid": 26, "pos": [2.25, 0.94], "text": "26번이 사라졌습니다.", "check": false}
+{"t": 1793848472.679, "event": "track_new", "tid": 23, "pos": [3.56, -1.17], "text": "새 번호 23번이 생겼습니다.", "check": false}
+{"t": 1793848474.926, "tid": 23, "event": "track_end", "truth": null}
+{"t": 1793848474.926, "event": "track_gone", "tid": 23, "pos": [3.54, -1.21], "text": "23번이 사라졌습니다.", "check": false}
+{"t": 1793848535.628, "event": "person_exit", "tid": "P1", "pos": [1.34, -2.26], "text": "P1 나감 (열린 쪽)", "check": false}

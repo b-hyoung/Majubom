@@ -1,0 +1,18 @@
+{
+ "session": "TEST",
+ "description": "기능 시험(비교에 쓰지 않음)",
+ "default_truth": "unknown",
+ "participant": "",
+ "activity": "측정 범위",
+ "note": "방향별로 천천히 입실, 5초 정지, 퇴실. 측정자 한 명. 비교용 아님.",
+ "started_at": 1793508427.2094305,
+ "stopped_at": 1793508725.6911652,
+ "stop_reason": "user",
+ "height_m": 2.7,
+ "tilt_deg": 90.0,
+ "upside_down": true,
+ "reader_commit": "e4d6725",
+ "frames": 5403,
+ "corrupt": 20,
+ "label_changes": 0
+}

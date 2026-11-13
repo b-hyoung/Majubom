@@ -17,6 +17,9 @@ param(
     [int]$TailSeconds = 20,      # time to press "group measurement stop" before mmWave stops
     [string[]]$Postures = @(),   # subset of the labels below; default: all
     [switch]$KeepOrder,          # do not shuffle
+    [switch]$Gait,               # walking cues (mmWave only, no camera) instead of bed postures
+    [switch]$NormalOnly,         # with -Gait: only the usual-pace segment (baseline), e.g. -HoldSeconds 180
+    [string]$Participant = '',   # who is measured (saved in marks.json)
     [string]$ViewerDir = (Join-Path $env:USERPROFILE 'Downloads\mmw_viewer'),
     [string]$Viewer = 'http://localhost:8765'
 )
@@ -32,12 +35,34 @@ $all = [ordered]@{
     '옆누움'       = '침대에 옆으로 누우세요'
     '섬'           = '침대 옆에 서세요'
 }
+if ($Gait) {
+    # Same circle path as the 2026-11-05 S3 recordings: keep walking without stopping between cues.
+    $all = [ordered]@{
+        '평소 걷기'   = '원을 따라 평소 속도로 계속 걸으세요'
+        '천천히 걷기' = '원을 따라 천천히 계속 걸으세요'
+        '종종걸음'    = '원을 따라 보폭을 줄여 종종걸음으로 걸으세요'
+    }
+    if ($NormalOnly) { $Postures = @('평소 걷기') }
+}
 $chosen = if ($Postures.Count) { $Postures } else { @($all.Keys) }
 foreach ($p in $chosen) { if (-not $all.Contains($p)) { throw "Unknown posture '$p'. Use: $($all.Keys -join ', ')" } }
 # Shuffle so a model cannot learn the posture from its position in the session.
 $order = if ($KeepOrder) { $chosen } else { @($chosen | Get-Random -Count $chosen.Count) }
 
 function Say($text) { $voice.Speak($text) }
+# Big on-screen cue + countdown, for when the speaker cannot be heard.
+function Banner($text, $color = 'Yellow') {
+    $line = '=' * 60
+    Write-Host ''; Write-Host $line -ForegroundColor $color
+    Write-Host "   >>>  $text  <<<" -ForegroundColor $color
+    Write-Host $line -ForegroundColor $color
+}
+function Wait($seconds, $label) {
+    for ($left = $seconds; $left -gt 0; $left -= 5) {
+        Write-Host ("   [{0}]  남은 시간 {1,3}초" -f $label, $left)
+        Start-Sleep -Seconds ([Math]::Min(5, $left))
+    }
+}
 function Stamp { (Get-Date).ToString('HH:mm:ss.fff') }
 function Post($path, $body) {
     Invoke-RestMethod -Method Post -ContentType 'application/json' -Uri "$Viewer$path" `
@@ -45,28 +70,47 @@ function Post($path, $body) {
 }
 
 $marks = [ordered]@{}
-$started = Post '/api/record/start' @{ session = 'TEST'; activity = "camera+mmWave sync: $($order -join ', ')"; note = 'tools/Record-CamMmw.ps1' }
+$kind = if ($Gait) { 'gait' } else { 'camera+mmWave sync' }
+$started = Post '/api/record/start' @{ session = 'TEST'; activity = "${kind}: $($order -join ', ')"; participant = $Participant; note = 'tools/Record-CamMmw.ps1' }
 $mmw = $started.name
 Write-Host "mmWave recording: $mmw"
 Write-Host "order: $($order -join ' -> ')"
 try {
-    Say "엠엠웨이브 녹화를 시작했습니다. 카메라 작업실에서 그룹 측정 시작을 누르고 침대로 가세요."
-    Start-Sleep -Seconds $LeadSeconds
+    if ($Gait) {
+        Banner '원 모양 길의 시작점에 서세요' 'Cyan'
+        Say "엠엠웨이브 녹화를 시작했습니다. 원 모양 길의 시작점에 서세요."
+    } else {
+        Banner '카메라 작업실에서 [그룹 측정 시작]을 누르고 침대로 가세요' 'Cyan'
+        Say "엠엠웨이브 녹화를 시작했습니다. 카메라 작업실에서 그룹 측정 시작을 누르고 침대로 가세요."
+    }
+    Wait $LeadSeconds '준비'
+    $i = 0
     foreach ($p in $order) {
+        $i++
         $marks[$p] = Stamp
         Write-Host "$($marks[$p])  $p"
+        Banner "($i/$($order.Count)) $($all[$p])"
+        $next = if ($i -lt $order.Count) { "다음: $($order[$i])" } else { '다음: 끝' }
+        Write-Host "   $next"
         Say $all[$p]
-        Start-Sleep -Seconds $HoldSeconds
+        Wait $HoldSeconds $p
     }
     $marks['끝'] = Stamp
     Write-Host "$($marks['끝'])  끝"
-    Say "끝났습니다. 카메라 작업실에서 그룹 측정 종료를 누르세요."
-    Start-Sleep -Seconds $TailSeconds
+    if ($Gait) {
+        Banner '끝났습니다. 멈추셔도 됩니다' 'Green'
+        Say "끝났습니다. 멈추셔도 됩니다."
+    } else {
+        Banner '끝났습니다. 카메라 작업실에서 [그룹 측정 종료]를 누르세요' 'Green'
+        Say "끝났습니다. 카메라 작업실에서 그룹 측정 종료를 누르세요."
+    }
+    Wait $TailSeconds '마무리'
 }
 finally {
     $stopped = Post '/api/record/stop' @{}
     Write-Host "mmWave stopped: $($stopped.name)"
-    $result = [ordered]@{ mmwave_session = $mmw; hold_seconds = $HoldSeconds; order = $order; marks = $marks }
+    $result = [ordered]@{ mmwave_session = $mmw; kind = $(if ($Gait) { 'gait' } else { 'posture' }); participant = $Participant
+                          hold_seconds = $HoldSeconds; order = [object[]]@($order); marks = $marks }
     $file = Join-Path $ViewerDir "sessions\$mmw\marks.json"
     [IO.File]::WriteAllText($file, ($result | ConvertTo-Json), (New-Object Text.UTF8Encoding $false))
     Write-Host "marks saved: $file"

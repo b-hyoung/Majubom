@@ -1,0 +1,7 @@
+{"t": 1794455112.495, "event": "person_no_points", "tid": 1, "pos": [1.46, 0.8], "text": "사람으로 표시한 1번에 반사점이 없습니다. 사람이 떠난 자리일 수 있습니다.", "check": true}
+{"t": 1794455158.471, "event": "track_new", "tid": 3, "pos": [1.04, -0.45], "text": "새 번호 3번이 생겼습니다.", "check": false}
+{"t": 1794455172.571, "event": "person_no_points", "tid": 1, "pos": [0.95, 1.23], "text": "사람으로 표시한 1번에 반사점이 없습니다. 사람이 떠난 자리일 수 있습니다.", "check": true}
+{"t": 1794455230.317, "event": "track_new", "tid": 4, "pos": [-1.65, 1.97], "text": "새 번호 4번이 생겼습니다.", "check": false}
+{"t": 1794455231.349, "event": "track_new", "tid": 5, "pos": [-0.33, 1.88], "text": "새 번호 5번이 생겼습니다.", "check": false}
+{"t": 1794455232.428, "tid": 4, "event": "track_end", "truth": null}
+{"t": 1794455232.428, "event": "track_gone", "tid": 4, "pos": [-1.64, 1.95], "text": "4번이 사라졌습니다.", "check": false}

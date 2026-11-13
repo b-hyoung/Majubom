@@ -1,0 +1,18 @@
+{
+ "session": "TEST",
+ "description": "기능 시험(비교에 쓰지 않음)",
+ "default_truth": "unknown",
+ "participant": "lee",
+ "activity": "left/right side-lying: 누움, 왼쪽 옆누움, 누움, 오른쪽 옆누움, 누움, 왼쪽 옆누움, 누움, 오른쪽 옆누움, 누움, 왼쪽 ",
+ "note": "Record-LeftRight.ps1",
+ "started_at": 1794566809.3731368,
+ "stopped_at": 1794567241.9356616,
+ "stop_reason": "user",
+ "height_m": 2.7,
+ "tilt_deg": 90.0,
+ "upside_down": true,
+ "reader_commit": "1342d95",
+ "frames": 7822,
+ "corrupt": 41,
+ "label_changes": 0
+}

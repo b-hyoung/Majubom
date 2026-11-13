@@ -1,0 +1,3 @@
+{"t": 1794467373.327, "tid": 1, "event": "track_end", "truth": null}
+{"t": 1794467373.327, "event": "track_gone", "tid": 1, "pos": [2.74, 0.33], "text": "1번이 사라졌습니다.", "check": false}
+{"t": 1794467496.849, "event": "person_exit", "tid": "P1", "pos": [-1.01, 1.7], "text": "P1 나감 (문)", "check": false}

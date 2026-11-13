@@ -1,0 +1,63 @@
+{"t": 1794034156.842, "event": "track_new", "tid": 28, "pos": [1.29, -2.04], "text": "새 번호 28번이 생겼습니다.", "check": false}
+{"t": 1794034212.724, "event": "track_new", "tid": 8, "pos": [0.7, 0.96], "text": "새 번호 8번이 생겼습니다.", "check": false}
+{"t": 1794034436.006, "event": "track_new", "tid": 24, "pos": [3.27, 1.42], "text": "새 번호 24번이 생겼습니다.", "check": false}
+{"t": 1794034438.461, "tid": 24, "event": "track_end", "truth": null}
+{"t": 1794034438.461, "event": "track_gone", "tid": 24, "pos": [3.28, 1.42], "text": "24번이 사라졌습니다.", "check": false}
+{"t": 1794034565.816, "tid": 13, "event": "track_end", "truth": null}
+{"t": 1794034565.816, "event": "track_gone", "tid": 13, "pos": [2.69, 1.23], "text": "13번이 사라졌습니다.", "check": false}
+{"t": 1794034567.774, "event": "track_new", "tid": 1, "pos": [3.16, 1.36], "text": "새 번호 1번이 생겼습니다.", "check": false}
+{"t": 1794034570.021, "tid": 1, "event": "track_end", "truth": null}
+{"t": 1794034570.021, "event": "track_gone", "tid": 1, "pos": [3.16, 1.36], "text": "1번이 사라졌습니다.", "check": false}
+{"t": 1794034570.427, "event": "track_new", "tid": 6, "pos": [2.8, 1.18], "text": "새 번호 6번이 생겼습니다.", "check": false}
+{"t": 1794034572.699, "tid": 6, "event": "track_end", "truth": null}
+{"t": 1794034572.699, "event": "track_gone", "tid": 6, "pos": [2.79, 1.18], "text": "6번이 사라졌습니다.", "check": false}
+{"t": 1794034593.077, "event": "track_new", "tid": 19, "pos": [2.69, 0.96], "text": "새 번호 19번이 생겼습니다.", "check": false}
+{"t": 1794034595.429, "tid": 19, "event": "track_end", "truth": null}
+{"t": 1794034595.429, "event": "track_gone", "tid": 19, "pos": [2.69, 0.99], "text": "19번이 사라졌습니다.", "check": false}
+{"t": 1794034600.251, "event": "track_new", "tid": 27, "pos": [2.79, 1.15], "text": "새 번호 27번이 생겼습니다.", "check": false}
+{"t": 1794034901.395, "tid": 8, "event": "track_end", "truth": null}
+{"t": 1794034901.395, "tid": 27, "event": "track_end", "truth": null}
+{"t": 1794034901.395, "event": "track_gone", "tid": 8, "pos": [1.4, 1.09], "text": "8번이 사라졌습니다.", "check": false}
+{"t": 1794034901.395, "event": "track_gone", "tid": 27, "pos": [2.7, 1.09], "text": "27번이 사라졌습니다.", "check": false}
+{"t": 1794035067.59, "event": "track_new", "tid": 18, "pos": [0.88, 0.86], "text": "새 번호 18번이 생겼습니다.", "check": false}
+{"t": 1794035082.455, "event": "track_new", "tid": 23, "pos": [2.69, 1.19], "text": "새 번호 23번이 생겼습니다.", "check": false}
+{"t": 1794035181.494, "event": "track_new", "tid": 10, "pos": [-0.8, 0.15], "text": "새 번호 10번이 생겼습니다.", "check": false}
+{"t": 1794035687.406, "tid": 23, "event": "track_end", "truth": null}
+{"t": 1794035687.406, "event": "track_gone", "tid": 23, "pos": [2.81, 1.25], "text": "23번이 사라졌습니다.", "check": false}
+{"t": 1794035788.054, "event": "track_new", "tid": 22, "pos": [2.77, 1.5], "text": "새 번호 22번이 생겼습니다.", "check": false}
+{"t": 1794035886.968, "tid": 22, "event": "track_end", "truth": null}
+{"t": 1794035886.968, "event": "track_gone", "tid": 22, "pos": [2.75, 1.17], "text": "22번이 사라졌습니다.", "check": false}
+{"t": 1794035890.102, "tid": 18, "event": "track_end", "truth": null}
+{"t": 1794035890.102, "event": "track_gone", "tid": 18, "pos": [1.25, 1.17], "text": "18번이 사라졌습니다.", "check": false}
+{"t": 1794035896.327, "event": "track_new", "tid": 0, "pos": [3.29, 1.42], "text": "새 번호 0번이 생겼습니다.", "check": false}
+{"t": 1794035948.862, "event": "track_new", "tid": 16, "pos": [1.13, 1.62], "text": "새 번호 16번이 생겼습니다.", "check": false}
+{"t": 1794036264.929, "tid": 16, "event": "track_end", "truth": null}
+{"t": 1794036264.929, "event": "track_gone", "tid": 16, "pos": [1.13, 1.09], "text": "16번이 사라졌습니다.", "check": false}
+{"t": 1794036265.025, "tid": 0, "event": "track_end", "truth": null}
+{"t": 1794036265.025, "event": "track_gone", "tid": 0, "pos": [2.73, 1.23], "text": "0번이 사라졌습니다.", "check": false}
+{"t": 1794036271.589, "event": "track_new", "tid": 20, "pos": [1.1, 0.84], "text": "새 번호 20번이 생겼습니다.", "check": false}
+{"t": 1794036273.854, "tid": 20, "event": "track_end", "truth": null}
+{"t": 1794036273.854, "event": "track_gone", "tid": 20, "pos": [1.11, 0.85], "text": "20번이 사라졌습니다.", "check": false}
+{"t": 1794036280.152, "event": "track_new", "tid": 2, "pos": [0.99, 1.03], "text": "새 번호 2번이 생겼습니다.", "check": false}
+{"t": 1794036359.619, "event": "track_new", "tid": 15, "pos": [3.42, 1.43], "text": "새 번호 15번이 생겼습니다.", "check": false}
+{"t": 1794036361.979, "tid": 15, "event": "track_end", "truth": null}
+{"t": 1794036361.979, "event": "track_gone", "tid": 15, "pos": [3.42, 1.44], "text": "15번이 사라졌습니다.", "check": false}
+{"t": 1794036504.266, "event": "track_new", "tid": 14, "pos": [3.08, 1.37], "text": "새 번호 14번이 생겼습니다.", "check": false}
+{"t": 1794036506.47, "tid": 14, "event": "track_end", "truth": null}
+{"t": 1794036506.47, "event": "track_gone", "tid": 14, "pos": [3.1, 1.38], "text": "14번이 사라졌습니다.", "check": false}
+{"t": 1794036531.757, "event": "track_new", "tid": 11, "pos": [2.47, 1.1], "text": "새 번호 11번이 생겼습니다.", "check": false}
+{"t": 1794036534.09, "tid": 11, "event": "track_end", "truth": null}
+{"t": 1794036534.09, "event": "track_gone", "tid": 11, "pos": [2.48, 1.1], "text": "11번이 사라졌습니다.", "check": false}
+{"t": 1794036640.629, "event": "track_new", "tid": 3, "pos": [2.64, 1.15], "text": "새 번호 3번이 생겼습니다.", "check": false}
+{"t": 1794036643.095, "tid": 3, "event": "track_end", "truth": null}
+{"t": 1794036643.095, "event": "track_gone", "tid": 3, "pos": [2.62, 1.19], "text": "3번이 사라졌습니다.", "check": false}
+{"t": 1794036801.971, "event": "track_new", "tid": 5, "pos": [2.55, 1.1], "text": "새 번호 5번이 생겼습니다.", "check": false}
+{"t": 1794036804.826, "tid": 5, "event": "track_end", "truth": null}
+{"t": 1794036804.826, "event": "track_gone", "tid": 5, "pos": [2.52, 1.19], "text": "5번이 사라졌습니다.", "check": false}
+{"t": 1794036975.607, "event": "track_new", "tid": 4, "pos": [2.48, 0.85], "text": "새 번호 4번이 생겼습니다.", "check": false}
+{"t": 1794036977.938, "tid": 4, "event": "track_end", "truth": null}
+{"t": 1794036977.938, "event": "track_gone", "tid": 4, "pos": [2.45, 0.86], "text": "4번이 사라졌습니다.", "check": false}
+{"t": 1794037136.233, "event": "track_new", "tid": 21, "pos": [2.51, 1.21], "text": "새 번호 21번이 생겼습니다.", "check": false}
+{"t": 1794037138.492, "tid": 21, "event": "track_end", "truth": null}
+{"t": 1794037138.492, "event": "track_gone", "tid": 21, "pos": [2.5, 1.21], "text": "21번이 사라졌습니다.", "check": false}
+{"t": 1794037345.651, "event": "track_new", "tid": 7, "pos": [-0.34, 1.7], "text": "새 번호 7번이 생겼습니다.", "check": false}

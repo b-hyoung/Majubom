@@ -1,0 +1,18 @@
+{
+ "session": "S6",
+ "description": "4명 함께",
+ "default_truth": "unknown",
+ "participant": "여러 명",
+ "activity": "3명, 앉기 후 이동",
+ "note": "사용자 지정: 27, 2, 28번이 사람. 3명 모두 x+ 근처 책상. 4명 세션을 3명으로 진행.",
+ "started_at": 1793514092.379119,
+ "stopped_at": 1793514680.8936856,
+ "stop_reason": "user",
+ "height_m": 2.7,
+ "tilt_deg": 90.0,
+ "upside_down": true,
+ "reader_commit": "53e3b0f",
+ "frames": 10647,
+ "corrupt": 53,
+ "label_changes": 8
+}

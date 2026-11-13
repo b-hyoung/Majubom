@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>마주봄 mmWave 알고리즘 비교</title><style>
+/* 크기: 화면 너비에 비례 (기준 = 너비 1100px일 때 16px). 너비는 모두 % */
+html{font-size:clamp(11px,1.45vw,16px);-webkit-text-size-adjust:100%;text-size-adjust:100%}
+body{font-family:'Malgun Gothic','Apple SD Gothic Neo',sans-serif;width:94%;max-width:1100px;margin:2em auto;line-height:1.6;color:#222;background:#fff}
+/* 한글 줄바꿈: 단어 사이에서만 줄을 바꾸고 단어 안에서는 끊지 않음 */
+body,p,li,td,th,h1,h2,h3,button{word-break:keep-all;overflow-wrap:normal;line-break:strict;white-space:normal;hyphens:none}
+h1{font-size:1.625rem;border-bottom:2px solid #333;padding-bottom:.5em}
+h2{font-size:1.25rem;margin-top:2.2em;border-left:4px solid #3b6fb6;padding-left:.5em}
+h3{font-size:1.0625rem;margin-top:1.4em}
+p{margin:.5em 0}li p{margin:.15em 0}
+.table-wrap{width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;margin:.8em 0 1.3em}
+table{border-collapse:collapse;width:100%;margin:0;font-size:.875rem}
+th,td{border:1px solid #bbb;padding:.45em .55em;vertical-align:top}
+th{background:#eef2f8;text-align:left}tr:nth-child(even) td{background:#fafafa}
+td.merge{vertical-align:middle;text-align:center;font-weight:600;background:#f3f7fc}
+/* 메인 탭 */
+.site-title{font-size:.875rem;color:#666;margin:0 0 .3em}
+.main-tabs{position:sticky;top:0;z-index:5;display:flex;gap:2%;padding:.6em 0;margin:0 0 .5em;background:#fff;border-bottom:3px solid #222}
+.main-tabs button{font:inherit;font-size:1.125rem;font-weight:600;padding:.5em 1.1em;border:2px solid #222;border-radius:.5em;background:#fff;color:#222;cursor:pointer}
+.main-tabs button[aria-selected="true"]{background:#222;color:#fff}
+.main-tabs button:focus-visible{outline:3px solid #3b6fb6;outline-offset:2px}
+.page[hidden]{display:none}
+/* 자세 결과표 탭 */
+.tabs{display:flex;flex-wrap:wrap;gap:.4em;margin:.9em 0 0;border-bottom:2px solid #3b6fb6}
+.tabs button{font:inherit;font-size:.9375rem;padding:.45em .9em;border:1px solid #bbb;border-bottom:none;border-radius:.4em .4em 0 0;background:#f2f2f2;color:#333;cursor:pointer}
+.tabs button[aria-selected="true"]{background:#3b6fb6;border-color:#3b6fb6;color:#fff;font-weight:600}
+.tabs button:focus-visible{outline:2px solid #1d4f91;outline-offset:2px}
+.tab-panel{padding-top:.25em}.tab-panel[hidden]{display:none}.tab-panel h3{margin-top:.75em}
+/* 결과표: 탭을 바꿔도 칸 너비가 같도록 % 고정 */
+.tab-panel table{table-layout:fixed}
+.tab-panel th:nth-child(1){width:26%}.tab-panel th:nth-child(2),.tab-panel th:nth-child(3){width:17%}
+.tab-panel th:nth-child(4){width:22%}.tab-panel th:nth-child(5){width:18%}
+.tab-panel td,.tab-panel th{height:2.6em;vertical-align:middle}
+
+.tab-panel.gait th:nth-child(1){width:16%}.tab-panel.gait th:nth-child(2){width:18%}.tab-panel.gait th:nth-child(3){width:14%}
+.tab-panel.gait th:nth-child(4){width:13%}.tab-panel.gait th:nth-child(5){width:18%}.tab-panel.gait th:nth-child(6){width:21%}
+
+/* 실제 데이터 펼치기 */
+details.real-data{margin:-.6em 0 1.3em;border:1px solid #c9d4e6;border-radius:.5em;background:#f8fafd}
+details.real-data>summary{list-style:none;cursor:pointer;padding:.55em .8em;font-weight:600;color:#1d4f91;display:flex;align-items:center;gap:.5em}
+details.real-data>summary::-webkit-details-marker{display:none}
+details.real-data>summary::before{content:"";flex:none;width:0;height:0;border-left:.5em solid currentColor;border-top:.35em solid transparent;border-bottom:.35em solid transparent;transition:transform .15s}
+details.real-data[open]>summary::before{transform:rotate(90deg)}
+details.real-data>summary:focus-visible{outline:2px solid #3b6fb6;outline-offset:2px}
+details.real-data .rd-body{padding:0 .8em .6em}
+details.real-data .table-wrap{margin:.4em 0 .8em}
+details.real-data td.hit,details.real-data th.hit{background:#e3edf9;font-weight:700}
+</style></head><body>
+<p class="site-title">마주봄 · mmWave 알고리즘 비교 자료</p>
+<nav class="main-tabs" role="tablist" aria-label="자료 선택"><button role="tab" id="mt-posture" aria-controls="page-posture" aria-selected="true" tabindex="0" data-hash="#posture">자세 판정</button><button role="tab" id="mt-gait" aria-controls="page-gait" aria-selected="false" tabindex="-1" data-hash="#gait">보행 지표</button></nav>
+<section class="page" id="page-posture" role="tabpanel" aria-labelledby="mt-posture">
+
+<h1 id="mmwave-자세-판정-알고리즘-비교">mmWave 자세 판정 알고리즘 비교</h1>
+<h2 id="개요">개요</h2>
+<p>전처리 <strong>EMA</strong> + 분류 <strong>XGBoost</strong>, 정확도 <strong>75.1%</strong> (3명·녹화 9개). 처음 보는 사람 65.4~73.5%.</p>
+<div class="table-wrap"><table><thead><tr><th>항목</th><th>내용</th></tr></thead><tbody><tr><td>센서</td><td>TI IWR6843 (3D People Tracking 펌웨어), 천장 2.7m 설치, 약 18 프레임/초</td></tr><tr><td>판정할 자세 (5종)</td><td>섬, 침대 위 앉음, 걸터앉음, 누움, 옆누움</td></tr><tr><td>데이터</td><td>녹화 9개: lee 7개, vic 1개, kim 1개(11-12). 자세마다 60초씩 수집</td></tr><tr><td>평가 프레임</td><td>mmWave 프레임 37,773개 (섬 8,173 · 침대 위 앉음 6,559 · 걸터앉음 6,988 · 누움 7,960 · 옆누움 8,093). lee 27,744 · vic 4,935 · kim 5,094</td></tr><tr><td>평가 방법</td><td>녹화 하나씩 빼고 시험 (Leave-one-recording-out, 9회). 학습에 쓰지 않은 녹화로만 정확도를 냄. 추가로 사람 하나씩 빼고 시험(Leave-one-person-out)</td></tr><tr><td>지표</td><td>정확도(Accuracy), macro F1 (5개 자세의 F1 평균)</td></tr></tbody></table></div>
+<h2 id="입력-데이터-raw">입력 데이터 (RAW)</h2>
+<p>프레임마다 환자 트랙 값 8개.</p>
+<div class="table-wrap"><table><thead><tr><th>값</th><th>단위</th><th>뜻</th><th>어디서 나오나</th></tr></thead><tbody><tr><td>z</td><td>m</td><td>몸 중심 높이 (바닥 기준)</td><td>트랙 위치 (TLV 1010)</td></tr><tr><td>head_z</td><td>m</td><td>머리 쪽 높이: 소속 반사점 높이의 90% 백분위</td><td>반사점 (TLV 1020 + 1011)</td></tr><tr><td>speed</td><td>m/s</td><td>수평 이동 속도</td><td>트랙 속도</td></tr><tr><td>vz</td><td>m/s</td><td>세로 속도</td><td>트랙 속도</td></tr><tr><td>npts</td><td>개</td><td>그 사람에게 연결된 반사점 수</td><td>반사점</td></tr><tr><td>bed_dist</td><td>m</td><td>침대 영역까지 거리 (안이면 0)</td><td>트랙 위치 + 침대 꼭짓점</td></tr><tr><td>x</td><td>m</td><td>방 안 좌우 위치</td><td>트랙 위치</td></tr><tr><td>y</td><td>m</td><td>방 안 앞뒤 위치</td><td>트랙 위치</td></tr></tbody></table></div>
+
+<h2 id="전처리-알고리즘-비교">전처리 알고리즘 비교</h2>
+<p><strong>EMA 선택</strong> · 분류기는 XGBoost로 고정.</p>
+<div class="table-wrap"><table><thead><tr><th>전처리 알고리즘</th><th>방법</th><th>정확도</th><th>macro F1</th><th>EMA와 정확도 차이</th></tr></thead><tbody><tr><td><strong>지수 평활 (EMA, α=0.1)</strong></td><td>새 값 10% + 직전 평활값 90%</td><td><strong>75.1%</strong></td><td><strong>74.3%</strong></td><td>—</td></tr><tr><td>칼만 필터 (1차원)</td><td>예측값과 측정값을 불확실성 비율로 섞음</td><td>74.2%</td><td>73.3%</td><td>−0.8%p</td></tr><tr><td>Savitzky-Golay</td><td>최근 1초에 2차 다항식을 맞추고 가장 최근 값을 씁</td><td>72.3%</td><td>71.3%</td><td>−2.8%p</td></tr><tr><td>이동 평균 (1초)</td><td>최근 18프레임의 평균</td><td>72.3%</td><td>71.7%</td><td>−2.8%p</td></tr></tbody></table></div>
+<details class="real-data"><summary>실제 데이터 예시 (EMA)</summary><div class="rd-body">
+<p>학습 제외 녹화 vic(11-12)의 누움 구간 가운데 프레임 · 학습은 나머지 녹화 8개.</p>
+<div class="table-wrap"><table><thead><tr><th>값</th><th>단위</th><th>원본 (RAW)</th><th>EMA 후</th></tr></thead><tbody><tr><td>몸 중심 높이 z</td><td>m</td><td>0.662</td><td>0.662</td></tr><tr><td>머리 쪽 높이</td><td>m</td><td>1.130</td><td>1.109</td></tr><tr><td>이동 속도</td><td>m/s</td><td>0.066</td><td>0.066</td></tr><tr><td>위아래 속도</td><td>m/s</td><td>−0.004</td><td>−0.004</td></tr><tr><td>반사점 수</td><td>개</td><td>6.0</td><td>10.3</td></tr><tr><td>침대까지 거리</td><td>m</td><td>0.000</td><td>0.000</td></tr><tr><td>좌우 위치 x</td><td>m</td><td>−0.755</td><td>−0.755</td></tr><tr><td>앞뒤 위치 y</td><td>m</td><td>−0.116</td><td>−0.116</td></tr></tbody></table></div>
+</div></details>
+<h2 id="분류-알고리즘-비교">분류 알고리즘 비교</h2>
+<p><strong>XGBoost 선택</strong> · 전처리는 EMA로 고정.</p>
+<div class="table-wrap"><table><thead><tr><th>분류 알고리즘</th><th>설정</th><th>정확도</th><th>macro F1</th><th>XGBoost와 정확도 차이</th></tr></thead><tbody><tr><td><strong>XGBoost</strong></td><td>트리 300개, 학습률 0.05, 깊이 6, 히스토그램 분할, 자세별 균형 가중</td><td><strong>75.1%</strong></td><td><strong>74.3%</strong></td><td>—</td></tr><tr><td>LightGBM</td><td>트리 300개, 학습률 0.05, 잎 31개, 균형 가중</td><td>74.7%</td><td>73.9%</td><td>−0.4%p</td></tr><tr><td>HistGradientBoosting</td><td>트리 300개, 학습률 0.05, 균형 가중</td><td>74.6%</td><td>73.7%</td><td>−0.5%p</td></tr><tr><td>MLP 신경망</td><td>은닉층 64-32, 조기 종료</td><td>73.2%</td><td>72.7%</td><td>−1.9%p</td></tr></tbody></table></div>
+<details class="real-data"><summary>실제 데이터 예시 (XGBoost)</summary><div class="rd-body">
+<p>학습 제외 녹화 vic(11-12)의 누움 구간 가운데 프레임 · 학습은 나머지 녹화 8개. 입력은 위 EMA 값 8개.</p>
+<p>정답 누움 → 숫자 5칸</p>
+<div class="table-wrap"><table><thead><tr><th>구분</th><th>섬</th><th>침대 위 앉음</th><th>걸터앉음</th><th class="hit">누움</th><th>옆누움</th></tr></thead><tbody><tr><td>정답</td><td>0</td><td>0</td><td>0</td><td class="hit">1</td><td>0</td></tr></tbody></table></div>
+<p>트리 수별 예측 확률 · 오차 = −log(누움 확률)</p>
+<div class="table-wrap"><table><thead><tr><th>트리 수</th><th>섬</th><th>침대 위 앉음</th><th>걸터앉음</th><th class="hit">누움</th><th>옆누움</th><th>오차</th></tr></thead><tbody><tr><td>1개</td><td>0.193</td><td>0.193</td><td>0.193</td><td class="hit">0.225</td><td>0.195</td><td>1.490</td></tr><tr><td>10개</td><td>0.138</td><td>0.139</td><td>0.138</td><td class="hit">0.430</td><td>0.155</td><td>0.844</td></tr><tr><td>50개</td><td>0.024</td><td>0.025</td><td>0.024</td><td class="hit">0.899</td><td>0.029</td><td>0.107</td></tr><tr><td>100개</td><td>0.002</td><td>0.004</td><td>0.002</td><td class="hit">0.985</td><td>0.007</td><td>0.016</td></tr><tr><td>300개</td><td>0.000</td><td>0.000</td><td>0.000</td><td class="hit">0.998</td><td>0.002</td><td>0.002</td></tr></tbody></table></div>
+<p>같은 모델, vic 녹화 전체 (4,935프레임)</p>
+<div class="table-wrap"><table><thead><tr><th>트리 수</th><th>정확도</th><th>평균 오차</th></tr></thead><tbody><tr><td>1개</td><td>63.4%</td><td>1.543</td></tr><tr><td>10개</td><td>66.9%</td><td>1.178</td></tr><tr><td>50개</td><td>66.1%</td><td>0.918</td></tr><tr><td>100개</td><td>68.7%</td><td>0.957</td></tr><tr><td>300개</td><td>66.4%</td><td>1.305</td></tr></tbody></table></div>
+</div></details>
+<h2 id="알고리즘-조합-결과">알고리즘 조합 결과</h2>
+<p><strong>EMA + XGBoost가 16개 조합 중 1위</strong> · 칸은 정확도.</p>
+<div class="table-wrap"><table><thead><tr><th>전처리 \ 분류기</th><th>XGBoost</th><th>HistGradientBoosting</th><th>CatBoost</th><th>MLP 신경망</th></tr></thead><tbody><tr><td><strong>EMA</strong></td><td><strong>75.1%</strong></td><td>74.6%</td><td>72.9%</td><td>73.2%</td></tr><tr><td>Savitzky-Golay</td><td>72.3%</td><td>75.0%</td><td>73.8%</td><td>72.6%</td></tr><tr><td>칼만 필터</td><td>74.2%</td><td>73.3%</td><td>74.1%</td><td>71.9%</td></tr><tr><td>이동 평균</td><td>72.3%</td><td>73.6%</td><td>72.1%</td><td>72.4%</td></tr></tbody></table></div>
+<p>상위 5개 조합의 녹화별 꾸준함 (평균 순위는 낮을수록 좋음).</p>
+<div class="table-wrap"><table><thead><tr><th>조합</th><th>정확도</th><th>macro F1</th><th>녹화별 평균 순위 (낮을수록 좋음)</th><th>상위 4위 안에 든 녹화</th></tr></thead><tbody><tr><td><strong>EMA + XGBoost</strong></td><td><strong>75.1%</strong></td><td>74.3%</td><td>7.2</td><td><strong>5 / 9</strong></td></tr><tr><td>Savitzky-Golay + HistGradientBoosting</td><td>75.0%</td><td>74.6%</td><td>6.8</td><td>4 / 9</td></tr><tr><td>EMA + HistGradientBoosting</td><td>74.6%</td><td>73.7%</td><td>7.6</td><td>2 / 9</td></tr><tr><td>칼만 필터 + XGBoost</td><td>74.2%</td><td>73.3%</td><td>6.9</td><td>1 / 9</td></tr><tr><td>칼만 필터 + CatBoost</td><td>74.1%</td><td>73.0%</td><td>7.3</td><td>2 / 9</td></tr></tbody></table></div>
+<h2 id="결과표">결과표</h2>
+<p>녹화 9개 전체의 자세별 대표값 · 분류 % = XGBoost 평균 확률.</p>
+<div class="tabs" role="tablist" aria-label="자세 선택"><button role="tab" id="tab-0" aria-controls="posture-0" aria-selected="true" tabindex="0">섬</button><button role="tab" id="tab-1" aria-controls="posture-1" aria-selected="false" tabindex="-1">침대 위 앉음</button><button role="tab" id="tab-2" aria-controls="posture-2" aria-selected="false" tabindex="-1">걸터앉음</button><button role="tab" id="tab-3" aria-controls="posture-3" aria-selected="false" tabindex="-1">누움</button><button role="tab" id="tab-4" aria-controls="posture-4" aria-selected="false" tabindex="-1">옆누움</button></div>
+<div class="tab-panel" role="tabpanel" id="posture-0" aria-labelledby="tab-0">
+<h3>섬 (Standing)</h3>
+<div class="table-wrap"><table><thead><tr><th>구분</th><th>인풋 (RAW)</th><th>전처리 (EMA)</th><th>분류</th><th>아웃풋</th></tr></thead><tbody><tr><td>높이 z (m)</td><td>1.53</td><td>1.52</td><td rowspan="3" class="merge">섬 (95%)</td><td rowspan="3" class="merge">섬</td></tr><tr><td>머리 높이 head_z (m)</td><td>1.58</td><td>1.55</td></tr><tr><td>반사점 수 (개)</td><td>8</td><td>9.7</td></tr><tr><td>프레임 수</td><td>8,173</td><td>-</td><td>-</td><td>8,173</td></tr><tr><td>맞힌 비율</td><td>-</td><td>-</td><td>-</td><td>96%</td></tr><tr><td>가장 많이 틀린 판정</td><td>-</td><td>-</td><td>-</td><td>걸터앉음 1%</td></tr></tbody></table></div>
+</div>
+<div class="tab-panel" role="tabpanel" id="posture-1" aria-labelledby="tab-1" hidden>
+<h3>침대 위 앉음 (Sitting on bed)</h3>
+<div class="table-wrap"><table><thead><tr><th>구분</th><th>인풋 (RAW)</th><th>전처리 (EMA)</th><th>분류</th><th>아웃풋</th></tr></thead><tbody><tr><td>높이 z (m)</td><td>1.14</td><td>1.13</td><td rowspan="3" class="merge">침대 위 앉음 (69%)</td><td rowspan="3" class="merge">침대 위 앉음</td></tr><tr><td>머리 높이 head_z (m)</td><td>1.39</td><td>1.38</td></tr><tr><td>반사점 수 (개)</td><td>12</td><td>12.2</td></tr><tr><td>프레임 수</td><td>6,559</td><td>-</td><td>-</td><td>6,559</td></tr><tr><td>맞힌 비율</td><td>-</td><td>-</td><td>-</td><td>68%</td></tr><tr><td>가장 많이 틀린 판정</td><td>-</td><td>-</td><td>-</td><td>걸터앉음 14%</td></tr></tbody></table></div>
+</div>
+<div class="tab-panel" role="tabpanel" id="posture-2" aria-labelledby="tab-2" hidden>
+<h3>걸터앉음 (Sitting on edge)</h3>
+<div class="table-wrap"><table><thead><tr><th>구분</th><th>인풋 (RAW)</th><th>전처리 (EMA)</th><th>분류</th><th>아웃풋</th></tr></thead><tbody><tr><td>높이 z (m)</td><td>0.82</td><td>0.82</td><td rowspan="3" class="merge">걸터앉음 (85%)</td><td rowspan="3" class="merge">걸터앉음</td></tr><tr><td>머리 높이 head_z (m)</td><td>1.16</td><td>1.09</td></tr><tr><td>반사점 수 (개)</td><td>7</td><td>9.8</td></tr><tr><td>프레임 수</td><td>6,988</td><td>-</td><td>-</td><td>6,988</td></tr><tr><td>맞힌 비율</td><td>-</td><td>-</td><td>-</td><td>86%</td></tr><tr><td>가장 많이 틀린 판정</td><td>-</td><td>-</td><td>-</td><td>침대 위 앉음 10%</td></tr></tbody></table></div>
+</div>
+<div class="tab-panel" role="tabpanel" id="posture-3" aria-labelledby="tab-3" hidden>
+<h3>누움 (Lying on back)</h3>
+<div class="table-wrap"><table><thead><tr><th>구분</th><th>인풋 (RAW)</th><th>전처리 (EMA)</th><th>분류</th><th>아웃풋</th></tr></thead><tbody><tr><td>높이 z (m)</td><td>0.70</td><td>0.70</td><td rowspan="3" class="merge">누움 (76%)</td><td rowspan="3" class="merge">누움</td></tr><tr><td>머리 높이 head_z (m)</td><td>0.97</td><td>0.99</td></tr><tr><td>반사점 수 (개)</td><td>9</td><td>10.3</td></tr><tr><td>프레임 수</td><td>7,960</td><td>-</td><td>-</td><td>7,960</td></tr><tr><td>맞힌 비율</td><td>-</td><td>-</td><td>-</td><td>79%</td></tr><tr><td>가장 많이 틀린 판정</td><td>-</td><td>-</td><td>-</td><td>옆누움 17%</td></tr></tbody></table></div>
+</div>
+<div class="tab-panel" role="tabpanel" id="posture-4" aria-labelledby="tab-4" hidden>
+<h3>옆누움 (Lying on side)</h3>
+<div class="table-wrap"><table><thead><tr><th>구분</th><th>인풋 (RAW)</th><th>전처리 (EMA)</th><th>분류</th><th>아웃풋</th></tr></thead><tbody><tr><td>높이 z (m)</td><td>0.83</td><td>0.83</td><td rowspan="3" class="merge">옆누움 (46%)</td><td rowspan="3" class="merge">옆누움</td></tr><tr><td>머리 높이 head_z (m)</td><td>1.08</td><td>1.13</td></tr><tr><td>반사점 수 (개)</td><td>9</td><td>9.5</td></tr><tr><td>프레임 수</td><td>8,093</td><td>-</td><td>-</td><td>8,093</td></tr><tr><td>맞힌 비율</td><td>-</td><td>-</td><td>-</td><td>46%</td></tr><tr><td>가장 많이 틀린 판정</td><td>-</td><td>-</td><td>-</td><td>누움 29%</td></tr></tbody></table></div>
+</div>
+
+<p>사람별 정확도.</p>
+<div class="table-wrap"><table><thead><tr><th>측정자</th><th>프레임</th><th>녹화 하나씩 빼고 시험</th><th>사람 하나씩 빼고 시험</th><th>가장 낮은 자세 (사람 빼고 시험)</th></tr></thead><tbody><tr><td>lee</td><td>27,744</td><td>76.9%</td><td>65.4% (vic·kim 녹화 2개로만 학습)</td><td>옆누움 48%</td></tr><tr><td>vic</td><td>4,935</td><td>66.4%</td><td>66.4%</td><td>침대 위 앉음 17%</td></tr><tr><td>kim</td><td>5,094</td><td>73.5%</td><td>73.5%</td><td>옆누움 23%</td></tr></tbody></table></div>
+<h2 id="한계">한계</h2>
+<ul><li><p>측정자 3명·녹화 9개(lee 73%)라 상위 조합끼리의 차이(1%p 안팎)는 우연일 수 있습니다.</p></li><li><p>사람 차이가 커서, 다른 사람 녹화를 늘리는 것이 더 효과적입니다.</p></li><li><p>옆누움은 46%만 맞혔습니다. 높이 값만으로는 누움과 구별이 어렵습니다.</p></li><li><p>x·y 위치를 입력에 넣어, 침대 위치가 다른 방에서는 다시 학습해야 합니다.</p></li><li><p>카메라 관절을 함께 쓰면 93%입니다(참고용).</p></li></ul>
+
+</section>
+<section class="page" id="page-gait" role="tabpanel" aria-labelledby="mt-gait" hidden>
+<h1 id="g-mmwave-보행-지표-알고리즘-비교">mmWave 보행 지표 알고리즘 비교</h1>
+<h2 id="g-개요">개요</h2>
+<p>전처리 <strong>z-score</strong> + 판정 <strong>A·S 중 큰 값</strong>, 실제 녹화 정확도 <strong>90.1%</strong> (수정안 기준, 212구간).</p>
+<div class="table-wrap"><table><thead><tr><th>항목</th><th>내용</th></tr></thead><tbody><tr><td>판정 단위</td><td>걸음 6초 구간 하나 (약 109프레임)</td></tr><tr><td>D1 Pi 데이터</td><td>병실 Pi 보행 구간 130개 (10월 28~31일, 여러 사람). 저하는 인위로 넣음 (예: 속도 −20%, 흔들림·속도 변동 +20%)</td></tr><tr><td>D2 실제 걸음</td><td>lee·kim 2명, 같은 고리(약 1.7 × 3.3 m)를 멈추지 않고 걸음. 11-05: lee 48구간 · 11-12: lee 209구간, kim 56구간</td></tr><tr><td>D3 가상 환자</td><td>실제 데이터의 분포·상관을 따라 만든 10명, 사람마다 10회 반복</td></tr><tr><td>AUC</td><td>저하 구간을 평소 구간보다 더 위험하게 매길 확률 (0.5 = 찍기, 1 = 완벽)</td></tr><tr><td>검출률</td><td>헛알람을 5%로 맞춘 문턱에서 저하 구간을 잡은 비율</td></tr><tr><td>정확도</td><td>평소는 ‘정상’, 천천히·종종걸음은 ‘주의 이상’이면 맞음. 기준선은 같은 녹화 묶음의 평소 구간</td></tr></tbody></table></div>
+
+<h2 id="g-입력-데이터-raw">입력 데이터 (RAW)</h2>
+<p>환자 트랙의 최근 6초 이력 (약 109프레임).</p>
+<div class="table-wrap"><table><thead><tr><th>값</th><th>단위</th><th>뜻</th></tr></thead><tbody><tr><td>t</td><td>초</td><td>프레임 시각</td></tr><tr><td>x, y</td><td>m</td><td>방 안 위치 (바닥 기준 좌표)</td></tr><tr><td>z</td><td>m</td><td>몸 중심 높이</td></tr><tr><td>speed</td><td>m/s</td><td>수평 이동 속도 (레이더 추적기 값)</td></tr></tbody></table></div>
+
+<h2 id="g-전처리-알고리즘-비교">전처리 알고리즘 비교</h2>
+<p><strong>z-score 선택</strong> · 판정은 A 위험 방향 합으로 고정 · 칸은 AUC (괄호: 헛알람 5% 문턱 검출률).</p>
+
+<p>① 6초 이력 → 보행 지표 4개 (속도 · 속도 변동 · 흔들림 · 멈춤 비율) ② 지표마다 본인 평소와 비교해 표준화</p>
+
+<div class="table-wrap"><table><thead><tr><th>전처리(표준화) 알고리즘</th><th>계산</th><th>실제 천천히 (D2)</th><th>실제 종종걸음 (D2)</th><th>인위 저하 20% (D1)</th><th>가상 환자 6개 상황 평균 AUC (D3)</th><th>z-score와의 검출률 차이 (실제 천천히, D2)</th></tr></thead><tbody><tr><td><strong>z-score</strong></td><td>(값 − 평균) ÷ 표준편차</td><td><strong>0.97 (94%)</strong></td><td>1.00 (100%)</td><td>0.63 (22%)</td><td>0.783</td><td>—</td></tr><tr><td>Min-Max</td><td>(값 − 평균) ÷ (최댓값 − 최솟값)</td><td>0.96 (94%)</td><td>1.00 (100%)</td><td>0.63 (18%)</td><td>0.775</td><td>0%p</td></tr><tr><td>베이즈 예측확률</td><td>기록 수를 반영한 t 분포에서 ‘평소일 확률’</td><td>0.95 (72%)</td><td>0.99 (100%)</td><td>0.63 (22%)</td><td>0.783</td><td>−22%p</td></tr><tr><td>로버스트 스케일러</td><td>(값 − 중앙값) ÷ 사분위수 범위</td><td>0.92 (56%)</td><td>1.00 (100%)</td><td>0.62 (13%)</td><td>0.765</td><td>−38%p</td></tr></tbody></table></div>
+<details class="real-data"><summary>실제 데이터 예시 (z-score)</summary><div class="rd-body">
+<p>lee 11-12 고리 녹화 한 묶음의 6초 구간 (수정안 기준) · 기준선 = 같은 묶음의 평소 구간. 천천히 걸은 구간 하나.</p>
+<p>인풋: 6초 · 이동 경로 4.90 m · 순이동 2.91 m → 보행 지표 4개</p>
+<div class="table-wrap"><table><thead><tr><th>지표</th><th>이 구간 값</th><th>평소 평균 (구간 10개)</th><th>평소 표준편차</th><th class="hit">z = (값 − 평균) ÷ 표준편차</th></tr></thead><tbody><tr><td>속도 (m/s)</td><td>0.754</td><td>0.961</td><td>0.050</td><td class="hit">−4.14</td></tr><tr><td>속도 변동</td><td>0.203</td><td>0.280</td><td>0.041</td><td class="hit">−1.86</td></tr><tr><td>흔들림 (m)</td><td>0.052</td><td>0.043</td><td>0.020</td><td class="hit">+0.47</td></tr><tr><td>멈춤 비율</td><td>0.00</td><td>0.00</td><td>0.03</td><td class="hit">0.00</td></tr></tbody></table></div>
+<p>속도 표준편차는 하한값 0.05 적용 (평소 기록이 적어 너무 작아지는 것을 막음).</p>
+</div></details>
+<h2 id="g-분류판정-알고리즘-비교">분류(판정) 알고리즘 비교</h2>
+<p><strong>A·S 중 큰 값 선택</strong> · 전처리는 z-score로 고정.<br><strong>A</strong> = 위험한 방향으로 벗어난 z만 더한 값 (속도는 느려질 때, 속도 변동·흔들림·멈춤 비율은 커질 때) · <strong>S</strong> = 속도가 평소보다 느려진 정도 (−z 속도)</p>
+
+<div class="table-wrap"><table><thead><tr><th>분류(판정) 알고리즘</th><th>방법</th><th>평균 AUC (D3)</th><th>최저 AUC (D3)</th><th>좋아짐에&nbsp;반응&nbsp;(D3)<br>(낮을수록&nbsp;좋음)</th><th>인위 저하 20% (D1)</th><th>실제 걸음 정확도 (D2)</th><th>A·S 중 큰 값과의 최저 AUC 차이</th></tr></thead><tbody><tr><td><strong>A·S 중 큰 값</strong></td><td>A와 S를 각각 표준화해 큰 값</td><td><strong>0.815</strong></td><td><strong>0.68</strong></td><td>0.29</td><td>0.65 (17%)</td><td><strong>97.9%</strong></td><td>—</td></tr><tr><td>A+S 합</td><td>표준화한 A와 S를 더함</td><td>0.815</td><td>0.66</td><td>0.27</td><td>0.66 (23%)</td><td>—</td><td>−0.02</td></tr><tr><td>A 위험 방향 합</td><td>위험 쪽으로 벗어난 z만 더함</td><td>0.783</td><td>0.64</td><td>0.33</td><td>0.63 (22%)</td><td>64.6%</td><td>−0.04</td></tr><tr><td>양방향 |z| 합 (예전 방식)</td><td>방향 없이 |z|를 더함, 문턱 3</td><td>0.737</td><td>0.58</td><td>0.58</td><td>0.46 (2%)</td><td>97.9%</td><td>−0.10</td></tr></tbody></table></div>
+<details class="real-data"><summary>실제 데이터 예시 (A·S 중 큰 값)</summary><div class="rd-body">
+<p>lee 11-12 고리 녹화 한 묶음의 6초 구간 (수정안 기준) · 기준선 = 같은 묶음의 평소 구간. 평소 구간 하나와 천천히 구간 하나.</p>
+<p>z → A, S 계산</p>
+<div class="table-wrap"><table><thead><tr><th>단계</th><th>평소 구간</th><th>천천히 구간</th></tr></thead><tbody><tr><td>z 속도</td><td>−1.32</td><td>−4.14</td></tr><tr><td>z 속도 변동</td><td>+0.97</td><td>−1.86</td></tr><tr><td>z 흔들림</td><td>−0.07</td><td>+0.47</td></tr><tr><td>z 멈춤 비율</td><td>0.00</td><td>0.00</td></tr><tr><td>A (위험 방향 z 합)</td><td>2.29</td><td>4.61</td></tr><tr><td>S (= −z 속도)</td><td>+1.32</td><td>+4.14</td></tr><tr><td>표준화 A = (A − 1.6) ÷ 1.17</td><td>+0.59</td><td>+2.57</td></tr><tr><td>표준화 S = S ÷ 1</td><td>+1.32</td><td>+4.14</td></tr></tbody></table></div>
+<p>같은 구간을 판정 알고리즘별로 · 단계 기준 2 주의 · 3 경고 · 4 위험</p>
+<div class="table-wrap"><table><thead><tr><th>판정 알고리즘</th><th>평소 구간</th><th>천천히 구간</th></tr></thead><tbody>
+<tr><td>A·S 중 큰 값 → 단계</td><td class="hit">+1.32 → 정상</td><td class="hit">+4.14 → 위험</td></tr>
+<tr><td>A+S 합</td><td>+1.91</td><td>+6.71</td></tr>
+<tr><td>A 위험 방향 합 (≥ 2면 경보)</td><td>+0.59 → 정상</td><td>+2.57 → 경보</td></tr>
+<tr><td>양방향 |z| 합 (≥ 3이면 경보)</td><td>2.37 → 정상</td><td>6.48 → 경보</td></tr>
+</tbody></table></div>
+</div></details>
+<h2 id="g-결과표">결과표</h2>
+<p>실제 보행 녹화 212구간의 걷기 방식별 대표값 (수정안 기준) · 값은 중앙값.</p>
+<div class="tabs" role="tablist" aria-label="걷기 방식 선택"><button role="tab" id="gtab-0" aria-controls="gait-0" aria-selected="true" tabindex="0">평소</button><button role="tab" id="gtab-1" aria-controls="gait-1" aria-selected="false" tabindex="-1">천천히</button><button role="tab" id="gtab-2" aria-controls="gait-2" aria-selected="false" tabindex="-1">종종걸음</button></div>
+<div class="tab-panel gait" role="tabpanel" id="gait-0" aria-labelledby="gtab-0">
+<h3>평소 (Normal)</h3>
+<div class="table-wrap"><table><thead><tr><th>구분</th><th>인풋 (RAW, 6초)</th><th>전처리: 보행 지표</th><th>전처리: z-score</th><th>분류 (점수)</th><th>아웃풋 (대표 판정)</th></tr></thead><tbody><tr><td>속도 (m/s)</td><td rowspan="4" class="merge">이동 경로 5.17 m<br>순이동 1.39 m</td><td>0.828</td><td>+0.14</td><td rowspan="4" class="merge">A 0.88 · S −0.14<br>→ 점수 −0.02</td><td rowspan="4" class="merge">정상</td></tr><tr><td>속도 변동</td><td>0.273</td><td>−0.06</td></tr><tr><td>흔들림 (m)</td><td>0.041</td><td>+0.01</td></tr><tr><td>멈춤 비율</td><td>0.00</td><td>0.00</td></tr><tr><td>판정 단계</td><td>-</td><td>-</td><td>-</td><td>-</td><td>정상 104 · 주의 6 · 경고 2</td></tr><tr><td>맞힌 비율</td><td>-</td><td>-</td><td>-</td><td>-</td><td>92.9% (정상이면 맞음)</td></tr></tbody></table></div>
+</div>
+<div class="tab-panel gait" role="tabpanel" id="gait-1" aria-labelledby="gtab-1" hidden>
+<h3>천천히 (Slow)</h3>
+<div class="table-wrap"><table><thead><tr><th>구분</th><th>인풋 (RAW, 6초)</th><th>전처리: 보행 지표</th><th>전처리: z-score</th><th>분류 (점수)</th><th>아웃풋 (대표 판정)</th></tr></thead><tbody><tr><td>속도 (m/s)</td><td rowspan="4" class="merge">이동 경로 3.62 m<br>순이동 1.78 m</td><td>0.523</td><td>−4.65</td><td rowspan="4" class="merge">A 5.48 · S 4.65<br>→ 점수 4.65</td><td rowspan="4" class="merge">위험</td></tr><tr><td>속도 변동</td><td>0.266</td><td>+0.25</td></tr><tr><td>흔들림 (m)</td><td>0.035</td><td>−0.17</td></tr><tr><td>멈춤 비율</td><td>0.00</td><td>0.00</td></tr><tr><td>판정 단계</td><td>-</td><td>-</td><td>-</td><td>-</td><td>위험 38 · 경고 15 · 주의 1 · 정상 1</td></tr><tr><td>맞힌 비율</td><td>-</td><td>-</td><td>-</td><td>-</td><td>98.2% (주의 이상이면 맞음)</td></tr></tbody></table></div>
+</div>
+<div class="tab-panel gait" role="tabpanel" id="gait-2" aria-labelledby="gtab-2" hidden>
+<h3>종종걸음 (Shuffling)</h3>
+<div class="table-wrap"><table><thead><tr><th>구분</th><th>인풋 (RAW, 6초)</th><th>전처리: 보행 지표</th><th>전처리: z-score</th><th>분류 (점수)</th><th>아웃풋 (대표 판정)</th></tr></thead><tbody><tr><td>속도 (m/s)</td><td rowspan="4" class="merge">이동 경로 3.52 m<br>순이동 1.48 m</td><td>0.502</td><td>−5.60</td><td rowspan="4" class="merge">A 7.80 · S 5.60<br>→ 점수 6.13</td><td rowspan="4" class="merge">위험</td></tr><tr><td>속도 변동</td><td>0.271</td><td>+0.10</td></tr><tr><td>흔들림 (m)</td><td>0.030</td><td>−0.39</td></tr><tr><td>멈춤 비율</td><td>0.00</td><td>0.00</td></tr><tr><td>판정 단계</td><td>-</td><td>-</td><td>-</td><td>-</td><td>위험 33 · 정상 12</td></tr><tr><td>맞힌 비율</td><td>-</td><td>-</td><td>-</td><td>-</td><td>73.3% (주의 이상이면 맞음)</td></tr></tbody></table></div>
+</div>
+<p>점수 2 이상 주의 · 3 이상 경고 · 4 이상 위험.</p>
+<h2 id="g-실제-녹화-종합-결과-leekim-11-0511-12">실제 녹화 종합 결과 (lee·kim, 11-05·11-12)</h2>
+<p>지금 방식은 대부분 판정 불가, 수정안은 모든 녹화 판정.</p>
+<div class="table-wrap"><table><thead><tr><th>측정자 · 녹화</th><th>6초 구간 (평소 / 천천히 / 종종)</th><th>평균 속도 m/s (평소 / 천천히 / 종종)</th><th>지금 검사 통과</th><th>수정안 검사 통과</th></tr></thead><tbody><tr><td>lee 11-05</td><td>19 / 19 / 10</td><td>0.77 / 0.47 / 0.29</td><td>1 / 7 / 2</td><td>16 / 15 / 2</td></tr><tr><td>lee 11-12 ① (평소 5분 포함)</td><td>116 / 18 / 19</td><td>0.81 / 0.45 / 0.37</td><td>6 / 11 / 9</td><td>76 / 15 / 14</td></tr><tr><td>lee 11-12 ②</td><td>19 / 18 / 19</td><td>0.95 / 0.73 / 0.51</td><td>0 / 6 / 12</td><td>10 / 13 / 16</td></tr><tr><td>kim 11-12</td><td>19 / 18 / 19</td><td>0.91 / 0.55 / 0.77</td><td>0 / 6 / 1</td><td>10 / 12 / 13</td></tr></tbody></table></div>
+
+<div class="table-wrap"><table><thead><tr><th>판정 규칙 (문턱)</th><th>지금 검사 (판정 가능 1묶음, 26구간)</th><th>수정안 전체 (212구간)</th><th>수정안 lee (177구간)</th><th>수정안 kim (35구간)</th></tr></thead><tbody><tr><td><strong>A·S 중 큰 값 ≥ 2 (지금 서버)</strong></td><td>100%</td><td><strong>90.1%</strong></td><td>94.9%</td><td>65.7%</td></tr><tr><td>S 속도만 ≥ 2</td><td>100%</td><td>91.0%</td><td>96.0%</td><td>65.7%</td></tr><tr><td>A 위험 방향 합 ≥ 2</td><td>65.4%</td><td>90.1%</td><td>96.6%</td><td>57.1%</td></tr><tr><td>양방향 |z| 합 ≥ 3 (예전)</td><td>84.6%</td><td>87.7%</td><td>90.4%</td><td>74.3%</td></tr></tbody></table></div>
+
+<h2 id="g-한계">한계</h2>
+<ul><li><p>실제 걸음은 2명(lee, kim)의 연기한 걸음이라, 실제 환자 기록은 없습니다.</p></li><li><p>평소 속도가 녹화마다 달라(lee 0.65~0.95 m/s), 여러 날의 평소 걸음으로 기준선을 잡아야 합니다.</p></li><li><p>보폭 지표가 없어 속도는 그대로이고 보폭만 줄어든 걸음은 잡지 못합니다(kim 종종걸음).</p></li><li><p>D2(11-05) 결과의 97.9%는 보행 검사를 거치지 않은 값입니다.</p></li><li><p>걷기 전후 멈춤이 6초 구간에 섞이면 헛알람이 납니다.</p></li></ul>
+<h2 id="g-향후-수정-계획-아직-서버에-적용하지-않음">향후 수정 계획 (아직 서버에 적용하지 않음)</h2>
+<p>좁은 방에서는 6초 구간 대부분이 보행 검사에서 탈락합니다 (5분 걷기 97개 중 2개 통과).</p>
+<h3 id="g-수정안">수정안</h3>
+<ol><li><p><strong>직진성 검사를 3초 단위로</strong> (앞·뒤 3초 모두 0.5 이상이면 통과)</p></li><li><p><strong>흔들림을 진행 방향 기준으로</strong> (길 모양은 빼고 몸의 출렁임만)</p></li></ol>
+<h3 id="g-근거-1-검사-방식별-통과율">근거 1 · 검사 방식별 통과율</h3>
+<p>걷기 253구간 / 걷지 않음 696구간.</p>
+<div class="table-wrap"><table><thead><tr><th>직진성 기준</th><th>걸기 통과 (고리, 209구간)</th><th>걸기 통과 (원, 44구간)</th><th>걸지 않음 통과 (696구간, 낮을수록 좋음)</th></tr></thead><tbody><tr><td>지금: 6초 전체 ≥ 0.5</td><td>21.1%</td><td>22.7%</td><td>1.1%</td></tr><tr><td>6초 전체 ≥ 0.4</td><td>40.7%</td><td>52.3%</td><td>2.4%</td></tr><tr><td>6초 전체 ≥ 0.3</td><td>70.8%</td><td>75.0%</td><td>3.0%</td></tr><tr><td>6초 전체 ≥ 0.2</td><td>95.7%</td><td>95.5%</td><td>6.6%</td></tr><tr><td>직진성 검사 없음</td><td>100%</td><td>95.5%</td><td>12.4%</td></tr><tr><td><strong>수정안: 3초 단위 ≥ 0.5</strong></td><td><strong>68.9%</strong></td><td><strong>68.2%</strong></td><td><strong>1.0%</strong></td></tr></tbody></table></div>
+
+<h3 id="g-근거-2-흔들림-계산-방식">근거 2 · 흔들림 계산 방식</h3>
+<div class="table-wrap"><table><thead><tr><th>흔들림 계산</th><th>평소 걸기 곧은 구간 중앙값 (7개)</th><th>평소 걸기 휘어진 구간 중앙값 (147개)</th></tr></thead><tbody><tr><td>지금 (6초 시작점→끝점 직선)</td><td>0.290 m</td><td>0.453 m</td></tr><tr><td><strong>수정안 (진행 방향 기준)</strong></td><td><strong>0.045 m</strong></td><td><strong>0.043 m</strong></td></tr></tbody></table></div>
+
+<h3 id="g-근거-3-판정-정확도-lee-보행-녹화-4개-6초-구간-201개">근거 3 · 판정 정확도 (lee 보행 녹화 4개, 6초 구간 201개)</h3>
+<div class="table-wrap"><table><thead><tr><th>방식</th><th>판정한 구간</th><th>판정 못한 녹화 묶음</th><th>A·S 중 큰 값 정확도</th></tr></thead><tbody><tr><td>지금</td><td>26</td><td>4개 중 3개 (평소 기준선 부족)</td><td>100% (lee 1묶음만)</td></tr><tr><td>수정안 1 + 2</td><td>212</td><td>없음</td><td>90.1% (lee 94.9%, kim 65.7%)</td></tr></tbody></table></div>
+
+
+
+</section>
+<script>
+(function(){document.querySelectorAll('.tabs').forEach(function(list){var tabs=list.querySelectorAll('[role="tab"]');
+function pick(t){tabs.forEach(function(b){var on=b===t;b.setAttribute('aria-selected',on);b.tabIndex=on?0:-1;document.getElementById(b.getAttribute('aria-controls')).hidden=!on;});}
+tabs.forEach(function(b,i){b.addEventListener('click',function(){pick(b);});
+b.addEventListener('keydown',function(e){var k=e.key==='ArrowRight'?1:e.key==='ArrowLeft'?-1:0;if(k){var n=tabs[(i+k+tabs.length)%tabs.length];n.focus();pick(n);}});});});})();
+</script>
+<script>
+(function(){var mt=document.querySelectorAll('.main-tabs [role="tab"]');
+function show(b){mt.forEach(function(x){var on=x===b;x.setAttribute('aria-selected',on);x.tabIndex=on?0:-1;document.getElementById(x.getAttribute('aria-controls')).hidden=!on;});
+history.replaceState(null,'',b.dataset.hash);window.scrollTo(0,0);}
+mt.forEach(function(b,i){b.addEventListener('click',function(){show(b);});
+b.addEventListener('keydown',function(e){var k=e.key==='ArrowRight'?1:e.key==='ArrowLeft'?-1:0;if(k){var n=mt[(i+k+mt.length)%mt.length];n.focus();show(n);}});});
+if(location.hash==='#gait'){show(mt[1]);}})();
+</script>
+</body></html>

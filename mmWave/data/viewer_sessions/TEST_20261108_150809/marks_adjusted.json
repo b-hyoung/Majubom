@@ -1,0 +1,10 @@
+{
+    "mmwave_session":  "TEST_20261108_150809",
+    "marks":  {
+                  "걸터앉음":  "15:09:20.000",
+                  "침대 위 앉음":  "15:09:42.012",
+                  "섬":  "15:10:45.160",
+                  "끝":  "15:11:47.855"
+              },
+    "note":  "걸터앉음 cue was 15:08:38.370; moved to 15:09:20 because the person reached the bed at about 15:09:18 (camera pose + mmWave track)"
+}

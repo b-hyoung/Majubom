@@ -1,0 +1,932 @@
+{
+ "about": "One mmWave radar frame exactly as the IWR6843AOP sent it over USB serial. Decoded field by field from the saved bytes; nothing filtered, converted or smoothed.",
+ "source": {
+  "recording": "TEST_20261112_155312",
+  "participant": "vic",
+  "raw_file": "raw.bin",
+  "byte_offset": 6820736,
+  "byte_length": 1312,
+  "received_at_unix": 1794466643.252,
+  "cued_posture": "누움",
+  "matches_site_example": {
+   "track_id": 23,
+   "z": 0.662,
+   "head_z": 1.13,
+   "npts": 6
+  }
+ },
+ "frame_header": {
+  "magicWord_hex": "0201040306050807",
+  "version": 50659332,
+  "totalPacketLen": 1312,
+  "platform": 682051,
+  "frameNumber": 219477,
+  "timeCpuCycles": 0,
+  "numDetectedObj": 93,
+  "numTLVs": 5,
+  "subFrameNumber": 0
+ },
+ "tlvs": [
+  {
+   "type": 1020,
+   "length_bytes": 764,
+   "name": "compressed point cloud: 5 float units, then '<bbhHH' per point (integers before multiplying by units)",
+   "units": {
+    "elevationUnit": 0.009999999776482582,
+    "azimuthUnit": 0.009999999776482582,
+    "dopplerUnit": 0.0002800000074785203,
+    "rangeUnit": 0.0002500000118743628,
+    "snrUnit": 0.03999999910593033
+   },
+   "points": [
+    {
+     "elevation": -31,
+     "azimuth": 120,
+     "doppler": 0,
+     "range": 9863,
+     "snr": 922
+    },
+    {
+     "elevation": -44,
+     "azimuth": -114,
+     "doppler": 0,
+     "range": 19980,
+     "snr": 219
+    },
+    {
+     "elevation": 8,
+     "azimuth": 113,
+     "doppler": 0,
+     "range": 1012,
+     "snr": 6594
+    },
+    {
+     "elevation": 8,
+     "azimuth": 113,
+     "doppler": 0,
+     "range": 1012,
+     "snr": 3544
+    },
+    {
+     "elevation": 8,
+     "azimuth": 113,
+     "doppler": 0,
+     "range": 1012,
+     "snr": 1463
+    },
+    {
+     "elevation": 8,
+     "azimuth": 113,
+     "doppler": 0,
+     "range": 1012,
+     "snr": 1216
+    },
+    {
+     "elevation": 5,
+     "azimuth": 112,
+     "doppler": 0,
+     "range": 7840,
+     "snr": 36841
+    },
+    {
+     "elevation": -31,
+     "azimuth": 106,
+     "doppler": 0,
+     "range": 9863,
+     "snr": 2063
+    },
+    {
+     "elevation": -45,
+     "azimuth": 126,
+     "doppler": 0,
+     "range": 19980,
+     "snr": 169
+    },
+    {
+     "elevation": 8,
+     "azimuth": 105,
+     "doppler": 0,
+     "range": 1012,
+     "snr": 11566
+    },
+    {
+     "elevation": 8,
+     "azimuth": 105,
+     "doppler": 0,
+     "range": 1012,
+     "snr": 3722
+    },
+    {
+     "elevation": 8,
+     "azimuth": 105,
+     "doppler": 0,
+     "range": 1012,
+     "snr": 1547
+    },
+    {
+     "elevation": 8,
+     "azimuth": 105,
+     "doppler": 0,
+     "range": 1012,
+     "snr": 1241
+    },
+    {
+     "elevation": -65,
+     "azimuth": -112,
+     "doppler": 0,
+     "range": 6828,
+     "snr": 7095
+    },
+    {
+     "elevation": -39,
+     "azimuth": 96,
+     "doppler": 0,
+     "range": 8599,
+     "snr": 2691
+    },
+    {
+     "elevation": -30,
+     "azimuth": 92,
+     "doppler": 0,
+     "range": 9863,
+     "snr": 4041
+    },
+    {
+     "elevation": 7,
+     "azimuth": 91,
+     "doppler": 0,
+     "range": 1012,
+     "snr": 7850
+    },
+    {
+     "elevation": 7,
+     "azimuth": 91,
+     "doppler": 0,
+     "range": 1012,
+     "snr": 2288
+    },
+    {
+     "elevation": 7,
+     "azimuth": 91,
+     "doppler": 0,
+     "range": 1012,
+     "snr": 1331
+    },
+    {
+     "elevation": 7,
+     "azimuth": 91,
+     "doppler": 0,
+     "range": 1012,
+     "snr": 1088
+    },
+    {
+     "elevation": 15,
+     "azimuth": 87,
+     "doppler": 0,
+     "range": 20991,
+     "snr": 456
+    },
+    {
+     "elevation": 43,
+     "azimuth": 97,
+     "doppler": 0,
+     "range": 13910,
+     "snr": 25356
+    },
+    {
+     "elevation": 60,
+     "azimuth": -126,
+     "doppler": 0,
+     "range": 5311,
+     "snr": 494
+    },
+    {
+     "elevation": 61,
+     "azimuth": -125,
+     "doppler": 0,
+     "range": 23773,
+     "snr": 603
+    },
+    {
+     "elevation": 65,
+     "azimuth": -128,
+     "doppler": 0,
+     "range": 27567,
+     "snr": 209
+    },
+    {
+     "elevation": -71,
+     "azimuth": 121,
+     "doppler": 0,
+     "range": 6828,
+     "snr": 9098
+    },
+    {
+     "elevation": -45,
+     "azimuth": 86,
+     "doppler": 0,
+     "range": 8599,
+     "snr": 8456
+    },
+    {
+     "elevation": -30,
+     "azimuth": 81,
+     "doppler": 0,
+     "range": 9863,
+     "snr": 6063
+    },
+    {
+     "elevation": 7,
+     "azimuth": 78,
+     "doppler": 0,
+     "range": 1012,
+     "snr": 4750
+    },
+    {
+     "elevation": 7,
+     "azimuth": 78,
+     "doppler": 0,
+     "range": 1012,
+     "snr": 1384
+    },
+    {
+     "elevation": 7,
+     "azimuth": 78,
+     "doppler": 0,
+     "range": 1012,
+     "snr": 1047
+    },
+    {
+     "elevation": 7,
+     "azimuth": 78,
+     "doppler": 0,
+     "range": 1012,
+     "snr": 891
+    },
+    {
+     "elevation": 13,
+     "azimuth": 76,
+     "doppler": 0,
+     "range": 20991,
+     "snr": 731
+    },
+    {
+     "elevation": 40,
+     "azimuth": 85,
+     "doppler": 0,
+     "range": 7840,
+     "snr": 3066
+    },
+    {
+     "elevation": 36,
+     "azimuth": 81,
+     "doppler": 0,
+     "range": 14163,
+     "snr": 38375
+    },
+    {
+     "elevation": 61,
+     "azimuth": 101,
+     "doppler": 0,
+     "range": 27567,
+     "snr": 209
+    },
+    {
+     "elevation": -74,
+     "azimuth": 104,
+     "doppler": 0,
+     "range": 6828,
+     "snr": 8714
+    },
+    {
+     "elevation": -55,
+     "azimuth": 79,
+     "doppler": 0,
+     "range": 8599,
+     "snr": 1663
+    },
+    {
+     "elevation": -59,
+     "azimuth": 81,
+     "doppler": 0,
+     "range": 24026,
+     "snr": 503
+    },
+    {
+     "elevation": -44,
+     "azimuth": 72,
+     "doppler": 0,
+     "range": 8852,
+     "snr": 14353
+    },
+    {
+     "elevation": -29,
+     "azimuth": 70,
+     "doppler": 0,
+     "range": 9863,
+     "snr": 6297
+    },
+    {
+     "elevation": 9,
+     "azimuth": 67,
+     "doppler": 0,
+     "range": 1012,
+     "snr": 2209
+    },
+    {
+     "elevation": 9,
+     "azimuth": 67,
+     "doppler": 0,
+     "range": 1012,
+     "snr": 822
+    },
+    {
+     "elevation": 9,
+     "azimuth": 67,
+     "doppler": 0,
+     "range": 1012,
+     "snr": 734
+    },
+    {
+     "elevation": 9,
+     "azimuth": 67,
+     "doppler": 0,
+     "range": 1012,
+     "snr": 656
+    },
+    {
+     "elevation": 6,
+     "azimuth": 64,
+     "doppler": 0,
+     "range": 20738,
+     "snr": 481
+    },
+    {
+     "elevation": 38,
+     "azimuth": 70,
+     "doppler": 0,
+     "range": 8093,
+     "snr": 519
+    },
+    {
+     "elevation": 32,
+     "azimuth": 69,
+     "doppler": 0,
+     "range": 14163,
+     "snr": 43809
+    },
+    {
+     "elevation": 31,
+     "azimuth": 67,
+     "doppler": 0,
+     "range": 15933,
+     "snr": 284
+    },
+    {
+     "elevation": 72,
+     "azimuth": 93,
+     "doppler": 0,
+     "range": 23014,
+     "snr": 478
+    },
+    {
+     "elevation": 59,
+     "azimuth": 82,
+     "doppler": 0,
+     "range": 27820,
+     "snr": 219
+    },
+    {
+     "elevation": -101,
+     "azimuth": -110,
+     "doppler": 0,
+     "range": 1012,
+     "snr": 541
+    },
+    {
+     "elevation": -101,
+     "azimuth": -110,
+     "doppler": 0,
+     "range": 1012,
+     "snr": 309
+    },
+    {
+     "elevation": -101,
+     "azimuth": -110,
+     "doppler": 0,
+     "range": 1012,
+     "snr": 303
+    },
+    {
+     "elevation": -101,
+     "azimuth": -110,
+     "doppler": 0,
+     "range": 1012,
+     "snr": 281
+    },
+    {
+     "elevation": -60,
+     "azimuth": 70,
+     "doppler": 0,
+     "range": 8599,
+     "snr": 3394
+    },
+    {
+     "elevation": -63,
+     "azimuth": 71,
+     "doppler": 0,
+     "range": 24026,
+     "snr": 341
+    },
+    {
+     "elevation": -51,
+     "azimuth": 65,
+     "doppler": 0,
+     "range": 27820,
+     "snr": 213
+    },
+    {
+     "elevation": -28,
+     "azimuth": 60,
+     "doppler": 0,
+     "range": 9863,
+     "snr": 5063
+    },
+    {
+     "elevation": 13,
+     "azimuth": 56,
+     "doppler": 0,
+     "range": 1012,
+     "snr": 1356
+    },
+    {
+     "elevation": 13,
+     "azimuth": 56,
+     "doppler": 0,
+     "range": 1012,
+     "snr": 597
+    },
+    {
+     "elevation": 13,
+     "azimuth": 56,
+     "doppler": 0,
+     "range": 1012,
+     "snr": 575
+    },
+    {
+     "elevation": 13,
+     "azimuth": 56,
+     "doppler": 0,
+     "range": 1012,
+     "snr": 531
+    },
+    {
+     "elevation": 2,
+     "azimuth": 55,
+     "doppler": 0,
+     "range": 20738,
+     "snr": 363
+    },
+    {
+     "elevation": 34,
+     "azimuth": 59,
+     "doppler": 0,
+     "range": 8093,
+     "snr": 656
+    },
+    {
+     "elevation": 29,
+     "azimuth": 59,
+     "doppler": 0,
+     "range": 14163,
+     "snr": 39119
+    },
+    {
+     "elevation": 72,
+     "azimuth": 78,
+     "doppler": 0,
+     "range": 23014,
+     "snr": 409
+    },
+    {
+     "elevation": 55,
+     "azimuth": 67,
+     "doppler": 0,
+     "range": 27820,
+     "snr": 153
+    },
+    {
+     "elevation": -100,
+     "azimuth": 102,
+     "doppler": 0,
+     "range": 1012,
+     "snr": 441
+    },
+    {
+     "elevation": -100,
+     "azimuth": 102,
+     "doppler": 0,
+     "range": 1012,
+     "snr": 250
+    },
+    {
+     "elevation": -100,
+     "azimuth": 102,
+     "doppler": 0,
+     "range": 1012,
+     "snr": 241
+    },
+    {
+     "elevation": -100,
+     "azimuth": 102,
+     "doppler": 0,
+     "range": 1012,
+     "snr": 219
+    },
+    {
+     "elevation": -101,
+     "azimuth": 97,
+     "doppler": 0,
+     "range": 15174,
+     "snr": 222
+    },
+    {
+     "elevation": -64,
+     "azimuth": 61,
+     "doppler": 0,
+     "range": 8599,
+     "snr": 6419
+    },
+    {
+     "elevation": -65,
+     "azimuth": 58,
+     "doppler": 0,
+     "range": 23267,
+     "snr": 322
+    },
+    {
+     "elevation": -69,
+     "azimuth": 63,
+     "doppler": 0,
+     "range": 24026,
+     "snr": 181
+    },
+    {
+     "elevation": -58,
+     "azimuth": 57,
+     "doppler": 0,
+     "range": 27820,
+     "snr": 159
+    },
+    {
+     "elevation": -26,
+     "azimuth": 51,
+     "doppler": 0,
+     "range": 9863,
+     "snr": 3703
+    },
+    {
+     "elevation": -8,
+     "azimuth": 48,
+     "doppler": 0,
+     "range": 9610,
+     "snr": 9078
+    },
+    {
+     "elevation": -6,
+     "azimuth": 45,
+     "doppler": 0,
+     "range": 20485,
+     "snr": 250
+    },
+    {
+     "elevation": 30,
+     "azimuth": 49,
+     "doppler": 0,
+     "range": 8093,
+     "snr": 822
+    },
+    {
+     "elevation": 26,
+     "azimuth": 50,
+     "doppler": 0,
+     "range": 14163,
+     "snr": 29984
+    },
+    {
+     "elevation": 34,
+     "azimuth": 49,
+     "doppler": 0,
+     "range": 15680,
+     "snr": 706
+    },
+    {
+     "elevation": 57,
+     "azimuth": 56,
+     "doppler": 0,
+     "range": 1012,
+     "snr": 719
+    },
+    {
+     "elevation": 57,
+     "azimuth": 56,
+     "doppler": 0,
+     "range": 1012,
+     "snr": 394
+    },
+    {
+     "elevation": 57,
+     "azimuth": 56,
+     "doppler": 0,
+     "range": 1012,
+     "snr": 328
+    },
+    {
+     "elevation": 57,
+     "azimuth": 56,
+     "doppler": 0,
+     "range": 1012,
+     "snr": 272
+    },
+    {
+     "elevation": 71,
+     "azimuth": 65,
+     "doppler": 0,
+     "range": 23014,
+     "snr": 313
+    },
+    {
+     "elevation": -118,
+     "azimuth": 127,
+     "doppler": 0,
+     "range": 5311,
+     "snr": 228
+    },
+    {
+     "elevation": -104,
+     "azimuth": 81,
+     "doppler": 0,
+     "range": 15174,
+     "snr": 300
+    },
+    {
+     "elevation": -58,
+     "azimuth": 46,
+     "doppler": 0,
+     "range": 8852,
+     "snr": 9600
+    },
+    {
+     "elevation": -64,
+     "azimuth": 46,
+     "doppler": 0,
+     "range": 23267,
+     "snr": 344
+    },
+    {
+     "elevation": -88,
+     "azimuth": 58,
+     "doppler": 0,
+     "range": 26302,
+     "snr": 209
+    }
+   ],
+   "payload_hex": "0ad7233c0ad7233cf7cc92396f1283390ad7233de178000087269a03d48e00000c4edb0008710000f403c21908710000f403d80d08710000f403b70508710000f403c00405700000a01ee98fe16a000087260f08d37e00000c4ea90008690000f4032e2d08690000f4038a0e08690000f4030b0608690000f403d904bf900000ac1ab71bd96000009721830ae25c00008726c90f075b0000f403aa1e075b0000f403f008075b0000f4033305075b0000f40340040f570000ff51c8012b61000056360c633c820000bf14ee013d830000dd5c5b0241800000af6bd100b9790000ac1a8a23d356000097210821e25100008726af17074e0000f4038e12074e0000f4036805074e0000f4031704074e0000f4037b030d4c0000ff51db0228550000a01efa0b245100005337e7953d650000af6bd100b6680000ac1a0a22c94f000097217f06c5510000da5df701d448000094221138e34600008726991809430000f403a10809430000f403360309430000f403de0209430000f4039002064000000251e101264600009d1f070220450000533721ab1f4300003d3e1c01485d0000e659de013b520000ac6cdb009b920000f4031d029b920000f40335019b920000f4032f019b920000f4031901c44600009721420dc1470000da5d5501cd410000ac6cd500e43c00008726c7130d380000f4034c050d380000f40355020d380000f4033f020d380000f40313020237000002516b01223b00009d1f90021d3b00005337cf98484e0000e659990137430000ac6c99009c660000f403b9019c660000f403fa009c660000f403f1009c660000f403db009b610000463bde00c03d000097211319bf3a0000e35a4201bb3f0000da5db500c6390000ac6c9f00e63300008726770ef83000008a257623fa2d00000550fa001e3100009d1f36031a3200005337207522310000403dc20239380000f403cf0239380000f4038a0139380000f403480139380000f403100147410000e65939018a7f0000bf14e40098510000463b2c01c62e000094228025c02e0000e35a5801a83a0000be66d100"
+  },
+  {
+   "type": 1010,
+   "length_bytes": 336,
+   "name": "target list (3D People Tracking, 112 bytes per slot, '<I27f')",
+   "targets": [
+    {
+     "tid": 2,
+     "posX": 1.6262965202331543,
+     "posY": 2.4656543731689453,
+     "posZ": -1.8950904607772827,
+     "velX": 0.07317928224802017,
+     "velY": -0.09796614944934845,
+     "velZ": -0.009313968010246754,
+     "accX": 0.06006307899951935,
+     "accY": -0.0766477882862091,
+     "accZ": -0.004597241058945656,
+     "errorCovariance": [
+      1.2695852518081665,
+      -0.03365711495280266,
+      -0.003934929147362709,
+      -0.007724008057266474,
+      -0.03365711495280266,
+      15.644489288330078,
+      -0.05315731093287468,
+      -0.020153090357780457,
+      -0.003934931475669146,
+      -0.053157318383455276,
+      7.760709285736084,
+      -0.002455345122143626,
+      -0.007724008057266474,
+      -0.020153088495135307,
+      -0.002455344656482339,
+      0.45206156373023987
+     ],
+     "gatingGain": 3.0,
+     "confidenceLevel": 0.9999970197677612
+    },
+    {
+     "tid": 23,
+     "posX": 0.755222499370575,
+     "posY": 2.037559747695923,
+     "posZ": 0.11618362367153168,
+     "velX": -0.0227680541574955,
+     "velY": 0.003870151937007904,
+     "velZ": 0.06244058907032013,
+     "accX": -0.021981116384267807,
+     "accY": 0.006802537944167852,
+     "accZ": 0.05668662115931511,
+     "errorCovariance": [
+      1.1662566661834717,
+      -0.04072484374046326,
+      -0.043876275420188904,
+      -0.006597862113267183,
+      -0.04072484374046326,
+      17.642404556274414,
+      -0.29667219519615173,
+      -0.029729900881648064,
+      -0.043876275420188904,
+      -0.29667219519615173,
+      8.03975772857666,
+      -0.025554506108164787,
+      -0.006597862113267183,
+      -0.029729897156357765,
+      -0.025554506108164787,
+      0.7726886868476868
+     ],
+     "gatingGain": 3.0,
+     "confidenceLevel": 0.9999997615814209
+    },
+    {
+     "tid": 24,
+     "posX": -1.6065044403076172,
+     "posY": 2.0583736896514893,
+     "posZ": -0.6986166834831238,
+     "velX": 0.013621939346194267,
+     "velY": -0.00144779565744102,
+     "velZ": -0.004656463395804167,
+     "accX": 0.009441599249839783,
+     "accY": -0.001113824313506484,
+     "accZ": -0.003069087164476514,
+     "errorCovariance": [
+      0.9576941132545471,
+      -0.16272681951522827,
+      -0.05933272838592529,
+      -0.015197846107184887,
+      -0.16272680461406708,
+      6.585287570953369,
+      -0.2564029395580292,
+      -0.040470242500305176,
+      -0.059332724660634995,
+      -0.2564029395580292,
+      5.712048053741455,
+      -0.014117065817117691,
+      -0.015197847038507462,
+      -0.040470242500305176,
+      -0.01411706767976284,
+      0.2426529973745346
+     ],
+     "gatingGain": 3.0,
+     "confidenceLevel": 0.9998936653137207
+    }
+   ],
+   "payload_hex": "020000007c2ad03f48cd1d405392f2bf05df953d7aa2c8bd9d9918bcb404763d84f99cbd74a496bbc581a23f0bdc09bd94f080bbad19fdbb0bdc09bdd44f7a417bbb59bd1818a5bc99f080bb7dbb59bdbb57f840dbe920bbad19fdbb1718a5bcd9e920bb9d74e73e00004040ceff7f3f170000004356413f61670240aef1ed3d1284babc60a27d3bb4c17f3dbe11b4bcd3e7de3b3b30683de647953f18cf26bd9cb733bde132d8bb18cf26bda5238d416be597be1f8cf3bc9cb733bd6be597bed9a20041af57d1bce132d8bb1d8cf3bcaf57d1bcedce453f00004040fcff7f3f18000000f0a1cdbf65bc03408bd832bf8e2e5f3cf6c3bdba3f9598bbf0b01a3cbefd91babd2249bb712b753fdca126bee00673bd630079bcdba126beadbad2403f4783be20c425bddf0673bd3f4783be19c9b640444b67bc640079bc20c425bd464b67bc077a783e0000404008f97f3f"
+  },
+  {
+   "type": 1012,
+   "length_bytes": 36,
+   "name": "target height ('<I2f' per target)",
+   "heights": [
+    {
+     "tid": 2,
+     "maxZ": 1.2141845226287842,
+     "minZ": 1.0461955393730814e-29
+    },
+    {
+     "tid": 23,
+     "maxZ": 1.6651209592819214,
+     "minZ": 0.03861984610557556
+    },
+    {
+     "tid": 24,
+     "maxZ": 0.1861080378293991,
+     "minZ": 0.09431807696819305
+    }
+   ],
+   "payload_hex": "02000000666a9b3f9431540f17000000af22d53fd82f1e3d180000001b933e3ed629c13d"
+  },
+  {
+   "type": 1011,
+   "length_bytes": 92,
+   "name": "target index (one uint8 per point of the PREVIOUS frame; 253/254/255 = not assigned)",
+   "index": [
+    255,
+    254,
+    255,
+    255,
+    255,
+    255,
+    255,
+    255,
+    254,
+    255,
+    255,
+    255,
+    255,
+    255,
+    254,
+    2,
+    2,
+    255,
+    255,
+    255,
+    255,
+    255,
+    255,
+    255,
+    255,
+    254,
+    254,
+    2,
+    2,
+    2,
+    255,
+    255,
+    255,
+    255,
+    255,
+    255,
+    255,
+    254,
+    2,
+    2,
+    255,
+    2,
+    2,
+    255,
+    255,
+    255,
+    255,
+    255,
+    23,
+    255,
+    255,
+    255,
+    254,
+    255,
+    255,
+    255,
+    255,
+    2,
+    255,
+    2,
+    255,
+    255,
+    255,
+    255,
+    2,
+    23,
+    255,
+    255,
+    255,
+    255,
+    255,
+    255,
+    255,
+    255,
+    255,
+    2,
+    255,
+    255,
+    255,
+    23,
+    23,
+    2,
+    23,
+    23,
+    255,
+    255,
+    255,
+    255,
+    255,
+    255,
+    255,
+    2
+   ],
+   "payload_hex": "fffefffffffffffffefffffffffffe0202fffffffffffffffffefe020202fffffffffffffffe0202ff0202ffffffffff17fffffffeffffffff02ff02ffffffff0217ffffffffffffffffff02ffffff1717021717ffffffffffffff02"
+  },
+  {
+   "type": 1021,
+   "length_bytes": 4,
+   "name": "presence indication (uint32)",
+   "value": 1,
+   "payload_hex": "01000000"
+  }
+ ],
+ "frame_bytes_hex": "0201040306050807040005032005000043680a0055590300000000005d0000000500000000000000fc030000fc0200000ad7233c0ad7233cf7cc92396f1283390ad7233de178000087269a03d48e00000c4edb0008710000f403c21908710000f403d80d08710000f403b70508710000f403c00405700000a01ee98fe16a000087260f08d37e00000c4ea90008690000f4032e2d08690000f4038a0e08690000f4030b0608690000f403d904bf900000ac1ab71bd96000009721830ae25c00008726c90f075b0000f403aa1e075b0000f403f008075b0000f4033305075b0000f40340040f570000ff51c8012b61000056360c633c820000bf14ee013d830000dd5c5b0241800000af6bd100b9790000ac1a8a23d356000097210821e25100008726af17074e0000f4038e12074e0000f4036805074e0000f4031704074e0000f4037b030d4c0000ff51db0228550000a01efa0b245100005337e7953d650000af6bd100b6680000ac1a0a22c94f000097217f06c5510000da5df701d448000094221138e34600008726991809430000f403a10809430000f403360309430000f403de0209430000f4039002064000000251e101264600009d1f070220450000533721ab1f4300003d3e1c01485d0000e659de013b520000ac6cdb009b920000f4031d029b920000f40335019b920000f4032f019b920000f4031901c44600009721420dc1470000da5d5501cd410000ac6cd500e43c00008726c7130d380000f4034c050d380000f40355020d380000f4033f020d380000f40313020237000002516b01223b00009d1f90021d3b00005337cf98484e0000e659990137430000ac6c99009c660000f403b9019c660000f403fa009c660000f403f1009c660000f403db009b610000463bde00c03d000097211319bf3a0000e35a4201bb3f0000da5db500c6390000ac6c9f00e63300008726770ef83000008a257623fa2d00000550fa001e3100009d1f36031a3200005337207522310000403dc20239380000f403cf0239380000f4038a0139380000f403480139380000f403100147410000e65939018a7f0000bf14e40098510000463b2c01c62e000094228025c02e0000e35a5801a83a0000be66d100f203000050010000020000007c2ad03f48cd1d405392f2bf05df953d7aa2c8bd9d9918bcb404763d84f99cbd74a496bbc581a23f0bdc09bd94f080bbad19fdbb0bdc09bdd44f7a417bbb59bd1818a5bc99f080bb7dbb59bdbb57f840dbe920bbad19fdbb1718a5bcd9e920bb9d74e73e00004040ceff7f3f170000004356413f61670240aef1ed3d1284babc60a27d3bb4c17f3dbe11b4bcd3e7de3b3b30683de647953f18cf26bd9cb733bde132d8bb18cf26bda5238d416be597be1f8cf3bc9cb733bd6be597bed9a20041af57d1bce132d8bb1d8cf3bcaf57d1bcedce453f00004040fcff7f3f18000000f0a1cdbf65bc03408bd832bf8e2e5f3cf6c3bdba3f9598bbf0b01a3cbefd91babd2249bb712b753fdca126bee00673bd630079bcdba126beadbad2403f4783be20c425bddf0673bd3f4783be19c9b640444b67bc640079bc20c425bd464b67bc077a783e0000404008f97f3ff40300002400000002000000666a9b3f9431540f17000000af22d53fd82f1e3d180000001b933e3ed629c13df30300005c000000fffefffffffffffffefffffffffffe0202fffffffffffffffffefe020202fffffffffffffffe0202ff0202ffffffffff17fffffffeffffffff02ff02ffffffff0217ffffffffffffffffff02ffffff1717021717ffffffffffffff02fd0300000400000001000000"
+}

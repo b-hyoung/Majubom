@@ -1,0 +1,4 @@
+{"t": 1794455335.417, "event": "person_no_points", "tid": 1, "pos": [0.96, 0.95], "text": "사람으로 표시한 1번에 반사점이 없습니다. 사람이 떠난 자리일 수 있습니다.", "check": true}
+{"t": 1794455353.734, "event": "person_fall", "tid": "P1", "pos": [1.09, 1.17], "text": "P1 주의(바닥까지 내려갔다 일어남): z=0.72 기준 높이=1.1", "check": false}
+{"t": 1794455353.734, "event": "legacy_fall", "tid": 1, "pos": [1.09, 1.17], "text": "기존 판정 caution: 1번 z=0.72 기준 높이=1.1", "check": false}
+{"t": 1794455396.503, "event": "person_no_points", "tid": 1, "pos": [1.16, 1.15], "text": "사람으로 표시한 1번에 반사점이 없습니다. 사람이 떠난 자리일 수 있습니다.", "check": true}

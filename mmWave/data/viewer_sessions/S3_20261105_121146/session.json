@@ -1,0 +1,18 @@
+{
+ "session": "S3",
+ "description": "한 명씩 서 있기, 걷기",
+ "default_truth": "unknown",
+ "participant": "측정자 1명",
+ "activity": "원 모양 길 연속 걷기: 평소 속도 약 60초, 천천히 약 60초, 시작과 끝에 3초 정지, 전체 걸음 수 직접 셈",
+ "note": "원 중심 약 (1.0, 0.3), 반지름 약 0.9m. 걸음 주파수 정답 = 걸음 수 / 레이더로 잰 걷기 시간. 앞 녹화에서 y -1.0 바깥 감지가 약해 원을 y -0.6~+1.2 안에 둠.",
+ "started_at": 1793848306.4078805,
+ "stopped_at": 1793848555.8879886,
+ "stop_reason": "user",
+ "height_m": 2.7,
+ "tilt_deg": 90.0,
+ "upside_down": true,
+ "reader_commit": "56021f3",
+ "frames": 4498,
+ "corrupt": 40,
+ "label_changes": 0
+}

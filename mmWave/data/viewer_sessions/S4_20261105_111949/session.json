@@ -1,0 +1,18 @@
+{
+ "session": "S4",
+ "description": "침대에 눕기",
+ "default_truth": "unknown",
+ "participant": "측정자 1명",
+ "activity": "방 밖 y- 쪽에서 들어와 침대에 2분 누운 뒤 문으로 나가기",
+ "note": "시작 시점 방 안 사람 없음. 원본 남은 트랙 11, 28(방 왼쪽 벽 밖), 13(문 영역) 있음. 매트리스 윗면 0.7m 실측.",
+ "started_at": 1793845189.9788663,
+ "stopped_at": 1793845580.5202093,
+ "stop_reason": "user",
+ "height_m": 2.7,
+ "tilt_deg": 90.0,
+ "upside_down": true,
+ "reader_commit": "56021f3",
+ "frames": 7072,
+ "corrupt": 28,
+ "label_changes": 0
+}

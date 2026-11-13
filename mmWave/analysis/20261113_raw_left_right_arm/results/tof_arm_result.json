@@ -1,0 +1,89 @@
+{
+ "windows": {
+  "on_rail": 70,
+  "down": 70
+ },
+ "logistic": {
+  "acc": 0.914,
+  "segments_correct": "10/10",
+  "per_segment": {
+   "2": 0.5,
+   "3": 1.0,
+   "4": 1.0,
+   "5": 1.0,
+   "6": 1.0,
+   "7": 0.929,
+   "8": 1.0,
+   "9": 0.929,
+   "10": 0.857,
+   "11": 0.929
+  }
+ },
+ "random_forest": {
+  "acc": 0.879,
+  "segments_correct": "9/10",
+  "per_segment": {
+   "2": 0.0,
+   "3": 1.0,
+   "4": 1.0,
+   "5": 1.0,
+   "6": 1.0,
+   "7": 1.0,
+   "8": 1.0,
+   "9": 0.929,
+   "10": 1.0,
+   "11": 0.857
+  }
+ },
+ "zones_fully_separating": [
+  {
+   "sensor": "tof2",
+   "zone": 36,
+   "row": 4,
+   "col": 4,
+   "up_minus_down_mm": -69.1
+  },
+  {
+   "sensor": "tof2",
+   "zone": 37,
+   "row": 4,
+   "col": 5,
+   "up_minus_down_mm": -343.0
+  },
+  {
+   "sensor": "tof2",
+   "zone": 38,
+   "row": 4,
+   "col": 6,
+   "up_minus_down_mm": -295.6
+  },
+  {
+   "sensor": "tof2",
+   "zone": 44,
+   "row": 5,
+   "col": 4,
+   "up_minus_down_mm": -72.6
+  },
+  {
+   "sensor": "tof2",
+   "zone": 45,
+   "row": 5,
+   "col": 5,
+   "up_minus_down_mm": -34.8
+  },
+  {
+   "sensor": "tof2",
+   "zone": 46,
+   "row": 5,
+   "col": 6,
+   "up_minus_down_mm": -11.2
+  },
+  {
+   "sensor": "tof2",
+   "zone": 52,
+   "row": 6,
+   "col": 4,
+   "up_minus_down_mm": -22.9
+  }
+ ]
+}

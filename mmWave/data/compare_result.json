@@ -1,0 +1,928 @@
+{
+ "points": {
+  "빈 방 (지도 직후)": {
+   "원본": {
+    "per_frame": 95.7,
+    "person_keep": null,
+    "person_total": 0
+   },
+   "근거리 제거": {
+    "per_frame": 56.9,
+    "person_keep": null,
+    "person_total": 0
+   },
+   "+SNR 10": {
+    "per_frame": 44.5,
+    "person_keep": null,
+    "person_total": 0
+   },
+   "+SNR 20": {
+    "per_frame": 29.2,
+    "person_keep": null,
+    "person_total": 0
+   },
+   "+SNR 40": {
+    "per_frame": 17.5,
+    "person_keep": null,
+    "person_total": 0
+   },
+   "근거리+배경": {
+    "per_frame": 3.2,
+    "person_keep": null,
+    "person_total": 0
+   },
+   "근거리+SNR 10+배경": {
+    "per_frame": 2.0,
+    "person_keep": null,
+    "person_total": 0
+   },
+   "근거리+배경+범위": {
+    "per_frame": 0.2,
+    "person_keep": null,
+    "person_total": 0
+   },
+   "근거리+SNR 10+배경+범위": {
+    "per_frame": 0.2,
+    "person_keep": null,
+    "person_total": 0
+   }
+  },
+  "빈 방 (1차 퇴실 뒤)": {
+   "원본": {
+    "per_frame": 97.7,
+    "person_keep": null,
+    "person_total": 0
+   },
+   "근거리 제거": {
+    "per_frame": 58.6,
+    "person_keep": null,
+    "person_total": 0
+   },
+   "+SNR 10": {
+    "per_frame": 46.6,
+    "person_keep": null,
+    "person_total": 0
+   },
+   "+SNR 20": {
+    "per_frame": 31.2,
+    "person_keep": null,
+    "person_total": 0
+   },
+   "+SNR 40": {
+    "per_frame": 19.1,
+    "person_keep": null,
+    "person_total": 0
+   },
+   "근거리+배경": {
+    "per_frame": 4.2,
+    "person_keep": null,
+    "person_total": 0
+   },
+   "근거리+SNR 10+배경": {
+    "per_frame": 2.5,
+    "person_keep": null,
+    "person_total": 0
+   },
+   "근거리+배경+범위": {
+    "per_frame": 1.0,
+    "person_keep": null,
+    "person_total": 0
+   },
+   "근거리+SNR 10+배경+범위": {
+    "per_frame": 0.9,
+    "person_keep": null,
+    "person_total": 0
+   }
+  },
+  "빈 방 (2차 퇴실 뒤)": {
+   "원본": {
+    "per_frame": 92.2,
+    "person_keep": null,
+    "person_total": 0
+   },
+   "근거리 제거": {
+    "per_frame": 56.2,
+    "person_keep": null,
+    "person_total": 0
+   },
+   "+SNR 10": {
+    "per_frame": 40.6,
+    "person_keep": null,
+    "person_total": 0
+   },
+   "+SNR 20": {
+    "per_frame": 25.5,
+    "person_keep": null,
+    "person_total": 0
+   },
+   "+SNR 40": {
+    "per_frame": 18.0,
+    "person_keep": null,
+    "person_total": 0
+   },
+   "근거리+배경": {
+    "per_frame": 38.6,
+    "person_keep": null,
+    "person_total": 0
+   },
+   "근거리+SNR 10+배경": {
+    "per_frame": 28.0,
+    "person_keep": null,
+    "person_total": 0
+   },
+   "근거리+배경+범위": {
+    "per_frame": 9.7,
+    "person_keep": null,
+    "person_total": 0
+   },
+   "근거리+SNR 10+배경+범위": {
+    "per_frame": 7.3,
+    "person_keep": null,
+    "person_total": 0
+   }
+  },
+  "걷기 1": {
+   "원본": {
+    "per_frame": 166.3,
+    "person_keep": 100.0,
+    "person_total": 23907
+   },
+   "근거리 제거": {
+    "per_frame": 129.2,
+    "person_keep": 99.9,
+    "person_total": 23907
+   },
+   "+SNR 10": {
+    "per_frame": 103.9,
+    "person_keep": 79.5,
+    "person_total": 23907
+   },
+   "+SNR 20": {
+    "per_frame": 71.9,
+    "person_keep": 56.1,
+    "person_total": 23907
+   },
+   "+SNR 40": {
+    "per_frame": 37.1,
+    "person_keep": 26.8,
+    "person_total": 23907
+   },
+   "근거리+배경": {
+    "per_frame": 86.5,
+    "person_keep": 97.9,
+    "person_total": 23907
+   },
+   "근거리+SNR 10+배경": {
+    "per_frame": 68.2,
+    "person_keep": 77.6,
+    "person_total": 23907
+   },
+   "근거리+배경+범위": {
+    "per_frame": 71.0,
+    "person_keep": 92.6,
+    "person_total": 23907
+   },
+   "근거리+SNR 10+배경+범위": {
+    "per_frame": 57.0,
+    "person_keep": 74.3,
+    "person_total": 23907
+   }
+  },
+  "걷기 2": {
+   "원본": {
+    "per_frame": 176.6,
+    "person_keep": 100.0,
+    "person_total": 59932
+   },
+   "근거리 제거": {
+    "per_frame": 140.9,
+    "person_keep": 93.0,
+    "person_total": 59932
+   },
+   "+SNR 10": {
+    "per_frame": 110.0,
+    "person_keep": 75.2,
+    "person_total": 59932
+   },
+   "+SNR 20": {
+    "per_frame": 80.8,
+    "person_keep": 56.9,
+    "person_total": 59932
+   },
+   "+SNR 40": {
+    "per_frame": 53.0,
+    "person_keep": 37.0,
+    "person_total": 59932
+   },
+   "근거리+배경": {
+    "per_frame": 128.2,
+    "person_keep": 88.6,
+    "person_total": 59932
+   },
+   "근거리+SNR 10+배경": {
+    "per_frame": 99.5,
+    "person_keep": 71.8,
+    "person_total": 59932
+   },
+   "근거리+배경+범위": {
+    "per_frame": 92.7,
+    "person_keep": 82.9,
+    "person_total": 59932
+   },
+   "근거리+SNR 10+배경+범위": {
+    "per_frame": 76.9,
+    "person_keep": 68.8,
+    "person_total": 59932
+   }
+  },
+  "앉음": {
+   "원본": {
+    "per_frame": 108.3,
+    "person_keep": 100.0,
+    "person_total": 40153
+   },
+   "근거리 제거": {
+    "per_frame": 72.9,
+    "person_keep": 99.5,
+    "person_total": 40153
+   },
+   "+SNR 10": {
+    "per_frame": 53.0,
+    "person_keep": 80.5,
+    "person_total": 40153
+   },
+   "+SNR 20": {
+    "per_frame": 38.8,
+    "person_keep": 65.9,
+    "person_total": 40153
+   },
+   "+SNR 40": {
+    "per_frame": 27.1,
+    "person_keep": 46.4,
+    "person_total": 40153
+   },
+   "근거리+배경": {
+    "per_frame": 61.0,
+    "person_keep": 89.6,
+    "person_total": 40153
+   },
+   "근거리+SNR 10+배경": {
+    "per_frame": 43.9,
+    "person_keep": 72.0,
+    "person_total": 40153
+   },
+   "근거리+배경+범위": {
+    "per_frame": 29.3,
+    "person_keep": 85.6,
+    "person_total": 40153
+   },
+   "근거리+SNR 10+배경+범위": {
+    "per_frame": 23.4,
+    "person_keep": 69.0,
+    "person_total": 40153
+   }
+  },
+  "누움 1": {
+   "원본": {
+    "per_frame": 91.5,
+    "person_keep": 100.0,
+    "person_total": 238
+   },
+   "근거리 제거": {
+    "per_frame": 57.8,
+    "person_keep": 100.0,
+    "person_total": 238
+   },
+   "+SNR 10": {
+    "per_frame": 40.7,
+    "person_keep": 21.0,
+    "person_total": 238
+   },
+   "+SNR 20": {
+    "per_frame": 24.8,
+    "person_keep": 6.7,
+    "person_total": 238
+   },
+   "+SNR 40": {
+    "per_frame": 17.9,
+    "person_keep": 0.0,
+    "person_total": 238
+   },
+   "근거리+배경": {
+    "per_frame": 46.3,
+    "person_keep": 100.0,
+    "person_total": 238
+   },
+   "근거리+SNR 10+배경": {
+    "per_frame": 31.6,
+    "person_keep": 21.0,
+    "person_total": 238
+   },
+   "근거리+배경+범위": {
+    "per_frame": 8.4,
+    "person_keep": 96.6,
+    "person_total": 238
+   },
+   "근거리+SNR 10+배경+범위": {
+    "per_frame": 6.4,
+    "person_keep": 20.2,
+    "person_total": 238
+   }
+  },
+  "누움 2": {
+   "원본": {
+    "per_frame": 91.2,
+    "person_keep": 100.0,
+    "person_total": 1745
+   },
+   "근거리 제거": {
+    "per_frame": 57.3,
+    "person_keep": 100.0,
+    "person_total": 1745
+   },
+   "+SNR 10": {
+    "per_frame": 40.2,
+    "person_keep": 77.0,
+    "person_total": 1745
+   },
+   "+SNR 20": {
+    "per_frame": 26.9,
+    "person_keep": 58.9,
+    "person_total": 1745
+   },
+   "+SNR 40": {
+    "per_frame": 19.6,
+    "person_keep": 19.2,
+    "person_total": 1745
+   },
+   "근거리+배경": {
+    "per_frame": 45.1,
+    "person_keep": 100.0,
+    "person_total": 1745
+   },
+   "근거리+SNR 10+배경": {
+    "per_frame": 31.1,
+    "person_keep": 77.0,
+    "person_total": 1745
+   },
+   "근거리+배경+범위": {
+    "per_frame": 9.7,
+    "person_keep": 97.1,
+    "person_total": 1745
+   },
+   "근거리+SNR 10+배경+범위": {
+    "per_frame": 7.3,
+    "person_keep": 76.6,
+    "person_total": 1745
+   }
+  }
+ },
+ "dbscan": {
+  "1프레임": {
+   "빈 방 (지도 직후)": {
+    "clusters": 0.0,
+    "hit": null
+   },
+   "빈 방 (1차 퇴실 뒤)": {
+    "clusters": 0.0,
+    "hit": null
+   },
+   "빈 방 (2차 퇴실 뒤)": {
+    "clusters": 0.08,
+    "hit": null
+   },
+   "걷기 1": {
+    "clusters": 1.41,
+    "hit": 88.9
+   },
+   "걷기 2": {
+    "clusters": 2.88,
+    "hit": 81.9
+   },
+   "앉음": {
+    "clusters": 1.21,
+    "hit": 74.1
+   },
+   "누움 1": {
+    "clusters": 0.0,
+    "hit": 0.0
+   },
+   "누움 2": {
+    "clusters": 0.05,
+    "hit": 3.0
+   }
+  },
+  "5프레임": {
+   "빈 방 (지도 직후)": {
+    "clusters": 0.0,
+    "hit": null
+   },
+   "빈 방 (1차 퇴실 뒤)": {
+    "clusters": 0.27,
+    "hit": null
+   },
+   "빈 방 (2차 퇴실 뒤)": {
+    "clusters": 4.56,
+    "hit": null
+   },
+   "걷기 1": {
+    "clusters": 2.3,
+    "hit": 90.7
+   },
+   "걷기 2": {
+    "clusters": 4.2,
+    "hit": 92.4
+   },
+   "앉음": {
+    "clusters": 3.18,
+    "hit": 99.6
+   },
+   "누움 1": {
+    "clusters": 3.69,
+    "hit": 3.3
+   },
+   "누움 2": {
+    "clusters": 3.85,
+    "hit": 6.8
+   }
+  },
+  "10프레임": {
+   "빈 방 (지도 직후)": {
+    "clusters": 0.0,
+    "hit": null
+   },
+   "빈 방 (1차 퇴실 뒤)": {
+    "clusters": 0.58,
+    "hit": null
+   },
+   "빈 방 (2차 퇴실 뒤)": {
+    "clusters": 4.78,
+    "hit": null
+   },
+   "걷기 1": {
+    "clusters": 2.59,
+    "hit": 92.6
+   },
+   "걷기 2": {
+    "clusters": 3.87,
+    "hit": 97.1
+   },
+   "앉음": {
+    "clusters": 3.02,
+    "hit": 99.6
+   },
+   "누움 1": {
+    "clusters": 3.97,
+    "hit": 3.3
+   },
+   "누움 2": {
+    "clusters": 4.19,
+    "hit": 7.8
+   }
+  },
+  "18프레임(1초)": {
+   "빈 방 (지도 직후)": {
+    "clusters": 0.0,
+    "hit": null
+   },
+   "빈 방 (1차 퇴실 뒤)": {
+    "clusters": 0.88,
+    "hit": null
+   },
+   "빈 방 (2차 퇴실 뒤)": {
+    "clusters": 4.96,
+    "hit": null
+   },
+   "걷기 1": {
+    "clusters": 2.85,
+    "hit": 98.1
+   },
+   "걷기 2": {
+    "clusters": 3.61,
+    "hit": 100.0
+   },
+   "앉음": {
+    "clusters": 2.85,
+    "hit": 99.2
+   },
+   "누움 1": {
+    "clusters": 4.38,
+    "hit": 4.9
+   },
+   "누움 2": {
+    "clusters": 4.53,
+    "hit": 9.5
+   }
+  },
+  "36프레임(2초)": {
+   "빈 방 (지도 직후)": {
+    "clusters": 0.0,
+    "hit": null
+   },
+   "빈 방 (1차 퇴실 뒤)": {
+    "clusters": 1.0,
+    "hit": null
+   },
+   "빈 방 (2차 퇴실 뒤)": {
+    "clusters": 5.0,
+    "hit": null
+   },
+   "걷기 1": {
+    "clusters": 3.04,
+    "hit": 88.9
+   },
+   "걷기 2": {
+    "clusters": 3.19,
+    "hit": 98.1
+   },
+   "앉음": {
+    "clusters": 2.72,
+    "hit": 100.0
+   },
+   "누움 1": {
+    "clusters": 4.59,
+    "hit": 9.8
+   },
+   "누움 2": {
+    "clusters": 5.01,
+    "hit": 11.8
+   }
+  }
+ },
+ "track_rules": {
+  "필터 없음": {
+   "person/걷기·서기": [
+    100.0,
+    948
+   ],
+   "person/누움": [
+    100.0,
+    254
+   ],
+   "person/앉음": [
+    100.0,
+    160
+   ],
+   "person/앉음·서기": [
+    100.0,
+    80
+   ],
+   "object/남은 추적": [
+    100.0,
+    1240
+   ],
+   "object/떠난 자리": [
+    100.0,
+    530
+   ],
+   "object/방 안 가짜": [
+    100.0,
+    122
+   ],
+   "object/범위 밖": [
+    100.0,
+    2480
+   ],
+   "object/순간 가짜": [
+    100.0,
+    4
+   ]
+  },
+  "범위": {
+   "person/걷기·서기": [
+    89.8,
+    948
+   ],
+   "person/누움": [
+    99.6,
+    254
+   ],
+   "person/앉음": [
+    100.0,
+    160
+   ],
+   "person/앉음·서기": [
+    100.0,
+    80
+   ],
+   "object/남은 추적": [
+    78.5,
+    1240
+   ],
+   "object/떠난 자리": [
+    0.0,
+    530
+   ],
+   "object/방 안 가짜": [
+    100.0,
+    122
+   ],
+   "object/범위 밖": [
+    2.0,
+    2480
+   ],
+   "object/순간 가짜": [
+    0.0,
+    4
+   ]
+  },
+  "범위+반사점 3초": {
+   "person/걷기·서기": [
+    89.1,
+    948
+   ],
+   "person/누움": [
+    79.9,
+    254
+   ],
+   "person/앉음": [
+    100.0,
+    160
+   ],
+   "person/앉음·서기": [
+    100.0,
+    80
+   ],
+   "object/남은 추적": [
+    75.1,
+    1240
+   ],
+   "object/떠난 자리": [
+    0.0,
+    530
+   ],
+   "object/방 안 가짜": [
+    14.8,
+    122
+   ],
+   "object/범위 밖": [
+    0.6,
+    2480
+   ],
+   "object/순간 가짜": [
+    0.0,
+    4
+   ]
+  },
+  "범위+묶음": {
+   "person/걷기·서기": [
+    74.6,
+    948
+   ],
+   "person/누움": [
+    7.5,
+    254
+   ],
+   "person/앉음": [
+    99.4,
+    160
+   ],
+   "person/앉음·서기": [
+    83.8,
+    80
+   ],
+   "object/남은 추적": [
+    0.4,
+    1240
+   ],
+   "object/떠난 자리": [
+    0.0,
+    530
+   ],
+   "object/방 안 가짜": [
+    4.1,
+    122
+   ],
+   "object/범위 밖": [
+    0.3,
+    2480
+   ],
+   "object/순간 가짜": [
+    0.0,
+    4
+   ]
+  },
+  "범위+이동 이력": {
+   "person/걷기·서기": [
+    78.8,
+    948
+   ],
+   "person/누움": [
+    98.0,
+    254
+   ],
+   "person/앉음": [
+    100.0,
+    160
+   ],
+   "person/앉음·서기": [
+    100.0,
+    80
+   ],
+   "object/남은 추적": [
+    3.3,
+    1240
+   ],
+   "object/떠난 자리": [
+    0.0,
+    530
+   ],
+   "object/방 안 가짜": [
+    97.5,
+    122
+   ],
+   "object/범위 밖": [
+    2.0,
+    2480
+   ],
+   "object/순간 가짜": [
+    0.0,
+    4
+   ]
+  },
+  "범위+(묶음 또는 이동 2초)": {
+   "person/걷기·서기": [
+    75.0,
+    948
+   ],
+   "person/누움": [
+    10.6,
+    254
+   ],
+   "person/앉음": [
+    99.4,
+    160
+   ],
+   "person/앉음·서기": [
+    83.8,
+    80
+   ],
+   "object/남은 추적": [
+    0.4,
+    1240
+   ],
+   "object/떠난 자리": [
+    0.0,
+    530
+   ],
+   "object/방 안 가짜": [
+    4.9,
+    122
+   ],
+   "object/범위 밖": [
+    0.3,
+    2480
+   ],
+   "object/순간 가짜": [
+    0.0,
+    4
+   ]
+  }
+ },
+ "filters": {
+  "원본": {
+   "앉음": {
+    "pos_std": 0.126,
+    "z_std": 0.114,
+    "step99": 0.082
+   },
+   "누움": {
+    "pos_std": 0.181,
+    "z_std": 0.013,
+    "step99": 0.061
+   },
+   "걷기": {
+    "step99": 0.098,
+    "lag": 0.0
+   }
+  },
+  "중앙값 0.5초": {
+   "앉음": {
+    "pos_std": 0.126,
+    "z_std": 0.112,
+    "step99": 0.066
+   },
+   "누움": {
+    "pos_std": 0.181,
+    "z_std": 0.012,
+    "step99": 0.06
+   },
+   "걷기": {
+    "step99": 0.087,
+    "lag": 0.22
+   }
+  },
+  "중앙값 1초": {
+   "앉음": {
+    "pos_std": 0.124,
+    "z_std": 0.11,
+    "step99": 0.046
+   },
+   "누움": {
+    "pos_std": 0.178,
+    "z_std": 0.011,
+    "step99": 0.048
+   },
+   "걷기": {
+    "step99": 0.08,
+    "lag": 0.44
+   }
+  },
+  "EMA 0.3": {
+   "앉음": {
+    "pos_std": 0.122,
+    "z_std": 0.111,
+    "step99": 0.038
+   },
+   "누움": {
+    "pos_std": 0.18,
+    "z_std": 0.012,
+    "step99": 0.046
+   },
+   "걷기": {
+    "step99": 0.068,
+    "lag": 0.11
+   }
+  },
+  "EMA 0.15": {
+   "앉음": {
+    "pos_std": 0.117,
+    "z_std": 0.108,
+    "step99": 0.025
+   },
+   "누움": {
+    "pos_std": 0.176,
+    "z_std": 0.012,
+    "step99": 0.036
+   },
+   "걷기": {
+    "step99": 0.057,
+    "lag": 0.28
+   }
+  },
+  "칼만": {
+   "앉음": {
+    "pos_std": 0.131,
+    "z_std": 0.115,
+    "step99": 0.037
+   },
+   "누움": {
+    "pos_std": 0.187,
+    "z_std": 0.013,
+    "step99": 0.05
+   },
+   "걷기": {
+    "step99": 0.071,
+    "lag": 0.11
+   }
+  },
+  "One Euro (1.0, 1)": {
+   "앉음": {
+    "pos_std": 0.124,
+    "z_std": 0.112,
+    "step99": 0.048
+   },
+   "누움": {
+    "pos_std": 0.181,
+    "z_std": 0.012,
+    "step99": 0.054
+   },
+   "걷기": {
+    "step99": 0.078,
+    "lag": 0.06
+   }
+  },
+  "One Euro (0.5, 2)": {
+   "앉음": {
+    "pos_std": 0.124,
+    "z_std": 0.112,
+    "step99": 0.053
+   },
+   "누움": {
+    "pos_std": 0.182,
+    "z_std": 0.012,
+    "step99": 0.055
+   },
+   "걷기": {
+    "step99": 0.08,
+    "lag": 0.06
+   }
+  },
+  "One Euro (0.3, 5)": {
+   "앉음": {
+    "pos_std": 0.125,
+    "z_std": 0.113,
+    "step99": 0.056
+   },
+   "누움": {
+    "pos_std": 0.182,
+    "z_std": 0.013,
+    "step99": 0.054
+   },
+   "걷기": {
+    "step99": 0.087,
+    "lag": 0.06
+   }
+  }
+ }
+}

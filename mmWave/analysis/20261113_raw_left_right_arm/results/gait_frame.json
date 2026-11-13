@@ -1,0 +1,118 @@
+{
+ "session": "lee 11-12 ②",
+ "n_base": 10,
+ "examples": {
+  "평소": {
+   "ses": "TEST_20261112_173849",
+   "i": 12,
+   "n_windows": 10,
+   "n_base": 8,
+   "disp": 1.37,
+   "path": 5.28,
+   "st3": 0.74,
+   "metrics": {
+    "speed": 0.899,
+    "speed_cv": 0.315,
+    "sway": 0.04,
+    "freeze_ratio": 0.0
+   },
+   "mu": {
+    "speed": 0.965,
+    "speed_cv": 0.273,
+    "sway": 0.041,
+    "freeze_ratio": 0.0
+   },
+   "sigma": {
+    "speed": 0.05,
+    "speed_cv": 0.043,
+    "sway": 0.02,
+    "freeze_ratio": 0.03
+   },
+   "sigma_floor": {
+    "speed": 0.05,
+    "speed_cv": 0.03,
+    "sway": 0.02,
+    "freeze_ratio": 0.03
+   },
+   "z": {
+    "speed": -1.32,
+    "speed_cv": 0.97,
+    "sway": -0.07,
+    "freeze_ratio": 0.0
+   },
+   "total_abs": 2.37,
+   "a": 2.29,
+   "s": 1.32,
+   "n_a": 0.59,
+   "n_s": 1.32,
+   "combined": 1.32,
+   "sum_as": 1.91,
+   "driver": "speed",
+   "level": "normal",
+   "a_default": [
+    1.6,
+    1.17
+   ],
+   "s_default": [
+    0.0,
+    1.0
+   ]
+  },
+  "천천히": {
+   "ses": "TEST_20261112_173849",
+   "i": 10,
+   "n_windows": 13,
+   "n_base": 10,
+   "disp": 2.91,
+   "path": 4.9,
+   "st3": 0.69,
+   "metrics": {
+    "speed": 0.754,
+    "speed_cv": 0.203,
+    "sway": 0.052,
+    "freeze_ratio": 0.0
+   },
+   "mu": {
+    "speed": 0.961,
+    "speed_cv": 0.28,
+    "sway": 0.043,
+    "freeze_ratio": 0.0
+   },
+   "sigma": {
+    "speed": 0.05,
+    "speed_cv": 0.041,
+    "sway": 0.02,
+    "freeze_ratio": 0.03
+   },
+   "sigma_floor": {
+    "speed": 0.05,
+    "speed_cv": 0.03,
+    "sway": 0.02,
+    "freeze_ratio": 0.03
+   },
+   "z": {
+    "speed": -4.14,
+    "speed_cv": -1.86,
+    "sway": 0.47,
+    "freeze_ratio": 0.0
+   },
+   "total_abs": 6.48,
+   "a": 4.61,
+   "s": 4.14,
+   "n_a": 2.57,
+   "n_s": 4.14,
+   "combined": 4.14,
+   "sum_as": 6.71,
+   "driver": "speed",
+   "level": "critical",
+   "a_default": [
+    1.6,
+    1.17
+   ],
+   "s_default": [
+    0.0,
+    1.0
+   ]
+  }
+ }
+}

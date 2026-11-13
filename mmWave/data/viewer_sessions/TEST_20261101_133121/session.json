@@ -1,0 +1,20 @@
+{
+ "session": "TEST",
+ "description": "기능 시험(비교에 쓰지 않음)",
+ "default_truth": "unknown",
+ "participant": "",
+ "activity": "빈 방 cfg 비교 height27",
+ "note": "빈 방, cfg 변경: {\"sensorPosition\": \"sensorPosition 2.7 0 90\"}",
+ "started_at": 1793507481.0805304,
+ "stopped_at": 1793507781.1968472,
+ "stop_reason": "user",
+ "height_m": 2.7,
+ "tilt_deg": 90.0,
+ "upside_down": true,
+ "reader_commit": "e4d6725",
+ "frames": 5457,
+ "corrupt": 0,
+ "label_changes": 0,
+ "correction": "cfg 전송 스크립트 오류로 cfg가 바뀌지 않았다. 실제 설정은 S0와 같은 AOP_ceiling_2m5.cfg이며, activity와 note의 cfg 변경 내용은 적용되지 않았다.",
+ "cfg_actually_changed": false
+}

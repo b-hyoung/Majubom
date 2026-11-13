@@ -1,0 +1,279 @@
+{
+ "session": "TEST_20261113_201751",
+ "participant": "lee",
+ "edge_x": -0.11,
+ "static": {
+  "windows": {
+   "on_rail": 70,
+   "down": 70
+  },
+  "leave_one_cycle_out_acc": 0.607,
+  "segments_correct": "7/10",
+  "per_segment": {
+   "2": {
+    "label": "안전바",
+    "acc": 0.571
+   },
+   "3": {
+    "label": "내림",
+    "acc": 0.857
+   },
+   "4": {
+    "label": "안전바",
+    "acc": 1.0
+   },
+   "5": {
+    "label": "내림",
+    "acc": 0.071
+   },
+   "6": {
+    "label": "안전바",
+    "acc": 0.857
+   },
+   "7": {
+    "label": "내림",
+    "acc": 0.786
+   },
+   "8": {
+    "label": "안전바",
+    "acc": 0.0
+   },
+   "9": {
+    "label": "내림",
+    "acc": 0.5
+   },
+   "10": {
+    "label": "안전바",
+    "acc": 0.429
+   },
+   "11": {
+    "label": "내림",
+    "acc": 1.0
+   }
+  }
+ },
+ "feature_means": {
+  "n_bed": {
+   "UP2": 169.214,
+   "DN3": 314.071,
+   "UP4": 146.214,
+   "DN5": 188.857,
+   "UP6": 168.071,
+   "DN7": 385.429,
+   "UP8": 189.0,
+   "DN9": 160.143,
+   "UP10": 230.714,
+   "DN11": 310.071,
+   "separates": false
+  },
+  "n_edge_zone": {
+   "UP2": 0.286,
+   "DN3": 0.0,
+   "UP4": 0.0,
+   "DN5": 0.0,
+   "UP6": 2.0,
+   "DN7": 0.714,
+   "UP8": 0.0,
+   "DN9": 0.0,
+   "UP10": 0.0,
+   "DN11": 0.071,
+   "separates": false
+  },
+  "n_outside_edge": {
+   "UP2": 0.0,
+   "DN3": 0.0,
+   "UP4": 0.0,
+   "DN5": 0.0,
+   "UP6": 0.429,
+   "DN7": 0.0,
+   "UP8": 0.0,
+   "DN9": 0.0,
+   "UP10": 0.0,
+   "DN11": 0.0,
+   "separates": false
+  },
+  "snr_edge_zone": {
+   "UP2": 3.694,
+   "DN3": 0.0,
+   "UP4": 0.0,
+   "DN5": 0.0,
+   "UP6": 67.026,
+   "DN7": 5.457,
+   "UP8": 0.0,
+   "DN9": 0.0,
+   "UP10": 0.0,
+   "DN11": 0.546,
+   "separates": false
+  },
+  "logsnr_outside": {
+   "UP2": 0.0,
+   "DN3": 0.0,
+   "UP4": 0.0,
+   "DN5": 0.0,
+   "UP6": 1.222,
+   "DN7": 0.0,
+   "UP8": 0.0,
+   "DN9": 0.0,
+   "UP10": 0.0,
+   "DN11": 0.0,
+   "separates": false
+  },
+  "x_max": {
+   "UP2": -0.742,
+   "DN3": -0.464,
+   "UP4": -0.607,
+   "DN5": -0.523,
+   "UP6": -0.545,
+   "DN7": -0.468,
+   "UP8": -0.455,
+   "DN9": -0.592,
+   "UP10": -0.538,
+   "DN11": -0.386,
+   "separates": false
+  },
+  "x_p90": {
+   "UP2": -0.909,
+   "DN3": -0.607,
+   "UP4": -0.754,
+   "DN5": -0.743,
+   "UP6": -0.695,
+   "DN7": -0.658,
+   "UP8": -0.551,
+   "DN9": -0.785,
+   "UP10": -0.763,
+   "DN11": -0.554,
+   "separates": false
+  },
+  "x_mean": {
+   "UP2": -1.218,
+   "DN3": -0.942,
+   "UP4": -1.181,
+   "DN5": -1.109,
+   "UP6": -1.109,
+   "DN7": -0.955,
+   "UP8": -0.983,
+   "DN9": -1.101,
+   "UP10": -1.139,
+   "DN11": -0.917,
+   "separates": false
+  },
+  "z_max_edge": {
+   "UP2": 0.077,
+   "DN3": 0.0,
+   "UP4": 0.0,
+   "DN5": 0.0,
+   "UP6": 0.076,
+   "DN7": 0.183,
+   "UP8": 0.0,
+   "DN9": 0.0,
+   "UP10": 0.0,
+   "DN11": 0.045,
+   "separates": false
+  },
+  "z_mean_edge": {
+   "UP2": 0.07,
+   "DN3": 0.0,
+   "UP4": 0.0,
+   "DN5": 0.0,
+   "UP6": 0.07,
+   "DN7": 0.176,
+   "UP8": 0.0,
+   "DN9": 0.0,
+   "UP10": 0.0,
+   "DN11": 0.045,
+   "separates": false
+  }
+ },
+ "moment": [
+  {
+   "cue": 2,
+   "label": "팔 안전바",
+   "moving_points": 1250,
+   "moving_near_edge": 158,
+   "doppler_mean_near_edge": 0.333,
+   "corr_x_doppler_near_edge": 0.878,
+   "corr_x_doppler_all": 0.45
+  },
+  {
+   "cue": 3,
+   "label": "팔 내림",
+   "moving_points": 998,
+   "moving_near_edge": 54,
+   "doppler_mean_near_edge": -0.1018,
+   "corr_x_doppler_near_edge": -0.271,
+   "corr_x_doppler_all": -0.041
+  },
+  {
+   "cue": 4,
+   "label": "팔 안전바",
+   "moving_points": 555,
+   "moving_near_edge": 169,
+   "doppler_mean_near_edge": 0.1795,
+   "corr_x_doppler_near_edge": 0.789,
+   "corr_x_doppler_all": 0.549
+  },
+  {
+   "cue": 5,
+   "label": "팔 내림",
+   "moving_points": 550,
+   "moving_near_edge": 72,
+   "doppler_mean_near_edge": -0.03,
+   "corr_x_doppler_near_edge": -0.096,
+   "corr_x_doppler_all": -0.062
+  },
+  {
+   "cue": 6,
+   "label": "팔 안전바",
+   "moving_points": 703,
+   "moving_near_edge": 293,
+   "doppler_mean_near_edge": 0.3043,
+   "corr_x_doppler_near_edge": 0.764,
+   "corr_x_doppler_all": 0.572
+  },
+  {
+   "cue": 7,
+   "label": "팔 내림",
+   "moving_points": 3557,
+   "moving_near_edge": 453,
+   "doppler_mean_near_edge": 0.0214,
+   "corr_x_doppler_near_edge": -0.141,
+   "corr_x_doppler_all": 0.112
+  },
+  {
+   "cue": 8,
+   "label": "팔 안전바",
+   "moving_points": 1242,
+   "moving_near_edge": 225,
+   "doppler_mean_near_edge": 0.4324,
+   "corr_x_doppler_near_edge": 0.663,
+   "corr_x_doppler_all": 0.597
+  },
+  {
+   "cue": 9,
+   "label": "팔 내림",
+   "moving_points": 569,
+   "moving_near_edge": 113,
+   "doppler_mean_near_edge": -0.117,
+   "corr_x_doppler_near_edge": -0.381,
+   "corr_x_doppler_all": -0.337
+  },
+  {
+   "cue": 10,
+   "label": "팔 안전바",
+   "moving_points": 752,
+   "moving_near_edge": 238,
+   "doppler_mean_near_edge": 0.1947,
+   "corr_x_doppler_near_edge": 0.736,
+   "corr_x_doppler_all": 0.469
+  },
+  {
+   "cue": 11,
+   "label": "팔 내림",
+   "moving_points": 1389,
+   "moving_near_edge": 56,
+   "doppler_mean_near_edge": 0.01,
+   "corr_x_doppler_near_edge": -0.215,
+   "corr_x_doppler_all": 0.023
+  }
+ ]
+}

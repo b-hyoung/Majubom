@@ -1,0 +1,18 @@
+{
+ "session": "TEST",
+ "description": "기능 시험(비교에 쓰지 않음)",
+ "default_truth": "unknown",
+ "participant": "",
+ "activity": "camera+mmWave sync: 섬, 옆누움, 침대 위 앉음, 누움, 걸터앉음",
+ "note": "tools/Record-CamMmw.ps1",
+ "started_at": 1794466392.001677,
+ "stopped_at": 1794466765.6717775,
+ "stop_reason": "user",
+ "height_m": 2.7,
+ "tilt_deg": 90.0,
+ "upside_down": true,
+ "reader_commit": "1db1776",
+ "frames": 6762,
+ "corrupt": 32,
+ "label_changes": 0
+}

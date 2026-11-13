@@ -1,0 +1,18 @@
+{
+ "session": "TEST",
+ "description": "기능 시험(비교에 쓰지 않음)",
+ "default_truth": "unknown",
+ "participant": "",
+ "activity": "바닥에 누움",
+ "note": "사용자가 바닥에 누워 현재 위치를 바닥값으로 지정해 달라고 요청.",
+ "started_at": 1793508844.5153165,
+ "stopped_at": 1793508864.6148467,
+ "stop_reason": "user",
+ "height_m": 2.7,
+ "tilt_deg": 90.0,
+ "upside_down": true,
+ "reader_commit": "e4d6725",
+ "frames": 363,
+ "corrupt": 1,
+ "label_changes": 0
+}

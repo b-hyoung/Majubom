@@ -1,0 +1,18 @@
+{
+ "session": "S3",
+ "description": "한 명씩 서 있기, 걷기",
+ "default_truth": "unknown",
+ "participant": "P1",
+ "activity": "출입 시각 기록 시험",
+ "note": "한 명만 움직임. 문으로 나갔다 들어오기, y-로 나갔다 들어오기, 앉았다 일어나기. 시각은 사용자 알림 기준.",
+ "started_at": 1793516187.4126916,
+ "stopped_at": 1793516521.597132,
+ "stop_reason": "user",
+ "height_m": 2.7,
+ "tilt_deg": 90.0,
+ "upside_down": true,
+ "reader_commit": "883610a",
+ "frames": 6042,
+ "corrupt": 34,
+ "label_changes": 2
+}

@@ -1,0 +1,11 @@
+{
+    "mmwave_session":  "TEST_20261112_165534",
+    "kind":  "gait",
+    "participant":  "lee",
+    "hold_seconds":  300,
+    "order":  ["평소 걷기"],
+    "marks":  {
+                  "평소 걷기":  "16:56:01.754",
+                  "끝":  "17:01:06.239"
+              }
+}

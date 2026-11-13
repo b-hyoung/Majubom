@@ -1,0 +1,4 @@
+{"t": 1794122640.334, "event": "track_new", "tid": 3, "pos": [3.04, -1.18], "text": "새 번호 3번이 생겼습니다.", "check": false}
+{"t": 1794122642.599, "tid": 3, "event": "track_end", "truth": null}
+{"t": 1794122642.599, "event": "track_gone", "tid": 3, "pos": [3.05, -1.19], "text": "3번이 사라졌습니다.", "check": false}
+{"t": 1794122856.903, "event": "track_new", "tid": 2, "pos": [1.24, 0.52], "text": "새 번호 2번이 생겼습니다.", "check": false}

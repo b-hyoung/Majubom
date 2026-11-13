@@ -1,0 +1,16 @@
+﻿person track 옆누움: tid 0 (moved)
+person track 섬: tid 0 (moved)
+person track 누움: tid 0 (moved)
+person track 침대 위 앉음: tid 0 (pinned)
+person track 걸터앉음: tid 0 (moved)
+wrote C:\Majubom\camera-pose\recordings\cam-mmw\TEST_20261112_160657\matched.csv
+[A_PiC920] 옆누움: frames 871, pose 94%, mmw track 98% | mmw z 0.831 head_z 1.32 speed 0.161 npts 5.0 | MP hip_y 0.556 shoulder_y 0.819 | cam None:685, side:155, edge_sitting:28 | mmw tid 0 98%, segment track 98%
+[A_PiC920] 섬: frames 856, pose 100%, mmw track 99% | mmw z 1.279 head_z 1.52 speed 0.11 npts 3.0 | MP hip_y 0.571 shoulder_y 0.188 | cam standing:790, None:65, side:1 | mmw tid 0 99%, segment track 99%
+[A_PiC920] 누움: frames 864, pose 100%, mmw track 99% | mmw z 0.878 head_z 0.96 speed 0.063 npts 7.0 | MP hip_y 0.572 shoulder_y 0.836 | cam None:605, side:256, standing:3 | mmw tid 0 99%, segment track 99%
+[A_PiC920] 침대 위 앉음: frames 708, pose 99%, mmw track 99% | mmw z 1.075 head_z 1.44 speed 0.036 npts 7.0 | MP hip_y 0.565 shoulder_y 0.308 | cam other:254, None:252, side:202 | mmw tid 0 99%, segment track 99%
+[A_PiC920] 걸터앉음: frames 829, pose 100%, mmw track 99% | mmw z 0.938 head_z 1.35 speed 0.046 npts 4 | MP hip_y 0.583 shoulder_y 0.293 | cam edge_sitting:776, None:28, side:25 | mmw tid 0 99%, segment track 99%
+[B_USB] 옆누움: frames 864, pose 100%, mmw track 99% | mmw z 0.828 head_z 1.32 speed 0.161 npts 5 | MP hip_y 0.477 shoulder_y 0.277 | cam None:517, other:190, side:83 | mmw tid 0 99%, segment track 99%
+[B_USB] 섬: frames 1052, pose 52%, mmw track 99% | mmw z 1.281 head_z 1.52 speed 0.128 npts 3 | MP hip_y 0.527 shoulder_y 0.13 | cam None:663, other:205, standing:166 | mmw tid 0 99%, segment track 99%
+[B_USB] 누움: frames 815, pose 99%, mmw track 99% | mmw z 0.878 head_z 0.96 speed 0.063 npts 7 | MP hip_y 0.527 shoulder_y 0.331 | cam side:780, None:35 | mmw tid 0 99%, segment track 99%
+[B_USB] 침대 위 앉음: frames 712, pose 100%, mmw track 99% | mmw z 1.079 head_z 1.44 speed 0.037 npts 7 | MP hip_y 0.606 shoulder_y 0.259 | cam other:393, None:215, sitting:96 | mmw tid 0 99%, segment track 99%
+[B_USB] 걸터앉음: frames 834, pose 100%, mmw track 99% | mmw z 0.939 head_z 1.35 speed 0.047 npts 4.0 | MP hip_y 0.613 shoulder_y 0.26 | cam sitting:560, None:144, edge_sitting:95 | mmw tid 0 99%, segment track 99%

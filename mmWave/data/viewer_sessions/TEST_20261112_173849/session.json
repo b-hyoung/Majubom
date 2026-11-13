@@ -1,0 +1,18 @@
+{
+ "session": "TEST",
+ "description": "기능 시험(비교에 쓰지 않음)",
+ "default_truth": "unknown",
+ "participant": "lee",
+ "activity": "gait: 평소 걷기, 천천히 걷기, 종종걸음",
+ "note": "tools/Record-CamMmw.ps1",
+ "started_at": 1794472729.5148644,
+ "stopped_at": 1794472976.0953436,
+ "stop_reason": "user",
+ "height_m": 2.7,
+ "tilt_deg": 90.0,
+ "upside_down": true,
+ "reader_commit": "1db1776",
+ "frames": 4463,
+ "corrupt": 21,
+ "label_changes": 0
+}
