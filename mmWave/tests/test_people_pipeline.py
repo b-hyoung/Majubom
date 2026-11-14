@@ -234,3 +234,94 @@ class HelperTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class BedPreferenceAndRestoreTests(unittest.TestCase):
+    """2026-11-14: 리더 재시작 뒤 침대 밖 번호가 자동 지정됨. 침대 안 사람을 먼저 고르고, 재시작 전 환자를 이어받는다."""
+    BED_XY = (-0.8, -0.3)        # BED_POLYGON 안
+
+    def test_lying_person_in_bed_wins_over_recent_walker_outside(self):
+        sim = Sim()
+        lying = lambda i, n: [target(9, *self.BED_XY, z=0.9, npts=30)]
+        sim.run(3, lambda i, n: lying(i, n) + walk(1, (2.0, 1.0), (1.0, 1.0))(i, n))
+        self.assertEqual(sim.last["patient_tid"], 9)
+
+    def test_most_points_in_bed_is_chosen_when_split(self):
+        sim = Sim()
+        sim.run(2, lambda i, n: [target(3, -0.9, -0.6, z=0.9, npts=6), target(9, *self.BED_XY, z=0.9, npts=40)])
+        self.assertEqual(sim.last["patient_tid"], 9)
+
+    def test_restore_keeps_previous_patient_and_blocks_auto(self):
+        sim = Sim()
+        sim.pipe.restore(sim.t, 22, auto=False)
+        sim.run(2, lambda i, n: [target(9, *self.BED_XY, z=0.9, npts=40), target(22, 1.0, 1.0, npts=10)])
+        self.assertEqual((sim.last["patient_tid"], sim.last["patient"]["locked"]), (22, "manual"))
+
+    def test_restore_gives_up_when_number_is_gone(self):
+        sim = Sim()
+        sim.pipe.restore(sim.t, 77, auto=False)
+        sim.run(12, lambda i, n: [target(9, *self.BED_XY, z=0.9, npts=40)])
+        self.assertEqual((sim.last["patient_tid"], sim.last["patient"]["locked"]), (9, "auto"))
+
+
+class PatientStateFileTests(unittest.TestCase):
+    def test_saved_state_round_trip_and_age_limit(self):
+        import tempfile
+        from send_mmw import load_patient_state, save_patient_state
+        path = os.path.join(tempfile.mkdtemp(), "p.json")
+        save_patient_state(1000.0, {"tid": 22, "locked": "manual"}, path)
+        self.assertEqual(load_patient_state(1010.0, path), (22, False))
+        self.assertIsNone(load_patient_state(1100.0, path))            # 60초 넘게 지난 기록
+        save_patient_state(1000.0, {"tid": None, "locked": None}, path)
+        self.assertIsNone(load_patient_state(1001.0, path))            # 환자 없음
+
+
+class HybridPatientTests(unittest.TestCase):
+    """2026-11-14 합친 방식: 침대 소속도로 자동 지정·애매하면 보류·잘못 잡힌 자동 지정 바로잡기, 클릭은 그대로 우선."""
+    BED = (-0.8, -0.3)
+    OUT = (1.5, 1.0)
+
+    def lie(self, tid=9, xy=None, npts=30):
+        xy = xy or self.BED
+        return [target(tid, *xy, z=0.9, npts=npts)]
+
+    def test_two_people_far_apart_on_bed_are_held_not_guessed(self):
+        sim = Sim()
+        sim.run(3, lambda i, n: self.lie(9, (-1.3, -1.2)) + self.lie(11, (-0.3, 0.3)))
+        self.assertIsNone(sim.last["patient_tid"])
+        self.assertIn("침대 위 후보 2명", sim.last["patient"]["hold"])
+
+    def test_wrong_auto_patient_outside_is_corrected_to_person_staying_in_bed(self):
+        sim = Sim()
+        sim.run(3, walk(1, (2.0, 1.5), self.OUT))                          # 침대가 빈 동안 걷던 번호가 자동 지정
+        self.assertEqual((sim.last["patient_tid"], sim.last["patient"]["basis"]), (1, "auto_move"))
+        sim.run(35, lambda i, n: [target(1, *self.OUT)] + self.lie())       # 침대에 사람이 35초 머문다
+        self.assertEqual((sim.last["patient_tid"], sim.last["patient"]["basis"]), (9, "corrected"))
+
+    def test_manual_patient_is_never_switched_only_flagged(self):
+        sim = Sim()
+        sim.run(2, lambda i, n: [target(1, *self.OUT)])
+        sim.pipe.designate(sim.t, 1)
+        sim.run(35, lambda i, n: [target(1, *self.OUT)] + self.lie())
+        self.assertEqual((sim.last["patient_tid"], sim.last["patient"]["locked"]), (1, "manual"))
+        self.assertIn("확인 필요", sim.last["patient"]["suspect"])
+
+    def test_patient_walking_away_from_empty_bed_is_kept(self):
+        sim = Sim()
+        sim.run(5, lambda i, n: self.lie(1))
+        self.assertEqual((sim.last["patient_tid"], sim.last["patient"]["basis"]), (1, "auto_bed"))
+        sim.run(70, walk(1, self.BED, self.OUT))                            # 침대를 떠나 70초 동안 걷는다(침대는 빔)
+        self.assertEqual(sim.last["patient_tid"], 1)
+
+    def test_visitor_sitting_on_bed_briefly_does_not_take_over(self):
+        sim = Sim()
+        sim.run(5, lambda i, n: self.lie(1))
+        sim.run(40, walk(1, self.BED, self.OUT))                            # 환자가 걸어 나가 침대 소속도가 떨어진 뒤
+        sim.run(15, lambda i, n: [target(1, *self.OUT)] + self.lie(5))      # 보호자가 15초 앉는다(30초 미만)
+        self.assertEqual(sim.last["patient_tid"], 1)
+
+    def test_split_body_on_bed_counts_as_one_person(self):
+        sim = Sim()
+        sim.run(3, lambda i, n: self.lie(22, (-0.63, -0.50), 44) + self.lie(3, (-0.33, 0.20), 6))   # 11-14 실측 배치
+        self.assertEqual(sim.last["patient_tid"], 22)
+        self.assertIsNone(sim.last["patient"]["hold"])

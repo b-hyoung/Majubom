@@ -11,6 +11,7 @@
   (2026-11-01 S6 녹화 15:25:10). 문 앞에서 실제로 넘어진 사람도 같은 표시를 받는다.
 """
 import math
+from collections import deque
 
 import fall_detect
 from person_ids import FRESH_MIN_FRAMES, FRESH_MIN_POINTS, PersonTracker, in_poly
@@ -21,6 +22,15 @@ MOVE_MIN_M = 0.3         # 생긴 자리에서 이만큼 움직인 적이 있는
 AUTO_RECENT_MOVE_SEC = 5.0  # 자동 지정 후보는 최근 이 시간 안에 움직인 번호만(2026-11-07: 멈춘 유령 번호가 자동 지정됨)
 TRACK_END_SEC = 2.0      # 이 시간 넘게 안 보인 추적 번호는 끝난 것으로 본다
 FALL_CONFIRM_SEC = 1.0   # 기존 리더의 FALL_CONFIRM_SEC와 같다
+# ── 환자 고르기: 사람 ID 방식(클릭 우선·끝까지 따라감) + 10월 방식(침대 소속도·애매하면 보류·잘못 잡으면 바로잡기), 2026-11-14 ──
+AFFINITY_HORIZON_SEC = 60.0  # 침대 소속도 = 최근 60초 중 위치가 침대 안이던 비율(10월 send_mmw.select_patient와 같은 정의)
+AFFINITY_MIN = 0.25          # 자동 지정의 침대 후보 최소 소속도(10월 값)
+BED_MERGE_M = 1.0            # 침대 후보끼리 이 안이면 한 사람이 번호 여러 개로 갈라진 것(누운 사람 길이 ~1.7 m, 11-14 실측 0.76 m 떨어진 두 번호)
+CANDIDATE_FRESH_SEC = 2.0    # 침대 후보는 최근 이 시간 안에 반사점이 잡힌 번호만(유령·남은 번호 제외)
+CORRECT_AFF = 0.6            # 자동 교정: 침대 쪽 사람이 이만큼 이상 침대에 있었고
+CORRECT_SEEN_SEC = 30.0      #   이만큼 이상 지켜봤으며(보호자가 잠깐 앉는 것과 구별)
+CORRECT_PATIENT_AFF = 0.25   #   지금 환자는 침대 소속도가 이보다 낮고 침대 밖에 있을 때만 바꾼다
+RESTORE_WAIT_SEC = 10.0  # 재시작 전 환자 번호를 이어받으려고 기다리는 시간(그동안 자동 지정을 막는다)
 DOOR_NEAR_M = 0.3        # 낙상 위치가 문 구역에서 이 안이면 문 근처로 본다
 DOOR_RECENT_SEC = 5.0    # 이 시간 안에 문 구역에 있었으면 문 근처로 본다
 
@@ -97,6 +107,12 @@ class RoomPipeline:
         self.tracks = {}
         self.patient_pid = None
         self.patient_auto = False
+        self.pending_restore = None   # (tid, auto, 기다릴 기한) — 리더 재시작 전 환자 번호
+        self.patient_basis = None     # manual / restored / auto_bed / auto_move / corrected
+        self.bed_hist = {}            # tid -> deque[(t, 침대 안 여부)] 최근 AFFINITY_HORIZON_SEC
+        self.pid_hist = {}            # pid -> deque[(t, 침대 안 여부)] — 번호가 바뀌어도 사람 단위로 이어지는 소속도
+        self.suspect = None           # 직접 지정한 환자가 의심스러울 때의 안내(자동으로 바꾸지 않는다)
+        self.hold_reason = None       # 자동 지정을 보류한 이유(대시보드·로그용)
         fall_detect.BED_CENTER = (sum(c[0] for c in bed) / len(bed), sum(c[1] for c in bed) / len(bed))
         if tilt >= 80:
             fall_detect.HEIGHT_FIT = (1.0, 0.0)   # 거리별 높이 보정은 벽 설치에서 잰 값이라 천장에서는 끈다
@@ -107,15 +123,105 @@ class RoomPipeline:
         if pid:
             self.patient_pid = pid
             self.patient_auto = False
+            self.patient_basis = "manual"
+            self.suspect = None
         return pid
+
+    def restore(self, now, tid, auto):
+        """리더가 재시작되기 전의 환자 번호를 이어받도록 예약한다(2026-11-14: 레이더 USB가 잠깐 끊겨 리더가 다시 켜지면서
+        직접 지정이 사라지고 침대 밖 번호가 자동 지정됨). 레이더가 계속 켜져 있어 번호가 그대로일 때만 부른다."""
+        self.pending_restore = (tid, bool(auto), now + RESTORE_WAIT_SEC)
+
+    def _apply_restore(self, now):
+        tid, auto, until = self.pending_restore
+        if now > until:
+            self.pending_restore = None
+            return False
+        if tid not in self.people.tracks:
+            return False
+        self.pending_restore = None
+        pid = self.people.label(now, tid, "person", reason="재시작 전 환자 이어받기")
+        if not pid:
+            return False
+        self.patient_pid, self.patient_auto = pid, auto
+        self.patient_basis = "restored"
+        return True
+
+    # ── 침대 소속도 ──
+    def _record_bed(self, now, targets, tid_to_pid):
+        for t in targets:
+            inside = in_poly(t["posX"], t["posY"], self.bed)
+            for key, hist in ((t["tid"], self.bed_hist), (tid_to_pid.get(t["tid"]), self.pid_hist)):
+                if key is None:
+                    continue
+                dq = hist.setdefault(key, deque())
+                dq.append((now, inside))
+                while dq and now - dq[0][0] > AFFINITY_HORIZON_SEC:
+                    dq.popleft()
+        live = {t["tid"] for t in targets}
+        for tid in [k for k in self.bed_hist if k not in live]:
+            del self.bed_hist[tid]
+
+    @staticmethod
+    def _affinity(dq):
+        """(소속도, 지켜본 시간). 기록이 없으면 (0, 0)."""
+        if not dq:
+            return 0.0, 0.0
+        return sum(1 for _, b in dq if b) / len(dq), dq[-1][0] - dq[0][0]
+
+    def _bed_clusters(self, now, targets, snap, exclude=()):
+        """침대 후보 번호를 BED_MERGE_M 안끼리 묶는다. 후보: 숨김 아님, 최근 반사점, 침대 소속도 AFFINITY_MIN 이상.
+        반환: [(묶음의 대표 번호, 묶음 소속도, 묶음 지켜본 시간), ...]"""
+        cands = []
+        for t in targets:
+            tid = t["tid"]
+            st = self.people.tracks.get(tid)
+            if st is None or tid in exclude or tid in snap["hidden"] or now - st["fresh_t"] > CANDIDATE_FRESH_SEC:
+                continue
+            aff, seen = self._affinity(self.bed_hist.get(tid))
+            if aff < AFFINITY_MIN:
+                continue
+            pts = sum(n for _, n in st["frames"]) / max(len(st["frames"]), 1)
+            cands.append({"tid": tid, "x": t["posX"], "y": t["posY"], "aff": aff, "seen": seen, "pts": pts})
+        groups = []
+        for c in cands:
+            near = [g for g in groups if any(math.hypot(c["x"] - o["x"], c["y"] - o["y"]) <= BED_MERGE_M for o in g)]
+            merged = [c] + [o for g in near for o in g]
+            groups = [g for g in groups if all(g is not n for n in near)] + [merged]
+        out = []
+        for g in groups:
+            best = max(g, key=lambda c: (c["aff"], c["pts"]))
+            out.append((best["tid"], max(c["aff"] for c in g), max(c["seen"] for c in g)))
+        return out
+
+    def _fresh(self, st):
+        counts = [n for _, n in st["frames"]]
+        return sum(n > 0 for n in counts) >= FRESH_MIN_FRAMES and sum(counts) / max(len(counts), 1) >= FRESH_MIN_POINTS
 
     def _auto_designate(self, now, snap, targets):
         """방 안에 사람 ID가 붙은 사람이 없고 사람 후보 번호가 정확히 하나면 그 번호를 환자로 정한다. 반환: 정했는지.
         후보: 사람 ID 없음, 숨김(문·나간 사람의 번호·반사점 없는 번호) 아님, 방 안, 생긴 자리에서 움직인 적 있음,
         최근 1초 반사점이 사람 잇기 기준(person_ids FRESH_MIN_*)을 넘음, 최근 AUTO_RECENT_MOVE_SEC 안에 움직임.
         멈춘 유령 번호는 움직인 적이 없어 빠지고, 사람을 따라 움직이다 멈춘 유령 번호는 멈춘 지 오래되어 빠진다."""
-        if any(p["state"] == "in" for p in snap["persons"]):
+        if self.pending_restore is not None or any(p["state"] == "in" for p in snap["persons"]):
             return False
+        # 1) 침대 소속도(10월 방식): 침대에 머물러 온 사람이 환자. 누워 있어 움직이지 않아도 된다.
+        #    한 사람이 번호 여러 개로 갈라지면 BED_MERGE_M 안끼리 한 사람으로 묶는다.
+        #    침대 위에 떨어진 두 사람이 있으면(환자와 보호자) 추측하지 않고 보류한다 — 클릭을 기다린다.
+        taken = {t["tid"] for t in targets if self.people.tracks.get(t["tid"], {}).get("pid")}
+        clusters = self._bed_clusters(now, targets, snap, exclude=taken)
+        if len(clusters) >= 2:
+            self.hold_reason = f"침대 위 후보 {len(clusters)}명 — 환자를 눌러 주세요"
+            return False
+        if clusters:
+            tid, aff, _ = clusters[0]
+            pid = self.people.label(now, tid, "person", reason=f"자동 지정(침대 소속도 {aff:.0%})")
+            if pid:
+                self.patient_pid, self.patient_auto, self.patient_basis = pid, True, "auto_bed"
+                self.hold_reason = None
+                return True
+            return False
+        # 2) 침대에 아무도 없으면: 최근에 움직인 후보가 정확히 1명일 때만(사람 ID 방식의 기존 규칙)
         cands = []
         for t in targets:
             st = self.people.tracks.get(t["tid"])
@@ -125,8 +231,7 @@ class RoomPipeline:
                 continue
             if not in_poly(t["posX"], t["posY"], self.room):
                 continue
-            counts = [n for _, n in st["frames"]]
-            if sum(n > 0 for n in counts) < FRESH_MIN_FRAMES or sum(counts) / max(len(counts), 1) < FRESH_MIN_POINTS:
+            if not self._fresh(st):
                 continue
             cands.append(t["tid"])
         if len(cands) != 1:
@@ -134,8 +239,36 @@ class RoomPipeline:
         pid = self.people.label(now, cands[0], "person", reason="자동 지정(후보 1명)")
         if not pid:
             return False
-        self.patient_pid = pid
-        self.patient_auto = True
+        self.patient_pid, self.patient_auto, self.patient_basis = pid, True, "auto_move"
+        self.hold_reason = None
+        return True
+
+    def _check_patient(self, now, snap, targets, patient):
+        """잘못 잡힌 환자 바로잡기(10월 방식의 '매번 다시 고르기' 장점). 지금 환자가 침대 밖에 있고 최근 60초 침대
+        소속도가 낮은데, 침대에는 다른 사람이 CORRECT_SEEN_SEC 넘게 머물러 왔다면 환자가 잘못 잡힌 것이다.
+        자동 지정이면 침대 쪽 사람으로 바꾸고, 직접 지정이면 바꾸지 않고 안내만 남긴다.
+        환자가 침대를 떠나 걸어 다니는 동안 침대가 비어 있으면 아무것도 하지 않는다(끝까지 따라감)."""
+        self.suspect = None
+        if patient is None or patient["tid"] is None:
+            return False
+        cur = next((t for t in targets if t["tid"] == patient["tid"]), None)
+        if cur is None or in_poly(cur["posX"], cur["posY"], self.bed):
+            return False
+        cur_aff, cur_seen = self._affinity(self.pid_hist.get(patient["pid"]))
+        if cur_aff >= CORRECT_PATIENT_AFF or cur_seen < CORRECT_SEEN_SEC:
+            return False
+        others = [c for c in self._bed_clusters(now, targets, snap, exclude={patient["tid"]})
+                  if c[1] >= CORRECT_AFF and c[2] >= CORRECT_SEEN_SEC]
+        if len(others) != 1:
+            return False
+        tid, aff, seen = others[0]
+        if not self.patient_auto:
+            self.suspect = f"환자({patient['pid']})는 침대 밖, 침대에는 {tid}번이 {seen:.0f}초 머묾 — 확인 필요"
+            return False
+        pid = self.people.label(now, tid, "person", reason=f"자동 교정(침대에 {seen:.0f}초, 소속도 {aff:.0%})")
+        if not pid or pid == self.patient_pid:
+            return False
+        self.patient_pid, self.patient_auto, self.patient_basis = pid, True, "corrected"
         return True
 
     def _moved(self, now, tid, x, y, z):
@@ -166,9 +299,15 @@ class RoomPipeline:
         """targets: 바닥 기준 좌표 추적 목록(posX, posY, posZ, velX, velY, velZ, npts, linked_npts, top_z)."""
         tracks = [{"tid": t["tid"], "world": [t["posX"], t["posY"], t["posZ"]], "npts": t["npts"]} for t in targets]
         snap = self.people.update(now, tracks, self.room, self.door, self.bed)
+        if self.pending_restore is not None and self._apply_restore(now):
+            snap = self.people.snapshot(now, self.room, self.door, self.bed)
+        self._record_bed(now, targets, snap["tid_to_pid"])
         if self._auto_designate(now, snap, targets):
             snap = self.people.snapshot(now, self.room, self.door, self.bed)
         patient = next((p for p in snap["persons"] if p["pid"] == self.patient_pid), None)
+        if self._check_patient(now, snap, targets, patient):
+            snap = self.people.snapshot(now, self.room, self.door, self.bed)
+            patient = next((p for p in snap["persons"] if p["pid"] == self.patient_pid), None)
         patient_tid = patient["tid"] if patient else None
 
         inputs = [{"tid": t["tid"], "posX": t["posX"], "posY": t["posY"], "posZ": t["posZ"], "velZ": t["velZ"],
@@ -193,7 +332,9 @@ class RoomPipeline:
         info = {"tid": patient_tid, "pid": self.patient_pid, "locked": ("auto" if self.patient_auto else "manual") if patient_tid is not None else None,
                 "since": now - patient["since"] if patient else None,
                 "bed_in": bool(patient_target and in_poly(patient_target["posX"], patient_target["posY"], self.bed)),
-                "bed_park": False}
+                "bed_park": False, "basis": self.patient_basis if patient_tid is not None else None,
+                "bed_affinity": round(self._affinity(self.pid_hist.get(self.patient_pid))[0], 2) if patient_tid is not None else None,
+                "suspect": self.suspect, "hold": self.hold_reason if patient_tid is None else None}
         return {"targets": shown, "persons": snap["persons"], "full": snap["full"], "patient_tid": patient_tid, "patient": info,
                 "patient_target": patient_target, "events": events, "falls": falls,
                 "n_people": sum(s["role"] in ("patient", "other") for s in shown)}

@@ -27,7 +27,10 @@ TLV 구조 (3D People Counting/Tracking, little-endian):
 마지막으로 누른 사람의 보행 지표만 서버로 보낸다. 낙상은 사람 ID마다 프레임 단위로 판정해 /mmw/fall로 보낸다.
 """
 import argparse
+import json
 import math
+import os
+import tempfile
 import socket
 import struct
 import threading
@@ -171,7 +174,25 @@ def track_to_world(t, height=2.7, tilt=90.0, upside_down=None):
 
 # 2026-11-01 사용자가 뷰어에서 확정한 측정 범위(바닥 좌표 x, y m). 레이더나 가구를 옮기면 다시 정해야 한다.
 ROOM_POLYGON = [(-1.79, -1.86), (2.8, -1.9), (2.8, 2.0), (-1.7, 2.0)]
-BED_POLYGON = [(-1.58, -1.46), (-0.05, -1.48), (-0.07, 0.45), (-1.56, 0.45)]
+BED_POLYGON_20261101 = [(-1.58, -1.46), (-0.05, -1.48), (-0.07, 0.45), (-1.56, 0.45)]
+
+
+def load_bed_polygon(path=os.path.join(os.path.dirname(os.path.abspath(__file__)), "viewer", "bed_corners.json")):
+    """침대 범위는 뷰어에서 마지막으로 확정한 viewer/bed_corners.json을 쓴다(2026-11-14). 대시보드 지도·융합 서버도
+    같은 파일을 쓴다. 11-01 값은 머리 쪽이 y 0.45 m까지라, 11-05에 다시 잰 침대(0.75 m)의 머리 부분에 누운 사람을
+    침대 밖으로 봤다. 파일이 없거나 이상하면 11-01 값을 쓴다."""
+    try:
+        with open(path, encoding="utf-8-sig") as fh:
+            corners = json.load(fh)["corners"]
+        poly = [(float(x), float(y)) for x, y in corners]
+        if len(poly) == 4 and all(math.isfinite(v) for c in poly for v in c):
+            return poly
+    except (OSError, ValueError, KeyError, TypeError):
+        pass
+    return BED_POLYGON_20261101
+
+
+BED_POLYGON = load_bed_polygon()
 DOOR_POLYGON = [(-1.83, 1.66), (-0.43, 1.66), (-0.43, 2.49), (-1.83, 2.51)]
 
 
@@ -608,6 +629,38 @@ def poll_patient_clicks(target_id, started, click):
         time.sleep(PATIENT_POLL_SEC)
 
 
+# 2026-11-14: 레이더 USB가 잠깐 끊기면 리더가 종료됐다가 systemd가 다시 켠다. 환자 지정은 리더 메모리에만 있어서
+# 사라지고, 다시 켠 리더가 침대 밖 번호를 자동 지정했다. 지금 환자 번호를 파일에 남겨 두고, 레이더가 계속 켜져 있어
+# (cfg를 다시 보내지 않음) 번호가 그대로일 때만 재시작 직후 이어받는다.
+PATIENT_STATE_PATH = os.path.join(tempfile.gettempdir(), "majubom_mmw_patient.json")
+PATIENT_STATE_MAX_AGE_SEC = 60.0   # 이보다 오래된 기록은 쓰지 않는다(그사이 번호가 바뀌었을 수 있다)
+PATIENT_STATE_EVERY_SEC = 1.0
+
+
+def save_patient_state(now, patient, path=PATIENT_STATE_PATH):
+    try:
+        tmp = path + ".tmp"
+        with open(tmp, "w", encoding="utf-8") as fh:
+            json.dump({"at": now, "tid": patient.get("tid"), "locked": patient.get("locked")}, fh)
+        os.replace(tmp, path)
+    except OSError:
+        pass   # 기록 실패는 수신에 영향을 주지 않는다
+
+
+def load_patient_state(now, path=PATIENT_STATE_PATH, max_age=PATIENT_STATE_MAX_AGE_SEC):
+    """재시작 직후 이어받을 환자 번호. (tid, auto) 또는 None."""
+    try:
+        with open(path, encoding="utf-8") as fh:
+            st = json.load(fh)
+    except (OSError, ValueError):
+        return None
+    if not isinstance(st, dict) or st.get("tid") is None or st.get("locked") not in ("manual", "auto"):
+        return None
+    if not isinstance(st.get("at"), (int, float)) or not 0 <= now - st["at"] <= max_age:
+        return None
+    return int(st["tid"]), st["locked"] == "auto"
+
+
 def apply_click(now, pipeline, click, applied_seq):
     """새 클릭이 있으면 사람으로 표시한다. 반환: 적용한 seq"""
     if click["seq"] is None or click["seq"] == applied_seq:
@@ -726,8 +779,7 @@ def run(cli_port, data_port, cfg_path, do_send=True, target_id="room_01", height
     if do_send and requests is None:
         raise RuntimeError("requests 미설치: pip install requests")
 
-    if cfg_path:
-        apply_config(cli_port, data_port, cfg_path)
+    radar_restarted = apply_config(cli_port, data_port, cfg_path) if cfg_path else None
 
     data = serial.Serial(data_port, 921600, timeout=0.1, exclusive=True)
     buf = b""
@@ -742,6 +794,11 @@ def run(cli_port, data_port, cfg_path, do_send=True, target_id="room_01", height
                             emit=log_person)
     click = {"tid": None, "seq": None}
     applied_seq = None
+    saved = load_patient_state(time.time()) if radar_restarted is False else None
+    if saved:
+        pipeline.restore(time.time(), *saved)
+        print(f"[patient] 재시작 전 환자 번호 {saved[0]}번을 이어받습니다({'자동' if saved[1] else '직접'} 지정)")
+    last_state_save, last_state = 0.0, None
     clock = FrameClock(frame_period_from_cfg(cfg_path))
     global poster
     if do_send and poster is None:
@@ -775,6 +832,10 @@ def run(cli_port, data_port, cfg_path, do_send=True, target_id="room_01", height
                     applied_seq = apply_click(now, pipeline, click, applied_seq)
                     latest = pipeline.update(now, targets)
                     latest_at = now
+                    state_now = (latest["patient"]["tid"], latest["patient"]["locked"])
+                    if state_now != last_state or now - last_state_save >= PATIENT_STATE_EVERY_SEC:
+                        save_patient_state(now, latest["patient"])
+                        last_state_save, last_state = now, state_now
                     for ev in latest["events"]:
                         send_fall_event(ev, target_id, do_send)
                     t = latest["patient_target"]
