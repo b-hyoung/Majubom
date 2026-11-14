@@ -104,6 +104,10 @@ HEAD_MIN_POINTS = 8            # 머리 높이를 계산할 최소 연결 반사
 HEAD_TOP_FRACTION = 0.9        # 연결 반사점 높이의 상위 10% 지점을 머리 쪽 높이로 본다
 HEAD_WINDOW_SEC = 1.0          # 흔들림을 줄이려고 이 시간의 중앙값을 쓴다
 HEAD_CEILING_MARGIN_M = 0.4    # 레이더 바로 앞 반사(z 약 2.6m)가 머리로 잡히지 않게 제외한다
+# 2026-11-14: 가만히 누우면 움직이는 반사점이 줄어 1초 안에 새 머리 높이가 안 나오는 프레임이 생긴다
+# (lee 누움 녹화 7,822프레임 중 336프레임, 값↔없음 전환 280번). 그때 화면이 몸 중심 높이로 떨어졌다 올라오지 않게,
+# 새 값이 없으면 마지막 머리 높이를 이 시간까지 유지한다.
+HEAD_HOLD_SEC = 10.0
 
 state = {"error": None, "connected": False, "frames": 0, "corrupt": 0, "bytes": 0, "frame": None, "events": []}
 lock = threading.Lock()
@@ -414,6 +418,7 @@ class Reader:
         self.prev_point_z = None
         self.prev_points = []
         self.head_samples = defaultdict(deque)
+        self.head_last = {}            # tid -> (시각, 마지막 머리 높이)
         self.proc_hist = deque()
         self.proc_tracks = {}
         self.shape_cache = (0.0, None)
@@ -513,9 +518,12 @@ class Reader:
         while samples and now - samples[0][0] > HEAD_WINDOW_SEC:
             samples.popleft()
         if not samples:
-            return None
+            last = self.head_last.get(tid)
+            return last[1] if last and now - last[0] <= HEAD_HOLD_SEC else None
         values = sorted(s[1] for s in samples)
-        return round(values[len(values) // 2], 2)
+        value = round(values[len(values) // 2], 2)
+        self.head_last[tid] = (now, value)
+        return value
 
     def _emit(self, now, event, tid, pos, text, check):
         record = {"t": round(now, 3), "event": event, "tid": tid, "pos": [round(pos[0], 2), round(pos[1], 2)],
@@ -653,6 +661,8 @@ class Reader:
                 del self.trails[tid]
         for tid in [k for k in self.head_samples if k not in live]:
             del self.head_samples[tid]
+        for tid in [k for k in self.head_last if k not in live]:
+            del self.head_last[tid]
         self.prev_point_z = [p[2] for p in points]
         self.prev_points = points
 

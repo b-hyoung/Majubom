@@ -1,0 +1,18 @@
+{
+ "session": "TEST",
+ "description": "기능 시험(비교에 쓰지 않음)",
+ "default_truth": "unknown",
+ "participant": "kim",
+ "activity": "exit turn with bed rail: exit, sit_only, exit, rail_only, exit, turn_in, exit, s",
+ "note": "Record-ExitTurn.ps1",
+ "started_at": 1794643985.6213002,
+ "stopped_at": 1794644406.8010705,
+ "stop_reason": "user",
+ "height_m": 2.7,
+ "tilt_deg": 90.0,
+ "upside_down": true,
+ "reader_commit": "f1b4e92",
+ "frames": 7609,
+ "corrupt": 47,
+ "label_changes": 0
+}

@@ -620,15 +620,61 @@ def apply_click(now, pipeline, click, applied_seq):
     return click["seq"]
 
 
+class BackgroundPoster:
+    """서버 POST를 별도 스레드에서 보낸다(2026-11-14).
+
+    전에는 수신 루프 안에서 POST 응답을 기다렸다. mmw_server가 가끔 2초씩 늦게 답하면 그동안 DATA 포트를 못 읽어
+    USB 시리얼 버퍼가 넘치고 프레임 30여 개가 버려졌다(11-14 실측: 6초 지표 POST 1.83초·2.17초 = 뷰어 끊김 1.82초·2.16초).
+    낙상 사건과 6초 지표는 순서대로 모두 보내고, 실시간 snapshot은 가장 최근 것 하나만 보낸다(밀리면 오래된 것은 버림).
+    """
+    MAX_QUEUE = 100
+
+    def __init__(self):
+        self.cond = threading.Condition()
+        self.queue = deque()
+        self.live = None
+        threading.Thread(target=self._run, daemon=True, name="mmw-post").start()
+
+    def post(self, url, payload, timeout, label=None):
+        with self.cond:
+            if len(self.queue) >= self.MAX_QUEUE:
+                self.queue.popleft()
+            self.queue.append((url, payload, timeout, label))
+            self.cond.notify()
+
+    def post_live(self, url, payload, timeout):
+        with self.cond:
+            self.live = (url, payload, timeout, None)
+            self.cond.notify()
+
+    def _run(self):
+        while True:
+            with self.cond:
+                while not self.queue and self.live is None:
+                    self.cond.wait()
+                if self.queue:
+                    job = self.queue.popleft()
+                else:
+                    job, self.live = self.live, None
+            url, payload, timeout, label = job
+            try:
+                r = requests.post(url, json=payload, timeout=timeout)
+                if label:
+                    print(f"   -> POST {r.status_code} {r.json()}")
+            except Exception as e:
+                if label:
+                    print(f"   -> POST 실패: {e}")
+
+
+poster = None   # run()에서 만든다
+
+
 def send_fall_event(ev, target_id, do_send):
     print(f"[fall] {time.strftime('%H:%M:%S')} {ev['pid']} {ev['stage']} door_check={ev.get('door_check', False)} "
           f"tid={ev['tid']} z={ev.get('z')} ref={ev.get('ref')}")
-    if do_send:
-        try:
-            requests.post(FALL_URL, json={**ev, "target_id": target_id,
-                                          "at": time.strftime('%Y-%m-%dT%H:%M:%S', time.localtime(ev["at"]))}, timeout=0.5)
-        except Exception:
-            pass  # 서버가 잠시 꺼져 있어도 수신은 계속한다
+    if do_send and poster is not None:   # 서버가 잠시 꺼져 있거나 느려도 수신은 계속한다
+        poster.post(FALL_URL, {**ev, "target_id": target_id,
+                               "at": time.strftime('%Y-%m-%dT%H:%M:%S', time.localtime(ev["at"]))}, timeout=0.5)
 
 
 def log_person(now, event, pid, pos, text, guess):
@@ -697,6 +743,9 @@ def run(cli_port, data_port, cfg_path, do_send=True, target_id="room_01", height
     click = {"tid": None, "seq": None}
     applied_seq = None
     clock = FrameClock(frame_period_from_cfg(cfg_path))
+    global poster
+    if do_send and poster is None:
+        poster = BackgroundPoster()
     tap = RawTap(raw_tap) if raw_tap else None
     if tap:
         print(f"[tap] 원본 바이트 복사 127.0.0.1:{tap.port} (테스트 뷰어용)")
@@ -741,12 +790,9 @@ def run(cli_port, data_port, cfg_path, do_send=True, target_id="room_01", height
             # 실시간 snapshot 전송 (LIVE_INTERVAL 마다)
             now = time.time()
             if do_send and now - last_live >= LIVE_INTERVAL and latest and now - latest_at <= LIVE_STALE_SEC:
-                try:
-                    requests.post(LIVE_URL, json={"targets": latest["targets"], "target_id": target_id,
-                                                  "patient_tid": latest["patient_tid"], "patient": latest["patient"],
-                                                  "falls": latest["falls"]}, timeout=0.5)
-                except Exception:
-                    pass  # 시각화 실패는 무시
+                poster.post_live(LIVE_URL, {"targets": latest["targets"], "target_id": target_id,
+                                            "patient_tid": latest["patient_tid"], "patient": latest["patient"],
+                                            "falls": latest["falls"]}, timeout=0.5)   # 시각화 실패는 무시
                 last_live = now
 
             # 윈도우 경과 → 지표 계산 + 전송
@@ -783,11 +829,7 @@ def run(cli_port, data_port, cfg_path, do_send=True, target_id="room_01", height
                     print(f"[{time.strftime('%H:%M:%S')}] 데이터 부족/보류 presence={presence}")
 
                 if do_send:
-                    try:
-                        r = requests.post(SERVER_URL, json=payload, timeout=3)
-                        print(f"   -> POST {r.status_code} {r.json()}")
-                    except Exception as e:
-                        print(f"   -> POST 실패: {e}")
+                    poster.post(SERVER_URL, payload, timeout=3, label="window")
 
                 window_start = time.time()
     except KeyboardInterrupt:

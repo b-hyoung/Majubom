@@ -32,6 +32,12 @@ NO_POINTS_HIDE_SEC = 5.0  # 사람이 아닌 번호에 반사점이 이만큼 �
 ALIVE_MIN_POINTS = 3.0    # 최근 1초의 프레임당 평균 반사점이 이 이상이어야 사람이 아닌 번호를 살아 있다고 본다
 DOOR_FRAMES_OUT = 18      # 문 구역 밖에서 반사점과 함께 이만큼 프레임이 잡혀야 문을 벗어난 것으로 본다
 STILL_M = 0.1             # 이 안에서만 움직이면 멈춘 것으로 본다
+ECHO_WINDOW_SEC = 10.0    # 반사 유령 판단: 최근 10초를 본다
+ECHO_FRESH_MAX = 0.25     # 반사점이 붙은 프레임이 이 비율보다 적고
+ECHO_WITH_MOVER = 0.8     # 그중 이 비율 이상이 다른 사람이 움직이던 프레임이면 그 사람의 반사(다중경로)로 본다
+ECHO_MIN_HITS = 3
+MOVER_SPEED = 0.25        # 다른 사람이 움직인다 = 초속 0.25m 이상, 반사점 5개 이상
+MOVER_POINTS = 5
 DOOR_STILL_SEC = 5.0      # 문 구역에서 이만큼 멈춰 있으면 사람이 아니라 문으로 본다
 
 
@@ -127,6 +133,7 @@ class PersonTracker:
 
     def update(self, now, tracks, room, door, bed):
         seen = set()
+        movers = {t["tid"] for t in tracks if t.get("npts", 0) >= MOVER_POINTS and t.get("speed", 0.0) >= MOVER_SPEED}
         for t in tracks:
             tid = t["tid"]
             seen.add(tid)
@@ -137,11 +144,14 @@ class PersonTracker:
                     "born": now, "first": [x, y], "pid": None, "abandoned": False, "abandon_pos": None, "pos": [x, y], "z": z,
                     "last": now, "fresh_t": now, "fresh_pos": [x, y], "fresh_z": z, "frames": deque(), "left_door": not in_poly(x, y, door),
                     "born_door": in_poly(x, y, door), "moved": False, "outside_since": None, "relink_after": 0.0, "out_door": 0, "abandoned_by": None, "alive_t": now,
-                    "anchor": [x, y], "anchor_t": now}
+                    "anchor": [x, y], "anchor_t": now, "echo": deque()}
             elif st["pid"] and now - st["last"] < JUMP_GAP_SEC and (math.hypot(x - st["pos"][0], y - st["pos"][1]) > JUMP_M or not Z_MIN <= z <= Z_MAX):
                 self._lose(now, self.persons[st["pid"]], f"{tid}번이 튐", st)
             st.update(pos=[x, y], z=z, last=now)
             fresh = t.get("npts", 0) > 0
+            st["echo"].append((now, fresh, bool(movers - {tid})))
+            while st["echo"] and now - st["echo"][0][0] > ECHO_WINDOW_SEC:
+                st["echo"].popleft()
             if fresh:
                 st["fresh_t"], st["fresh_pos"], st["fresh_z"] = now, [x, y], z
                 if not in_poly(x, y, door):
@@ -256,6 +266,15 @@ class PersonTracker:
         if out:
             self._link(now, min(out, key=lambda p: math.hypot(fx - p["pos"][0], fy - p["pos"][1])), st, tid, guess=len(out) > 1, reason="나간 곳으로 들어옴")
 
+    @staticmethod
+    def _is_echo(now, st, bed):
+        """다른 사람이 움직일 때만 반사점이 잠깐씩 붙는 번호 = 그 사람 전파가 벽·천장에 한 번 더 튕겨 생긴 유령(11-14 실측 8번)."""
+        if now - st["born"] < ECHO_WINDOW_SEC or in_poly(*st["pos"], bed):
+            return False
+        hits = [m for _, f, m in st["echo"] if f]
+        return (len(hits) >= ECHO_MIN_HITS and len(hits) / len(st["echo"]) < ECHO_FRESH_MAX
+                and sum(hits) / len(hits) >= ECHO_WITH_MOVER)
+
     def snapshot(self, now, room, door, bed):
         hidden = {}
         for tid, st in self.tracks.items():
@@ -269,6 +288,8 @@ class PersonTracker:
                 hidden[tid] = "문"
             elif now - st["alive_t"] >= NO_POINTS_HIDE_SEC and st["fresh_z"] >= LOW_Z_M and not in_poly(*st["fresh_pos"], bed):
                 hidden[tid] = "반사점 없는 남은 번호"
+            elif self._is_echo(now, st, bed):
+                hidden[tid] = "다른 사람의 반사"
         return {
             "tid_to_pid": {tid: st["pid"] for tid, st in self.tracks.items() if st["pid"]},
             "hidden": hidden,

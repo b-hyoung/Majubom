@@ -77,6 +77,10 @@ powershell -NoProfile -ExecutionPolicy Bypass -File tools\Record-LeftRight.ps1 -
 
 # 오른쪽 옆누움에서 오른팔을 안전바에 올렸다 내리기 5번
 powershell -NoProfile -ExecutionPolicy Bypass -File tools\Record-ArmRail.ps1 -Participant lee
+
+# 안전바를 올린 채 이탈 시도: 안전바 잡으며 앉기 → 침대 밖 쪽으로 몸 돌리기 (5번)
+# 비교 동작(앉기만 / 누운 채 안전바만 / 앉아서 안쪽으로 돌기) 각 2번을 섞어서, 약 5분
+powershell -NoProfile -ExecutionPolicy Bypass -File tools\Record-ExitTurn.ps1 -Participant kim
 ```
 
 - 자세 녹화에서 카메라도 쓰려면 먼저 `camera-pose/Start-PiUsb.ps1`로 카메라 작업실을 켜고 "그룹 측정 시작" 직전까지 준비합니다.
@@ -161,10 +165,31 @@ python arm_analyze.py "$S\TEST_20261113_201751" $B arm_lee.json    # 팔-안전�
 - 결과 JSON: `analysis/20261113_raw_left_right_arm/results/`
 - 인원과 반복 수가 적어 일반화하려면 더 많은 사람의 녹화가 필요합니다.
 
+### 5-3. 2026-11-14 이탈 시도 실험 (`analysis/20261114_exit_turn/`)
+```powershell
+$S = 'C:\Majubom\mmWave\dataiewer_sessions'
+$B = 'C:\Majubom\mmWaveiewered_corners.json'
+python exit_turn_analyze.py  "$S\TEST_20261114_171305" $B exit_turn_kim.json   # 안내마다 높이·가장자리 움직임·몸 중심 이동
+python exit_turn_accuracy.py "$S\TEST_20261114_171305" $B exit_acc_kim.json    # 시도 하나씩 빼고 시험한 정확도
+```
+
+| 판단 (kim 1명, 시도 11번 중 이탈 5번) | 정확도 |
+|---|---|
+| 이탈 시도인지 (가장자리 움직임 + 몸 중심의 가장자리 쪽 이동) | 90.9% (11번 중 10번) |
+| 앉음 / 누움 (1초 단위, 반사점 위쪽 높이) | 89.0% |
+| 밖으로 / 안쪽으로 몸 돌리기 (몸 중심 이동) | 85.7% (7번 중 6번) |
+| 안전바 잡기 (가장자리 움직임) | 63.6% — ToF가 더 적합 |
+
+- 앉은 자세에서는 도플러 부호로 도는 방향을 구별하지 못했습니다(누운 자세와 다름). 몸 중심이 가장자리 쪽으로 0.2m 넘게 옮겨 가는지가 더 잘 맞았습니다.
+- `TEST_20261114_155620`은 유령 트랙(다른 사람의 반사) 진단용 60초 녹화입니다.
+
 ---
 
 ## 6. 주의할 점
 - 침대 좌표(`viewer/bed_corners.json`, `send_mmw.py`의 `BED_POLYGON`)와 방 범위는 레이더나 가구를 옮기면 다시 재야 합니다.
 - 뷰어는 테스트 전용입니다. 운영 경로는 파이의 리더 → 5002 서버 → DB입니다.
+- 뷰어의 머리 높이는 새 반사점이 없으면 마지막 값을 10초까지 유지합니다(가만히 누운 사람의 높이가 튀지 않게). 그 전 녹화의 `head_z`는 유지 없이 계산된 값입니다.
+- 뷰어 "전처리" 화면은 다른 사람이 움직일 때만 반사점이 잠깐씩 붙는 번호를 "다른 사람의 반사"로 숨깁니다. "원본" 화면은 모두 보여 줍니다.
+- 리더(`send_mmw.py`)는 서버 POST를 별도 스레드로 보냅니다. 전에는 5002 서버가 2초쯤 늦게 답하면 그동안 DATA 포트를 못 읽어 프레임 30여 개가 버려졌습니다.
 - 파이 DB의 원본(`tof_readings`, `mmw_readings`)은 3일 지나면 매일 03:30에 `server/raw_archive/`로 옮겨집니다.
 - ToF 원본은 침대에 사람이 있을 때(+이탈 후 10초)만 저장됩니다.

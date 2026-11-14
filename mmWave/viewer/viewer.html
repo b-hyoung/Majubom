@@ -600,7 +600,6 @@ function draw(frame, meta) {
   hline(s, -4, 4, 0, css("--ref"), "바닥 z = 0 (누운 위치로 확인)");
   hline(s, -4, 4, meta.height, css("--above"), `레이더 z = ${meta.height} m`);
   hline(s, -4, 4, meta.bed_top, css("--muted"), `매트리스 윗면 ${meta.bed_top} m`);
-  hline(s, -4, 4, meta.person_height, css("--person"), `측정자 키 ${meta.person_height} m`);
   for (const tr of frame.tracks) {
     const color = css(KIND[tr.kind][0]);
     if (tr.head_z === null) {

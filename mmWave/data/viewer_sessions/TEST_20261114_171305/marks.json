@@ -1,0 +1,203 @@
+{
+    "mmwave_session":  "TEST_20261114_171305",
+    "kind":  "exit_turn",
+    "participant":  "kim",
+    "rail_side":  "radar-side bed edge",
+    "move_seconds":  8,
+    "lie_seconds":  12,
+    "trials":  [
+                   "exit",
+                   "sit_only",
+                   "exit",
+                   "rail_only",
+                   "exit",
+                   "turn_in",
+                   "exit",
+                   "sit_only",
+                   "exit",
+                   "rail_only",
+                   "turn_in"
+               ],
+    "marks":  [
+                  {
+                      "label":  "앉으며 안전바",
+                      "time":  "17:13:35.316",
+                      "trial":  1,
+                      "kind":  "exit"
+                  },
+                  {
+                      "label":  "밖으로 돌기",
+                      "time":  "17:13:47.356",
+                      "trial":  1,
+                      "kind":  "exit"
+                  },
+                  {
+                      "label":  "누움",
+                      "time":  "17:14:00.361",
+                      "trial":  1,
+                      "kind":  "exit"
+                  },
+                  {
+                      "label":  "앉기만",
+                      "time":  "17:14:15.218",
+                      "trial":  2,
+                      "kind":  "sit_only"
+                  },
+                  {
+                      "label":  "누움",
+                      "time":  "17:14:27.397",
+                      "trial":  2,
+                      "kind":  "sit_only"
+                  },
+                  {
+                      "label":  "앉으며 안전바",
+                      "time":  "17:14:42.221",
+                      "trial":  3,
+                      "kind":  "exit"
+                  },
+                  {
+                      "label":  "밖으로 돌기",
+                      "time":  "17:14:54.250",
+                      "trial":  3,
+                      "kind":  "exit"
+                  },
+                  {
+                      "label":  "누움",
+                      "time":  "17:15:07.243",
+                      "trial":  3,
+                      "kind":  "exit"
+                  },
+                  {
+                      "label":  "안전바만",
+                      "time":  "17:15:22.089",
+                      "trial":  4,
+                      "kind":  "rail_only"
+                  },
+                  {
+                      "label":  "누움",
+                      "time":  "17:15:33.702",
+                      "trial":  4,
+                      "kind":  "rail_only"
+                  },
+                  {
+                      "label":  "앉으며 안전바",
+                      "time":  "17:15:48.576",
+                      "trial":  5,
+                      "kind":  "exit"
+                  },
+                  {
+                      "label":  "밖으로 돌기",
+                      "time":  "17:16:00.610",
+                      "trial":  5,
+                      "kind":  "exit"
+                  },
+                  {
+                      "label":  "누움",
+                      "time":  "17:16:13.606",
+                      "trial":  5,
+                      "kind":  "exit"
+                  },
+                  {
+                      "label":  "앉음",
+                      "time":  "17:16:28.443",
+                      "trial":  6,
+                      "kind":  "turn_in"
+                  },
+                  {
+                      "label":  "안쪽으로 돌기",
+                      "time":  "17:16:39.035",
+                      "trial":  6,
+                      "kind":  "turn_in"
+                  },
+                  {
+                      "label":  "누움",
+                      "time":  "17:16:50.489",
+                      "trial":  6,
+                      "kind":  "turn_in"
+                  },
+                  {
+                      "label":  "앉으며 안전바",
+                      "time":  "17:17:05.364",
+                      "trial":  7,
+                      "kind":  "exit"
+                  },
+                  {
+                      "label":  "밖으로 돌기",
+                      "time":  "17:17:17.397",
+                      "trial":  7,
+                      "kind":  "exit"
+                  },
+                  {
+                      "label":  "누움",
+                      "time":  "17:17:30.421",
+                      "trial":  7,
+                      "kind":  "exit"
+                  },
+                  {
+                      "label":  "앉기만",
+                      "time":  "17:17:45.288",
+                      "trial":  8,
+                      "kind":  "sit_only"
+                  },
+                  {
+                      "label":  "누움",
+                      "time":  "17:17:57.396",
+                      "trial":  8,
+                      "kind":  "sit_only"
+                  },
+                  {
+                      "label":  "앉으며 안전바",
+                      "time":  "17:18:12.249",
+                      "trial":  9,
+                      "kind":  "exit"
+                  },
+                  {
+                      "label":  "밖으로 돌기",
+                      "time":  "17:18:24.299",
+                      "trial":  9,
+                      "kind":  "exit"
+                  },
+                  {
+                      "label":  "누움",
+                      "time":  "17:18:37.314",
+                      "trial":  9,
+                      "kind":  "exit"
+                  },
+                  {
+                      "label":  "안전바만",
+                      "time":  "17:18:52.172",
+                      "trial":  10,
+                      "kind":  "rail_only"
+                  },
+                  {
+                      "label":  "누움",
+                      "time":  "17:19:03.784",
+                      "trial":  10,
+                      "kind":  "rail_only"
+                  },
+                  {
+                      "label":  "앉음",
+                      "time":  "17:19:18.622",
+                      "trial":  11,
+                      "kind":  "turn_in"
+                  },
+                  {
+                      "label":  "안쪽으로 돌기",
+                      "time":  "17:19:29.226",
+                      "trial":  11,
+                      "kind":  "turn_in"
+                  },
+                  {
+                      "label":  "누움",
+                      "time":  "17:19:40.655",
+                      "trial":  11,
+                      "kind":  "turn_in"
+                  },
+                  {
+                      "label":  "끝",
+                      "time":  "17:19:55.497",
+                      "trial":  null,
+                      "kind":  null
+                  }
+              ]
+}
