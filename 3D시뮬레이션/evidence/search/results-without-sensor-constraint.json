@@ -1,0 +1,3646 @@
+{
+  "method": "Finite grid framing + conservative AABB collision and visibility; not physical simulation or model inference",
+  "grid": {
+    "xs": [
+      -1.3,
+      -0.9,
+      -0.5,
+      -0.1,
+      0.3,
+      0.7,
+      1.1
+    ],
+    "zs": [
+      -1.15,
+      -0.7,
+      -0.25,
+      0.2,
+      0.65,
+      1.1,
+      1.55,
+      2,
+      2.55
+    ],
+    "hs": [
+      1.4,
+      1.65,
+      1.85,
+      2.05
+    ],
+    "fovs": [
+      44,
+      50,
+      57,
+      64,
+      72
+    ],
+    "targetHeights": [
+      0.75,
+      0.95,
+      1.15
+    ],
+    "tvs": [
+      [
+        -0.7,
+        0,
+        -1.8
+      ],
+      [
+        -0.7,
+        0,
+        -1.15
+      ],
+      [
+        -0.7,
+        0,
+        -0.75
+      ],
+      [
+        -0.7,
+        0,
+        2.1
+      ],
+      [
+        -0.35,
+        0,
+        -1.8
+      ],
+      [
+        -0.35,
+        0,
+        -1.15
+      ],
+      [
+        -0.35,
+        0,
+        -0.75
+      ],
+      [
+        -0.35,
+        0,
+        2.1
+      ],
+      [
+        0,
+        0,
+        -1.8
+      ],
+      [
+        0,
+        0,
+        -1.15
+      ],
+      [
+        0,
+        0,
+        -0.75
+      ],
+      [
+        0,
+        0,
+        2.1
+      ]
+    ],
+    "aspect": "16:9",
+    "poseStepSeconds": 0.5,
+    "poseCount": 61,
+    "cameraFootprintRadius": 0.12,
+    "collisionSubjectMargin": 0.12,
+    "framingMarginNDC": {
+      "x": 0.08,
+      "y": 0.1
+    }
+  },
+  "stats": {
+    "total": 45360,
+    "considered": 45360,
+    "blockedCamera": 15120,
+    "blockedTV": 11280,
+    "patientCut": 16441,
+    "tvCut": 1879,
+    "feasible": 640
+  },
+  "shortlisted": 640,
+  "selected": [
+    {
+      "tv": [
+        -0.35,
+        0,
+        2.1
+      ],
+      "camera": [
+        -0.5,
+        1.85,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        1.15,
+        0.45
+      ],
+      "fov": 57,
+      "angle": -3.095471537575282,
+      "width": 442,
+      "screenHeight": 236,
+      "humanHeight": 346,
+      "quality": 0.8659776475469944,
+      "visibility": 0.9963570127504554,
+      "worstPoseVisibility": 0.8888888888888888,
+      "screenVisibility": 1,
+      "score": 93.84148958588068
+    },
+    {
+      "tv": [
+        -0.35,
+        0,
+        2.1
+      ],
+      "camera": [
+        -0.1,
+        1.65,
+        -0.7
+      ],
+      "target": [
+        0.35,
+        1.15,
+        0.45
+      ],
+      "fov": 72,
+      "angle": 3.0525430709552954,
+      "width": 417,
+      "screenHeight": 230,
+      "humanHeight": 367,
+      "quality": 0.8285325728292642,
+      "visibility": 0.9963570127504554,
+      "worstPoseVisibility": 0.8888888888888888,
+      "screenVisibility": 1,
+      "score": 92.15646122358282
+    },
+    {
+      "tv": [
+        0,
+        0,
+        2.1
+      ],
+      "camera": [
+        -0.1,
+        1.65,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        1.15,
+        0.45
+      ],
+      "fov": 57,
+      "angle": -3.110833127519324,
+      "width": 360,
+      "screenHeight": 208,
+      "humanHeight": 390,
+      "quality": 0.8141710509481183,
+      "visibility": 0.9963570127504554,
+      "worstPoseVisibility": 0.8888888888888888,
+      "screenVisibility": 1,
+      "score": 91.51019273893127
+    },
+    {
+      "tv": [
+        -0.35,
+        0,
+        2.1
+      ],
+      "camera": [
+        0.3,
+        1.65,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        1.15,
+        0.45
+      ],
+      "fov": 57,
+      "angle": 2.9441970937399127,
+      "width": 352,
+      "screenHeight": 204,
+      "humanHeight": 404,
+      "quality": 0.8109962380209531,
+      "visibility": 0.9981785063752276,
+      "worstPoseVisibility": 0.8888888888888888,
+      "screenVisibility": 1,
+      "score": 91.43107843407586
+    },
+    {
+      "tv": [
+        0,
+        0,
+        2.1
+      ],
+      "camera": [
+        0.7,
+        1.65,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        1.15,
+        0.45
+      ],
+      "fov": 57,
+      "angle": 2.9294489005853177,
+      "width": 329,
+      "screenHeight": 186,
+      "humanHeight": 404,
+      "quality": 0.7772772488851454,
+      "visibility": 1,
+      "worstPoseVisibility": 1,
+      "screenVisibility": 1,
+      "score": 89.97747619983154
+    },
+    {
+      "tv": [
+        0,
+        0,
+        2.1
+      ],
+      "camera": [
+        0.3,
+        1.65,
+        -0.7
+      ],
+      "target": [
+        0.35,
+        1.15,
+        0.45
+      ],
+      "fov": 72,
+      "angle": 3.0348569809406576,
+      "width": 322,
+      "screenHeight": 191,
+      "humanHeight": 399,
+      "quality": 0.7549008376713988,
+      "visibility": 0.9981785063752276,
+      "worstPoseVisibility": 0.8888888888888888,
+      "screenVisibility": 1,
+      "score": 88.90678541834592
+    },
+    {
+      "tv": [
+        0,
+        0,
+        2.1
+      ],
+      "camera": [
+        -0.5,
+        1.85,
+        -0.7
+      ],
+      "target": [
+        0.35,
+        1.15,
+        0.45
+      ],
+      "fov": 72,
+      "angle": -2.9648837975197564,
+      "width": 412,
+      "screenHeight": 222,
+      "humanHeight": 311,
+      "quality": 0.7468671930698092,
+      "visibility": 0.9963570127504554,
+      "worstPoseVisibility": 0.8888888888888888,
+      "screenVisibility": 1,
+      "score": 88.48151913440736
+    },
+    {
+      "tv": [
+        0,
+        0,
+        2.1
+      ],
+      "camera": [
+        -0.9,
+        2.05,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        1.15,
+        0.45
+      ],
+      "fov": 57,
+      "angle": -2.8714394538783883,
+      "width": 401,
+      "screenHeight": 214,
+      "humanHeight": 306,
+      "quality": 0.7453326696253704,
+      "visibility": 0.9981785063752276,
+      "worstPoseVisibility": 0.8888888888888888,
+      "screenVisibility": 1,
+      "score": 88.47621785627464
+    },
+    {
+      "tv": [
+        -0.7,
+        0,
+        -0.75
+      ],
+      "camera": [
+        -0.9,
+        2.05,
+        2.55
+      ],
+      "target": [
+        0.35,
+        0.75,
+        0.45
+      ],
+      "fov": 64,
+      "angle": -0.060532019782107156,
+      "width": 409,
+      "screenHeight": 211,
+      "humanHeight": 325,
+      "quality": 0.747933415996253,
+      "visibility": 0.9817850637522769,
+      "worstPoseVisibility": 0.8888888888888888,
+      "screenVisibility": 1,
+      "score": 88.01948095116107
+    },
+    {
+      "tv": [
+        -0.35,
+        0,
+        2.1
+      ],
+      "camera": [
+        1.1,
+        1.65,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        1.15,
+        0.45
+      ],
+      "fov": 57,
+      "angle": 2.7219417914546895,
+      "width": 303,
+      "screenHeight": 172,
+      "humanHeight": 389,
+      "quality": 0.7173630932844186,
+      "visibility": 1,
+      "worstPoseVisibility": 1,
+      "screenVisibility": 1,
+      "score": 87.28133919779883
+    },
+    {
+      "tv": [
+        0,
+        0,
+        2.1
+      ],
+      "camera": [
+        -0.9,
+        1.4,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        0.95,
+        0.45
+      ],
+      "fov": 57,
+      "angle": -2.8714394538783883,
+      "width": 389,
+      "screenHeight": 219,
+      "humanHeight": 355,
+      "quality": 0.8049262874264034,
+      "visibility": 0.8834244080145719,
+      "worstPoseVisibility": 0.7777777777777778,
+      "screenVisibility": 1,
+      "score": 87.14153721469818
+    },
+    {
+      "tv": [
+        -0.7,
+        0,
+        -0.75
+      ],
+      "camera": [
+        -0.9,
+        1.65,
+        2.55
+      ],
+      "target": [
+        0.35,
+        0.75,
+        0.45
+      ],
+      "fov": 64,
+      "angle": -0.060532019782107156,
+      "width": 403,
+      "screenHeight": 217,
+      "humanHeight": 336,
+      "quality": 0.7689257301395587,
+      "visibility": 0.9271402550091075,
+      "worstPoseVisibility": 0.7777777777777778,
+      "screenVisibility": 1,
+      "score": 87.05156678159891
+    },
+    {
+      "tv": [
+        0,
+        0,
+        -0.75
+      ],
+      "camera": [
+        -1.3,
+        2.05,
+        2.55
+      ],
+      "target": [
+        0.35,
+        0.75,
+        0.45
+      ],
+      "fov": 57,
+      "angle": -0.37527082285595736,
+      "width": 353,
+      "screenHeight": 197,
+      "humanHeight": 338,
+      "quality": 0.7178588618081463,
+      "visibility": 0.9744990892531876,
+      "worstPoseVisibility": 0.8888888888888888,
+      "screenVisibility": 1,
+      "score": 86.41111690522816
+    },
+    {
+      "tv": [
+        -0.35,
+        0,
+        2.1
+      ],
+      "camera": [
+        -0.5,
+        1.4,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        0.95,
+        0.45
+      ],
+      "fov": 64,
+      "angle": -3.095471537575282,
+      "width": 377,
+      "screenHeight": 210,
+      "humanHeight": 341,
+      "quality": 0.749408815788815,
+      "visibility": 0.907103825136612,
+      "worstPoseVisibility": 0.7777777777777778,
+      "screenVisibility": 1,
+      "score": 85.47203059027811
+    },
+    {
+      "tv": [
+        -0.35,
+        0,
+        -0.75
+      ],
+      "camera": [
+        -0.9,
+        2.05,
+        2.55
+      ],
+      "target": [
+        0.35,
+        0.75,
+        0.45
+      ],
+      "fov": 64,
+      "angle": -0.16514867741462685,
+      "width": 358,
+      "screenHeight": 194,
+      "humanHeight": 325,
+      "quality": 0.6888955696327242,
+      "visibility": 0.9817850637522769,
+      "worstPoseVisibility": 0.8888888888888888,
+      "screenVisibility": 1,
+      "score": 85.36277786480228
+    },
+    {
+      "tv": [
+        0,
+        0,
+        2.1
+      ],
+      "camera": [
+        -1.3,
+        2.05,
+        -0.7
+      ],
+      "target": [
+        0.35,
+        0.75,
+        0.45
+      ],
+      "fov": 72,
+      "angle": -2.7069224384405484,
+      "width": 430,
+      "screenHeight": 217,
+      "humanHeight": 255,
+      "quality": 0.6801228297570443,
+      "visibility": 0.9908925318761385,
+      "worstPoseVisibility": 0.8888888888888888,
+      "screenVisibility": 1,
+      "score": 85.28676595473183
+    },
+    {
+      "tv": [
+        0,
+        0,
+        -0.75
+      ],
+      "camera": [
+        0.7,
+        1.85,
+        2.55
+      ],
+      "target": [
+        0.35,
+        0.95,
+        0.45
+      ],
+      "fov": 64,
+      "angle": 0.20902294280626463,
+      "width": 290,
+      "screenHeight": 166,
+      "humanHeight": 392,
+      "quality": 0.6927619386390911,
+      "visibility": 0.9562841530054644,
+      "worstPoseVisibility": 0.7777777777777778,
+      "screenVisibility": 1,
+      "score": 84.64423259395035
+    },
+    {
+      "tv": [
+        0,
+        0,
+        -0.75
+      ],
+      "camera": [
+        -1.3,
+        1.4,
+        2.55
+      ],
+      "target": [
+        0.35,
+        0.75,
+        0.45
+      ],
+      "fov": 57,
+      "angle": -0.37527082285595736,
+      "width": 340,
+      "screenHeight": 196,
+      "humanHeight": 342,
+      "quality": 0.7153502948441253,
+      "visibility": 0.9253187613843351,
+      "worstPoseVisibility": 0.7777777777777778,
+      "screenVisibility": 1,
+      "score": 84.57691991643736
+    },
+    {
+      "tv": [
+        -0.35,
+        0,
+        -0.75
+      ],
+      "camera": [
+        0.7,
+        1.85,
+        2.55
+      ],
+      "target": [
+        0.35,
+        0.95,
+        0.45
+      ],
+      "fov": 64,
+      "angle": 0.30805278102377637,
+      "width": 288,
+      "screenHeight": 167,
+      "humanHeight": 392,
+      "quality": 0.6871104895611624,
+      "visibility": 0.9562841530054644,
+      "worstPoseVisibility": 0.7777777777777778,
+      "screenVisibility": 1,
+      "score": 84.38991738544357
+    },
+    {
+      "tv": [
+        -0.7,
+        0,
+        -0.75
+      ],
+      "camera": [
+        0.7,
+        1.85,
+        2.55
+      ],
+      "target": [
+        0.35,
+        0.95,
+        0.45
+      ],
+      "fov": 64,
+      "angle": 0.40122879900484876,
+      "width": 291,
+      "screenHeight": 167,
+      "humanHeight": 392,
+      "quality": 0.6840802364014313,
+      "visibility": 0.9562841530054644,
+      "worstPoseVisibility": 0.7777777777777778,
+      "screenVisibility": 1,
+      "score": 84.25355599325566
+    },
+    {
+      "tv": [
+        -0.35,
+        0,
+        2.1
+      ],
+      "camera": [
+        -1.3,
+        2.05,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        0.95,
+        0.45
+      ],
+      "fov": 64,
+      "angle": -2.8572078769959344,
+      "width": 410,
+      "screenHeight": 206,
+      "humanHeight": 253,
+      "quality": 0.6566692019144176,
+      "visibility": 0.9908925318761385,
+      "worstPoseVisibility": 0.8888888888888888,
+      "screenVisibility": 1,
+      "score": 84.23135270181363
+    },
+    {
+      "tv": [
+        0,
+        0,
+        -1.15
+      ],
+      "camera": [
+        -1.3,
+        2.05,
+        2.55
+      ],
+      "target": [
+        0.35,
+        0.75,
+        0.45
+      ],
+      "fov": 57,
+      "angle": -0.3378781882402785,
+      "width": 330,
+      "screenHeight": 182,
+      "humanHeight": 338,
+      "quality": 0.6692322357383194,
+      "visibility": 0.9744990892531876,
+      "worstPoseVisibility": 0.8888888888888888,
+      "screenVisibility": 1,
+      "score": 84.22291873208594
+    },
+    {
+      "tv": [
+        -0.35,
+        0,
+        -0.75
+      ],
+      "camera": [
+        -0.9,
+        1.65,
+        2.55
+      ],
+      "target": [
+        0.35,
+        0.75,
+        0.45
+      ],
+      "fov": 64,
+      "angle": -0.16514867741462685,
+      "width": 352,
+      "screenHeight": 198,
+      "humanHeight": 336,
+      "quality": 0.704418469195792,
+      "visibility": 0.9271402550091075,
+      "worstPoseVisibility": 0.7777777777777778,
+      "screenVisibility": 1,
+      "score": 84.1487400391294
+    },
+    {
+      "tv": [
+        -0.35,
+        0,
+        2.1
+      ],
+      "camera": [
+        0.3,
+        2.05,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        1.15,
+        0.45
+      ],
+      "fov": 64,
+      "angle": 2.9441970937399127,
+      "width": 322,
+      "screenHeight": 186,
+      "humanHeight": 308,
+      "quality": 0.6425014706879315,
+      "visibility": 1,
+      "worstPoseVisibility": 1,
+      "screenVisibility": 1,
+      "score": 83.9125661809569
+    },
+    {
+      "tv": [
+        0,
+        0,
+        2.1
+      ],
+      "camera": [
+        0.3,
+        2.05,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        1.15,
+        0.45
+      ],
+      "fov": 64,
+      "angle": 3.0495458047263866,
+      "width": 314,
+      "screenHeight": 181,
+      "humanHeight": 308,
+      "quality": 0.634261291759435,
+      "visibility": 1,
+      "worstPoseVisibility": 1,
+      "screenVisibility": 1,
+      "score": 83.54175812917457
+    },
+    {
+      "tv": [
+        -0.7,
+        0,
+        -1.15
+      ],
+      "camera": [
+        0.7,
+        1.65,
+        2.55
+      ],
+      "target": [
+        0.35,
+        0.75,
+        0.45
+      ],
+      "fov": 64,
+      "angle": 0.36172924151993224,
+      "width": 262,
+      "screenHeight": 156,
+      "humanHeight": 414,
+      "quality": 0.6576843287117551,
+      "visibility": 0.9508196721311475,
+      "worstPoseVisibility": 0.7777777777777778,
+      "screenVisibility": 1,
+      "score": 82.87448331661913
+    },
+    {
+      "tv": [
+        0,
+        0,
+        -1.15
+      ],
+      "camera": [
+        1.1,
+        2.05,
+        2.55
+      ],
+      "target": [
+        0.35,
+        0.95,
+        0.45
+      ],
+      "fov": 57,
+      "angle": 0.2889754099925665,
+      "width": 292,
+      "screenHeight": 167,
+      "humanHeight": 407,
+      "quality": 0.7051216424029445,
+      "visibility": 0.8797814207650273,
+      "worstPoseVisibility": 0.6666666666666666,
+      "screenVisibility": 1,
+      "score": 82.52282363490846
+    },
+    {
+      "tv": [
+        -0.7,
+        0,
+        -0.75
+      ],
+      "camera": [
+        -0.1,
+        1.65,
+        2.55
+      ],
+      "target": [
+        0.35,
+        0.75,
+        0.45
+      ],
+      "fov": 72,
+      "angle": 0.17985349979247828,
+      "width": 318,
+      "screenHeight": 178,
+      "humanHeight": 346,
+      "quality": 0.6495432925700886,
+      "visibility": 0.9489981785063752,
+      "worstPoseVisibility": 0.7777777777777778,
+      "screenVisibility": 1,
+      "score": 82.44438441337711
+    },
+    {
+      "tv": [
+        -0.35,
+        0,
+        2.1
+      ],
+      "camera": [
+        -1.3,
+        1.65,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        0.95,
+        0.45
+      ],
+      "fov": 64,
+      "angle": -2.8572078769959344,
+      "width": 399,
+      "screenHeight": 210,
+      "humanHeight": 271,
+      "quality": 0.6795695390008438,
+      "visibility": 0.9052823315118397,
+      "worstPoseVisibility": 0.7777777777777778,
+      "screenVisibility": 1,
+      "score": 82.26551085795235
+    },
+    {
+      "tv": [
+        0,
+        0,
+        -1.15
+      ],
+      "camera": [
+        -1.3,
+        1.4,
+        2.55
+      ],
+      "target": [
+        0.35,
+        0.75,
+        0.45
+      ],
+      "fov": 57,
+      "angle": -0.3378781882402785,
+      "width": 315,
+      "screenHeight": 178,
+      "humanHeight": 342,
+      "quality": 0.6628826571440305,
+      "visibility": 0.9253187613843351,
+      "worstPoseVisibility": 0.7777777777777778,
+      "screenVisibility": 1,
+      "score": 82.2158762199331
+    }
+  ],
+  "top": [
+    {
+      "tv": [
+        -0.35,
+        0,
+        2.1
+      ],
+      "camera": [
+        -0.5,
+        1.85,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        1.15,
+        0.45
+      ],
+      "fov": 57,
+      "angle": -3.095471537575282,
+      "width": 442,
+      "screenHeight": 236,
+      "humanHeight": 346,
+      "quality": 0.8659776475469944,
+      "visibility": 0.9963570127504554,
+      "worstPoseVisibility": 0.8888888888888888,
+      "screenVisibility": 1,
+      "score": 93.84148958588068
+    },
+    {
+      "tv": [
+        -0.35,
+        0,
+        2.1
+      ],
+      "camera": [
+        -0.1,
+        1.65,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        1.15,
+        0.45
+      ],
+      "fov": 57,
+      "angle": 3.064820762320015,
+      "width": 393,
+      "screenHeight": 221,
+      "humanHeight": 390,
+      "quality": 0.8547126690281881,
+      "visibility": 0.9963570127504554,
+      "worstPoseVisibility": 0.8888888888888888,
+      "screenVisibility": 1,
+      "score": 93.33456555253441
+    },
+    {
+      "tv": [
+        -0.35,
+        0,
+        2.1
+      ],
+      "camera": [
+        -0.1,
+        1.65,
+        -0.7
+      ],
+      "target": [
+        0.35,
+        1.15,
+        0.45
+      ],
+      "fov": 72,
+      "angle": 3.0525430709552954,
+      "width": 417,
+      "screenHeight": 230,
+      "humanHeight": 367,
+      "quality": 0.8285325728292642,
+      "visibility": 0.9963570127504554,
+      "worstPoseVisibility": 0.8888888888888888,
+      "screenVisibility": 1,
+      "score": 92.15646122358282
+    },
+    {
+      "tv": [
+        0,
+        0,
+        2.1
+      ],
+      "camera": [
+        -0.1,
+        1.65,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        1.15,
+        0.45
+      ],
+      "fov": 57,
+      "angle": -3.110833127519324,
+      "width": 360,
+      "screenHeight": 208,
+      "humanHeight": 390,
+      "quality": 0.8141710509481183,
+      "visibility": 0.9963570127504554,
+      "worstPoseVisibility": 0.8888888888888888,
+      "screenVisibility": 1,
+      "score": 91.51019273893127
+    },
+    {
+      "tv": [
+        -0.35,
+        0,
+        2.1
+      ],
+      "camera": [
+        0.3,
+        1.65,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        1.15,
+        0.45
+      ],
+      "fov": 57,
+      "angle": 2.9441970937399127,
+      "width": 352,
+      "screenHeight": 204,
+      "humanHeight": 404,
+      "quality": 0.8109962380209531,
+      "visibility": 0.9981785063752276,
+      "worstPoseVisibility": 0.8888888888888888,
+      "screenVisibility": 1,
+      "score": 91.43107843407586
+    },
+    {
+      "tv": [
+        0,
+        0,
+        2.1
+      ],
+      "camera": [
+        0.3,
+        1.65,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        1.15,
+        0.45
+      ],
+      "fov": 57,
+      "angle": 3.0495458047263866,
+      "width": 342,
+      "screenHeight": 198,
+      "humanHeight": 404,
+      "quality": 0.8005980113529911,
+      "visibility": 0.9981785063752276,
+      "worstPoseVisibility": 0.8888888888888888,
+      "screenVisibility": 1,
+      "score": 90.96315823401757
+    },
+    {
+      "tv": [
+        0,
+        0,
+        2.1
+      ],
+      "camera": [
+        -0.5,
+        1.85,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        1.15,
+        0.45
+      ],
+      "fov": 57,
+      "angle": -2.988943325194528,
+      "width": 390,
+      "screenHeight": 217,
+      "humanHeight": 346,
+      "quality": 0.7950631076793413,
+      "visibility": 0.9963570127504554,
+      "worstPoseVisibility": 0.8888888888888888,
+      "screenVisibility": 1,
+      "score": 90.6503352918363
+    },
+    {
+      "tv": [
+        -0.35,
+        0,
+        2.1
+      ],
+      "camera": [
+        0.3,
+        1.4,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        1.15,
+        0.45
+      ],
+      "fov": 57,
+      "angle": 2.9441970937399127,
+      "width": 336,
+      "screenHeight": 194,
+      "humanHeight": 434,
+      "quality": 0.7844985173335093,
+      "visibility": 0.9981785063752276,
+      "worstPoseVisibility": 0.8888888888888888,
+      "screenVisibility": 1,
+      "score": 90.23868100314087
+    },
+    {
+      "tv": [
+        0,
+        0,
+        2.1
+      ],
+      "camera": [
+        0.7,
+        1.65,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        1.15,
+        0.45
+      ],
+      "fov": 57,
+      "angle": 2.9294489005853177,
+      "width": 329,
+      "screenHeight": 186,
+      "humanHeight": 404,
+      "quality": 0.7772772488851454,
+      "visibility": 1,
+      "worstPoseVisibility": 1,
+      "screenVisibility": 1,
+      "score": 89.97747619983154
+    },
+    {
+      "tv": [
+        0,
+        0,
+        2.1
+      ],
+      "camera": [
+        0.3,
+        1.4,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        1.15,
+        0.45
+      ],
+      "fov": 57,
+      "angle": 3.0495458047263866,
+      "width": 327,
+      "screenHeight": 188,
+      "humanHeight": 434,
+      "quality": 0.7748165612121101,
+      "visibility": 0.9981785063752276,
+      "worstPoseVisibility": 0.8888888888888888,
+      "screenVisibility": 1,
+      "score": 89.80299297767793
+    },
+    {
+      "tv": [
+        -0.35,
+        0,
+        2.1
+      ],
+      "camera": [
+        0.3,
+        1.65,
+        -0.7
+      ],
+      "target": [
+        0.35,
+        1.15,
+        0.45
+      ],
+      "fov": 72,
+      "angle": 2.9134900253098506,
+      "width": 336,
+      "screenHeight": 199,
+      "humanHeight": 399,
+      "quality": 0.7687430111440541,
+      "visibility": 0.9981785063752276,
+      "worstPoseVisibility": 0.8888888888888888,
+      "screenVisibility": 1,
+      "score": 89.52968322461541
+    },
+    {
+      "tv": [
+        -0.35,
+        0,
+        2.1
+      ],
+      "camera": [
+        0.7,
+        1.65,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        1.15,
+        0.45
+      ],
+      "fov": 57,
+      "angle": 2.8291010938552743,
+      "width": 323,
+      "screenHeight": 186,
+      "humanHeight": 404,
+      "quality": 0.7644596300139953,
+      "visibility": 1,
+      "worstPoseVisibility": 1,
+      "screenVisibility": 1,
+      "score": 89.40068335062978
+    },
+    {
+      "tv": [
+        0,
+        0,
+        2.1
+      ],
+      "camera": [
+        -0.1,
+        1.65,
+        -0.7
+      ],
+      "target": [
+        0.35,
+        1.15,
+        0.45
+      ],
+      "fov": 72,
+      "angle": -3.1058935409104693,
+      "width": 361,
+      "screenHeight": 209,
+      "humanHeight": 367,
+      "quality": 0.762739103954396,
+      "visibility": 0.9963570127504554,
+      "worstPoseVisibility": 0.8888888888888888,
+      "screenVisibility": 1,
+      "score": 89.19575512421376
+    },
+    {
+      "tv": [
+        0,
+        0,
+        2.1
+      ],
+      "camera": [
+        0.7,
+        1.4,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        1.15,
+        0.45
+      ],
+      "fov": 57,
+      "angle": 2.9294489005853177,
+      "width": 315,
+      "screenHeight": 178,
+      "humanHeight": 437,
+      "quality": 0.7541683972997645,
+      "visibility": 1,
+      "worstPoseVisibility": 1,
+      "screenVisibility": 1,
+      "score": 88.93757787848939
+    },
+    {
+      "tv": [
+        0,
+        0,
+        2.1
+      ],
+      "camera": [
+        0.3,
+        1.65,
+        -0.7
+      ],
+      "target": [
+        0.35,
+        1.15,
+        0.45
+      ],
+      "fov": 72,
+      "angle": 3.0348569809406576,
+      "width": 322,
+      "screenHeight": 191,
+      "humanHeight": 399,
+      "quality": 0.7549008376713988,
+      "visibility": 0.9981785063752276,
+      "worstPoseVisibility": 0.8888888888888888,
+      "screenVisibility": 1,
+      "score": 88.90678541834592
+    },
+    {
+      "tv": [
+        0,
+        0,
+        2.1
+      ],
+      "camera": [
+        1.1,
+        1.65,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        1.15,
+        0.45
+      ],
+      "fov": 57,
+      "angle": 2.8152338368830305,
+      "width": 320,
+      "screenHeight": 184,
+      "humanHeight": 389,
+      "quality": 0.7449682169737945,
+      "visibility": 1,
+      "worstPoseVisibility": 1,
+      "screenVisibility": 1,
+      "score": 88.52356976382075
+    },
+    {
+      "tv": [
+        0,
+        0,
+        2.1
+      ],
+      "camera": [
+        -0.5,
+        1.85,
+        -0.7
+      ],
+      "target": [
+        0.35,
+        1.15,
+        0.45
+      ],
+      "fov": 72,
+      "angle": -2.9648837975197564,
+      "width": 412,
+      "screenHeight": 222,
+      "humanHeight": 311,
+      "quality": 0.7468671930698092,
+      "visibility": 0.9963570127504554,
+      "worstPoseVisibility": 0.8888888888888888,
+      "screenVisibility": 1,
+      "score": 88.48151913440736
+    },
+    {
+      "tv": [
+        0,
+        0,
+        2.1
+      ],
+      "camera": [
+        -0.9,
+        2.05,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        1.15,
+        0.45
+      ],
+      "fov": 57,
+      "angle": -2.8714394538783883,
+      "width": 401,
+      "screenHeight": 214,
+      "humanHeight": 306,
+      "quality": 0.7453326696253704,
+      "visibility": 0.9981785063752276,
+      "worstPoseVisibility": 0.8888888888888888,
+      "screenVisibility": 1,
+      "score": 88.47621785627464
+    },
+    {
+      "tv": [
+        -0.35,
+        0,
+        2.1
+      ],
+      "camera": [
+        0.7,
+        1.4,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        1.15,
+        0.45
+      ],
+      "fov": 57,
+      "angle": 2.8291010938552743,
+      "width": 309,
+      "screenHeight": 177,
+      "humanHeight": 437,
+      "quality": 0.7421039750997469,
+      "visibility": 1,
+      "worstPoseVisibility": 1,
+      "screenVisibility": 1,
+      "score": 88.3946788794886
+    },
+    {
+      "tv": [
+        0,
+        0,
+        2.1
+      ],
+      "camera": [
+        1.1,
+        1.85,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        1.15,
+        0.45
+      ],
+      "fov": 57,
+      "angle": 2.8152338368830305,
+      "width": 328,
+      "screenHeight": 189,
+      "humanHeight": 373,
+      "quality": 0.7397970241415786,
+      "visibility": 1,
+      "worstPoseVisibility": 1,
+      "screenVisibility": 1,
+      "score": 88.29086608637103
+    },
+    {
+      "tv": [
+        0,
+        0,
+        2.1
+      ],
+      "camera": [
+        1.1,
+        1.4,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        1.15,
+        0.45
+      ],
+      "fov": 57,
+      "angle": 2.8152338368830305,
+      "width": 308,
+      "screenHeight": 176,
+      "humanHeight": 422,
+      "quality": 0.7385073777236593,
+      "visibility": 1,
+      "worstPoseVisibility": 1,
+      "screenVisibility": 1,
+      "score": 88.23283199756466
+    },
+    {
+      "tv": [
+        -0.35,
+        0,
+        2.1
+      ],
+      "camera": [
+        -0.1,
+        1.4,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        0.95,
+        0.45
+      ],
+      "fov": 64,
+      "angle": 3.064820762320015,
+      "width": 346,
+      "screenHeight": 198,
+      "humanHeight": 371,
+      "quality": 0.7461016044987558,
+      "visibility": 0.9872495446265938,
+      "worstPoseVisibility": 0.8888888888888888,
+      "screenVisibility": 1,
+      "score": 88.1283062643748
+    },
+    {
+      "tv": [
+        -0.7,
+        0,
+        -0.75
+      ],
+      "camera": [
+        -0.9,
+        2.05,
+        2.55
+      ],
+      "target": [
+        0.35,
+        0.75,
+        0.45
+      ],
+      "fov": 64,
+      "angle": -0.060532019782107156,
+      "width": 409,
+      "screenHeight": 211,
+      "humanHeight": 325,
+      "quality": 0.747933415996253,
+      "visibility": 0.9817850637522769,
+      "worstPoseVisibility": 0.8888888888888888,
+      "screenVisibility": 1,
+      "score": 88.01948095116107
+    },
+    {
+      "tv": [
+        -0.7,
+        0,
+        -0.75
+      ],
+      "camera": [
+        -0.9,
+        1.85,
+        2.55
+      ],
+      "target": [
+        0.35,
+        0.75,
+        0.45
+      ],
+      "fov": 64,
+      "angle": -0.060532019782107156,
+      "width": 408,
+      "screenHeight": 216,
+      "humanHeight": 332,
+      "quality": 0.7642590294981415,
+      "visibility": 0.9489981785063752,
+      "worstPoseVisibility": 0.7777777777777778,
+      "screenVisibility": 1,
+      "score": 87.6065925751395
+    },
+    {
+      "tv": [
+        0,
+        0,
+        2.1
+      ],
+      "camera": [
+        -0.5,
+        2.05,
+        -0.7
+      ],
+      "target": [
+        0.35,
+        1.15,
+        0.45
+      ],
+      "fov": 72,
+      "angle": -2.9648837975197564,
+      "width": 422,
+      "screenHeight": 221,
+      "humanHeight": 286,
+      "quality": 0.7252923253387198,
+      "visibility": 0.9981785063752276,
+      "worstPoseVisibility": 0.8888888888888888,
+      "screenVisibility": 1,
+      "score": 87.57440236337534
+    },
+    {
+      "tv": [
+        -0.35,
+        0,
+        2.1
+      ],
+      "camera": [
+        -0.9,
+        1.85,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        0.95,
+        0.45
+      ],
+      "fov": 64,
+      "angle": -2.9739502157585775,
+      "width": 419,
+      "screenHeight": 219,
+      "humanHeight": 287,
+      "quality": 0.726110609964403,
+      "visibility": 0.9908925318761385,
+      "worstPoseVisibility": 0.8888888888888888,
+      "screenVisibility": 1,
+      "score": 87.35621606406299
+    },
+    {
+      "tv": [
+        0,
+        0,
+        2.1
+      ],
+      "camera": [
+        -1.3,
+        2.05,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        0.95,
+        0.45
+      ],
+      "fov": 57,
+      "angle": -2.761086276477428,
+      "width": 404,
+      "screenHeight": 214,
+      "humanHeight": 291,
+      "quality": 0.7254650984014799,
+      "visibility": 0.9908925318761385,
+      "worstPoseVisibility": 0.8888888888888888,
+      "screenVisibility": 1,
+      "score": 87.32716804373143
+    },
+    {
+      "tv": [
+        -0.35,
+        0,
+        2.1
+      ],
+      "camera": [
+        1.1,
+        1.65,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        1.15,
+        0.45
+      ],
+      "fov": 57,
+      "angle": 2.7219417914546895,
+      "width": 303,
+      "screenHeight": 172,
+      "humanHeight": 389,
+      "quality": 0.7173630932844186,
+      "visibility": 1,
+      "worstPoseVisibility": 1,
+      "screenVisibility": 1,
+      "score": 87.28133919779883
+    },
+    {
+      "tv": [
+        0,
+        0,
+        2.1
+      ],
+      "camera": [
+        -1.3,
+        1.85,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        0.95,
+        0.45
+      ],
+      "fov": 57,
+      "angle": -2.761086276477428,
+      "width": 400,
+      "screenHeight": 215,
+      "humanHeight": 303,
+      "quality": 0.7401524586886266,
+      "visibility": 0.9690346083788707,
+      "worstPoseVisibility": 0.8888888888888888,
+      "screenVisibility": 1,
+      "score": 87.22307193424868
+    },
+    {
+      "tv": [
+        0,
+        0,
+        2.1
+      ],
+      "camera": [
+        -0.9,
+        1.4,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        0.95,
+        0.45
+      ],
+      "fov": 57,
+      "angle": -2.8714394538783883,
+      "width": 389,
+      "screenHeight": 219,
+      "humanHeight": 355,
+      "quality": 0.8049262874264034,
+      "visibility": 0.8834244080145719,
+      "worstPoseVisibility": 0.7777777777777778,
+      "screenVisibility": 1,
+      "score": 87.14153721469818
+    },
+    {
+      "tv": [
+        -0.35,
+        0,
+        2.1
+      ],
+      "camera": [
+        1.1,
+        1.4,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        1.15,
+        0.45
+      ],
+      "fov": 57,
+      "angle": 2.7219417914546895,
+      "width": 292,
+      "screenHeight": 165,
+      "humanHeight": 422,
+      "quality": 0.7123198219667302,
+      "visibility": 1,
+      "worstPoseVisibility": 1,
+      "screenVisibility": 1,
+      "score": 87.05439198850284
+    },
+    {
+      "tv": [
+        -0.7,
+        0,
+        -0.75
+      ],
+      "camera": [
+        -0.9,
+        1.65,
+        2.55
+      ],
+      "target": [
+        0.35,
+        0.75,
+        0.45
+      ],
+      "fov": 64,
+      "angle": -0.060532019782107156,
+      "width": 403,
+      "screenHeight": 217,
+      "humanHeight": 336,
+      "quality": 0.7689257301395587,
+      "visibility": 0.9271402550091075,
+      "worstPoseVisibility": 0.7777777777777778,
+      "screenVisibility": 1,
+      "score": 87.05156678159891
+    },
+    {
+      "tv": [
+        -0.35,
+        0,
+        2.1
+      ],
+      "camera": [
+        1.1,
+        1.85,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        1.15,
+        0.45
+      ],
+      "fov": 57,
+      "angle": 2.7219417914546895,
+      "width": 312,
+      "screenHeight": 177,
+      "humanHeight": 373,
+      "quality": 0.711818015072086,
+      "visibility": 1,
+      "worstPoseVisibility": 1,
+      "screenVisibility": 1,
+      "score": 87.03181067824386
+    },
+    {
+      "tv": [
+        -0.35,
+        0,
+        2.1
+      ],
+      "camera": [
+        -0.9,
+        1.65,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        0.95,
+        0.45
+      ],
+      "fov": 64,
+      "angle": -2.9739502157585775,
+      "width": 409,
+      "screenHeight": 218,
+      "humanHeight": 299,
+      "quality": 0.7332205889133461,
+      "visibility": 0.9690346083788707,
+      "worstPoseVisibility": 0.8888888888888888,
+      "screenVisibility": 1,
+      "score": 86.91113779436104
+    },
+    {
+      "tv": [
+        -0.35,
+        0,
+        2.1
+      ],
+      "camera": [
+        -0.9,
+        2.05,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        0.95,
+        0.45
+      ],
+      "fov": 64,
+      "angle": -2.9739502157585775,
+      "width": 423,
+      "screenHeight": 216,
+      "humanHeight": 273,
+      "quality": 0.7073345300019636,
+      "visibility": 0.9981785063752276,
+      "worstPoseVisibility": 0.8888888888888888,
+      "screenVisibility": 1,
+      "score": 86.76630157322134
+    },
+    {
+      "tv": [
+        0,
+        0,
+        2.1
+      ],
+      "camera": [
+        -0.1,
+        1.4,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        0.95,
+        0.45
+      ],
+      "fov": 64,
+      "angle": -3.110833127519324,
+      "width": 317,
+      "screenHeight": 186,
+      "humanHeight": 371,
+      "quality": 0.7134450721175571,
+      "visibility": 0.9872495446265938,
+      "worstPoseVisibility": 0.8888888888888888,
+      "screenVisibility": 1,
+      "score": 86.65876230722085
+    },
+    {
+      "tv": [
+        -0.35,
+        0,
+        2.1
+      ],
+      "camera": [
+        -0.5,
+        1.65,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        1.15,
+        0.45
+      ],
+      "fov": 64,
+      "angle": -3.095471537575282,
+      "width": 372,
+      "screenHeight": 203,
+      "humanHeight": 317,
+      "quality": 0.706949542461808,
+      "visibility": 0.9908925318761385,
+      "worstPoseVisibility": 0.8888888888888888,
+      "screenVisibility": 1,
+      "score": 86.4939680264462
+    },
+    {
+      "tv": [
+        0,
+        0,
+        -0.75
+      ],
+      "camera": [
+        -1.3,
+        2.05,
+        2.55
+      ],
+      "target": [
+        0.35,
+        0.75,
+        0.45
+      ],
+      "fov": 57,
+      "angle": -0.37527082285595736,
+      "width": 353,
+      "screenHeight": 197,
+      "humanHeight": 338,
+      "quality": 0.7178588618081463,
+      "visibility": 0.9744990892531876,
+      "worstPoseVisibility": 0.8888888888888888,
+      "screenVisibility": 1,
+      "score": 86.41111690522816
+    },
+    {
+      "tv": [
+        -0.35,
+        0,
+        2.1
+      ],
+      "camera": [
+        -0.5,
+        1.85,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        1.15,
+        0.45
+      ],
+      "fov": 64,
+      "angle": -3.095471537575282,
+      "width": 384,
+      "screenHeight": 205,
+      "humanHeight": 301,
+      "quality": 0.6981978474703583,
+      "visibility": 0.9963570127504554,
+      "worstPoseVisibility": 0.8888888888888888,
+      "screenVisibility": 1,
+      "score": 86.29139858243207
+    },
+    {
+      "tv": [
+        -0.35,
+        0,
+        2.1
+      ],
+      "camera": [
+        -0.1,
+        1.65,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        1.15,
+        0.45
+      ],
+      "fov": 64,
+      "angle": 3.064820762320015,
+      "width": 342,
+      "screenHeight": 192,
+      "humanHeight": 339,
+      "quality": 0.6952337687296651,
+      "visibility": 0.9963570127504554,
+      "worstPoseVisibility": 0.8888888888888888,
+      "screenVisibility": 1,
+      "score": 86.15801503910087
+    },
+    {
+      "tv": [
+        0,
+        0,
+        2.1
+      ],
+      "camera": [
+        -0.5,
+        1.65,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        0.95,
+        0.45
+      ],
+      "fov": 64,
+      "angle": -2.988943325194528,
+      "width": 349,
+      "screenHeight": 199,
+      "humanHeight": 327,
+      "quality": 0.6982909127994341,
+      "visibility": 0.9908925318761385,
+      "worstPoseVisibility": 0.8888888888888888,
+      "screenVisibility": 1,
+      "score": 86.10432969163936
+    },
+    {
+      "tv": [
+        -0.35,
+        0,
+        2.1
+      ],
+      "camera": [
+        -0.1,
+        1.4,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        1.15,
+        0.45
+      ],
+      "fov": 64,
+      "angle": 3.064820762320015,
+      "width": 324,
+      "screenHeight": 184,
+      "humanHeight": 358,
+      "quality": 0.6967279232711827,
+      "visibility": 0.9872495446265938,
+      "worstPoseVisibility": 0.8888888888888888,
+      "screenVisibility": 1,
+      "score": 85.906490609134
+    },
+    {
+      "tv": [
+        -0.35,
+        0,
+        2.1
+      ],
+      "camera": [
+        -0.1,
+        1.85,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        1.15,
+        0.45
+      ],
+      "fov": 64,
+      "angle": 3.064820762320015,
+      "width": 353,
+      "screenHeight": 196,
+      "humanHeight": 317,
+      "quality": 0.6836368455106647,
+      "visibility": 0.9981785063752276,
+      "worstPoseVisibility": 0.8888888888888888,
+      "screenVisibility": 1,
+      "score": 85.69990577111288
+    },
+    {
+      "tv": [
+        -0.7,
+        0,
+        -0.75
+      ],
+      "camera": [
+        -0.9,
+        1.4,
+        2.55
+      ],
+      "target": [
+        0.35,
+        0.75,
+        0.45
+      ],
+      "fov": 64,
+      "angle": -0.060532019782107156,
+      "width": 391,
+      "screenHeight": 215,
+      "humanHeight": 334,
+      "quality": 0.757078206159356,
+      "visibility": 0.8998178506375227,
+      "worstPoseVisibility": 0.7777777777777778,
+      "screenVisibility": 1,
+      "score": 85.5621440494843
+    },
+    {
+      "tv": [
+        -0.35,
+        0,
+        2.1
+      ],
+      "camera": [
+        -0.5,
+        2.05,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        1.15,
+        0.45
+      ],
+      "fov": 64,
+      "angle": -3.095471537575282,
+      "width": 391,
+      "screenHeight": 205,
+      "humanHeight": 281,
+      "quality": 0.6793934563803916,
+      "visibility": 0.9981785063752276,
+      "worstPoseVisibility": 0.8888888888888888,
+      "screenVisibility": 1,
+      "score": 85.50895326025059
+    },
+    {
+      "tv": [
+        -0.35,
+        0,
+        2.1
+      ],
+      "camera": [
+        -0.9,
+        1.85,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        1.15,
+        0.45
+      ],
+      "fov": 64,
+      "angle": -2.9739502157585775,
+      "width": 396,
+      "screenHeight": 207,
+      "humanHeight": 280,
+      "quality": 0.6843530722270084,
+      "visibility": 0.9908925318761385,
+      "worstPoseVisibility": 0.8888888888888888,
+      "screenVisibility": 1,
+      "score": 85.47712686588022
+    },
+    {
+      "tv": [
+        -0.35,
+        0,
+        2.1
+      ],
+      "camera": [
+        -0.5,
+        1.4,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        0.95,
+        0.45
+      ],
+      "fov": 64,
+      "angle": -3.095471537575282,
+      "width": 377,
+      "screenHeight": 210,
+      "humanHeight": 341,
+      "quality": 0.749408815788815,
+      "visibility": 0.907103825136612,
+      "worstPoseVisibility": 0.7777777777777778,
+      "screenVisibility": 1,
+      "score": 85.47203059027811
+    },
+    {
+      "tv": [
+        -0.35,
+        0,
+        2.1
+      ],
+      "camera": [
+        0.3,
+        1.4,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        1.15,
+        0.45
+      ],
+      "fov": 64,
+      "angle": 2.9441970937399127,
+      "width": 292,
+      "screenHeight": 168,
+      "humanHeight": 377,
+      "quality": 0.6763436504057464,
+      "visibility": 0.9981785063752276,
+      "worstPoseVisibility": 0.8888888888888888,
+      "screenVisibility": 1,
+      "score": 85.37171199139155
+    },
+    {
+      "tv": [
+        -0.35,
+        0,
+        -0.75
+      ],
+      "camera": [
+        -0.9,
+        2.05,
+        2.55
+      ],
+      "target": [
+        0.35,
+        0.75,
+        0.45
+      ],
+      "fov": 64,
+      "angle": -0.16514867741462685,
+      "width": 358,
+      "screenHeight": 194,
+      "humanHeight": 325,
+      "quality": 0.6888955696327242,
+      "visibility": 0.9817850637522769,
+      "worstPoseVisibility": 0.8888888888888888,
+      "screenVisibility": 1,
+      "score": 85.36277786480228
+    },
+    {
+      "tv": [
+        0,
+        0,
+        2.1
+      ],
+      "camera": [
+        -0.9,
+        2.05,
+        -0.7
+      ],
+      "target": [
+        0.35,
+        1.15,
+        0.45
+      ],
+      "fov": 72,
+      "angle": -2.8305943729842524,
+      "width": 417,
+      "screenHeight": 210,
+      "humanHeight": 264,
+      "quality": 0.6752057455124854,
+      "visibility": 0.9981785063752276,
+      "worstPoseVisibility": 0.8888888888888888,
+      "screenVisibility": 1,
+      "score": 85.3205062711948
+    },
+    {
+      "tv": [
+        -0.7,
+        0,
+        -0.75
+      ],
+      "camera": [
+        -1.3,
+        2.05,
+        2.55
+      ],
+      "target": [
+        0.35,
+        0.75,
+        0.45
+      ],
+      "fov": 64,
+      "angle": -0.1798534997924783,
+      "width": 399,
+      "screenHeight": 204,
+      "humanHeight": 294,
+      "quality": 0.6932276878926299,
+      "visibility": 0.9744990892531876,
+      "worstPoseVisibility": 0.8888888888888888,
+      "screenVisibility": 1,
+      "score": 85.30271407902991
+    },
+    {
+      "tv": [
+        0,
+        0,
+        2.1
+      ],
+      "camera": [
+        -1.3,
+        2.05,
+        -0.7
+      ],
+      "target": [
+        0.35,
+        0.75,
+        0.45
+      ],
+      "fov": 72,
+      "angle": -2.7069224384405484,
+      "width": 430,
+      "screenHeight": 217,
+      "humanHeight": 255,
+      "quality": 0.6801228297570443,
+      "visibility": 0.9908925318761385,
+      "worstPoseVisibility": 0.8888888888888888,
+      "screenVisibility": 1,
+      "score": 85.28676595473183
+    },
+    {
+      "tv": [
+        0,
+        0,
+        2.1
+      ],
+      "camera": [
+        -1.3,
+        1.65,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        0.95,
+        0.45
+      ],
+      "fov": 57,
+      "angle": -2.761086276477428,
+      "width": 393,
+      "screenHeight": 215,
+      "humanHeight": 312,
+      "quality": 0.7455681561488082,
+      "visibility": 0.9052823315118397,
+      "worstPoseVisibility": 0.7777777777777778,
+      "screenVisibility": 1,
+      "score": 85.23544862961077
+    },
+    {
+      "tv": [
+        -0.7,
+        0,
+        -0.75
+      ],
+      "camera": [
+        -1.3,
+        1.85,
+        2.55
+      ],
+      "target": [
+        0.35,
+        0.75,
+        0.45
+      ],
+      "fov": 64,
+      "angle": -0.1798534997924783,
+      "width": 399,
+      "screenHeight": 209,
+      "humanHeight": 298,
+      "quality": 0.7069694704009439,
+      "visibility": 0.9526411657559198,
+      "worstPoseVisibility": 0.8888888888888888,
+      "screenVisibility": 1,
+      "score": 85.15606696949966
+    },
+    {
+      "tv": [
+        -0.35,
+        0,
+        2.1
+      ],
+      "camera": [
+        -0.9,
+        1.65,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        1.15,
+        0.45
+      ],
+      "fov": 64,
+      "angle": -2.9739502157585775,
+      "width": 386,
+      "screenHeight": 206,
+      "humanHeight": 292,
+      "quality": 0.6919755469646417,
+      "visibility": 0.9690346083788707,
+      "worstPoseVisibility": 0.8888888888888888,
+      "screenVisibility": 1,
+      "score": 85.05511090666936
+    },
+    {
+      "tv": [
+        0,
+        0,
+        2.1
+      ],
+      "camera": [
+        0.3,
+        1.4,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        1.15,
+        0.45
+      ],
+      "fov": 64,
+      "angle": 3.0495458047263866,
+      "width": 284,
+      "screenHeight": 164,
+      "humanHeight": 377,
+      "quality": 0.6690337164280468,
+      "visibility": 0.9981785063752276,
+      "worstPoseVisibility": 0.8888888888888888,
+      "screenVisibility": 1,
+      "score": 85.04276496239507
+    },
+    {
+      "tv": [
+        0,
+        0,
+        2.1
+      ],
+      "camera": [
+        1.1,
+        1.4,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        0.95,
+        0.45
+      ],
+      "fov": 64,
+      "angle": 2.8152338368830305,
+      "width": 280,
+      "screenHeight": 164,
+      "humanHeight": 379,
+      "quality": 0.6665469861593719,
+      "visibility": 1,
+      "worstPoseVisibility": 1,
+      "screenVisibility": 1,
+      "score": 84.99461437717173
+    },
+    {
+      "tv": [
+        -0.35,
+        0,
+        2.1
+      ],
+      "camera": [
+        0.3,
+        1.65,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        1.15,
+        0.45
+      ],
+      "fov": 64,
+      "angle": 2.9441970937399127,
+      "width": 305,
+      "screenHeight": 177,
+      "humanHeight": 351,
+      "quality": 0.6678341580953132,
+      "visibility": 0.9981785063752276,
+      "worstPoseVisibility": 0.8888888888888888,
+      "screenVisibility": 1,
+      "score": 84.98878483742207
+    },
+    {
+      "tv": [
+        -0.35,
+        0,
+        2.1
+      ],
+      "camera": [
+        -0.9,
+        2.05,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        1.15,
+        0.45
+      ],
+      "fov": 64,
+      "angle": -2.9739502157585775,
+      "width": 402,
+      "screenHeight": 204,
+      "humanHeight": 266,
+      "quality": 0.6672211333356913,
+      "visibility": 0.9981785063752276,
+      "worstPoseVisibility": 0.8888888888888888,
+      "screenVisibility": 1,
+      "score": 84.96119872323908
+    },
+    {
+      "tv": [
+        -0.7,
+        0,
+        -0.75
+      ],
+      "camera": [
+        -1.3,
+        1.65,
+        2.55
+      ],
+      "target": [
+        0.35,
+        0.75,
+        0.45
+      ],
+      "fov": 64,
+      "angle": -0.1798534997924783,
+      "width": 395,
+      "screenHeight": 211,
+      "humanHeight": 300,
+      "quality": 0.7110026916716505,
+      "visibility": 0.9380692167577414,
+      "worstPoseVisibility": 0.7777777777777778,
+      "screenVisibility": 1,
+      "score": 84.82754371174521
+    },
+    {
+      "tv": [
+        -0.35,
+        0,
+        -0.75
+      ],
+      "camera": [
+        -0.9,
+        1.85,
+        2.55
+      ],
+      "target": [
+        0.35,
+        0.75,
+        0.45
+      ],
+      "fov": 64,
+      "angle": -0.16514867741462685,
+      "width": 357,
+      "screenHeight": 197,
+      "humanHeight": 332,
+      "quality": 0.701647044660964,
+      "visibility": 0.9489981785063752,
+      "worstPoseVisibility": 0.7777777777777778,
+      "screenVisibility": 1,
+      "score": 84.7890532574665
+    },
+    {
+      "tv": [
+        0,
+        0,
+        2.1
+      ],
+      "camera": [
+        -0.1,
+        1.65,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        1.15,
+        0.45
+      ],
+      "fov": 64,
+      "angle": -3.110833127519324,
+      "width": 313,
+      "screenHeight": 181,
+      "humanHeight": 339,
+      "quality": 0.6646246079569355,
+      "visibility": 0.9963570127504554,
+      "worstPoseVisibility": 0.8888888888888888,
+      "screenVisibility": 1,
+      "score": 84.78060280432804
+    },
+    {
+      "tv": [
+        -0.35,
+        0,
+        2.1
+      ],
+      "camera": [
+        -0.1,
+        2.05,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        1.15,
+        0.45
+      ],
+      "fov": 64,
+      "angle": 3.064820762320015,
+      "width": 361,
+      "screenHeight": 198,
+      "humanHeight": 291,
+      "quality": 0.6624523342523025,
+      "visibility": 0.9981785063752276,
+      "worstPoseVisibility": 0.8888888888888888,
+      "screenVisibility": 1,
+      "score": 84.74660276448658
+    },
+    {
+      "tv": [
+        0,
+        0,
+        -0.75
+      ],
+      "camera": [
+        0.7,
+        1.85,
+        2.55
+      ],
+      "target": [
+        0.35,
+        0.95,
+        0.45
+      ],
+      "fov": 64,
+      "angle": 0.20902294280626463,
+      "width": 290,
+      "screenHeight": 166,
+      "humanHeight": 392,
+      "quality": 0.6927619386390911,
+      "visibility": 0.9562841530054644,
+      "worstPoseVisibility": 0.7777777777777778,
+      "screenVisibility": 1,
+      "score": 84.64423259395035
+    },
+    {
+      "tv": [
+        0,
+        0,
+        2.1
+      ],
+      "camera": [
+        0.3,
+        1.65,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        1.15,
+        0.45
+      ],
+      "fov": 64,
+      "angle": 3.0495458047263866,
+      "width": 297,
+      "screenHeight": 172,
+      "humanHeight": 351,
+      "quality": 0.6599834356302572,
+      "visibility": 0.9981785063752276,
+      "worstPoseVisibility": 0.8888888888888888,
+      "screenVisibility": 1,
+      "score": 84.63550232649455
+    },
+    {
+      "tv": [
+        0,
+        0,
+        2.1
+      ],
+      "camera": [
+        -0.1,
+        1.4,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        1.15,
+        0.45
+      ],
+      "fov": 64,
+      "angle": -3.110833127519324,
+      "width": 299,
+      "screenHeight": 173,
+      "humanHeight": 358,
+      "quality": 0.6679118824790629,
+      "visibility": 0.9872495446265938,
+      "worstPoseVisibility": 0.8888888888888888,
+      "screenVisibility": 1,
+      "score": 84.6097687734886
+    },
+    {
+      "tv": [
+        0,
+        0,
+        -0.75
+      ],
+      "camera": [
+        0.7,
+        1.65,
+        2.55
+      ],
+      "target": [
+        0.35,
+        0.95,
+        0.45
+      ],
+      "fov": 64,
+      "angle": 0.20902294280626463,
+      "width": 285,
+      "screenHeight": 164,
+      "humanHeight": 405,
+      "quality": 0.6958865002533561,
+      "visibility": 0.9508196721311475,
+      "worstPoseVisibility": 0.7777777777777778,
+      "screenVisibility": 1,
+      "score": 84.59358103599119
+    },
+    {
+      "tv": [
+        0,
+        0,
+        2.1
+      ],
+      "camera": [
+        0.7,
+        1.4,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        1.15,
+        0.45
+      ],
+      "fov": 64,
+      "angle": 2.9294489005853177,
+      "width": 274,
+      "screenHeight": 154,
+      "humanHeight": 380,
+      "quality": 0.6572726263543376,
+      "visibility": 1,
+      "worstPoseVisibility": 1,
+      "screenVisibility": 1,
+      "score": 84.5772681859452
+    },
+    {
+      "tv": [
+        0,
+        0,
+        -0.75
+      ],
+      "camera": [
+        -1.3,
+        1.4,
+        2.55
+      ],
+      "target": [
+        0.35,
+        0.75,
+        0.45
+      ],
+      "fov": 57,
+      "angle": -0.37527082285595736,
+      "width": 340,
+      "screenHeight": 196,
+      "humanHeight": 342,
+      "quality": 0.7153502948441253,
+      "visibility": 0.9253187613843351,
+      "worstPoseVisibility": 0.7777777777777778,
+      "screenVisibility": 1,
+      "score": 84.57691991643736
+    },
+    {
+      "tv": [
+        -0.35,
+        0,
+        -0.75
+      ],
+      "camera": [
+        0.7,
+        1.85,
+        2.55
+      ],
+      "target": [
+        0.35,
+        0.95,
+        0.45
+      ],
+      "fov": 64,
+      "angle": 0.30805278102377637,
+      "width": 288,
+      "screenHeight": 167,
+      "humanHeight": 392,
+      "quality": 0.6871104895611624,
+      "visibility": 0.9562841530054644,
+      "worstPoseVisibility": 0.7777777777777778,
+      "screenVisibility": 1,
+      "score": 84.38991738544357
+    },
+    {
+      "tv": [
+        0,
+        0,
+        2.1
+      ],
+      "camera": [
+        1.1,
+        1.65,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        0.95,
+        0.45
+      ],
+      "fov": 64,
+      "angle": 2.8152338368830305,
+      "width": 292,
+      "screenHeight": 172,
+      "humanHeight": 350,
+      "quality": 0.6526655016016862,
+      "visibility": 1,
+      "worstPoseVisibility": 1,
+      "screenVisibility": 1,
+      "score": 84.36994757207587
+    },
+    {
+      "tv": [
+        -0.35,
+        0,
+        -0.75
+      ],
+      "camera": [
+        0.7,
+        1.65,
+        2.55
+      ],
+      "target": [
+        0.35,
+        0.95,
+        0.45
+      ],
+      "fov": 64,
+      "angle": 0.30805278102377637,
+      "width": 283,
+      "screenHeight": 164,
+      "humanHeight": 405,
+      "quality": 0.6901067410186594,
+      "visibility": 0.9508196721311475,
+      "worstPoseVisibility": 0.7777777777777778,
+      "screenVisibility": 1,
+      "score": 84.33349187042984
+    },
+    {
+      "tv": [
+        0,
+        0,
+        2.1
+      ],
+      "camera": [
+        -0.1,
+        1.85,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        1.15,
+        0.45
+      ],
+      "fov": 64,
+      "angle": -3.110833127519324,
+      "width": 322,
+      "screenHeight": 185,
+      "humanHeight": 317,
+      "quality": 0.652506827265513,
+      "visibility": 0.9981785063752276,
+      "worstPoseVisibility": 0.8888888888888888,
+      "screenVisibility": 1,
+      "score": 84.29905495008106
+    },
+    {
+      "tv": [
+        -0.7,
+        0,
+        -0.75
+      ],
+      "camera": [
+        0.7,
+        1.85,
+        2.55
+      ],
+      "target": [
+        0.35,
+        0.95,
+        0.45
+      ],
+      "fov": 64,
+      "angle": 0.40122879900484876,
+      "width": 291,
+      "screenHeight": 167,
+      "humanHeight": 392,
+      "quality": 0.6840802364014313,
+      "visibility": 0.9562841530054644,
+      "worstPoseVisibility": 0.7777777777777778,
+      "screenVisibility": 1,
+      "score": 84.25355599325566
+    },
+    {
+      "tv": [
+        -0.35,
+        0,
+        2.1
+      ],
+      "camera": [
+        0.3,
+        1.85,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        1.15,
+        0.45
+      ],
+      "fov": 64,
+      "angle": 2.9441970937399127,
+      "width": 315,
+      "screenHeight": 182,
+      "humanHeight": 324,
+      "quality": 0.6512510584066183,
+      "visibility": 0.9981785063752276,
+      "worstPoseVisibility": 0.8888888888888888,
+      "screenVisibility": 1,
+      "score": 84.24254535143079
+    },
+    {
+      "tv": [
+        -0.35,
+        0,
+        2.1
+      ],
+      "camera": [
+        -1.3,
+        2.05,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        0.95,
+        0.45
+      ],
+      "fov": 64,
+      "angle": -2.8572078769959344,
+      "width": 410,
+      "screenHeight": 206,
+      "humanHeight": 253,
+      "quality": 0.6566692019144176,
+      "visibility": 0.9908925318761385,
+      "worstPoseVisibility": 0.8888888888888888,
+      "screenVisibility": 1,
+      "score": 84.23135270181363
+    },
+    {
+      "tv": [
+        0,
+        0,
+        -1.15
+      ],
+      "camera": [
+        -1.3,
+        2.05,
+        2.55
+      ],
+      "target": [
+        0.35,
+        0.75,
+        0.45
+      ],
+      "fov": 57,
+      "angle": -0.3378781882402785,
+      "width": 330,
+      "screenHeight": 182,
+      "humanHeight": 338,
+      "quality": 0.6692322357383194,
+      "visibility": 0.9744990892531876,
+      "worstPoseVisibility": 0.8888888888888888,
+      "screenVisibility": 1,
+      "score": 84.22291873208594
+    },
+    {
+      "tv": [
+        -0.35,
+        0,
+        2.1
+      ],
+      "camera": [
+        -1.3,
+        1.85,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        0.95,
+        0.45
+      ],
+      "fov": 64,
+      "angle": -2.8572078769959344,
+      "width": 406,
+      "screenHeight": 209,
+      "humanHeight": 263,
+      "quality": 0.6728584396249309,
+      "visibility": 0.9690346083788707,
+      "worstPoseVisibility": 0.8888888888888888,
+      "screenVisibility": 1,
+      "score": 84.19484107638236
+    },
+    {
+      "tv": [
+        -0.7,
+        0,
+        -0.75
+      ],
+      "camera": [
+        0.7,
+        1.65,
+        2.55
+      ],
+      "target": [
+        0.35,
+        0.95,
+        0.45
+      ],
+      "fov": 64,
+      "angle": 0.40122879900484876,
+      "width": 285,
+      "screenHeight": 165,
+      "humanHeight": 405,
+      "quality": 0.686915721785107,
+      "visibility": 0.9508196721311475,
+      "worstPoseVisibility": 0.7777777777777778,
+      "screenVisibility": 1,
+      "score": 84.18989600491997
+    },
+    {
+      "tv": [
+        -0.35,
+        0,
+        2.1
+      ],
+      "camera": [
+        0.7,
+        1.4,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        1.15,
+        0.45
+      ],
+      "fov": 64,
+      "angle": 2.8291010938552743,
+      "width": 269,
+      "screenHeight": 154,
+      "humanHeight": 380,
+      "quality": 0.648163916435037,
+      "visibility": 1,
+      "worstPoseVisibility": 1,
+      "screenVisibility": 1,
+      "score": 84.16737623957667
+    },
+    {
+      "tv": [
+        -0.35,
+        0,
+        -0.75
+      ],
+      "camera": [
+        -0.9,
+        1.65,
+        2.55
+      ],
+      "target": [
+        0.35,
+        0.75,
+        0.45
+      ],
+      "fov": 64,
+      "angle": -0.16514867741462685,
+      "width": 352,
+      "screenHeight": 198,
+      "humanHeight": 336,
+      "quality": 0.704418469195792,
+      "visibility": 0.9271402550091075,
+      "worstPoseVisibility": 0.7777777777777778,
+      "screenVisibility": 1,
+      "score": 84.1487400391294
+    },
+    {
+      "tv": [
+        -0.7,
+        0,
+        -0.75
+      ],
+      "camera": [
+        -1.3,
+        2.05,
+        2.55
+      ],
+      "target": [
+        0.35,
+        0.95,
+        0.45
+      ],
+      "fov": 64,
+      "angle": -0.1798534997924783,
+      "width": 384,
+      "screenHeight": 196,
+      "humanHeight": 290,
+      "quality": 0.6675280202976688,
+      "visibility": 0.9744990892531876,
+      "worstPoseVisibility": 0.8888888888888888,
+      "screenVisibility": 1,
+      "score": 84.14622903725666
+    },
+    {
+      "tv": [
+        0,
+        0,
+        2.1
+      ],
+      "camera": [
+        -0.5,
+        1.65,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        1.15,
+        0.45
+      ],
+      "fov": 64,
+      "angle": -2.988943325194528,
+      "width": 330,
+      "screenHeight": 186,
+      "humanHeight": 317,
+      "quality": 0.6535870381248261,
+      "visibility": 0.9908925318761385,
+      "worstPoseVisibility": 0.8888888888888888,
+      "screenVisibility": 1,
+      "score": 84.09265533128203
+    },
+    {
+      "tv": [
+        0,
+        0,
+        2.1
+      ],
+      "camera": [
+        -0.9,
+        1.85,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        0.95,
+        0.45
+      ],
+      "fov": 64,
+      "angle": -2.8714394538783883,
+      "width": 361,
+      "screenHeight": 198,
+      "humanHeight": 287,
+      "quality": 0.6523354494788607,
+      "visibility": 0.9908925318761385,
+      "worstPoseVisibility": 0.8888888888888888,
+      "screenVisibility": 1,
+      "score": 84.03633384221358
+    },
+    {
+      "tv": [
+        -0.35,
+        0,
+        2.1
+      ],
+      "camera": [
+        1.1,
+        1.4,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        0.95,
+        0.45
+      ],
+      "fov": 64,
+      "angle": 2.7219417914546895,
+      "width": 266,
+      "screenHeight": 153,
+      "humanHeight": 379,
+      "quality": 0.6444449728489061,
+      "visibility": 1,
+      "worstPoseVisibility": 1,
+      "screenVisibility": 1,
+      "score": 84.00002377820077
+    },
+    {
+      "tv": [
+        -0.7,
+        0,
+        -0.75
+      ],
+      "camera": [
+        -1.3,
+        1.4,
+        2.55
+      ],
+      "target": [
+        0.35,
+        0.75,
+        0.45
+      ],
+      "fov": 64,
+      "angle": -0.1798534997924783,
+      "width": 384,
+      "screenHeight": 209,
+      "humanHeight": 297,
+      "quality": 0.7013948078613843,
+      "visibility": 0.9253187613843351,
+      "worstPoseVisibility": 0.7777777777777778,
+      "screenVisibility": 1,
+      "score": 83.94892300221402
+    },
+    {
+      "tv": [
+        0,
+        0,
+        -0.75
+      ],
+      "camera": [
+        0.7,
+        2.05,
+        2.55
+      ],
+      "target": [
+        0.35,
+        0.95,
+        0.45
+      ],
+      "fov": 64,
+      "angle": 0.20902294280626463,
+      "width": 294,
+      "screenHeight": 167,
+      "humanHeight": 373,
+      "quality": 0.6738160258266717,
+      "visibility": 0.9599271402550091,
+      "worstPoseVisibility": 0.7777777777777778,
+      "screenVisibility": 1,
+      "score": 83.91917107112555
+    },
+    {
+      "tv": [
+        -0.35,
+        0,
+        2.1
+      ],
+      "camera": [
+        0.3,
+        2.05,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        1.15,
+        0.45
+      ],
+      "fov": 64,
+      "angle": 2.9441970937399127,
+      "width": 322,
+      "screenHeight": 186,
+      "humanHeight": 308,
+      "quality": 0.6425014706879315,
+      "visibility": 1,
+      "worstPoseVisibility": 1,
+      "screenVisibility": 1,
+      "score": 83.9125661809569
+    },
+    {
+      "tv": [
+        0,
+        0,
+        2.1
+      ],
+      "camera": [
+        0.7,
+        1.65,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        1.15,
+        0.45
+      ],
+      "fov": 64,
+      "angle": 2.9294489005853177,
+      "width": 286,
+      "screenHeight": 162,
+      "humanHeight": 351,
+      "quality": 0.6424865004319257,
+      "visibility": 1,
+      "worstPoseVisibility": 1,
+      "screenVisibility": 1,
+      "score": 83.91189251943665
+    },
+    {
+      "tv": [
+        0,
+        0,
+        2.1
+      ],
+      "camera": [
+        -0.5,
+        1.85,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        1.15,
+        0.45
+      ],
+      "fov": 64,
+      "angle": -2.988943325194528,
+      "width": 339,
+      "screenHeight": 189,
+      "humanHeight": 301,
+      "quality": 0.644656951602657,
+      "visibility": 0.9963570127504554,
+      "worstPoseVisibility": 0.8888888888888888,
+      "screenVisibility": 1,
+      "score": 83.8820582683855
+    },
+    {
+      "tv": [
+        0,
+        0,
+        2.1
+      ],
+      "camera": [
+        0.3,
+        1.85,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        1.15,
+        0.45
+      ],
+      "fov": 64,
+      "angle": 3.0495458047263866,
+      "width": 307,
+      "screenHeight": 177,
+      "humanHeight": 324,
+      "quality": 0.6431130329916406,
+      "visibility": 0.9981785063752276,
+      "worstPoseVisibility": 0.8888888888888888,
+      "screenVisibility": 1,
+      "score": 83.8763342077568
+    },
+    {
+      "tv": [
+        -0.35,
+        0,
+        -0.75
+      ],
+      "camera": [
+        0.7,
+        2.05,
+        2.55
+      ],
+      "target": [
+        0.35,
+        0.95,
+        0.45
+      ],
+      "fov": 64,
+      "angle": 0.30805278102377637,
+      "width": 292,
+      "screenHeight": 168,
+      "humanHeight": 373,
+      "quality": 0.6684933604178591,
+      "visibility": 0.9599271402550091,
+      "worstPoseVisibility": 0.7777777777777778,
+      "screenVisibility": 1,
+      "score": 83.67965112772897
+    },
+    {
+      "tv": [
+        0,
+        0,
+        2.1
+      ],
+      "camera": [
+        0.7,
+        1.85,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        1.15,
+        0.45
+      ],
+      "fov": 64,
+      "angle": 2.9294489005853177,
+      "width": 295,
+      "screenHeight": 167,
+      "humanHeight": 335,
+      "quality": 0.6358513446298482,
+      "visibility": 1,
+      "worstPoseVisibility": 1,
+      "screenVisibility": 1,
+      "score": 83.61331050834318
+    },
+    {
+      "tv": [
+        0,
+        0,
+        2.1
+      ],
+      "camera": [
+        -0.9,
+        2.05,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        0.95,
+        0.45
+      ],
+      "fov": 64,
+      "angle": -2.8714394538783883,
+      "width": 365,
+      "screenHeight": 197,
+      "humanHeight": 273,
+      "quality": 0.6369284786460756,
+      "visibility": 0.9981785063752276,
+      "worstPoseVisibility": 0.8888888888888888,
+      "screenVisibility": 1,
+      "score": 83.59802926220637
+    },
+    {
+      "tv": [
+        -0.35,
+        0,
+        2.1
+      ],
+      "camera": [
+        -0.9,
+        1.4,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        0.95,
+        0.45
+      ],
+      "fov": 64,
+      "angle": -2.9739502157585775,
+      "width": 391,
+      "screenHeight": 213,
+      "humanHeight": 308,
+      "quality": 0.7257016127100364,
+      "visibility": 0.8834244080145719,
+      "worstPoseVisibility": 0.7777777777777778,
+      "screenVisibility": 1,
+      "score": 83.57642685246165
+    },
+    {
+      "tv": [
+        -0.7,
+        0,
+        -0.75
+      ],
+      "camera": [
+        0.7,
+        2.05,
+        2.55
+      ],
+      "target": [
+        0.35,
+        0.95,
+        0.45
+      ],
+      "fov": 64,
+      "angle": 0.40122879900484876,
+      "width": 294,
+      "screenHeight": 168,
+      "humanHeight": 373,
+      "quality": 0.6657751853386754,
+      "visibility": 0.9599271402550091,
+      "worstPoseVisibility": 0.7777777777777778,
+      "screenVisibility": 1,
+      "score": 83.55733324916572
+    },
+    {
+      "tv": [
+        0,
+        0,
+        2.1
+      ],
+      "camera": [
+        -0.9,
+        1.65,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        0.95,
+        0.45
+      ],
+      "fov": 64,
+      "angle": -2.8714394538783883,
+      "width": 352,
+      "screenHeight": 196,
+      "humanHeight": 299,
+      "quality": 0.6584568464292007,
+      "visibility": 0.9690346083788707,
+      "worstPoseVisibility": 0.8888888888888888,
+      "screenVisibility": 1,
+      "score": 83.54676938257451
+    },
+    {
+      "tv": [
+        0,
+        0,
+        2.1
+      ],
+      "camera": [
+        0.3,
+        2.05,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        1.15,
+        0.45
+      ],
+      "fov": 64,
+      "angle": 3.0495458047263866,
+      "width": 314,
+      "screenHeight": 181,
+      "humanHeight": 308,
+      "quality": 0.634261291759435,
+      "visibility": 1,
+      "worstPoseVisibility": 1,
+      "screenVisibility": 1,
+      "score": 83.54175812917457
+    },
+    {
+      "tv": [
+        -0.35,
+        0,
+        2.1
+      ],
+      "camera": [
+        0.7,
+        1.65,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        1.15,
+        0.45
+      ],
+      "fov": 64,
+      "angle": 2.8291010938552743,
+      "width": 281,
+      "screenHeight": 162,
+      "humanHeight": 351,
+      "quality": 0.6328091225834209,
+      "visibility": 1,
+      "worstPoseVisibility": 1,
+      "screenVisibility": 1,
+      "score": 83.47641051625394
+    },
+    {
+      "tv": [
+        -0.35,
+        0,
+        2.1
+      ],
+      "camera": [
+        -0.5,
+        1.4,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        1.15,
+        0.45
+      ],
+      "fov": 64,
+      "angle": -3.095471537575282,
+      "width": 353,
+      "screenHeight": 196,
+      "humanHeight": 331,
+      "quality": 0.7042967947914804,
+      "visibility": 0.907103825136612,
+      "worstPoseVisibility": 0.7777777777777778,
+      "screenVisibility": 1,
+      "score": 83.44198964539804
+    }
+  ],
+  "limitations": [
+    "AABB checks are conservative; thin/angled geometry may be over-rejected.",
+    "Sampled skeleton visibility does not include self-occlusion or actual pixel text legibility.",
+    "TV visibility sampled at nine points; person overlapping TV is checked in final renders.",
+    "Dimensions and motion are existing scene estimates, not surveyed site measurements.",
+    "Camera support approximated as 24cm vertical column, not a full tripod.",
+    "Best within this finite grid and scoring function, not a continuous global optimum."
+  ]
+}

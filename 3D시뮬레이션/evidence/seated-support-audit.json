@@ -1,0 +1,27 @@
+{
+  "report": {
+    "rail": {
+      "maxAnkleDeviation": 25.000005657021138,
+      "maxToeDeviation": 0,
+      "maxKneeFlex": 149.9999954067745,
+      "maxBoneError": 2.148207250973755e-8,
+      "maxFootStep": 13.414513857426556,
+      "worst": {
+        "time": 21.6,
+        "side": "l"
+      }
+    },
+    "exit": {
+      "maxAnkleDeviation": 25.000005657021138,
+      "maxToeDeviation": 0,
+      "maxKneeFlex": 149.01264868972686,
+      "maxBoneError": 2.14820725652487e-8,
+      "maxFootStep": 16.792340200153845,
+      "worst": {
+        "time": 14.5,
+        "side": "r"
+      }
+    }
+  },
+  "errors": []
+}

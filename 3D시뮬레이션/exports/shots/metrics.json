@@ -1,0 +1,52 @@
+[
+  {
+    "screenWidthPx": 338,
+    "screenHeightPx": 188,
+    "screenInFrame": true
+  },
+  {
+    "screenWidthPx": 316,
+    "screenHeightPx": 172,
+    "screenInFrame": true
+  },
+  {
+    "screenWidthPx": 1863,
+    "screenHeightPx": 882,
+    "screenInFrame": false
+  },
+  {
+    "screenWidthPx": 1549,
+    "screenHeightPx": 541,
+    "screenInFrame": false
+  },
+  {
+    "screenWidthPx": 282,
+    "screenHeightPx": 161,
+    "screenInFrame": true
+  },
+  {
+    "screenWidthPx": 348,
+    "screenHeightPx": 189,
+    "screenInFrame": true
+  },
+  {
+    "screenWidthPx": 358,
+    "screenHeightPx": 186,
+    "screenInFrame": true
+  },
+  {
+    "screenWidthPx": 272,
+    "screenHeightPx": 149,
+    "screenInFrame": true
+  },
+  {
+    "screenWidthPx": 364,
+    "screenHeightPx": 200,
+    "screenInFrame": true
+  },
+  {
+    "screenWidthPx": 230,
+    "screenHeightPx": 127,
+    "screenInFrame": true
+  }
+]

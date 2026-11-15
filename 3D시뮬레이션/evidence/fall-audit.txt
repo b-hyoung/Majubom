@@ -1,0 +1,13 @@
+{
+  finite: true,
+  maxPelvisStepPer50ms: 0.1287547194388563,
+  worst: 18.2,
+  floorBounds: [
+    { t: 18.9, minY: 0.022737241511063978 },
+    { t: 19.2, minY: 0.022737241511063978 },
+    { t: 30, minY: 0.022737241511063978 }
+  ],
+  mode: 'fall'
+}
+restore { mode: 'rail', time: 0, rail: 0 }
+errors []

@@ -1,0 +1,130 @@
+{
+  "method": "Finite grid framing + conservative AABB collision and visibility; not physical simulation or model inference",
+  "grid": {
+    "xs": [
+      -1.3,
+      -0.9,
+      -0.5,
+      -0.1,
+      0.3,
+      0.7,
+      1.1
+    ],
+    "zs": [
+      -1.15,
+      -0.7,
+      -0.25,
+      0.2,
+      0.65,
+      1.1,
+      1.55,
+      2,
+      2.55
+    ],
+    "hs": [
+      1.4,
+      1.65,
+      1.85,
+      2.05
+    ],
+    "fovs": [
+      44,
+      50,
+      57,
+      64,
+      72
+    ],
+    "targetHeights": [
+      0.75,
+      0.95,
+      1.15
+    ],
+    "tvs": [
+      [
+        -0.7,
+        0,
+        -1.8
+      ],
+      [
+        -0.7,
+        0,
+        -1.15
+      ],
+      [
+        -0.7,
+        0,
+        -0.75
+      ],
+      [
+        -0.7,
+        0,
+        2.1
+      ],
+      [
+        -0.35,
+        0,
+        -1.8
+      ],
+      [
+        -0.35,
+        0,
+        -1.15
+      ],
+      [
+        -0.35,
+        0,
+        -0.75
+      ],
+      [
+        -0.35,
+        0,
+        2.1
+      ],
+      [
+        0,
+        0,
+        -1.8
+      ],
+      [
+        0,
+        0,
+        -1.15
+      ],
+      [
+        0,
+        0,
+        -0.75
+      ],
+      [
+        0,
+        0,
+        2.1
+      ]
+    ],
+    "aspect": "16:9",
+    "poseStepSeconds": 0.5,
+    "poseCount": 61,
+    "cameraFootprintRadius": 0.12,
+    "subjectMargin": 0.12
+  },
+  "stats": {
+    "total": 45360,
+    "considered": 45360,
+    "blockedCamera": 20160,
+    "blockedTV": 14400,
+    "patientCut": 10800,
+    "tvCut": 0,
+    "feasible": 0
+  },
+  "shortlisted": 0,
+  "selected": [],
+  "top": [],
+  "limitations": [
+    "AABB checks are conservative; thin/angled geometry may be over-rejected.",
+    "Sampled skeleton visibility does not include self-occlusion or actual pixel text legibility.",
+    "TV visibility sampled at nine points; person overlapping TV is checked in final renders.",
+    "Dimensions and motion are existing scene estimates, not surveyed site measurements.",
+    "Camera support approximated as 24cm vertical column, not a full tripod.",
+    "Best within this finite grid and scoring function, not a continuous global optimum."
+  ]
+}

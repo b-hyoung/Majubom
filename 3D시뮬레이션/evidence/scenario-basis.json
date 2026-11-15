@@ -1,0 +1,162 @@
+{
+  "source_commit": "77ccfc8298864172750145f60558cce91986b97c",
+  "source_branch": "seungmin",
+  "purpose": "촬영·예측 데이터 수집용 시나리오",
+  "status": "동작 설계 자료. 센서 원시값이나 모델 출력이 아님.",
+  "sources": [
+    {
+      "path": "mmWave/README.md",
+      "description": "11/13 팔-안전바, 11/14 이탈 시도 실험"
+    },
+    {
+      "path": "mmWave/analysis/20261113_raw_left_right_arm/tof_arm.py",
+      "description": "1초별 ToF 각 64존 중앙값. 팔 안전바/팔 내림 분류"
+    },
+    {
+      "path": "mmWave/analysis/20261114_exit_turn/exit_turn_accuracy.py",
+      "description": "시도 단위 최대 edge_moving,cx_shift로 오프라인 분류. 온라인 선행 예측 평가가 아님."
+    },
+    {
+      "path": "TOF/ml/predict_posture.py",
+      "description": "자세 6종 분류. 모델 로더의 우선순위와 실험 보고서 모델을 구분."
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "rail",
+      "labels": [
+        "팔 뻗기",
+        "안전바 접촉",
+        "상체 상승",
+        "몸 중심 바깥 이동",
+        "첫 다리 경계 통과",
+        "복귀"
+      ]
+    },
+    {
+      "id": "exit",
+      "labels": [
+        "상체 상승",
+        "바깥으로 돌기",
+        "양발 침상 밖",
+        "걸터앉음",
+        "복귀"
+      ]
+    },
+    {
+      "id": "sit_only",
+      "labels": [
+        "앉기만",
+        "다시 누움"
+      ]
+    },
+    {
+      "id": "rail_only",
+      "labels": [
+        "안전바만 잡기",
+        "팔 내림"
+      ]
+    },
+    {
+      "id": "turn_in",
+      "labels": [
+        "상체 상승",
+        "안쪽으로 돌기",
+        "복귀"
+      ]
+    },
+    {
+      "id": "fall",
+      "status": "가상 사고 연출. 실제 카메라 낙상 재현 또는 센서 출력 아님.",
+      "labels": [
+        "난간 접근",
+        "첫 다리 경계 통과",
+        "반대 다리 이동",
+        "지지 상실",
+        "몸통 측방 회전",
+        "바닥 접촉",
+        "바닥에 머묾"
+      ],
+      "authored_alert_seconds": [
+        14,
+        22.2
+      ]
+    }
+  ],
+  "capture_template": {
+    "participant_id": null,
+    "session_id": null,
+    "camera_timestamp": null,
+    "pi_timestamp": null,
+    "clock_offset_seconds": null,
+    "action_label": null,
+    "action_onset_timestamp": null,
+    "rail_crossing_timestamp": null,
+    "tof1_distances_mm": null,
+    "tof2_distances_mm": null,
+    "mmwave_frame_id": null,
+    "mmwave_points": null,
+    "patient_track_id": null,
+    "model_version": null,
+    "model_output": null,
+    "prediction_timestamp": null,
+    "alert_timestamp": null,
+    "prediction_lead_seconds": null,
+    "lead_time_definition": "관찰 경계 통과 시각 - 사전 예측 시각. 관측값이 없으면 null.",
+    "label_source": "카메라 검토로 확정",
+    "split_group": "참여자/세션 단위 분리"
+  },
+  "limits": [
+    "ToF 팔 실험 원시 DB 추출 파일은 저장소 미포함(README).",
+    "ToF와 mmWave 실험 정확도를 합산하거나 곱해 낙상 예측 확률로 쓰지 않는다.",
+    "nurse의 rail_exit/bed_exit_predict/time_to_rail_s 소비 코드는 확인. 해당 필드 생성 운영 코드와의 연결은 추가 확인 대상.",
+    "현재 3D 알림은 연출. 실제 센서 판정이나 학습 데이터가 아니다.",
+    "가상 낙상의 관절 궤적·접촉 순서·초 단위 시점은 제작 가정. 문헌의 모션 캡처나 검증된 생체역학 모델이 아님."
+  ],
+  "literature": [
+    {
+      "url": "https://www.fda.gov/medical-devices/hospital-beds/guide-bed-safety-bed-rails-hospitals-nursing-homes-and-home-health-care-facts",
+      "supports": "난간을 넘다가 떨어지는 위험. 특정 관절 궤적은 제공하지 않음."
+    },
+    {
+      "url": "https://www.gov.uk/guidance/bed-rails-management-and-safe-use",
+      "supports": "혼란 또는 지남력 저하 상태에서 난간을 넘어 더 높은 곳에서 추락한 사례."
+    },
+    {
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC9729006/",
+      "supports": "실제 고령자 낙상 중 하강 회전 및 측방 착지 관찰. 난간 넘기 전용 연구는 아님."
+    },
+    {
+      "url": "https://www.sfu.ca/ipml/research/data-sharing.html",
+      "supports": "실제 낙상 영상 300건의 접근 신청 안내. 공용 공간 영상이며 침실/욕실은 촬영하지 않았음."
+    },
+    {
+      "url": "https://www.sfu.ca/ipml/research/educational-videos.html",
+      "supports": "연구팀의 공개 낙상 예방 교육 영상 모음. 특정 난간 넘기 장면을 확인한 것은 아님."
+    }
+  ],
+  "rail_followup": {
+    "verified": [
+      {
+        "url": "https://api.cqc.org.uk/public/v1/reports/f554c813-7530-4e7b-b3d6-dcc352cb54ac?20211030120000=",
+        "locator": "page 8 / one leg over the rail",
+        "scope": "직접 관찰한 비대칭 자세. 연속 낙상 동작은 아님."
+      },
+      {
+        "url": "https://adultfostercare.apps.lara.state.mi.us/Home/ViewReport/362707",
+        "locator": "two separate occasions",
+        "scope": "사고기록과 직원 진술. 구체적인 착지 방향/접촉 순서는 알 수 없음."
+      },
+      {
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC9969063/",
+        "locator": "Cluster 3",
+        "scope": "난간 위 넘기/사이 통과/테이블 아래 통과의 행동 구분."
+      }
+    ],
+    "unverified_visual": {
+      "url": "https://www.rightdecisions.scot.nhs.uk/media/hr2ou13m/assessment-and-use-of-bed-safety-rails-in-the-community-compressed.pdf",
+      "status": "검색 색인에 시연 사진이 기재돼 있으나 원본 PDF는 403. 직접 시각 검증하지 못함."
+    }
+  },
+  "deep_review": "deep-rail-research.json"
+}

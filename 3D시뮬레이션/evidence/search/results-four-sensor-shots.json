@@ -1,0 +1,4963 @@
+{
+  "method": "Finite grid framing + conservative AABB collision and visibility; not physical simulation or model inference",
+  "grid": {
+    "xs": [
+      -1.3,
+      -0.9,
+      -0.5,
+      -0.1,
+      0.3,
+      0.7,
+      1.1
+    ],
+    "zs": [
+      -1.15,
+      -0.7,
+      -0.25,
+      0.2,
+      0.65,
+      1.1,
+      1.55,
+      2,
+      2.55
+    ],
+    "hs": [
+      1.4,
+      1.65,
+      1.85,
+      2.05
+    ],
+    "fovs": [
+      44,
+      50,
+      57,
+      64,
+      72,
+      80
+    ],
+    "targetHeights": [
+      0.75,
+      0.95,
+      1.15,
+      1.35,
+      1.55
+    ],
+    "tvs": [
+      [
+        -0.7,
+        0,
+        -1.8
+      ],
+      [
+        -0.7,
+        0,
+        -1.15
+      ],
+      [
+        -0.7,
+        0,
+        -0.75
+      ],
+      [
+        -0.7,
+        0,
+        2.1
+      ],
+      [
+        -0.35,
+        0,
+        -1.8
+      ],
+      [
+        -0.35,
+        0,
+        -1.15
+      ],
+      [
+        -0.35,
+        0,
+        -0.75
+      ],
+      [
+        -0.35,
+        0,
+        2.1
+      ],
+      [
+        0,
+        0,
+        -1.8
+      ],
+      [
+        0,
+        0,
+        -1.15
+      ],
+      [
+        0,
+        0,
+        -0.75
+      ],
+      [
+        0,
+        0,
+        2.1
+      ]
+    ],
+    "aspect": "16:9",
+    "poseStepSeconds": 0.5,
+    "poseCount": 61,
+    "cameraFootprintRadius": 0.12,
+    "collisionSubjectMargin": 0.12,
+    "framingMarginNDC": {
+      "x": 0.08,
+      "y": 0.1
+    }
+  },
+  "stats": {
+    "total": 90720,
+    "considered": 90720,
+    "blockedCamera": 30240,
+    "blockedTV": 22560,
+    "patientCut": 32666,
+    "tvCut": 3745,
+    "sensorCut": 1372,
+    "sensorTooSmall": 0,
+    "sensorOccluded": 131,
+    "feasible": 137
+  },
+  "sensorRequirement": {
+    "allThreeInstalledPositions": true,
+    "minimumWidthPx": 12,
+    "minimumHeightPx": 6,
+    "includesPatientTorsoOcclusion": true,
+    "interpretation": "Position visibility only; not close-up sensor identification; two ToF units and one mmWave are not three sensor types"
+  },
+  "shortlisted": 137,
+  "selected": [
+    {
+      "tv": [
+        -0.35,
+        0,
+        2.1
+      ],
+      "camera": [
+        -1.3,
+        2.05,
+        -0.7
+      ],
+      "target": [
+        0.35,
+        1.35,
+        0.45
+      ],
+      "fov": 80,
+      "angle": -2.8144945565840005,
+      "width": 394,
+      "screenHeight": 187,
+      "humanHeight": 206,
+      "quality": 0.5464875541208862,
+      "sensorPixels": [
+        {
+          "name": "머리맡 ToF",
+          "width": 38,
+          "height": 46
+        },
+        {
+          "name": "발치 ToF",
+          "width": 22,
+          "height": 28
+        },
+        {
+          "name": "천장 mmWave",
+          "width": 33,
+          "height": 28
+        }
+      ],
+      "sensorsVisible": [
+        true,
+        true,
+        true
+      ],
+      "visibility": 0.9908925318761385,
+      "worstPoseVisibility": 0.8888888888888888,
+      "screenVisibility": 1,
+      "score": 79.27317855110472
+    },
+    {
+      "tv": [
+        -0.35,
+        0,
+        2.1
+      ],
+      "camera": [
+        -1.3,
+        1.65,
+        -0.7
+      ],
+      "target": [
+        0.35,
+        1.15,
+        0.45
+      ],
+      "fov": 80,
+      "angle": -2.8144945565840005,
+      "width": 402,
+      "screenHeight": 203,
+      "humanHeight": 225,
+      "quality": 0.5970066805153722,
+      "sensorPixels": [
+        {
+          "name": "머리맡 ToF",
+          "width": 38,
+          "height": 44
+        },
+        {
+          "name": "발치 ToF",
+          "width": 22,
+          "height": 27
+        },
+        {
+          "name": "천장 mmWave",
+          "width": 32,
+          "height": 33
+        }
+      ],
+      "sensorsVisible": [
+        true,
+        true,
+        true
+      ],
+      "visibility": 0.9052823315118397,
+      "worstPoseVisibility": 0.7777777777777778,
+      "screenVisibility": 1,
+      "score": 78.55018222610614
+    },
+    {
+      "tv": [
+        0,
+        0,
+        2.1
+      ],
+      "camera": [
+        -1.3,
+        2.05,
+        -0.7
+      ],
+      "target": [
+        0.35,
+        1.35,
+        0.45
+      ],
+      "fov": 80,
+      "angle": -2.7069224384405484,
+      "width": 319,
+      "screenHeight": 161,
+      "humanHeight": 206,
+      "quality": 0.46201913555821655,
+      "sensorPixels": [
+        {
+          "name": "머리맡 ToF",
+          "width": 38,
+          "height": 46
+        },
+        {
+          "name": "발치 ToF",
+          "width": 22,
+          "height": 28
+        },
+        {
+          "name": "천장 mmWave",
+          "width": 33,
+          "height": 28
+        }
+      ],
+      "sensorsVisible": [
+        true,
+        true,
+        true
+      ],
+      "visibility": 0.9908925318761385,
+      "worstPoseVisibility": 0.8888888888888888,
+      "screenVisibility": 1,
+      "score": 75.4720997157846
+    },
+    {
+      "tv": [
+        0,
+        0,
+        2.1
+      ],
+      "camera": [
+        -1.3,
+        1.65,
+        -0.7
+      ],
+      "target": [
+        0.35,
+        1.15,
+        0.45
+      ],
+      "fov": 80,
+      "angle": -2.7069224384405484,
+      "width": 323,
+      "screenHeight": 171,
+      "humanHeight": 225,
+      "quality": 0.49929412567191367,
+      "sensorPixels": [
+        {
+          "name": "머리맡 ToF",
+          "width": 38,
+          "height": 44
+        },
+        {
+          "name": "발치 ToF",
+          "width": 22,
+          "height": 27
+        },
+        {
+          "name": "천장 mmWave",
+          "width": 32,
+          "height": 33
+        }
+      ],
+      "sensorsVisible": [
+        true,
+        true,
+        true
+      ],
+      "visibility": 0.9052823315118397,
+      "worstPoseVisibility": 0.7777777777777778,
+      "screenVisibility": 1,
+      "score": 74.1531172581505
+    }
+  ],
+  "top": [
+    {
+      "tv": [
+        -0.35,
+        0,
+        2.1
+      ],
+      "camera": [
+        -1.3,
+        2.05,
+        -0.7
+      ],
+      "target": [
+        0.35,
+        1.35,
+        0.45
+      ],
+      "fov": 80,
+      "angle": -2.8144945565840005,
+      "width": 394,
+      "screenHeight": 187,
+      "humanHeight": 206,
+      "quality": 0.5464875541208862,
+      "sensorPixels": [
+        {
+          "name": "머리맡 ToF",
+          "width": 38,
+          "height": 46
+        },
+        {
+          "name": "발치 ToF",
+          "width": 22,
+          "height": 28
+        },
+        {
+          "name": "천장 mmWave",
+          "width": 33,
+          "height": 28
+        }
+      ],
+      "sensorsVisible": [
+        true,
+        true,
+        true
+      ],
+      "visibility": 0.9908925318761385,
+      "worstPoseVisibility": 0.8888888888888888,
+      "screenVisibility": 1,
+      "score": 79.27317855110472
+    },
+    {
+      "tv": [
+        -0.35,
+        0,
+        2.1
+      ],
+      "camera": [
+        -1.3,
+        1.65,
+        -0.7
+      ],
+      "target": [
+        0.35,
+        1.15,
+        0.45
+      ],
+      "fov": 80,
+      "angle": -2.8144945565840005,
+      "width": 402,
+      "screenHeight": 203,
+      "humanHeight": 225,
+      "quality": 0.5970066805153722,
+      "sensorPixels": [
+        {
+          "name": "머리맡 ToF",
+          "width": 38,
+          "height": 44
+        },
+        {
+          "name": "발치 ToF",
+          "width": 22,
+          "height": 27
+        },
+        {
+          "name": "천장 mmWave",
+          "width": 32,
+          "height": 33
+        }
+      ],
+      "sensorsVisible": [
+        true,
+        true,
+        true
+      ],
+      "visibility": 0.9052823315118397,
+      "worstPoseVisibility": 0.7777777777777778,
+      "screenVisibility": 1,
+      "score": 78.55018222610614
+    },
+    {
+      "tv": [
+        -0.35,
+        0,
+        2.1
+      ],
+      "camera": [
+        -1.3,
+        1.4,
+        -0.7
+      ],
+      "target": [
+        0.35,
+        1.15,
+        0.45
+      ],
+      "fov": 80,
+      "angle": -2.8144945565840005,
+      "width": 380,
+      "screenHeight": 199,
+      "humanHeight": 230,
+      "quality": 0.5905320027188161,
+      "sensorPixels": [
+        {
+          "name": "머리맡 ToF",
+          "width": 35,
+          "height": 45
+        },
+        {
+          "name": "발치 ToF",
+          "width": 21,
+          "height": 27
+        },
+        {
+          "name": "천장 mmWave",
+          "width": 30,
+          "height": 32
+        }
+      ],
+      "sensorsVisible": [
+        true,
+        true,
+        true
+      ],
+      "visibility": 0.8397085610200364,
+      "worstPoseVisibility": 0.6666666666666666,
+      "screenVisibility": 1,
+      "score": 75.96373975804799
+    },
+    {
+      "tv": [
+        0,
+        0,
+        2.1
+      ],
+      "camera": [
+        -1.3,
+        2.05,
+        -0.7
+      ],
+      "target": [
+        0.35,
+        1.35,
+        0.45
+      ],
+      "fov": 80,
+      "angle": -2.7069224384405484,
+      "width": 319,
+      "screenHeight": 161,
+      "humanHeight": 206,
+      "quality": 0.46201913555821655,
+      "sensorPixels": [
+        {
+          "name": "머리맡 ToF",
+          "width": 38,
+          "height": 46
+        },
+        {
+          "name": "발치 ToF",
+          "width": 22,
+          "height": 28
+        },
+        {
+          "name": "천장 mmWave",
+          "width": 33,
+          "height": 28
+        }
+      ],
+      "sensorsVisible": [
+        true,
+        true,
+        true
+      ],
+      "visibility": 0.9908925318761385,
+      "worstPoseVisibility": 0.8888888888888888,
+      "screenVisibility": 1,
+      "score": 75.4720997157846
+    },
+    {
+      "tv": [
+        0,
+        0,
+        2.1
+      ],
+      "camera": [
+        -1.3,
+        1.65,
+        -0.7
+      ],
+      "target": [
+        0.35,
+        1.15,
+        0.45
+      ],
+      "fov": 80,
+      "angle": -2.7069224384405484,
+      "width": 323,
+      "screenHeight": 171,
+      "humanHeight": 225,
+      "quality": 0.49929412567191367,
+      "sensorPixels": [
+        {
+          "name": "머리맡 ToF",
+          "width": 38,
+          "height": 44
+        },
+        {
+          "name": "발치 ToF",
+          "width": 22,
+          "height": 27
+        },
+        {
+          "name": "천장 mmWave",
+          "width": 32,
+          "height": 33
+        }
+      ],
+      "sensorsVisible": [
+        true,
+        true,
+        true
+      ],
+      "visibility": 0.9052823315118397,
+      "worstPoseVisibility": 0.7777777777777778,
+      "screenVisibility": 1,
+      "score": 74.1531172581505
+    },
+    {
+      "tv": [
+        0,
+        0,
+        2.1
+      ],
+      "camera": [
+        -1.3,
+        1.4,
+        -0.7
+      ],
+      "target": [
+        0.35,
+        1.15,
+        0.45
+      ],
+      "fov": 80,
+      "angle": -2.7069224384405484,
+      "width": 307,
+      "screenHeight": 167,
+      "humanHeight": 230,
+      "quality": 0.49548881407976,
+      "sensorPixels": [
+        {
+          "name": "머리맡 ToF",
+          "width": 35,
+          "height": 45
+        },
+        {
+          "name": "발치 ToF",
+          "width": 21,
+          "height": 27
+        },
+        {
+          "name": "천장 mmWave",
+          "width": 30,
+          "height": 32
+        }
+      ],
+      "sensorsVisible": [
+        true,
+        true,
+        true
+      ],
+      "visibility": 0.8397085610200364,
+      "worstPoseVisibility": 0.6666666666666666,
+      "screenVisibility": 1,
+      "score": 71.68679626929047
+    },
+    {
+      "tv": [
+        -0.7,
+        0,
+        -0.75
+      ],
+      "camera": [
+        -1.3,
+        1.4,
+        2.55
+      ],
+      "target": [
+        0.35,
+        0.95,
+        0.45
+      ],
+      "fov": 72,
+      "angle": -0.1798534997924783,
+      "width": 315,
+      "screenHeight": 172,
+      "humanHeight": 251,
+      "quality": 0.5360159787509053,
+      "sensorPixels": [
+        {
+          "name": "머리맡 ToF",
+          "width": 20,
+          "height": 26
+        },
+        {
+          "name": "발치 ToF",
+          "width": 44,
+          "height": 48
+        },
+        {
+          "name": "천장 mmWave",
+          "width": 34,
+          "height": 30
+        }
+      ],
+      "sensorsVisible": [
+        false,
+        true,
+        true
+      ],
+      "score": null
+    },
+    {
+      "tv": [
+        -0.35,
+        0,
+        2.1
+      ],
+      "camera": [
+        -0.9,
+        1.85,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        1.35,
+        0.45
+      ],
+      "fov": 72,
+      "angle": -2.9739502157585775,
+      "width": 324,
+      "screenHeight": 170,
+      "humanHeight": 239,
+      "quality": 0.5241907996658508,
+      "sensorPixels": [
+        {
+          "name": "머리맡 ToF",
+          "width": 65,
+          "height": 66
+        },
+        {
+          "name": "발치 ToF",
+          "width": 23,
+          "height": 30
+        },
+        {
+          "name": "천장 mmWave",
+          "width": 44,
+          "height": 37
+        }
+      ],
+      "sensorsVisible": [
+        true,
+        false,
+        true
+      ],
+      "score": null
+    },
+    {
+      "tv": [
+        -0.7,
+        0,
+        -0.75
+      ],
+      "camera": [
+        -1.3,
+        2.05,
+        2.55
+      ],
+      "target": [
+        0.35,
+        1.15,
+        0.45
+      ],
+      "fov": 72,
+      "angle": -0.1798534997924783,
+      "width": 319,
+      "screenHeight": 164,
+      "humanHeight": 248,
+      "quality": 0.5193009623501736,
+      "sensorPixels": [
+        {
+          "name": "머리맡 ToF",
+          "width": 20,
+          "height": 27
+        },
+        {
+          "name": "발치 ToF",
+          "width": 46,
+          "height": 49
+        },
+        {
+          "name": "천장 mmWave",
+          "width": 36,
+          "height": 25
+        }
+      ],
+      "sensorsVisible": [
+        false,
+        true,
+        true
+      ],
+      "score": null
+    },
+    {
+      "tv": [
+        -0.35,
+        0,
+        2.1
+      ],
+      "camera": [
+        -1.3,
+        1.65,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        1.15,
+        0.45
+      ],
+      "fov": 72,
+      "angle": -2.8572078769959344,
+      "width": 326,
+      "screenHeight": 172,
+      "humanHeight": 229,
+      "quality": 0.5160467161804467,
+      "sensorPixels": [
+        {
+          "name": "머리맡 ToF",
+          "width": 46,
+          "height": 49
+        },
+        {
+          "name": "발치 ToF",
+          "width": 22,
+          "height": 28
+        },
+        {
+          "name": "천장 mmWave",
+          "width": 36,
+          "height": 33
+        }
+      ],
+      "sensorsVisible": [
+        true,
+        false,
+        true
+      ],
+      "score": null
+    },
+    {
+      "tv": [
+        -0.35,
+        0,
+        2.1
+      ],
+      "camera": [
+        -1.3,
+        1.4,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        1.15,
+        0.45
+      ],
+      "fov": 72,
+      "angle": -2.8572078769959344,
+      "width": 313,
+      "screenHeight": 169,
+      "humanHeight": 235,
+      "quality": 0.5146151059802737,
+      "sensorPixels": [
+        {
+          "name": "머리맡 ToF",
+          "width": 42,
+          "height": 50
+        },
+        {
+          "name": "발치 ToF",
+          "width": 22,
+          "height": 28
+        },
+        {
+          "name": "천장 mmWave",
+          "width": 34,
+          "height": 33
+        }
+      ],
+      "sensorsVisible": [
+        true,
+        false,
+        true
+      ],
+      "score": null
+    },
+    {
+      "tv": [
+        -0.35,
+        0,
+        2.1
+      ],
+      "camera": [
+        -1.3,
+        1.65,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        1.35,
+        0.45
+      ],
+      "fov": 72,
+      "angle": -2.8572078769959344,
+      "width": 312,
+      "screenHeight": 167,
+      "humanHeight": 228,
+      "quality": 0.5026695081984524,
+      "sensorPixels": [
+        {
+          "name": "머리맡 ToF",
+          "width": 43,
+          "height": 48
+        },
+        {
+          "name": "발치 ToF",
+          "width": 22,
+          "height": 27
+        },
+        {
+          "name": "천장 mmWave",
+          "width": 34,
+          "height": 30
+        }
+      ],
+      "sensorsVisible": [
+        true,
+        false,
+        true
+      ],
+      "score": null
+    },
+    {
+      "tv": [
+        -0.35,
+        0,
+        2.1
+      ],
+      "camera": [
+        -1.3,
+        1.85,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        1.35,
+        0.45
+      ],
+      "fov": 72,
+      "angle": -2.8572078769959344,
+      "width": 320,
+      "screenHeight": 166,
+      "humanHeight": 221,
+      "quality": 0.49545609122906675,
+      "sensorPixels": [
+        {
+          "name": "머리맡 ToF",
+          "width": 45,
+          "height": 51
+        },
+        {
+          "name": "발치 ToF",
+          "width": 22,
+          "height": 28
+        },
+        {
+          "name": "천장 mmWave",
+          "width": 36,
+          "height": 29
+        }
+      ],
+      "sensorsVisible": [
+        true,
+        false,
+        true
+      ],
+      "score": null
+    },
+    {
+      "tv": [
+        -0.35,
+        0,
+        -0.75
+      ],
+      "camera": [
+        -1.3,
+        1.4,
+        2.55
+      ],
+      "target": [
+        0.35,
+        0.95,
+        0.45
+      ],
+      "fov": 72,
+      "angle": -0.2802996563384511,
+      "width": 275,
+      "screenHeight": 154,
+      "humanHeight": 251,
+      "quality": 0.4891134713595564,
+      "sensorPixels": [
+        {
+          "name": "머리맡 ToF",
+          "width": 20,
+          "height": 26
+        },
+        {
+          "name": "발치 ToF",
+          "width": 44,
+          "height": 48
+        },
+        {
+          "name": "천장 mmWave",
+          "width": 34,
+          "height": 30
+        }
+      ],
+      "sensorsVisible": [
+        false,
+        true,
+        true
+      ],
+      "score": null
+    },
+    {
+      "tv": [
+        -0.35,
+        0,
+        2.1
+      ],
+      "camera": [
+        -1.3,
+        2.05,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        1.35,
+        0.45
+      ],
+      "fov": 72,
+      "angle": -2.8572078769959344,
+      "width": 324,
+      "screenHeight": 164,
+      "humanHeight": 212,
+      "quality": 0.4827161224804657,
+      "sensorPixels": [
+        {
+          "name": "머리맡 ToF",
+          "width": 46,
+          "height": 52
+        },
+        {
+          "name": "발치 ToF",
+          "width": 22,
+          "height": 29
+        },
+        {
+          "name": "천장 mmWave",
+          "width": 37,
+          "height": 28
+        }
+      ],
+      "sensorsVisible": [
+        true,
+        false,
+        true
+      ],
+      "score": null
+    },
+    {
+      "tv": [
+        -0.35,
+        0,
+        -0.75
+      ],
+      "camera": [
+        -1.3,
+        2.05,
+        2.55
+      ],
+      "target": [
+        0.35,
+        1.15,
+        0.45
+      ],
+      "fov": 72,
+      "angle": -0.2802996563384511,
+      "width": 279,
+      "screenHeight": 149,
+      "humanHeight": 248,
+      "quality": 0.47722858077865155,
+      "sensorPixels": [
+        {
+          "name": "머리맡 ToF",
+          "width": 20,
+          "height": 27
+        },
+        {
+          "name": "발치 ToF",
+          "width": 46,
+          "height": 49
+        },
+        {
+          "name": "천장 mmWave",
+          "width": 36,
+          "height": 25
+        }
+      ],
+      "sensorsVisible": [
+        false,
+        true,
+        true
+      ],
+      "score": null
+    },
+    {
+      "tv": [
+        0,
+        0,
+        2.1
+      ],
+      "camera": [
+        -0.9,
+        1.85,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        1.35,
+        0.45
+      ],
+      "fov": 72,
+      "angle": -2.8714394538783883,
+      "width": 282,
+      "screenHeight": 153,
+      "humanHeight": 239,
+      "quality": 0.47715984116402754,
+      "sensorPixels": [
+        {
+          "name": "머리맡 ToF",
+          "width": 65,
+          "height": 66
+        },
+        {
+          "name": "발치 ToF",
+          "width": 23,
+          "height": 30
+        },
+        {
+          "name": "천장 mmWave",
+          "width": 44,
+          "height": 37
+        }
+      ],
+      "sensorsVisible": [
+        true,
+        false,
+        true
+      ],
+      "score": null
+    },
+    {
+      "tv": [
+        -0.7,
+        0,
+        -0.75
+      ],
+      "camera": [
+        -0.9,
+        1.65,
+        2.55
+      ],
+      "target": [
+        0.35,
+        0.95,
+        0.45
+      ],
+      "fov": 80,
+      "angle": -0.060532019782107156,
+      "width": 286,
+      "screenHeight": 153,
+      "humanHeight": 246,
+      "quality": 0.47677216632536834,
+      "sensorPixels": [
+        {
+          "name": "머리맡 ToF",
+          "width": 19,
+          "height": 24
+        },
+        {
+          "name": "발치 ToF",
+          "width": 55,
+          "height": 50
+        },
+        {
+          "name": "천장 mmWave",
+          "width": 36,
+          "height": 31
+        }
+      ],
+      "sensorsVisible": [
+        false,
+        true,
+        true
+      ],
+      "score": null
+    },
+    {
+      "tv": [
+        -0.7,
+        0,
+        -0.75
+      ],
+      "camera": [
+        -0.5,
+        2.05,
+        2.55
+      ],
+      "target": [
+        0.35,
+        1.15,
+        0.45
+      ],
+      "fov": 80,
+      "angle": 0.06053201978210712,
+      "width": 274,
+      "screenHeight": 143,
+      "humanHeight": 258,
+      "quality": 0.4715121748418828,
+      "sensorPixels": [
+        {
+          "name": "머리맡 ToF",
+          "width": 20,
+          "height": 27
+        },
+        {
+          "name": "발치 ToF",
+          "width": 72,
+          "height": 65
+        },
+        {
+          "name": "천장 mmWave",
+          "width": 44,
+          "height": 31
+        }
+      ],
+      "sensorsVisible": [
+        false,
+        true,
+        true
+      ],
+      "score": null
+    },
+    {
+      "tv": [
+        -0.7,
+        0,
+        -0.75
+      ],
+      "camera": [
+        -0.9,
+        1.4,
+        2.55
+      ],
+      "target": [
+        0.35,
+        0.95,
+        0.45
+      ],
+      "fov": 80,
+      "angle": -0.060532019782107156,
+      "width": 276,
+      "screenHeight": 151,
+      "humanHeight": 244,
+      "quality": 0.4695028026426208,
+      "sensorPixels": [
+        {
+          "name": "머리맡 ToF",
+          "width": 18,
+          "height": 24
+        },
+        {
+          "name": "발치 ToF",
+          "width": 52,
+          "height": 52
+        },
+        {
+          "name": "천장 mmWave",
+          "width": 34,
+          "height": 31
+        }
+      ],
+      "sensorsVisible": [
+        false,
+        true,
+        true
+      ],
+      "score": null
+    },
+    {
+      "tv": [
+        0,
+        0,
+        2.1
+      ],
+      "camera": [
+        -1.3,
+        1.65,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        1.15,
+        0.45
+      ],
+      "fov": 72,
+      "angle": -2.761086276477428,
+      "width": 281,
+      "screenHeight": 153,
+      "humanHeight": 229,
+      "quality": 0.46330318804026316,
+      "sensorPixels": [
+        {
+          "name": "머리맡 ToF",
+          "width": 46,
+          "height": 49
+        },
+        {
+          "name": "발치 ToF",
+          "width": 22,
+          "height": 28
+        },
+        {
+          "name": "천장 mmWave",
+          "width": 36,
+          "height": 33
+        }
+      ],
+      "sensorsVisible": [
+        true,
+        false,
+        true
+      ],
+      "score": null
+    },
+    {
+      "tv": [
+        0,
+        0,
+        2.1
+      ],
+      "camera": [
+        -1.3,
+        1.4,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        1.15,
+        0.45
+      ],
+      "fov": 72,
+      "angle": -2.761086276477428,
+      "width": 271,
+      "screenHeight": 150,
+      "humanHeight": 235,
+      "quality": 0.46308482155198727,
+      "sensorPixels": [
+        {
+          "name": "머리맡 ToF",
+          "width": 42,
+          "height": 50
+        },
+        {
+          "name": "발치 ToF",
+          "width": 22,
+          "height": 28
+        },
+        {
+          "name": "천장 mmWave",
+          "width": 34,
+          "height": 33
+        }
+      ],
+      "sensorsVisible": [
+        true,
+        false,
+        true
+      ],
+      "score": null
+    },
+    {
+      "tv": [
+        -0.7,
+        0,
+        -0.75
+      ],
+      "camera": [
+        -0.9,
+        1.85,
+        2.55
+      ],
+      "target": [
+        0.35,
+        1.15,
+        0.45
+      ],
+      "fov": 80,
+      "angle": -0.060532019782107156,
+      "width": 279,
+      "screenHeight": 147,
+      "humanHeight": 242,
+      "quality": 0.46092008057484574,
+      "sensorPixels": [
+        {
+          "name": "머리맡 ToF",
+          "width": 18,
+          "height": 24
+        },
+        {
+          "name": "발치 ToF",
+          "width": 53,
+          "height": 51
+        },
+        {
+          "name": "천장 mmWave",
+          "width": 36,
+          "height": 27
+        }
+      ],
+      "sensorsVisible": [
+        false,
+        true,
+        true
+      ],
+      "score": null
+    },
+    {
+      "tv": [
+        0,
+        0,
+        -0.75
+      ],
+      "camera": [
+        -1.3,
+        1.4,
+        2.55
+      ],
+      "target": [
+        0.35,
+        0.95,
+        0.45
+      ],
+      "fov": 72,
+      "angle": -0.37527082285595736,
+      "width": 245,
+      "screenHeight": 140,
+      "humanHeight": 251,
+      "quality": 0.4556382326403279,
+      "sensorPixels": [
+        {
+          "name": "머리맡 ToF",
+          "width": 20,
+          "height": 26
+        },
+        {
+          "name": "발치 ToF",
+          "width": 44,
+          "height": 48
+        },
+        {
+          "name": "천장 mmWave",
+          "width": 34,
+          "height": 30
+        }
+      ],
+      "sensorsVisible": [
+        false,
+        true,
+        true
+      ],
+      "score": null
+    },
+    {
+      "tv": [
+        -0.7,
+        0,
+        -0.75
+      ],
+      "camera": [
+        -0.9,
+        2.05,
+        2.55
+      ],
+      "target": [
+        0.35,
+        1.15,
+        0.45
+      ],
+      "fov": 80,
+      "angle": -0.060532019782107156,
+      "width": 281,
+      "screenHeight": 145,
+      "humanHeight": 237,
+      "quality": 0.45276068318803475,
+      "sensorPixels": [
+        {
+          "name": "머리맡 ToF",
+          "width": 19,
+          "height": 25
+        },
+        {
+          "name": "발치 ToF",
+          "width": 53,
+          "height": 52
+        },
+        {
+          "name": "천장 mmWave",
+          "width": 37,
+          "height": 26
+        }
+      ],
+      "sensorsVisible": [
+        false,
+        true,
+        true
+      ],
+      "score": null
+    },
+    {
+      "tv": [
+        0,
+        0,
+        2.1
+      ],
+      "camera": [
+        -1.3,
+        1.65,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        1.35,
+        0.45
+      ],
+      "fov": 72,
+      "angle": -2.761086276477428,
+      "width": 270,
+      "screenHeight": 148,
+      "humanHeight": 228,
+      "quality": 0.45261815901793034,
+      "sensorPixels": [
+        {
+          "name": "머리맡 ToF",
+          "width": 43,
+          "height": 48
+        },
+        {
+          "name": "발치 ToF",
+          "width": 22,
+          "height": 27
+        },
+        {
+          "name": "천장 mmWave",
+          "width": 34,
+          "height": 30
+        }
+      ],
+      "sensorsVisible": [
+        true,
+        false,
+        true
+      ],
+      "score": null
+    },
+    {
+      "tv": [
+        -0.7,
+        0,
+        -0.75
+      ],
+      "camera": [
+        -1.3,
+        1.4,
+        2.55
+      ],
+      "target": [
+        0.35,
+        0.75,
+        0.45
+      ],
+      "fov": 80,
+      "angle": -0.1798534997924783,
+      "width": 286,
+      "screenHeight": 156,
+      "humanHeight": 221,
+      "quality": 0.4525611439120552,
+      "sensorPixels": [
+        {
+          "name": "머리맡 ToF",
+          "width": 18,
+          "height": 23
+        },
+        {
+          "name": "발치 ToF",
+          "width": 41,
+          "height": 43
+        },
+        {
+          "name": "천장 mmWave",
+          "width": 31,
+          "height": 29
+        }
+      ],
+      "sensorsVisible": [
+        false,
+        true,
+        true
+      ],
+      "score": null
+    },
+    {
+      "tv": [
+        -0.35,
+        0,
+        2.1
+      ],
+      "camera": [
+        -0.5,
+        1.4,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        1.35,
+        0.45
+      ],
+      "fov": 80,
+      "angle": -3.095471537575282,
+      "width": 249,
+      "screenHeight": 140,
+      "humanHeight": 246,
+      "quality": 0.44935541056425876,
+      "sensorPixels": [
+        {
+          "name": "머리맡 ToF",
+          "width": 79,
+          "height": 79
+        },
+        {
+          "name": "발치 ToF",
+          "width": 21,
+          "height": 27
+        },
+        {
+          "name": "천장 mmWave",
+          "width": 41,
+          "height": 38
+        }
+      ],
+      "sensorsVisible": [
+        true,
+        false,
+        true
+      ],
+      "score": null
+    },
+    {
+      "tv": [
+        -0.35,
+        0,
+        -0.75
+      ],
+      "camera": [
+        -0.5,
+        2.05,
+        2.55
+      ],
+      "target": [
+        0.35,
+        1.15,
+        0.45
+      ],
+      "fov": 80,
+      "angle": -0.04542327942157703,
+      "width": 246,
+      "screenHeight": 134,
+      "humanHeight": 258,
+      "quality": 0.4487317207218335,
+      "sensorPixels": [
+        {
+          "name": "머리맡 ToF",
+          "width": 20,
+          "height": 27
+        },
+        {
+          "name": "발치 ToF",
+          "width": 72,
+          "height": 65
+        },
+        {
+          "name": "천장 mmWave",
+          "width": 44,
+          "height": 31
+        }
+      ],
+      "sensorsVisible": [
+        false,
+        true,
+        true
+      ],
+      "score": null
+    },
+    {
+      "tv": [
+        0,
+        0,
+        -0.75
+      ],
+      "camera": [
+        -1.3,
+        2.05,
+        2.55
+      ],
+      "target": [
+        0.35,
+        1.15,
+        0.45
+      ],
+      "fov": 72,
+      "angle": -0.37527082285595736,
+      "width": 248,
+      "screenHeight": 136,
+      "humanHeight": 248,
+      "quality": 0.4467966955851185,
+      "sensorPixels": [
+        {
+          "name": "머리맡 ToF",
+          "width": 20,
+          "height": 27
+        },
+        {
+          "name": "발치 ToF",
+          "width": 46,
+          "height": 49
+        },
+        {
+          "name": "천장 mmWave",
+          "width": 36,
+          "height": 25
+        }
+      ],
+      "sensorsVisible": [
+        false,
+        true,
+        true
+      ],
+      "score": null
+    },
+    {
+      "tv": [
+        -0.35,
+        0,
+        2.1
+      ],
+      "camera": [
+        -0.9,
+        1.4,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        1.15,
+        0.45
+      ],
+      "fov": 80,
+      "angle": -2.9739502157585775,
+      "width": 274,
+      "screenHeight": 149,
+      "humanHeight": 225,
+      "quality": 0.4462259835131809,
+      "sensorPixels": [
+        {
+          "name": "머리맡 ToF",
+          "width": 54,
+          "height": 57
+        },
+        {
+          "name": "발치 ToF",
+          "width": 20,
+          "height": 26
+        },
+        {
+          "name": "천장 mmWave",
+          "width": 36,
+          "height": 35
+        }
+      ],
+      "sensorsVisible": [
+        true,
+        false,
+        true
+      ],
+      "score": null
+    },
+    {
+      "tv": [
+        -0.35,
+        0,
+        2.1
+      ],
+      "camera": [
+        -0.9,
+        1.65,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        1.15,
+        0.45
+      ],
+      "fov": 80,
+      "angle": -2.9739502157585775,
+      "width": 287,
+      "screenHeight": 153,
+      "humanHeight": 217,
+      "quality": 0.44618113272753024,
+      "sensorPixels": [
+        {
+          "name": "머리맡 ToF",
+          "width": 59,
+          "height": 55
+        },
+        {
+          "name": "발치 ToF",
+          "width": 21,
+          "height": 26
+        },
+        {
+          "name": "천장 mmWave",
+          "width": 39,
+          "height": 36
+        }
+      ],
+      "sensorsVisible": [
+        true,
+        false,
+        true
+      ],
+      "score": null
+    },
+    {
+      "tv": [
+        0,
+        0,
+        2.1
+      ],
+      "camera": [
+        -1.3,
+        1.85,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        1.35,
+        0.45
+      ],
+      "fov": 72,
+      "angle": -2.761086276477428,
+      "width": 276,
+      "screenHeight": 149,
+      "humanHeight": 221,
+      "quality": 0.44585538513776357,
+      "sensorPixels": [
+        {
+          "name": "머리맡 ToF",
+          "width": 45,
+          "height": 51
+        },
+        {
+          "name": "발치 ToF",
+          "width": 22,
+          "height": 28
+        },
+        {
+          "name": "천장 mmWave",
+          "width": 36,
+          "height": 29
+        }
+      ],
+      "sensorsVisible": [
+        true,
+        false,
+        true
+      ],
+      "score": null
+    },
+    {
+      "tv": [
+        -0.35,
+        0,
+        -0.75
+      ],
+      "camera": [
+        -0.9,
+        1.65,
+        2.55
+      ],
+      "target": [
+        0.35,
+        0.95,
+        0.45
+      ],
+      "fov": 80,
+      "angle": -0.16514867741462685,
+      "width": 251,
+      "screenHeight": 140,
+      "humanHeight": 246,
+      "quality": 0.4438212478653891,
+      "sensorPixels": [
+        {
+          "name": "머리맡 ToF",
+          "width": 19,
+          "height": 24
+        },
+        {
+          "name": "발치 ToF",
+          "width": 55,
+          "height": 50
+        },
+        {
+          "name": "천장 mmWave",
+          "width": 36,
+          "height": 31
+        }
+      ],
+      "sensorsVisible": [
+        false,
+        true,
+        true
+      ],
+      "score": null
+    },
+    {
+      "tv": [
+        -0.35,
+        0,
+        2.1
+      ],
+      "camera": [
+        -0.5,
+        1.65,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        1.35,
+        0.45
+      ],
+      "fov": 80,
+      "angle": -3.095471537575282,
+      "width": 262,
+      "screenHeight": 143,
+      "humanHeight": 234,
+      "quality": 0.44293417362671617,
+      "sensorPixels": [
+        {
+          "name": "머리맡 ToF",
+          "width": 89,
+          "height": 75
+        },
+        {
+          "name": "발치 ToF",
+          "width": 22,
+          "height": 27
+        },
+        {
+          "name": "천장 mmWave",
+          "width": 45,
+          "height": 40
+        }
+      ],
+      "sensorsVisible": [
+        true,
+        false,
+        true
+      ],
+      "score": null
+    },
+    {
+      "tv": [
+        -0.7,
+        0,
+        -0.75
+      ],
+      "camera": [
+        -1.3,
+        1.65,
+        2.55
+      ],
+      "target": [
+        0.35,
+        0.95,
+        0.45
+      ],
+      "fov": 80,
+      "angle": -0.1798534997924783,
+      "width": 281,
+      "screenHeight": 150,
+      "humanHeight": 220,
+      "quality": 0.44101072892613824,
+      "sensorPixels": [
+        {
+          "name": "머리맡 ToF",
+          "width": 18,
+          "height": 22
+        },
+        {
+          "name": "발치 ToF",
+          "width": 40,
+          "height": 40
+        },
+        {
+          "name": "천장 mmWave",
+          "width": 31,
+          "height": 26
+        }
+      ],
+      "sensorsVisible": [
+        false,
+        true,
+        true
+      ],
+      "score": null
+    },
+    {
+      "tv": [
+        -0.7,
+        0,
+        -0.75
+      ],
+      "camera": [
+        -1.3,
+        1.85,
+        2.55
+      ],
+      "target": [
+        0.35,
+        0.95,
+        0.45
+      ],
+      "fov": 80,
+      "angle": -0.1798534997924783,
+      "width": 285,
+      "screenHeight": 149,
+      "humanHeight": 219,
+      "quality": 0.4393719099284188,
+      "sensorPixels": [
+        {
+          "name": "머리맡 ToF",
+          "width": 18,
+          "height": 23
+        },
+        {
+          "name": "발치 ToF",
+          "width": 41,
+          "height": 42
+        },
+        {
+          "name": "천장 mmWave",
+          "width": 32,
+          "height": 25
+        }
+      ],
+      "sensorsVisible": [
+        false,
+        true,
+        true
+      ],
+      "score": null
+    },
+    {
+      "tv": [
+        -0.35,
+        0,
+        -0.75
+      ],
+      "camera": [
+        -0.9,
+        1.4,
+        2.55
+      ],
+      "target": [
+        0.35,
+        0.95,
+        0.45
+      ],
+      "fov": 80,
+      "angle": -0.16514867741462685,
+      "width": 243,
+      "screenHeight": 137,
+      "humanHeight": 244,
+      "quality": 0.4369919887205158,
+      "sensorPixels": [
+        {
+          "name": "머리맡 ToF",
+          "width": 18,
+          "height": 24
+        },
+        {
+          "name": "발치 ToF",
+          "width": 52,
+          "height": 52
+        },
+        {
+          "name": "천장 mmWave",
+          "width": 34,
+          "height": 31
+        }
+      ],
+      "sensorsVisible": [
+        false,
+        true,
+        true
+      ],
+      "score": null
+    },
+    {
+      "tv": [
+        -0.35,
+        0,
+        2.1
+      ],
+      "camera": [
+        -0.9,
+        1.4,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        1.35,
+        0.45
+      ],
+      "fov": 80,
+      "angle": -2.9739502157585775,
+      "width": 261,
+      "screenHeight": 144,
+      "humanHeight": 224,
+      "quality": 0.4357623601313113,
+      "sensorPixels": [
+        {
+          "name": "머리맡 ToF",
+          "width": 48,
+          "height": 55
+        },
+        {
+          "name": "발치 ToF",
+          "width": 20,
+          "height": 25
+        },
+        {
+          "name": "천장 mmWave",
+          "width": 33,
+          "height": 31
+        }
+      ],
+      "sensorsVisible": [
+        true,
+        false,
+        true
+      ],
+      "score": null
+    },
+    {
+      "tv": [
+        0,
+        0,
+        2.1
+      ],
+      "camera": [
+        -1.3,
+        2.05,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        1.35,
+        0.45
+      ],
+      "fov": 72,
+      "angle": -2.761086276477428,
+      "width": 280,
+      "screenHeight": 147,
+      "humanHeight": 212,
+      "quality": 0.4348546986201318,
+      "sensorPixels": [
+        {
+          "name": "머리맡 ToF",
+          "width": 46,
+          "height": 52
+        },
+        {
+          "name": "발치 ToF",
+          "width": 22,
+          "height": 29
+        },
+        {
+          "name": "천장 mmWave",
+          "width": 37,
+          "height": 28
+        }
+      ],
+      "sensorsVisible": [
+        true,
+        false,
+        true
+      ],
+      "score": null
+    },
+    {
+      "tv": [
+        -0.7,
+        0,
+        -0.75
+      ],
+      "camera": [
+        -1.3,
+        1.4,
+        2.55
+      ],
+      "target": [
+        0.35,
+        0.95,
+        0.45
+      ],
+      "fov": 80,
+      "angle": -0.1798534997924783,
+      "width": 273,
+      "screenHeight": 149,
+      "humanHeight": 218,
+      "quality": 0.4347137288848575,
+      "sensorPixels": [
+        {
+          "name": "머리맡 ToF",
+          "width": 17,
+          "height": 22
+        },
+        {
+          "name": "발치 ToF",
+          "width": 38,
+          "height": 42
+        },
+        {
+          "name": "천장 mmWave",
+          "width": 29,
+          "height": 26
+        }
+      ],
+      "sensorsVisible": [
+        false,
+        true,
+        true
+      ],
+      "score": null
+    },
+    {
+      "tv": [
+        -0.35,
+        0,
+        2.1
+      ],
+      "camera": [
+        -1.3,
+        1.4,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        0.95,
+        0.45
+      ],
+      "fov": 80,
+      "angle": -2.8572078769959344,
+      "width": 286,
+      "screenHeight": 154,
+      "humanHeight": 206,
+      "quality": 0.4331917840943644,
+      "sensorPixels": [
+        {
+          "name": "머리맡 ToF",
+          "width": 40,
+          "height": 45
+        },
+        {
+          "name": "발치 ToF",
+          "width": 20,
+          "height": 25
+        },
+        {
+          "name": "천장 mmWave",
+          "width": 31,
+          "height": 32
+        }
+      ],
+      "sensorsVisible": [
+        true,
+        false,
+        true
+      ],
+      "score": null
+    },
+    {
+      "tv": [
+        -0.35,
+        0,
+        2.1
+      ],
+      "camera": [
+        -0.9,
+        1.65,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        1.35,
+        0.45
+      ],
+      "fov": 80,
+      "angle": -2.9739502157585775,
+      "width": 273,
+      "screenHeight": 147,
+      "humanHeight": 216,
+      "quality": 0.4325064363329645,
+      "sensorPixels": [
+        {
+          "name": "머리맡 ToF",
+          "width": 54,
+          "height": 54
+        },
+        {
+          "name": "발치 ToF",
+          "width": 20,
+          "height": 25
+        },
+        {
+          "name": "천장 mmWave",
+          "width": 36,
+          "height": 32
+        }
+      ],
+      "sensorsVisible": [
+        true,
+        false,
+        true
+      ],
+      "score": null
+    },
+    {
+      "tv": [
+        -0.7,
+        0,
+        -0.75
+      ],
+      "camera": [
+        -1.3,
+        2.05,
+        2.55
+      ],
+      "target": [
+        0.35,
+        0.95,
+        0.45
+      ],
+      "fov": 80,
+      "angle": -0.1798534997924783,
+      "width": 286,
+      "screenHeight": 146,
+      "humanHeight": 216,
+      "quality": 0.43214499962625036,
+      "sensorPixels": [
+        {
+          "name": "머리맡 ToF",
+          "width": 18,
+          "height": 24
+        },
+        {
+          "name": "발치 ToF",
+          "width": 42,
+          "height": 43
+        },
+        {
+          "name": "천장 mmWave",
+          "width": 33,
+          "height": 24
+        }
+      ],
+      "sensorsVisible": [
+        false,
+        true,
+        true
+      ],
+      "score": null
+    },
+    {
+      "tv": [
+        0,
+        0,
+        -0.75
+      ],
+      "camera": [
+        -0.5,
+        2.05,
+        2.55
+      ],
+      "target": [
+        0.35,
+        1.15,
+        0.45
+      ],
+      "fov": 80,
+      "angle": -0.15037142800713454,
+      "width": 224,
+      "screenHeight": 125,
+      "humanHeight": 258,
+      "quality": 0.43148066228517024,
+      "sensorPixels": [
+        {
+          "name": "머리맡 ToF",
+          "width": 20,
+          "height": 27
+        },
+        {
+          "name": "발치 ToF",
+          "width": 72,
+          "height": 65
+        },
+        {
+          "name": "천장 mmWave",
+          "width": 44,
+          "height": 31
+        }
+      ],
+      "sensorsVisible": [
+        false,
+        true,
+        true
+      ],
+      "score": null
+    },
+    {
+      "tv": [
+        -0.35,
+        0,
+        -0.75
+      ],
+      "camera": [
+        -0.9,
+        1.85,
+        2.55
+      ],
+      "target": [
+        0.35,
+        1.15,
+        0.45
+      ],
+      "fov": 80,
+      "angle": -0.16514867741462685,
+      "width": 245,
+      "screenHeight": 134,
+      "humanHeight": 242,
+      "quality": 0.4305137937448484,
+      "sensorPixels": [
+        {
+          "name": "머리맡 ToF",
+          "width": 18,
+          "height": 24
+        },
+        {
+          "name": "발치 ToF",
+          "width": 53,
+          "height": 51
+        },
+        {
+          "name": "천장 mmWave",
+          "width": 36,
+          "height": 27
+        }
+      ],
+      "sensorsVisible": [
+        false,
+        true,
+        true
+      ],
+      "score": null
+    },
+    {
+      "tv": [
+        -0.7,
+        0,
+        -0.75
+      ],
+      "camera": [
+        -1.3,
+        1.65,
+        2.55
+      ],
+      "target": [
+        0.35,
+        1.15,
+        0.45
+      ],
+      "fov": 80,
+      "angle": -0.1798534997924783,
+      "width": 270,
+      "screenHeight": 145,
+      "humanHeight": 219,
+      "quality": 0.42955708766153516,
+      "sensorPixels": [
+        {
+          "name": "머리맡 ToF",
+          "width": 17,
+          "height": 22
+        },
+        {
+          "name": "발치 ToF",
+          "width": 38,
+          "height": 39
+        },
+        {
+          "name": "천장 mmWave",
+          "width": 29,
+          "height": 23
+        }
+      ],
+      "sensorsVisible": [
+        false,
+        true,
+        true
+      ],
+      "score": null
+    },
+    {
+      "tv": [
+        0,
+        0,
+        -1.15
+      ],
+      "camera": [
+        -1.3,
+        1.4,
+        2.55
+      ],
+      "target": [
+        0.35,
+        0.95,
+        0.45
+      ],
+      "fov": 72,
+      "angle": -0.3378781882402785,
+      "width": 227,
+      "screenHeight": 128,
+      "humanHeight": 251,
+      "quality": 0.4284900697431457,
+      "sensorPixels": [
+        {
+          "name": "머리맡 ToF",
+          "width": 20,
+          "height": 26
+        },
+        {
+          "name": "발치 ToF",
+          "width": 44,
+          "height": 48
+        },
+        {
+          "name": "천장 mmWave",
+          "width": 34,
+          "height": 30
+        }
+      ],
+      "sensorsVisible": [
+        false,
+        true,
+        true
+      ],
+      "score": null
+    },
+    {
+      "tv": [
+        -0.7,
+        0,
+        -0.75
+      ],
+      "camera": [
+        -1.3,
+        1.85,
+        2.55
+      ],
+      "target": [
+        0.35,
+        1.15,
+        0.45
+      ],
+      "fov": 80,
+      "angle": -0.1798534997924783,
+      "width": 275,
+      "screenHeight": 144,
+      "humanHeight": 218,
+      "quality": 0.4282500433906473,
+      "sensorPixels": [
+        {
+          "name": "머리맡 ToF",
+          "width": 17,
+          "height": 22
+        },
+        {
+          "name": "발치 ToF",
+          "width": 39,
+          "height": 41
+        },
+        {
+          "name": "천장 mmWave",
+          "width": 30,
+          "height": 23
+        }
+      ],
+      "sensorsVisible": [
+        false,
+        true,
+        true
+      ],
+      "score": null
+    },
+    {
+      "tv": [
+        -0.35,
+        0,
+        2.1
+      ],
+      "camera": [
+        -0.5,
+        1.85,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        1.55,
+        0.45
+      ],
+      "fov": 80,
+      "angle": -3.095471537575282,
+      "width": 259,
+      "screenHeight": 140,
+      "humanHeight": 223,
+      "quality": 0.4248765632229125,
+      "sensorPixels": [
+        {
+          "name": "머리맡 ToF",
+          "width": 86,
+          "height": 80
+        },
+        {
+          "name": "발치 ToF",
+          "width": 21,
+          "height": 28
+        },
+        {
+          "name": "천장 mmWave",
+          "width": 45,
+          "height": 35
+        }
+      ],
+      "sensorsVisible": [
+        true,
+        false,
+        true
+      ],
+      "score": null
+    },
+    {
+      "tv": [
+        -0.35,
+        0,
+        2.1
+      ],
+      "camera": [
+        -0.9,
+        1.85,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        1.35,
+        0.45
+      ],
+      "fov": 80,
+      "angle": -2.9739502157585775,
+      "width": 281,
+      "screenHeight": 147,
+      "humanHeight": 207,
+      "quality": 0.4242375496589112,
+      "sensorPixels": [
+        {
+          "name": "머리맡 ToF",
+          "width": 57,
+          "height": 57
+        },
+        {
+          "name": "발치 ToF",
+          "width": 20,
+          "height": 26
+        },
+        {
+          "name": "천장 mmWave",
+          "width": 38,
+          "height": 32
+        }
+      ],
+      "sensorsVisible": [
+        true,
+        false,
+        true
+      ],
+      "score": null
+    },
+    {
+      "tv": [
+        -0.35,
+        0,
+        -0.75
+      ],
+      "camera": [
+        -0.9,
+        2.05,
+        2.55
+      ],
+      "target": [
+        0.35,
+        1.15,
+        0.45
+      ],
+      "fov": 80,
+      "angle": -0.16514867741462685,
+      "width": 247,
+      "screenHeight": 133,
+      "humanHeight": 237,
+      "quality": 0.4235945707272065,
+      "sensorPixels": [
+        {
+          "name": "머리맡 ToF",
+          "width": 19,
+          "height": 25
+        },
+        {
+          "name": "발치 ToF",
+          "width": 53,
+          "height": 52
+        },
+        {
+          "name": "천장 mmWave",
+          "width": 37,
+          "height": 26
+        }
+      ],
+      "sensorsVisible": [
+        false,
+        true,
+        true
+      ],
+      "score": null
+    },
+    {
+      "tv": [
+        -0.7,
+        0,
+        -0.75
+      ],
+      "camera": [
+        -1.3,
+        1.4,
+        2.55
+      ],
+      "target": [
+        0.35,
+        1.15,
+        0.45
+      ],
+      "fov": 80,
+      "angle": -0.1798534997924783,
+      "width": 262,
+      "screenHeight": 143,
+      "humanHeight": 216,
+      "quality": 0.42341518813049195,
+      "sensorPixels": [
+        {
+          "name": "머리맡 ToF",
+          "width": 17,
+          "height": 22
+        },
+        {
+          "name": "발치 ToF",
+          "width": 36,
+          "height": 40
+        },
+        {
+          "name": "천장 mmWave",
+          "width": 28,
+          "height": 24
+        }
+      ],
+      "sensorsVisible": [
+        false,
+        true,
+        true
+      ],
+      "score": null
+    },
+    {
+      "tv": [
+        0,
+        0,
+        2.1
+      ],
+      "camera": [
+        -0.5,
+        1.4,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        1.35,
+        0.45
+      ],
+      "fov": 80,
+      "angle": -2.988943325194528,
+      "width": 224,
+      "screenHeight": 128,
+      "humanHeight": 246,
+      "quality": 0.4231658918622873,
+      "sensorPixels": [
+        {
+          "name": "머리맡 ToF",
+          "width": 79,
+          "height": 79
+        },
+        {
+          "name": "발치 ToF",
+          "width": 21,
+          "height": 27
+        },
+        {
+          "name": "천장 mmWave",
+          "width": 41,
+          "height": 38
+        }
+      ],
+      "sensorsVisible": [
+        true,
+        false,
+        true
+      ],
+      "score": null
+    },
+    {
+      "tv": [
+        0,
+        0,
+        -1.15
+      ],
+      "camera": [
+        -1.3,
+        2.05,
+        2.55
+      ],
+      "target": [
+        0.35,
+        1.15,
+        0.45
+      ],
+      "fov": 72,
+      "angle": -0.3378781882402785,
+      "width": 231,
+      "screenHeight": 126,
+      "humanHeight": 248,
+      "quality": 0.4221547175239916,
+      "sensorPixels": [
+        {
+          "name": "머리맡 ToF",
+          "width": 20,
+          "height": 27
+        },
+        {
+          "name": "발치 ToF",
+          "width": 46,
+          "height": 49
+        },
+        {
+          "name": "천장 mmWave",
+          "width": 36,
+          "height": 25
+        }
+      ],
+      "sensorsVisible": [
+        false,
+        true,
+        true
+      ],
+      "score": null
+    },
+    {
+      "tv": [
+        -0.7,
+        0,
+        -0.75
+      ],
+      "camera": [
+        -1.3,
+        2.05,
+        2.55
+      ],
+      "target": [
+        0.35,
+        1.15,
+        0.45
+      ],
+      "fov": 80,
+      "angle": -0.1798534997924783,
+      "width": 277,
+      "screenHeight": 142,
+      "humanHeight": 215,
+      "quality": 0.421710778196548,
+      "sensorPixels": [
+        {
+          "name": "머리맡 ToF",
+          "width": 17,
+          "height": 23
+        },
+        {
+          "name": "발치 ToF",
+          "width": 40,
+          "height": 42
+        },
+        {
+          "name": "천장 mmWave",
+          "width": 31,
+          "height": 22
+        }
+      ],
+      "sensorsVisible": [
+        false,
+        true,
+        true
+      ],
+      "score": null
+    },
+    {
+      "tv": [
+        0,
+        0,
+        -0.75
+      ],
+      "camera": [
+        -0.9,
+        1.65,
+        2.55
+      ],
+      "target": [
+        0.35,
+        0.95,
+        0.45
+      ],
+      "fov": 80,
+      "angle": -0.2662520491509254,
+      "width": 224,
+      "screenHeight": 128,
+      "humanHeight": 246,
+      "quality": 0.41977354571141073,
+      "sensorPixels": [
+        {
+          "name": "머리맡 ToF",
+          "width": 19,
+          "height": 24
+        },
+        {
+          "name": "발치 ToF",
+          "width": 55,
+          "height": 50
+        },
+        {
+          "name": "천장 mmWave",
+          "width": 36,
+          "height": 31
+        }
+      ],
+      "sensorsVisible": [
+        false,
+        true,
+        true
+      ],
+      "score": null
+    },
+    {
+      "tv": [
+        -0.35,
+        0,
+        2.1
+      ],
+      "camera": [
+        -1.3,
+        1.65,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        1.15,
+        0.45
+      ],
+      "fov": 80,
+      "angle": -2.8572078769959344,
+      "width": 283,
+      "screenHeight": 149,
+      "humanHeight": 198,
+      "quality": 0.4168036906235273,
+      "sensorPixels": [
+        {
+          "name": "머리맡 ToF",
+          "width": 40,
+          "height": 43
+        },
+        {
+          "name": "발치 ToF",
+          "width": 19,
+          "height": 24
+        },
+        {
+          "name": "천장 mmWave",
+          "width": 31,
+          "height": 28
+        }
+      ],
+      "sensorsVisible": [
+        true,
+        false,
+        true
+      ],
+      "score": null
+    },
+    {
+      "tv": [
+        -0.35,
+        0,
+        2.1
+      ],
+      "camera": [
+        -1.3,
+        1.4,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        1.15,
+        0.45
+      ],
+      "fov": 80,
+      "angle": -2.8572078769959344,
+      "width": 271,
+      "screenHeight": 146,
+      "humanHeight": 203,
+      "quality": 0.41645583336984804,
+      "sensorPixels": [
+        {
+          "name": "머리맡 ToF",
+          "width": 37,
+          "height": 44
+        },
+        {
+          "name": "발치 ToF",
+          "width": 19,
+          "height": 24
+        },
+        {
+          "name": "천장 mmWave",
+          "width": 29,
+          "height": 28
+        }
+      ],
+      "sensorsVisible": [
+        true,
+        false,
+        true
+      ],
+      "score": null
+    },
+    {
+      "tv": [
+        -0.7,
+        0,
+        -0.75
+      ],
+      "camera": [
+        -1.3,
+        2.05,
+        2.55
+      ],
+      "target": [
+        0.35,
+        1.35,
+        0.45
+      ],
+      "fov": 80,
+      "angle": -0.1798534997924783,
+      "width": 268,
+      "screenHeight": 139,
+      "humanHeight": 216,
+      "quality": 0.4162178577781228,
+      "sensorPixels": [
+        {
+          "name": "머리맡 ToF",
+          "width": 17,
+          "height": 23
+        },
+        {
+          "name": "발치 ToF",
+          "width": 38,
+          "height": 42
+        },
+        {
+          "name": "천장 mmWave",
+          "width": 30,
+          "height": 20
+        }
+      ],
+      "sensorsVisible": [
+        false,
+        true,
+        true
+      ],
+      "score": null
+    },
+    {
+      "tv": [
+        0,
+        0,
+        2.1
+      ],
+      "camera": [
+        -0.5,
+        1.65,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        1.35,
+        0.45
+      ],
+      "fov": 80,
+      "angle": -2.988943325194528,
+      "width": 234,
+      "screenHeight": 131,
+      "humanHeight": 234,
+      "quality": 0.4156391612055772,
+      "sensorPixels": [
+        {
+          "name": "머리맡 ToF",
+          "width": 89,
+          "height": 75
+        },
+        {
+          "name": "발치 ToF",
+          "width": 22,
+          "height": 27
+        },
+        {
+          "name": "천장 mmWave",
+          "width": 45,
+          "height": 40
+        }
+      ],
+      "sensorsVisible": [
+        true,
+        false,
+        true
+      ],
+      "score": null
+    },
+    {
+      "tv": [
+        -0.35,
+        0,
+        -0.75
+      ],
+      "camera": [
+        -1.3,
+        1.4,
+        2.55
+      ],
+      "target": [
+        0.35,
+        0.75,
+        0.45
+      ],
+      "fov": 80,
+      "angle": -0.2802996563384511,
+      "width": 248,
+      "screenHeight": 140,
+      "humanHeight": 221,
+      "quality": 0.4145156378048282,
+      "sensorPixels": [
+        {
+          "name": "머리맡 ToF",
+          "width": 18,
+          "height": 23
+        },
+        {
+          "name": "발치 ToF",
+          "width": 41,
+          "height": 43
+        },
+        {
+          "name": "천장 mmWave",
+          "width": 31,
+          "height": 29
+        }
+      ],
+      "sensorsVisible": [
+        false,
+        true,
+        true
+      ],
+      "score": null
+    },
+    {
+      "tv": [
+        0,
+        0,
+        -0.75
+      ],
+      "camera": [
+        -0.9,
+        1.4,
+        2.55
+      ],
+      "target": [
+        0.35,
+        0.95,
+        0.45
+      ],
+      "fov": 80,
+      "angle": -0.2662520491509254,
+      "width": 219,
+      "screenHeight": 126,
+      "humanHeight": 244,
+      "quality": 0.4133260128936367,
+      "sensorPixels": [
+        {
+          "name": "머리맡 ToF",
+          "width": 18,
+          "height": 24
+        },
+        {
+          "name": "발치 ToF",
+          "width": 52,
+          "height": 52
+        },
+        {
+          "name": "천장 mmWave",
+          "width": 34,
+          "height": 31
+        }
+      ],
+      "sensorsVisible": [
+        false,
+        true,
+        true
+      ],
+      "score": null
+    },
+    {
+      "tv": [
+        -0.35,
+        0,
+        2.1
+      ],
+      "camera": [
+        -1.3,
+        1.85,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        1.15,
+        0.45
+      ],
+      "fov": 80,
+      "angle": -2.8572078769959344,
+      "width": 289,
+      "screenHeight": 149,
+      "humanHeight": 192,
+      "quality": 0.4113256115688414,
+      "sensorPixels": [
+        {
+          "name": "머리맡 ToF",
+          "width": 41,
+          "height": 45
+        },
+        {
+          "name": "발치 ToF",
+          "width": 20,
+          "height": 25
+        },
+        {
+          "name": "천장 mmWave",
+          "width": 33,
+          "height": 28
+        }
+      ],
+      "sensorsVisible": [
+        true,
+        false,
+        true
+      ],
+      "score": null
+    },
+    {
+      "tv": [
+        -0.35,
+        0,
+        2.1
+      ],
+      "camera": [
+        -0.9,
+        2.05,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        1.35,
+        0.45
+      ],
+      "fov": 80,
+      "angle": -2.9739502157585775,
+      "width": 286,
+      "screenHeight": 146,
+      "humanHeight": 196,
+      "quality": 0.4111557784852089,
+      "sensorPixels": [
+        {
+          "name": "머리맡 ToF",
+          "width": 58,
+          "height": 58
+        },
+        {
+          "name": "발치 ToF",
+          "width": 20,
+          "height": 27
+        },
+        {
+          "name": "천장 mmWave",
+          "width": 40,
+          "height": 31
+        }
+      ],
+      "sensorsVisible": [
+        true,
+        false,
+        true
+      ],
+      "score": null
+    },
+    {
+      "tv": [
+        0,
+        0,
+        2.1
+      ],
+      "camera": [
+        -0.9,
+        1.4,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        1.15,
+        0.45
+      ],
+      "fov": 80,
+      "angle": -2.8714394538783883,
+      "width": 239,
+      "screenHeight": 134,
+      "humanHeight": 225,
+      "quality": 0.4096425634455436,
+      "sensorPixels": [
+        {
+          "name": "머리맡 ToF",
+          "width": 54,
+          "height": 57
+        },
+        {
+          "name": "발치 ToF",
+          "width": 20,
+          "height": 26
+        },
+        {
+          "name": "천장 mmWave",
+          "width": 36,
+          "height": 35
+        }
+      ],
+      "sensorsVisible": [
+        true,
+        false,
+        true
+      ],
+      "score": null
+    },
+    {
+      "tv": [
+        0,
+        0,
+        2.1
+      ],
+      "camera": [
+        -0.9,
+        1.65,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        1.15,
+        0.45
+      ],
+      "fov": 80,
+      "angle": -2.8714394538783883,
+      "width": 249,
+      "screenHeight": 137,
+      "humanHeight": 217,
+      "quality": 0.40834977120421223,
+      "sensorPixels": [
+        {
+          "name": "머리맡 ToF",
+          "width": 59,
+          "height": 55
+        },
+        {
+          "name": "발치 ToF",
+          "width": 21,
+          "height": 26
+        },
+        {
+          "name": "천장 mmWave",
+          "width": 39,
+          "height": 36
+        }
+      ],
+      "sensorsVisible": [
+        true,
+        false,
+        true
+      ],
+      "score": null
+    },
+    {
+      "tv": [
+        0,
+        0,
+        -0.75
+      ],
+      "camera": [
+        -0.9,
+        1.85,
+        2.55
+      ],
+      "target": [
+        0.35,
+        1.15,
+        0.45
+      ],
+      "fov": 80,
+      "angle": -0.2662520491509254,
+      "width": 220,
+      "screenHeight": 123,
+      "humanHeight": 242,
+      "quality": 0.40823602318172236,
+      "sensorPixels": [
+        {
+          "name": "머리맡 ToF",
+          "width": 18,
+          "height": 24
+        },
+        {
+          "name": "발치 ToF",
+          "width": 53,
+          "height": 51
+        },
+        {
+          "name": "천장 mmWave",
+          "width": 36,
+          "height": 27
+        }
+      ],
+      "sensorsVisible": [
+        false,
+        true,
+        true
+      ],
+      "score": null
+    },
+    {
+      "tv": [
+        -0.35,
+        0,
+        2.1
+      ],
+      "camera": [
+        -1.3,
+        1.4,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        1.35,
+        0.45
+      ],
+      "fov": 80,
+      "angle": -2.8572078769959344,
+      "width": 259,
+      "screenHeight": 142,
+      "humanHeight": 203,
+      "quality": 0.4082002928679843,
+      "sensorPixels": [
+        {
+          "name": "머리맡 ToF",
+          "width": 34,
+          "height": 43
+        },
+        {
+          "name": "발치 ToF",
+          "width": 19,
+          "height": 23
+        },
+        {
+          "name": "천장 mmWave",
+          "width": 28,
+          "height": 26
+        }
+      ],
+      "sensorsVisible": [
+        true,
+        false,
+        true
+      ],
+      "score": null
+    },
+    {
+      "tv": [
+        -0.35,
+        0,
+        2.1
+      ],
+      "camera": [
+        -1.3,
+        1.65,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        1.35,
+        0.45
+      ],
+      "fov": 80,
+      "angle": -2.8572078769959344,
+      "width": 271,
+      "screenHeight": 144,
+      "humanHeight": 198,
+      "quality": 0.4066833478364198,
+      "sensorPixels": [
+        {
+          "name": "머리맡 ToF",
+          "width": 37,
+          "height": 42
+        },
+        {
+          "name": "발치 ToF",
+          "width": 19,
+          "height": 23
+        },
+        {
+          "name": "천장 mmWave",
+          "width": 30,
+          "height": 26
+        }
+      ],
+      "sensorsVisible": [
+        true,
+        false,
+        true
+      ],
+      "score": null
+    },
+    {
+      "tv": [
+        -0.35,
+        0,
+        2.1
+      ],
+      "camera": [
+        -0.5,
+        2.05,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        1.55,
+        0.45
+      ],
+      "fov": 80,
+      "angle": -3.095471537575282,
+      "width": 264,
+      "screenHeight": 139,
+      "humanHeight": 207,
+      "quality": 0.40659420058030105,
+      "sensorPixels": [
+        {
+          "name": "머리맡 ToF",
+          "width": 88,
+          "height": 81
+        },
+        {
+          "name": "발치 ToF",
+          "width": 21,
+          "height": 29
+        },
+        {
+          "name": "천장 mmWave",
+          "width": 47,
+          "height": 35
+        }
+      ],
+      "sensorsVisible": [
+        true,
+        false,
+        true
+      ],
+      "score": null
+    },
+    {
+      "tv": [
+        -0.35,
+        0,
+        -0.75
+      ],
+      "camera": [
+        -1.3,
+        1.65,
+        2.55
+      ],
+      "target": [
+        0.35,
+        0.95,
+        0.45
+      ],
+      "fov": 80,
+      "angle": -0.2802996563384511,
+      "width": 244,
+      "screenHeight": 135,
+      "humanHeight": 220,
+      "quality": 0.40558286431209134,
+      "sensorPixels": [
+        {
+          "name": "머리맡 ToF",
+          "width": 18,
+          "height": 22
+        },
+        {
+          "name": "발치 ToF",
+          "width": 40,
+          "height": 40
+        },
+        {
+          "name": "천장 mmWave",
+          "width": 31,
+          "height": 26
+        }
+      ],
+      "sensorsVisible": [
+        false,
+        true,
+        true
+      ],
+      "score": null
+    },
+    {
+      "tv": [
+        -0.35,
+        0,
+        -0.75
+      ],
+      "camera": [
+        -1.3,
+        1.85,
+        2.55
+      ],
+      "target": [
+        0.35,
+        0.95,
+        0.45
+      ],
+      "fov": 80,
+      "angle": -0.2802996563384511,
+      "width": 248,
+      "screenHeight": 135,
+      "humanHeight": 219,
+      "quality": 0.404785507062966,
+      "sensorPixels": [
+        {
+          "name": "머리맡 ToF",
+          "width": 18,
+          "height": 23
+        },
+        {
+          "name": "발치 ToF",
+          "width": 41,
+          "height": 42
+        },
+        {
+          "name": "천장 mmWave",
+          "width": 32,
+          "height": 25
+        }
+      ],
+      "sensorsVisible": [
+        false,
+        true,
+        true
+      ],
+      "score": null
+    },
+    {
+      "tv": [
+        -0.35,
+        0,
+        2.1
+      ],
+      "camera": [
+        -0.9,
+        2.05,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        1.55,
+        0.45
+      ],
+      "fov": 80,
+      "angle": -2.9739502157585775,
+      "width": 275,
+      "screenHeight": 142,
+      "humanHeight": 197,
+      "quality": 0.4036945427020897,
+      "sensorPixels": [
+        {
+          "name": "머리맡 ToF",
+          "width": 55,
+          "height": 58
+        },
+        {
+          "name": "발치 ToF",
+          "width": 20,
+          "height": 27
+        },
+        {
+          "name": "천장 mmWave",
+          "width": 37,
+          "height": 27
+        }
+      ],
+      "sensorsVisible": [
+        true,
+        false,
+        true
+      ],
+      "score": null
+    },
+    {
+      "tv": [
+        0,
+        0,
+        -0.75
+      ],
+      "camera": [
+        -0.9,
+        2.05,
+        2.55
+      ],
+      "target": [
+        0.35,
+        1.15,
+        0.45
+      ],
+      "fov": 80,
+      "angle": -0.2662520491509254,
+      "width": 222,
+      "screenHeight": 123,
+      "humanHeight": 237,
+      "quality": 0.40211542044297616,
+      "sensorPixels": [
+        {
+          "name": "머리맡 ToF",
+          "width": 19,
+          "height": 25
+        },
+        {
+          "name": "발치 ToF",
+          "width": 53,
+          "height": 52
+        },
+        {
+          "name": "천장 mmWave",
+          "width": 37,
+          "height": 26
+        }
+      ],
+      "sensorsVisible": [
+        false,
+        true,
+        true
+      ],
+      "score": null
+    },
+    {
+      "tv": [
+        0,
+        0,
+        2.1
+      ],
+      "camera": [
+        -0.9,
+        1.4,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        1.35,
+        0.45
+      ],
+      "fov": 80,
+      "angle": -2.8714394538783883,
+      "width": 229,
+      "screenHeight": 129,
+      "humanHeight": 224,
+      "quality": 0.40149551066615863,
+      "sensorPixels": [
+        {
+          "name": "머리맡 ToF",
+          "width": 48,
+          "height": 55
+        },
+        {
+          "name": "발치 ToF",
+          "width": 20,
+          "height": 25
+        },
+        {
+          "name": "천장 mmWave",
+          "width": 33,
+          "height": 31
+        }
+      ],
+      "sensorsVisible": [
+        true,
+        false,
+        true
+      ],
+      "score": null
+    },
+    {
+      "tv": [
+        -0.35,
+        0,
+        2.1
+      ],
+      "camera": [
+        -1.3,
+        2.05,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        1.15,
+        0.45
+      ],
+      "fov": 80,
+      "angle": -2.8572078769959344,
+      "width": 292,
+      "screenHeight": 147,
+      "humanHeight": 185,
+      "quality": 0.40087574601152387,
+      "sensorPixels": [
+        {
+          "name": "머리맡 ToF",
+          "width": 43,
+          "height": 46
+        },
+        {
+          "name": "발치 ToF",
+          "width": 20,
+          "height": 26
+        },
+        {
+          "name": "천장 mmWave",
+          "width": 34,
+          "height": 27
+        }
+      ],
+      "sensorsVisible": [
+        true,
+        false,
+        true
+      ],
+      "score": null
+    },
+    {
+      "tv": [
+        -0.35,
+        0,
+        2.1
+      ],
+      "camera": [
+        -1.3,
+        1.85,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        1.35,
+        0.45
+      ],
+      "fov": 80,
+      "angle": -2.8572078769959344,
+      "width": 277,
+      "screenHeight": 144,
+      "humanHeight": 191,
+      "quality": 0.4003170557357725,
+      "sensorPixels": [
+        {
+          "name": "머리맡 ToF",
+          "width": 39,
+          "height": 44
+        },
+        {
+          "name": "발치 ToF",
+          "width": 19,
+          "height": 24
+        },
+        {
+          "name": "천장 mmWave",
+          "width": 31,
+          "height": 25
+        }
+      ],
+      "sensorsVisible": [
+        true,
+        false,
+        true
+      ],
+      "score": null
+    },
+    {
+      "tv": [
+        -0.35,
+        0,
+        -0.75
+      ],
+      "camera": [
+        -1.3,
+        1.4,
+        2.55
+      ],
+      "target": [
+        0.35,
+        0.95,
+        0.45
+      ],
+      "fov": 80,
+      "angle": -0.2802996563384511,
+      "width": 238,
+      "screenHeight": 133,
+      "humanHeight": 218,
+      "quality": 0.399550311024341,
+      "sensorPixels": [
+        {
+          "name": "머리맡 ToF",
+          "width": 17,
+          "height": 22
+        },
+        {
+          "name": "발치 ToF",
+          "width": 38,
+          "height": 42
+        },
+        {
+          "name": "천장 mmWave",
+          "width": 29,
+          "height": 26
+        }
+      ],
+      "sensorsVisible": [
+        false,
+        true,
+        true
+      ],
+      "score": null
+    },
+    {
+      "tv": [
+        -0.35,
+        0,
+        -0.75
+      ],
+      "camera": [
+        -1.3,
+        2.05,
+        2.55
+      ],
+      "target": [
+        0.35,
+        0.95,
+        0.45
+      ],
+      "fov": 80,
+      "angle": -0.2802996563384511,
+      "width": 249,
+      "screenHeight": 133,
+      "humanHeight": 216,
+      "quality": 0.3992491189908419,
+      "sensorPixels": [
+        {
+          "name": "머리맡 ToF",
+          "width": 18,
+          "height": 24
+        },
+        {
+          "name": "발치 ToF",
+          "width": 42,
+          "height": 43
+        },
+        {
+          "name": "천장 mmWave",
+          "width": 33,
+          "height": 24
+        }
+      ],
+      "sensorsVisible": [
+        false,
+        true,
+        true
+      ],
+      "score": null
+    },
+    {
+      "tv": [
+        0,
+        0,
+        2.1
+      ],
+      "camera": [
+        -0.5,
+        1.85,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        1.55,
+        0.45
+      ],
+      "fov": 80,
+      "angle": -2.988943325194528,
+      "width": 231,
+      "screenHeight": 128,
+      "humanHeight": 223,
+      "quality": 0.3988197286812596,
+      "sensorPixels": [
+        {
+          "name": "머리맡 ToF",
+          "width": 86,
+          "height": 80
+        },
+        {
+          "name": "발치 ToF",
+          "width": 21,
+          "height": 28
+        },
+        {
+          "name": "천장 mmWave",
+          "width": 45,
+          "height": 35
+        }
+      ],
+      "sensorsVisible": [
+        true,
+        false,
+        true
+      ],
+      "score": null
+    },
+    {
+      "tv": [
+        0,
+        0,
+        2.1
+      ],
+      "camera": [
+        -0.9,
+        1.65,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        1.35,
+        0.45
+      ],
+      "fov": 80,
+      "angle": -2.8714394538783883,
+      "width": 238,
+      "screenHeight": 132,
+      "humanHeight": 216,
+      "quality": 0.3970876956670285,
+      "sensorPixels": [
+        {
+          "name": "머리맡 ToF",
+          "width": 54,
+          "height": 54
+        },
+        {
+          "name": "발치 ToF",
+          "width": 20,
+          "height": 25
+        },
+        {
+          "name": "천장 mmWave",
+          "width": 36,
+          "height": 32
+        }
+      ],
+      "sensorsVisible": [
+        true,
+        false,
+        true
+      ],
+      "score": null
+    },
+    {
+      "tv": [
+        -0.35,
+        0,
+        2.1
+      ],
+      "camera": [
+        -1.3,
+        1.85,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        1.55,
+        0.45
+      ],
+      "fov": 80,
+      "angle": -2.8572078769959344,
+      "width": 267,
+      "screenHeight": 141,
+      "humanHeight": 193,
+      "quality": 0.3965612992686959,
+      "sensorPixels": [
+        {
+          "name": "머리맡 ToF",
+          "width": 36,
+          "height": 43
+        },
+        {
+          "name": "발치 ToF",
+          "width": 19,
+          "height": 24
+        },
+        {
+          "name": "천장 mmWave",
+          "width": 29,
+          "height": 23
+        }
+      ],
+      "sensorsVisible": [
+        true,
+        false,
+        true
+      ],
+      "score": null
+    },
+    {
+      "tv": [
+        0,
+        0,
+        -1.8
+      ],
+      "camera": [
+        -1.3,
+        1.4,
+        2.55
+      ],
+      "target": [
+        0.35,
+        0.95,
+        0.45
+      ],
+      "fov": 72,
+      "angle": -0.2904019425484412,
+      "width": 203,
+      "screenHeight": 112,
+      "humanHeight": 251,
+      "quality": 0.39642369208488765,
+      "sensorPixels": [
+        {
+          "name": "머리맡 ToF",
+          "width": 20,
+          "height": 26
+        },
+        {
+          "name": "발치 ToF",
+          "width": 44,
+          "height": 48
+        },
+        {
+          "name": "천장 mmWave",
+          "width": 34,
+          "height": 30
+        }
+      ],
+      "sensorsVisible": [
+        false,
+        true,
+        true
+      ],
+      "score": null
+    },
+    {
+      "tv": [
+        -0.35,
+        0,
+        -0.75
+      ],
+      "camera": [
+        -1.3,
+        1.65,
+        2.55
+      ],
+      "target": [
+        0.35,
+        1.15,
+        0.45
+      ],
+      "fov": 80,
+      "angle": -0.2802996563384511,
+      "width": 236,
+      "screenHeight": 130,
+      "humanHeight": 219,
+      "quality": 0.3960471279051414,
+      "sensorPixels": [
+        {
+          "name": "머리맡 ToF",
+          "width": 17,
+          "height": 22
+        },
+        {
+          "name": "발치 ToF",
+          "width": 38,
+          "height": 39
+        },
+        {
+          "name": "천장 mmWave",
+          "width": 29,
+          "height": 23
+        }
+      ],
+      "sensorsVisible": [
+        false,
+        true,
+        true
+      ],
+      "score": null
+    },
+    {
+      "tv": [
+        -0.35,
+        0,
+        -0.75
+      ],
+      "camera": [
+        -1.3,
+        1.85,
+        2.55
+      ],
+      "target": [
+        0.35,
+        1.15,
+        0.45
+      ],
+      "fov": 80,
+      "angle": -0.2802996563384511,
+      "width": 239,
+      "screenHeight": 130,
+      "humanHeight": 218,
+      "quality": 0.39532474024825187,
+      "sensorPixels": [
+        {
+          "name": "머리맡 ToF",
+          "width": 17,
+          "height": 22
+        },
+        {
+          "name": "발치 ToF",
+          "width": 39,
+          "height": 41
+        },
+        {
+          "name": "천장 mmWave",
+          "width": 30,
+          "height": 23
+        }
+      ],
+      "sensorsVisible": [
+        false,
+        true,
+        true
+      ],
+      "score": null
+    },
+    {
+      "tv": [
+        0,
+        0,
+        -1.8
+      ],
+      "camera": [
+        -1.3,
+        2.05,
+        2.55
+      ],
+      "target": [
+        0.35,
+        1.15,
+        0.45
+      ],
+      "fov": 72,
+      "angle": -0.2904019425484412,
+      "width": 209,
+      "screenHeight": 111,
+      "humanHeight": 248,
+      "quality": 0.39241404460791435,
+      "sensorPixels": [
+        {
+          "name": "머리맡 ToF",
+          "width": 20,
+          "height": 27
+        },
+        {
+          "name": "발치 ToF",
+          "width": 46,
+          "height": 49
+        },
+        {
+          "name": "천장 mmWave",
+          "width": 36,
+          "height": 25
+        }
+      ],
+      "sensorsVisible": [
+        false,
+        true,
+        true
+      ],
+      "score": null
+    },
+    {
+      "tv": [
+        0,
+        0,
+        2.1
+      ],
+      "camera": [
+        -1.3,
+        1.4,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        0.95,
+        0.45
+      ],
+      "fov": 80,
+      "angle": -2.761086276477428,
+      "width": 245,
+      "screenHeight": 136,
+      "humanHeight": 206,
+      "quality": 0.3914126818223114,
+      "sensorPixels": [
+        {
+          "name": "머리맡 ToF",
+          "width": 40,
+          "height": 45
+        },
+        {
+          "name": "발치 ToF",
+          "width": 20,
+          "height": 25
+        },
+        {
+          "name": "천장 mmWave",
+          "width": 31,
+          "height": 32
+        }
+      ],
+      "sensorsVisible": [
+        true,
+        false,
+        true
+      ],
+      "score": null
+    },
+    {
+      "tv": [
+        -0.35,
+        0,
+        -0.75
+      ],
+      "camera": [
+        -1.3,
+        1.4,
+        2.55
+      ],
+      "target": [
+        0.35,
+        1.15,
+        0.45
+      ],
+      "fov": 80,
+      "angle": -0.2802996563384511,
+      "width": 230,
+      "screenHeight": 129,
+      "humanHeight": 216,
+      "quality": 0.3903733184277368,
+      "sensorPixels": [
+        {
+          "name": "머리맡 ToF",
+          "width": 17,
+          "height": 22
+        },
+        {
+          "name": "발치 ToF",
+          "width": 36,
+          "height": 40
+        },
+        {
+          "name": "천장 mmWave",
+          "width": 28,
+          "height": 24
+        }
+      ],
+      "sensorsVisible": [
+        false,
+        true,
+        true
+      ],
+      "score": null
+    },
+    {
+      "tv": [
+        -0.35,
+        0,
+        -0.75
+      ],
+      "camera": [
+        -1.3,
+        2.05,
+        2.55
+      ],
+      "target": [
+        0.35,
+        1.15,
+        0.45
+      ],
+      "fov": 80,
+      "angle": -0.2802996563384511,
+      "width": 241,
+      "screenHeight": 129,
+      "humanHeight": 215,
+      "quality": 0.39016856828349333,
+      "sensorPixels": [
+        {
+          "name": "머리맡 ToF",
+          "width": 17,
+          "height": 23
+        },
+        {
+          "name": "발치 ToF",
+          "width": 40,
+          "height": 42
+        },
+        {
+          "name": "천장 mmWave",
+          "width": 31,
+          "height": 22
+        }
+      ],
+      "sensorsVisible": [
+        false,
+        true,
+        true
+      ],
+      "score": null
+    },
+    {
+      "tv": [
+        -0.35,
+        0,
+        2.1
+      ],
+      "camera": [
+        -1.3,
+        2.05,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        1.35,
+        0.45
+      ],
+      "fov": 80,
+      "angle": -2.8572078769959344,
+      "width": 281,
+      "screenHeight": 142,
+      "humanHeight": 183,
+      "quality": 0.3895890570342895,
+      "sensorPixels": [
+        {
+          "name": "머리맡 ToF",
+          "width": 40,
+          "height": 45
+        },
+        {
+          "name": "발치 ToF",
+          "width": 19,
+          "height": 25
+        },
+        {
+          "name": "천장 mmWave",
+          "width": 32,
+          "height": 24
+        }
+      ],
+      "sensorsVisible": [
+        true,
+        false,
+        true
+      ],
+      "score": null
+    },
+    {
+      "tv": [
+        0,
+        0,
+        2.1
+      ],
+      "camera": [
+        -0.9,
+        1.85,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        1.35,
+        0.45
+      ],
+      "fov": 80,
+      "angle": -2.8714394538783883,
+      "width": 244,
+      "screenHeight": 133,
+      "humanHeight": 207,
+      "quality": 0.3889778303355633,
+      "sensorPixels": [
+        {
+          "name": "머리맡 ToF",
+          "width": 57,
+          "height": 57
+        },
+        {
+          "name": "발치 ToF",
+          "width": 20,
+          "height": 26
+        },
+        {
+          "name": "천장 mmWave",
+          "width": 38,
+          "height": 32
+        }
+      ],
+      "sensorsVisible": [
+        true,
+        false,
+        true
+      ],
+      "score": null
+    },
+    {
+      "tv": [
+        0,
+        0,
+        -0.75
+      ],
+      "camera": [
+        -1.3,
+        1.4,
+        2.55
+      ],
+      "target": [
+        0.35,
+        0.75,
+        0.45
+      ],
+      "fov": 80,
+      "angle": -0.37527082285595736,
+      "width": 220,
+      "screenHeight": 127,
+      "humanHeight": 221,
+      "quality": 0.3874250312853035,
+      "sensorPixels": [
+        {
+          "name": "머리맡 ToF",
+          "width": 18,
+          "height": 23
+        },
+        {
+          "name": "발치 ToF",
+          "width": 41,
+          "height": 43
+        },
+        {
+          "name": "천장 mmWave",
+          "width": 31,
+          "height": 29
+        }
+      ],
+      "sensorsVisible": [
+        false,
+        true,
+        true
+      ],
+      "score": null
+    },
+    {
+      "tv": [
+        -0.35,
+        0,
+        -0.75
+      ],
+      "camera": [
+        -1.3,
+        2.05,
+        2.55
+      ],
+      "target": [
+        0.35,
+        1.35,
+        0.45
+      ],
+      "fov": 80,
+      "angle": -0.2802996563384511,
+      "width": 235,
+      "screenHeight": 126,
+      "humanHeight": 216,
+      "quality": 0.3855796900846815,
+      "sensorPixels": [
+        {
+          "name": "머리맡 ToF",
+          "width": 17,
+          "height": 23
+        },
+        {
+          "name": "발치 ToF",
+          "width": 38,
+          "height": 42
+        },
+        {
+          "name": "천장 mmWave",
+          "width": 30,
+          "height": 20
+        }
+      ],
+      "sensorsVisible": [
+        false,
+        true,
+        true
+      ],
+      "score": null
+    },
+    {
+      "tv": [
+        -0.35,
+        0,
+        2.1
+      ],
+      "camera": [
+        -1.3,
+        2.05,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        1.55,
+        0.45
+      ],
+      "fov": 80,
+      "angle": -2.8572078769959344,
+      "width": 272,
+      "screenHeight": 139,
+      "humanHeight": 185,
+      "quality": 0.38471568799869105,
+      "sensorPixels": [
+        {
+          "name": "머리맡 ToF",
+          "width": 38,
+          "height": 45
+        },
+        {
+          "name": "발치 ToF",
+          "width": 19,
+          "height": 25
+        },
+        {
+          "name": "천장 mmWave",
+          "width": 30,
+          "height": 22
+        }
+      ],
+      "sensorsVisible": [
+        true,
+        false,
+        true
+      ],
+      "score": null
+    },
+    {
+      "tv": [
+        0,
+        0,
+        2.1
+      ],
+      "camera": [
+        -0.5,
+        2.05,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        1.55,
+        0.45
+      ],
+      "fov": 80,
+      "angle": -2.988943325194528,
+      "width": 235,
+      "screenHeight": 128,
+      "humanHeight": 207,
+      "quality": 0.38120668857179096,
+      "sensorPixels": [
+        {
+          "name": "머리맡 ToF",
+          "width": 88,
+          "height": 81
+        },
+        {
+          "name": "발치 ToF",
+          "width": 21,
+          "height": 29
+        },
+        {
+          "name": "천장 mmWave",
+          "width": 47,
+          "height": 35
+        }
+      ],
+      "sensorsVisible": [
+        true,
+        false,
+        true
+      ],
+      "score": null
+    },
+    {
+      "tv": [
+        0,
+        0,
+        -0.75
+      ],
+      "camera": [
+        -1.3,
+        1.65,
+        2.55
+      ],
+      "target": [
+        0.35,
+        0.95,
+        0.45
+      ],
+      "fov": 80,
+      "angle": -0.37527082285595736,
+      "width": 217,
+      "screenHeight": 123,
+      "humanHeight": 220,
+      "quality": 0.3802230257606206,
+      "sensorPixels": [
+        {
+          "name": "머리맡 ToF",
+          "width": 18,
+          "height": 22
+        },
+        {
+          "name": "발치 ToF",
+          "width": 40,
+          "height": 40
+        },
+        {
+          "name": "천장 mmWave",
+          "width": 31,
+          "height": 26
+        }
+      ],
+      "sensorsVisible": [
+        false,
+        true,
+        true
+      ],
+      "score": null
+    },
+    {
+      "tv": [
+        0,
+        0,
+        -0.75
+      ],
+      "camera": [
+        -1.3,
+        1.85,
+        2.55
+      ],
+      "target": [
+        0.35,
+        0.95,
+        0.45
+      ],
+      "fov": 80,
+      "angle": -0.37527082285595736,
+      "width": 220,
+      "screenHeight": 123,
+      "humanHeight": 219,
+      "quality": 0.3799035997972499,
+      "sensorPixels": [
+        {
+          "name": "머리맡 ToF",
+          "width": 18,
+          "height": 23
+        },
+        {
+          "name": "발치 ToF",
+          "width": 41,
+          "height": 42
+        },
+        {
+          "name": "천장 mmWave",
+          "width": 32,
+          "height": 25
+        }
+      ],
+      "sensorsVisible": [
+        false,
+        true,
+        true
+      ],
+      "score": null
+    },
+    {
+      "tv": [
+        0,
+        0,
+        2.1
+      ],
+      "camera": [
+        -1.3,
+        1.4,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        1.15,
+        0.45
+      ],
+      "fov": 80,
+      "angle": -2.761086276477428,
+      "width": 234,
+      "screenHeight": 130,
+      "humanHeight": 203,
+      "quality": 0.37782291106776,
+      "sensorPixels": [
+        {
+          "name": "머리맡 ToF",
+          "width": 37,
+          "height": 44
+        },
+        {
+          "name": "발치 ToF",
+          "width": 19,
+          "height": 24
+        },
+        {
+          "name": "천장 mmWave",
+          "width": 29,
+          "height": 28
+        }
+      ],
+      "sensorsVisible": [
+        true,
+        false,
+        true
+      ],
+      "score": null
+    },
+    {
+      "tv": [
+        0,
+        0,
+        2.1
+      ],
+      "camera": [
+        -1.3,
+        1.65,
+        -1.15
+      ],
+      "target": [
+        0.35,
+        1.15,
+        0.45
+      ],
+      "fov": 80,
+      "angle": -2.761086276477428,
+      "width": 243,
+      "screenHeight": 133,
+      "humanHeight": 198,
+      "quality": 0.37726118378148865,
+      "sensorPixels": [
+        {
+          "name": "머리맡 ToF",
+          "width": 40,
+          "height": 43
+        },
+        {
+          "name": "발치 ToF",
+          "width": 19,
+          "height": 24
+        },
+        {
+          "name": "천장 mmWave",
+          "width": 31,
+          "height": 28
+        }
+      ],
+      "sensorsVisible": [
+        true,
+        false,
+        true
+      ],
+      "score": null
+    }
+  ],
+  "limitations": [
+    "AABB checks are conservative; thin/angled geometry may be over-rejected.",
+    "Sampled skeleton visibility does not include self-occlusion or actual pixel text legibility.",
+    "TV visibility sampled at nine points; person overlapping TV is checked in final renders.",
+    "Dimensions and motion are existing scene estimates, not surveyed site measurements.",
+    "Camera support approximated as 24cm vertical column, not a full tripod.",
+    "Best within this finite grid and scoring function, not a continuous global optimum."
+  ]
+}

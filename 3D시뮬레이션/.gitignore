@@ -1,0 +1,12 @@
+.DS_Store
+node_modules/
+.env
+.env.*
+!.env.example
+*.log
+
+# Bundled demo assets, reference excerpts and validation captures are intentional.
+!*.png
+!*.txt
+!assets/
+!assets/**

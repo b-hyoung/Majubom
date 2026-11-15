@@ -1,0 +1,12 @@
+{
+  "screenshots": 120,
+  "all_nonempty": true,
+  "candidates": 30,
+  "browser_errors": [],
+  "playback_camera_preserved": true,
+  "render_size": [
+    1280,
+    720
+  ],
+  "measured_tv_projection_matches_search": true
+}

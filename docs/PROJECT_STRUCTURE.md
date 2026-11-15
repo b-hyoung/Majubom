@@ -18,6 +18,7 @@ PlatformIO 빌드, node_modules, 로그, LanceDB 저장 엔진 내부 파일은 
 
 | 경로 | 책임/진입점 |
 |---|---|
+| 3D시뮬레이션/ | 독립 정적 촬영 구도 앱. index.html, app.js, camera-placement.js, review-header.js; 카메라/TV 배치·연출 동작·센서 위치 확인. 운영 센서 판정과 별개 |
 | TOF/src/ | ESP32-S3 Arduino 펌웨어와 PlatformIO 프로젝트. main.ino가 원본; 이전 Windows 전처리 생성물 main.ino.cpp는 제거했고 PlatformIO가 빌드 시 임시 생성한다 |
 | TOF/ml/ | 자세 추론 predict_posture.py(운영: 세 사람 실측 RF posture_rf_bedC_20261104_3p/ → 없으면 CNN 특징+RF posture_cnn_bedC_20261104/ → RF posture_model.joblib, 노트북 원본 incoming/), RF 학습(train_posture_v2.py, 이전 모델은 archive/), ROI/침대 좌표(ROI 마스킹 비교 실험·노트북 안내 roi_experiment_20261106/), LSTM-AE 참고 이상탐지, 특징 로깅, 후보 모델 비교 |
 | TOF/dataset*/ | 라벨별 ToF 거리 CSV/JSONL, 기존 4×4 및 빈 침대 데이터 보관. dataset_v3 = 새 침상 실측, dataset_v3_synth = 합성 참가자(학습 보조 전용, synth_subjects.py), dataset_v4 = 센서 1.5m로 올린 뒤 6인 재녹화(정리된 값, 노트북 학습 안내 LAPTOP_TRAIN_PROMPT.md) |
@@ -63,6 +64,377 @@ Majubom/
 ├── .github/
 │   └── workflows/
 │       └── camera-pose.yml
+├── 3D시뮬레이션/
+│   ├── assets/
+│   │   ├── patient/
+│   │   │   ├── LICENSES/
+│   │   │   │   └── CC0-1.0.txt
+│   │   │   ├── CREDITS.md
+│   │   │   └── human-0423.glb
+│   │   ├── references/
+│   │   │   ├── deep/
+│   │   │   │   ├── inoue-rail-row.png
+│   │   │   │   ├── inoue-table1.png
+│   │   │   │   ├── komatsu-rail-row.png
+│   │   │   │   ├── paik-05-4.jpg
+│   │   │   │   ├── paik-05-9.jpg
+│   │   │   │   ├── paik-06-4.jpg
+│   │   │   │   └── paik-07-0.jpg
+│   │   │   ├── bed-video-6.mp4
+│   │   │   ├── bed-video-7.mp4
+│   │   │   └── bed-video-8.mp4
+│   │   ├── dashboard.png
+│   │   ├── PretendardVariable.woff2
+│   │   └── reference.png
+│   ├── evidence/
+│   │   ├── search/
+│   │   │   ├── initial-conservative-results.json
+│   │   │   ├── optimizer-four-sensor-shots.js
+│   │   │   ├── optimizer-without-sensor-constraint.js
+│   │   │   ├── results-four-sensor-shots.json
+│   │   │   ├── results-ten-nearby.json
+│   │   │   ├── results-without-sensor-constraint.json
+│   │   │   ├── results.json
+│   │   │   ├── shots-four.js
+│   │   │   ├── shots-ten-nearby.js
+│   │   │   └── verification.json
+│   │   ├── claude-fall-review-after.txt
+│   │   ├── claude-fall-review-before.txt
+│   │   ├── claude-rig-review-after.txt
+│   │   ├── claude-rig-review-before.txt
+│   │   ├── claude-seated-support-followup.txt
+│   │   ├── claude-seated-support-review.txt
+│   │   ├── deep-rail-research.json
+│   │   ├── exit-turn-marks.json
+│   │   ├── exit-turn-results.json
+│   │   ├── fall-audit.txt
+│   │   ├── fall-contact-audit.txt
+│   │   ├── feet-audit.json
+│   │   ├── scenario-basis.json
+│   │   ├── seated-support-audit.json
+│   │   ├── seated-support-positions.json
+│   │   ├── seated-support-shoe-contact.txt
+│   │   └── tof-arm-results.json
+│   ├── exports/
+│   │   ├── distinct-sensor-shots/
+│   │   │   ├── 01-cross.png
+│   │   │   ├── 01-fall.png
+│   │   │   ├── 01-floor.png
+│   │   │   ├── 01-normal.png
+│   │   │   ├── 02-cross.png
+│   │   │   ├── 02-fall.png
+│   │   │   ├── 02-floor.png
+│   │   │   ├── 02-normal.png
+│   │   │   ├── 03-cross.png
+│   │   │   ├── 03-fall.png
+│   │   │   ├── 03-floor.png
+│   │   │   ├── 03-normal.png
+│   │   │   ├── 04-cross.png
+│   │   │   ├── 04-fall.png
+│   │   │   ├── 04-floor.png
+│   │   │   ├── 04-normal.png
+│   │   │   ├── 05-cross.png
+│   │   │   ├── 05-fall.png
+│   │   │   ├── 05-floor.png
+│   │   │   ├── 05-normal.png
+│   │   │   ├── 06-cross.png
+│   │   │   ├── 06-fall.png
+│   │   │   ├── 06-floor.png
+│   │   │   ├── 06-normal.png
+│   │   │   ├── 07-cross.png
+│   │   │   ├── 07-fall.png
+│   │   │   ├── 07-floor.png
+│   │   │   ├── 07-normal.png
+│   │   │   ├── 08-cross.png
+│   │   │   ├── 08-fall.png
+│   │   │   ├── 08-floor.png
+│   │   │   ├── 08-normal.png
+│   │   │   ├── 09-cross.png
+│   │   │   ├── 09-fall.png
+│   │   │   ├── 09-floor.png
+│   │   │   ├── 09-normal.png
+│   │   │   ├── 10-cross.png
+│   │   │   ├── 10-fall.png
+│   │   │   ├── 10-floor.png
+│   │   │   ├── 10-normal.png
+│   │   │   └── metrics.json
+│   │   ├── optimized-shots/
+│   │   │   ├── 01-cross.png
+│   │   │   ├── 01-fall.png
+│   │   │   ├── 01-floor.png
+│   │   │   ├── 01-normal.png
+│   │   │   ├── 02-cross.png
+│   │   │   ├── 02-fall.png
+│   │   │   ├── 02-floor.png
+│   │   │   ├── 02-normal.png
+│   │   │   ├── 03-cross.png
+│   │   │   ├── 03-fall.png
+│   │   │   ├── 03-floor.png
+│   │   │   ├── 03-normal.png
+│   │   │   ├── 04-cross.png
+│   │   │   ├── 04-fall.png
+│   │   │   ├── 04-floor.png
+│   │   │   ├── 04-normal.png
+│   │   │   ├── 05-cross.png
+│   │   │   ├── 05-fall.png
+│   │   │   ├── 05-floor.png
+│   │   │   ├── 05-normal.png
+│   │   │   ├── 06-cross.png
+│   │   │   ├── 06-fall.png
+│   │   │   ├── 06-floor.png
+│   │   │   ├── 06-normal.png
+│   │   │   ├── 07-cross.png
+│   │   │   ├── 07-fall.png
+│   │   │   ├── 07-floor.png
+│   │   │   ├── 07-normal.png
+│   │   │   ├── 08-cross.png
+│   │   │   ├── 08-fall.png
+│   │   │   ├── 08-floor.png
+│   │   │   ├── 08-normal.png
+│   │   │   ├── 09-cross.png
+│   │   │   ├── 09-fall.png
+│   │   │   ├── 09-floor.png
+│   │   │   ├── 09-normal.png
+│   │   │   ├── 10-cross.png
+│   │   │   ├── 10-fall.png
+│   │   │   ├── 10-floor.png
+│   │   │   ├── 10-normal.png
+│   │   │   ├── 11-cross.png
+│   │   │   ├── 11-fall.png
+│   │   │   ├── 11-floor.png
+│   │   │   ├── 11-normal.png
+│   │   │   ├── 12-cross.png
+│   │   │   ├── 12-fall.png
+│   │   │   ├── 12-floor.png
+│   │   │   ├── 12-normal.png
+│   │   │   ├── 13-cross.png
+│   │   │   ├── 13-fall.png
+│   │   │   ├── 13-floor.png
+│   │   │   ├── 13-normal.png
+│   │   │   ├── 14-cross.png
+│   │   │   ├── 14-fall.png
+│   │   │   ├── 14-floor.png
+│   │   │   ├── 14-normal.png
+│   │   │   ├── 15-cross.png
+│   │   │   ├── 15-fall.png
+│   │   │   ├── 15-floor.png
+│   │   │   ├── 15-normal.png
+│   │   │   ├── 16-cross.png
+│   │   │   ├── 16-fall.png
+│   │   │   ├── 16-floor.png
+│   │   │   ├── 16-normal.png
+│   │   │   ├── 17-cross.png
+│   │   │   ├── 17-fall.png
+│   │   │   ├── 17-floor.png
+│   │   │   ├── 17-normal.png
+│   │   │   ├── 18-cross.png
+│   │   │   ├── 18-fall.png
+│   │   │   ├── 18-floor.png
+│   │   │   ├── 18-normal.png
+│   │   │   ├── 19-cross.png
+│   │   │   ├── 19-fall.png
+│   │   │   ├── 19-floor.png
+│   │   │   ├── 19-normal.png
+│   │   │   ├── 20-cross.png
+│   │   │   ├── 20-fall.png
+│   │   │   ├── 20-floor.png
+│   │   │   ├── 20-normal.png
+│   │   │   ├── 21-cross.png
+│   │   │   ├── 21-fall.png
+│   │   │   ├── 21-floor.png
+│   │   │   ├── 21-normal.png
+│   │   │   ├── 22-cross.png
+│   │   │   ├── 22-fall.png
+│   │   │   ├── 22-floor.png
+│   │   │   ├── 22-normal.png
+│   │   │   ├── 23-cross.png
+│   │   │   ├── 23-fall.png
+│   │   │   ├── 23-floor.png
+│   │   │   ├── 23-normal.png
+│   │   │   ├── 24-cross.png
+│   │   │   ├── 24-fall.png
+│   │   │   ├── 24-floor.png
+│   │   │   ├── 24-normal.png
+│   │   │   ├── 25-cross.png
+│   │   │   ├── 25-fall.png
+│   │   │   ├── 25-floor.png
+│   │   │   ├── 25-normal.png
+│   │   │   ├── 26-cross.png
+│   │   │   ├── 26-fall.png
+│   │   │   ├── 26-floor.png
+│   │   │   ├── 26-normal.png
+│   │   │   ├── 27-cross.png
+│   │   │   ├── 27-fall.png
+│   │   │   ├── 27-floor.png
+│   │   │   ├── 27-normal.png
+│   │   │   ├── 28-cross.png
+│   │   │   ├── 28-fall.png
+│   │   │   ├── 28-floor.png
+│   │   │   ├── 28-normal.png
+│   │   │   ├── 29-cross.png
+│   │   │   ├── 29-fall.png
+│   │   │   ├── 29-floor.png
+│   │   │   ├── 29-normal.png
+│   │   │   ├── 30-cross.png
+│   │   │   ├── 30-fall.png
+│   │   │   ├── 30-floor.png
+│   │   │   ├── 30-normal.png
+│   │   │   ├── comparison-page.png
+│   │   │   ├── contact-sheet.png
+│   │   │   ├── contact.html
+│   │   │   └── metrics.json
+│   │   ├── review/
+│   │   │   ├── camera-placement.png
+│   │   │   ├── camera-through-lens.png
+│   │   │   ├── distinct-directions-overview-preview.png
+│   │   │   ├── film-with-overview.png
+│   │   │   ├── header-filters.png
+│   │   │   ├── pinned-camera-preview.png
+│   │   │   └── ten-shot-buttons.png
+│   │   ├── screenshots/
+│   │   │   ├── mmwave-closeup.png
+│   │   │   └── mmwave-overview.png
+│   │   ├── sensor-shots/
+│   │   │   ├── 01-cross.png
+│   │   │   ├── 01-fall.png
+│   │   │   ├── 01-floor.png
+│   │   │   ├── 01-normal.png
+│   │   │   ├── 02-cross.png
+│   │   │   ├── 02-fall.png
+│   │   │   ├── 02-floor.png
+│   │   │   ├── 02-normal.png
+│   │   │   ├── 03-cross.png
+│   │   │   ├── 03-fall.png
+│   │   │   ├── 03-floor.png
+│   │   │   ├── 03-normal.png
+│   │   │   ├── 04-cross.png
+│   │   │   ├── 04-fall.png
+│   │   │   ├── 04-floor.png
+│   │   │   ├── 04-normal.png
+│   │   │   └── metrics.json
+│   │   ├── shots/
+│   │   │   ├── 01-cross.png
+│   │   │   ├── 01-fall.png
+│   │   │   ├── 01-floor.png
+│   │   │   ├── 01-normal.png
+│   │   │   ├── 02-cross.png
+│   │   │   ├── 02-fall.png
+│   │   │   ├── 02-floor.png
+│   │   │   ├── 02-normal.png
+│   │   │   ├── 03-cross.png
+│   │   │   ├── 03-fall.png
+│   │   │   ├── 03-floor.png
+│   │   │   ├── 03-normal.png
+│   │   │   ├── 04-cross.png
+│   │   │   ├── 04-fall.png
+│   │   │   ├── 04-floor.png
+│   │   │   ├── 04-normal.png
+│   │   │   ├── 05-cross.png
+│   │   │   ├── 05-fall.png
+│   │   │   ├── 05-floor.png
+│   │   │   ├── 05-normal.png
+│   │   │   ├── 06-cross.png
+│   │   │   ├── 06-fall.png
+│   │   │   ├── 06-floor.png
+│   │   │   ├── 06-normal.png
+│   │   │   ├── 07-cross.png
+│   │   │   ├── 07-fall.png
+│   │   │   ├── 07-floor.png
+│   │   │   ├── 07-normal.png
+│   │   │   ├── 08-cross.png
+│   │   │   ├── 08-fall.png
+│   │   │   ├── 08-floor.png
+│   │   │   ├── 08-normal.png
+│   │   │   ├── 09-cross.png
+│   │   │   ├── 09-fall.png
+│   │   │   ├── 09-floor.png
+│   │   │   ├── 09-normal.png
+│   │   │   ├── 10-cross.png
+│   │   │   ├── 10-fall.png
+│   │   │   ├── 10-floor.png
+│   │   │   ├── 10-normal.png
+│   │   │   ├── contact.html
+│   │   │   └── metrics.json
+│   │   ├── ten-sensor-shots/
+│   │   │   ├── 01-cross.png
+│   │   │   ├── 01-fall.png
+│   │   │   ├── 01-floor.png
+│   │   │   ├── 01-normal.png
+│   │   │   ├── 02-cross.png
+│   │   │   ├── 02-fall.png
+│   │   │   ├── 02-floor.png
+│   │   │   ├── 02-normal.png
+│   │   │   ├── 03-cross.png
+│   │   │   ├── 03-fall.png
+│   │   │   ├── 03-floor.png
+│   │   │   ├── 03-normal.png
+│   │   │   ├── 04-cross.png
+│   │   │   ├── 04-fall.png
+│   │   │   ├── 04-floor.png
+│   │   │   ├── 04-normal.png
+│   │   │   ├── 05-cross.png
+│   │   │   ├── 05-fall.png
+│   │   │   ├── 05-floor.png
+│   │   │   ├── 05-normal.png
+│   │   │   ├── 06-cross.png
+│   │   │   ├── 06-fall.png
+│   │   │   ├── 06-floor.png
+│   │   │   ├── 06-normal.png
+│   │   │   ├── 07-cross.png
+│   │   │   ├── 07-fall.png
+│   │   │   ├── 07-floor.png
+│   │   │   ├── 07-normal.png
+│   │   │   ├── 08-cross.png
+│   │   │   ├── 08-fall.png
+│   │   │   ├── 08-floor.png
+│   │   │   ├── 08-normal.png
+│   │   │   ├── 09-cross.png
+│   │   │   ├── 09-fall.png
+│   │   │   ├── 09-floor.png
+│   │   │   ├── 09-normal.png
+│   │   │   ├── 10-cross.png
+│   │   │   ├── 10-fall.png
+│   │   │   ├── 10-floor.png
+│   │   │   ├── 10-normal.png
+│   │   │   ├── contact.html
+│   │   │   ├── contact.png
+│   │   │   └── metrics.json
+│   │   ├── combined-camera-preview.png
+│   │   ├── majubom-rail-fall-demo.mp4
+│   │   └── mmwave-button-guide.png
+│   ├── scripts/
+│   │   ├── capture-distinct-sensor-shots.cjs
+│   │   ├── capture-shot-candidates.cjs
+│   │   ├── capture-ten-sensor-shots.cjs
+│   │   └── run-shot-search.cjs
+│   ├── vendor/
+│   │   ├── utils/
+│   │   │   ├── BufferGeometryUtils.js
+│   │   │   └── SkeletonUtils.js
+│   │   ├── GLTFLoader.js
+│   │   ├── OrbitControls.js
+│   │   ├── RoundedBoxGeometry.js
+│   │   ├── THREE-LICENSE.txt
+│   │   ├── three.core.js
+│   │   └── three.module.js
+│   ├── .gitignore
+│   ├── .impeccable.md
+│   ├── app.js
+│   ├── camera-placement.js
+│   ├── fall-scenario.js
+│   ├── index.html
+│   ├── optimize-shots.js
+│   ├── patient.js
+│   ├── README.md
+│   ├── references.html
+│   ├── review-header.js
+│   ├── scenario.js
+│   ├── shots-manual.js
+│   ├── shots-without-sensor-constraint.js
+│   ├── shots-without-sensors.html
+│   ├── shots.html
+│   ├── shots.js
+│   └── style.css
 ├── camera-pose/
 │   ├── .github/
 │   │   └── workflows/
@@ -1387,6 +1759,7 @@ Majubom/
 │   ├── seed_demo_emr.py
 │   ├── set_bed_center.py
 │   └── update_project_structure.py
+├── .DS_Store
 ├── .gitignore
 ├── 0704할일.md
 ├── 0707_TOF_진행상황_인수인계.md

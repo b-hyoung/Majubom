@@ -1,0 +1,83 @@
+{
+  "purpose": "논문 근거와 시각 자료를 분리해 난간 넘기 낙상 시연의 적용 범위를 검토",
+  "status": "공개 자료 심층 검색 완료. 난간 넘기부터 실제 바닥 충돌까지 연속 검증된 임상 영상은 미확보.",
+  "review_type": "탐색적 심층 조사. 체계적 문헌고찰 아님",
+  "records": [
+    {
+      "id": "V1",
+      "title": "함께해요 낙상예방!",
+      "creator": "인제대학교 부산백병원",
+      "official_source": "https://www.paik.ac.kr/paik/user/bbs/BMSR00040/view.do?boardId=23764&menuNo=200008",
+      "video": "https://www.youtube.com/watch?v=gvNwefIL4YA",
+      "publication_date": "2024-10-14 (공식 소개)",
+      "type": "성인 재연 / 병원 교육자료 / 논문 보충영상 아님",
+      "inspection": "영상 전체 2초 간격 프레임, 난간 구간 6fps 및 10fps 프레임 직접 확인",
+      "relevant_seconds_approx": [5.3, 7.3],
+      "preview_seconds": [5.4, 5.9, 6.4, 7.0],
+      "coverage": {"first_leg_crossing": true, "asymmetric_leg_support": true, "complete_trailing_leg_clearance": "판정 보류", "body_descent": true, "unsupported_fall": "검증 안 됨", "floor_contact": false},
+      "limit": "옆의 낮은 보호자 침상에서 몸을 받는 장면. 실제 사고 CCTV 또는 치매 환자의 임상 동작이 아님.",
+      "rights": "공식 원본 링크/임베드, 짧은 정지 프레임 인용. 전체 영상 재배포하지 않음. 발표물 재사용 권한 별도 확인."
+    },
+    {
+      "id": "P1",
+      "citation": "小松友, 山口（中上）悦子, 仲谷薫, 羽川直宏. 病院の施設管理におけるFMEAの応用：患者の投書とインシデントレポートを組み合わせた分析事例. 日本医療・病院管理学会誌. 2020;57(1):28–37.",
+      "url": "https://www.jstage.jst.go.jp/article/jsha/57/1/57_19-15/_pdf",
+      "type": "原著的研究報告 / 실제 사고보고 분석",
+      "locators": ["표3: 인쇄31쪽/PDF4쪽", "표6: 인쇄33쪽/PDF6쪽, ④-a ベッド柵を乗り越える"],
+      "inspection": "PDF 텍스트 및 표 렌더링 직접 확인",
+      "supports": "난간을 넘다 실패하여 추락한 보고 2건과 머리 부위 손상 결과. 난간 넘기 시나리오 선정 근거.",
+      "not_supported": "연속 관절 궤적, 좌우 방향, 충돌 부위 순서, 치매 진단 특정",
+      "video": null,
+      "rights": "출처를 밝힌 표의 짧은 해당 행 인용. 원문 전체 재배포 안 함."
+    },
+    {
+      "id": "P2",
+      "citation": "Inoue M, Kino S, Kobayashi D, Ogawa K. Video Behavior Recognition Running on Edge Devices to Realize a Patient Life Log System for Large-Scale Hospitals. Engineering Proceedings. 120(1):39.",
+      "doi": "10.3390/engproc2025120039",
+      "bibliographic_year": 2025,
+      "published": "2026-02-03",
+      "url": "https://www.mdpi.com/2673-4591/120/1/39",
+      "pdf": "https://mdpi-res.com/d_attachment/engproc/engproc-120-00039/article_deploy/engproc-120-00039.pdf",
+      "type": "학술대회 논문 / 재연 실험. 윤리 항목에 professional actors 명시",
+      "locators": ["Table 1, PDF2쪽", "실험 구성 PDF3~4쪽", "Data Availability PDF6쪽"],
+      "supports": "난간에 몸을 걸치는 상태로 전이를 위험 행동으로 정의",
+      "not_supported": "실제 환자의 난간 추락 운동학, ToF/mmWave 정확도 또는 경보 선행시간",
+      "access": "원본 영상 계약·개인정보 제한으로 비공개. 가공 수치 데이터는 합리적 연구 요청 시 제공 가능성 명시.",
+      "contact": "Madoka Inoue, Aiphone Co., Ltd.; madoka_inoue@aiphone.co.jp (논문 명시)",
+      "contacted": false,
+      "rights": "CC BY 4.0; 해당 표 행을 출처와 함께 발췌"
+    },
+    {
+      "id": "P3",
+      "citation": "Raymond DE, Catena RD, Vaughan TR. Biomechanics and injury risk assessment of falls onto protective floor mats. Rehabil Nurs. 2011;36(6):248–254.",
+      "doi": "10.1002/j.2048-7940.2011.tb00090.x",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/22073504/",
+      "type": "측방 충돌용 마네킹 낙하 실험",
+      "inspection": "PubMed 초록 확인. 실험 영상 미확보",
+      "supports": "침상 높이 수준의 측방 낙하 충격 연구",
+      "not_supported": "난간을 능동적으로 넘는 사람의 동작과 지지 전환",
+      "contact": "David E. Raymond; dr@traumabiomechanics.com (논문 기재 당시 연락처, 현재 유효성 미확인)",
+      "contacted": false
+    },
+    {
+      "id": "D1",
+      "url": "https://www.sfu.ca/ipml/research/data-sharing.html",
+      "type": "실제 고령자 낙상 / 제한 접근 데이터셋",
+      "access": "Databrary 접근 안내, 연구팀 Steve Robinovitch 문의 경로",
+      "limit": "공용 공간 촬영, 침실·욕실 없음. 난간 낙상 포함 근거 없음.",
+      "contacted": false
+    }
+  ],
+  "search_scope": {
+    "English": ["bed rail fall video study biomechanics", "bedrail climb video study", "bed rail climbing dataset fall video supplementary", "bed fall dummy biomechanics side rail", "bed rail fall dataset site:zenodo.org", "bed rail fall site:data.mendeley.com", "fall bed rail site:figshare.com", "climbing bed rail supplementary video study", "bedrail fall motion capture"],
+    "Korean": ["침대 난간 낙상 영상 논문", "침대 난간 낙상 학습 데이터 논문", "침대 난간 넘어오다 낙상 영상"],
+    "Japanese": ["ベッド柵 乗り越え 論文 動画", "ベッド柵 乗り越え 検知 論文"],
+    "checked_channels": ["PubMed/PMC", "J-STAGE PDF", "MDPI 논문/PDF 및 데이터 공개 선언", "병원 공식 게시물/연결 영상", "정부·규제기관 사고 보고서", "데이터 저장소 관련 공개 웹 검색"],
+    "excluded_or_unverified": ["소아 난간 사고: 대상 불일치", "끼임·질식: 다른 사고 유형", "KR20250007404A: 특허 설계 설명, 실증 논문 아님", "VAU-Bench: 원본 영상과 난간 여부 직접 검증 못함", "LookDeep 자료: 해당 페이지에 DRAFT 표시, 난간 넘기 공개 영상 확인 못함", "NHS 시연 사진: 검색 색인은 존재하나 PDF 접근403, 직접 시각 검증 못함", "J-STAGE 색상 난간 연구: 침대 접근/앉기, 난간 추락 아님"]
+  },
+  "application": {
+    "can_use": ["논문을 근거로 난간 넘기 실패를 사고 시나리오로 선정", "교육 재연에서 손 지지와 한쪽 다리 이동을 참고", "난간 걸침/이탈/실제 낙상을 별도 행동 라벨로 구분"],
+    "must_remain_authored": ["반대 다리 경로", "손 지지 상실의 정확한 시점", "완전한 공중 회전", "바닥 접촉 순서", "가상 센서 판정과 알림 시점"],
+    "no_claim": "임상 운동학 검증 또는 센서 모델 학습 데이터 검증을 완료했다고 표현하지 않음"
+  }
+}
