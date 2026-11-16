@@ -843,7 +843,7 @@ def run(cli_port, data_port, cfg_path, do_send=True, target_id="room_01", height
     if prefall:
         from prefall_predictor import load_patient_prefall
         pre, pre_why = load_patient_prefall()
-    print(f"[prefall] {'켜짐: 걷기 10초를 기준으로 0.5초마다 판정' if pre else '꺼짐 — ' + str(pre_why)}")
+    print(f"[prefall] {'켜짐: 모델 v' + str(pre.p.meta.get('version')) + ', 0.5초마다 판정' if pre else '꺼짐 — ' + str(pre_why)}")
     pre_last = None
     tap = RawTap(raw_tap) if raw_tap else None
     if tap:
