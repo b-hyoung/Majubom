@@ -22,3 +22,8 @@ mock_lead_*.pkl
 lead_cache_*.pkl
 lead.log
 catboost_info/
+comb_cache_*.pkl
+combined.log
+mock_exit_*.pkl
+pop_cache_*.pkl
+popbase.log

@@ -1,22 +1,32 @@
 {
  "created": "2026-11-16",
- "version": 2,
+ "version": 3,
  "scenarios": [
   "unsteady_fall",
   "freeze_collapse"
  ],
+ "baseline": "reference",
+ "reference": {
+  "speed": 0.789,
+  "speed_cv": 0.209,
+  "sway": 0.028,
+  "freeze_ratio": 0.0,
+  "stride_length": 1.004,
+  "stride_cv": 0.049
+ },
+ "reference_walk_z": 0.9808409967802802,
+ "start_sec": 3.0,
+ "walking_gate": false,
  "window_sec": 3,
  "step_sec": 0.5,
  "horizon_sec": 8.0,
- "baseline_sec": 10.0,
  "trend_lags_sec": [
   1.5,
   3.0
  ],
- "rule": "mean of last 3 windows >= threshold, upright, walking 1.5-4 s before",
+ "rule": "mean of last 3 windows >= threshold and upright (body centre >= 80% of reference walking height)",
  "threshold": 0.55,
  "upright_ratio": 0.8,
- "min_baseline_speed": 0.2,
  "features": [
   "speed_ratio",
   "speed_cv_ratio",
@@ -35,7 +45,10 @@
   "d_freeze_3s"
  ],
  "training": {
-  "mock": "mock_lead_train.pkl (60 virtual people x 5 episodes x 9 kinds, dizzy out)",
+  "mock": [
+   "mock_lead_train.pkl",
+   "mock_exit_train.pkl"
+  ],
   "real_sessions": [
    "TEST_20261116_152746",
    "TEST_20261116_153708",
@@ -44,25 +57,32 @@
    "TEST_20261116_163825",
    "TEST_20261116_170337"
   ],
-  "real_share": 0.15
+  "real_share": 0.15,
+  "reference_windows": 7744
  },
- "new_mock_test": {
-  "caught_pct": 56.0,
-  "mean_lead_sec": 2.93,
-  "false_alarms_per_h": 1.68,
-  "control_alarm_pct": 1.2
- },
- "real_left_out (prefall_lead.py A8)": {
-  "kim": {
-   "caught_pct": 50.0,
-   "mean_lead_sec": 2.93,
-   "control_alarm_pct": 16.7
+ "results": {
+  "new_mock_after_walking": {
+   "caught_pct": 56.0,
+   "mean_lead_sec": 3.08,
+   "false_alarms_per_h": 2.15
   },
-  "lee": {
-   "caught_pct": 81.7,
-   "mean_lead_sec": 4.57,
-   "control_alarm_pct": 16.7
+  "new_mock_right_after_getting_up": {
+   "caught_pct": 54.5,
+   "mean_lead_sec": 2.66,
+   "false_alarms_per_h": 0.47
+  },
+  "real_left_out": {
+   "kim": {
+    "caught_pct": 41.6,
+    "mean_lead_sec": 2.1,
+    "control_alarm_pct": 16.7
+   },
+   "lee": {
+    "caught_pct": 90.0,
+    "mean_lead_sec": 3.52,
+    "control_alarm_pct": 16.7
+   }
   }
  },
- "previous_version": "v1 2026-11-16: 3 s horizon, threshold 0.51"
+ "previous_version": "v2: personal 10 s baseline + walking-before gate (prefall_xgb_v2_8s.json)"
 }

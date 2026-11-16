@@ -199,6 +199,10 @@ def mixed_trial(rng, trials, weaken):
     return r
 
 
+LEAD_WALK = (12.0, 25.0)   # normal walking before the scenario; (0, 3) = starts right after standing up beside the bed
+START_STAND = False        # stand still 1-3 s first (just got out of bed)
+
+
 def episode_from_profile(rng, person, walk, kind, prof, mix=False):
     """Same frame model as episode(), but the scenario change is copied from one real acted trial of that kind
     (picked at random) with ±15% jitter, instead of the literature ranges."""
@@ -206,7 +210,10 @@ def episode_from_profile(rng, person, walk, kind, prof, mix=False):
     J = lambda v: v * rng.uniform(0.85, 1.15)
     info = {"kind": kind, "fall": kind in FALLS, "drop_start": None, "landed": None, "source_trial": None}
     gait = rng.choice(["normal", "slow"], p=[0.7, 0.3])
-    tr.walk(rng.uniform(12, 25), gait)
+    if START_STAND:
+        tr.stand(rng.uniform(1.0, 3.0), speed=0.04)
+    if LEAD_WALK[1] > 0:
+        tr.walk(rng.uniform(*LEAD_WALK), gait)
     if kind in FALLS and kind != "trip_fall":
         r = mixed_trial(rng, prof[kind], weaken=rng.random() < 0.5) if mix else prof[kind][rng.integers(len(prof[kind]))]
         info["source_trial"] = f"{r['session']}#{r['trial']}"
@@ -309,8 +316,15 @@ def main():
     ap.add_argument("--out", default="mock_episodes.pkl")
     ap.add_argument("--mix", action="store_true", help="blend two real trials and weaken half of the episodes")
     ap.add_argument("--skip-kind", action="append", default=[], help="scenario to leave out (e.g. dizzy_collapse)")
+    ap.add_argument("--lead-walk", type=float, nargs=2, default=None, metavar=("MIN", "MAX"),
+                    help="seconds of normal walking before the scenario (default 12 25; 0 3 = right after getting up)")
+    ap.add_argument("--start-stand", action="store_true", help="begin standing still 1-3 s beside the bed")
     a = ap.parse_args()
     prof = load_profile(a.profile, a.exclude_session) if a.profile else None
+    global LEAD_WALK, START_STAND
+    if a.lead_walk:
+        LEAD_WALK = tuple(a.lead_walk)
+    START_STAND = a.start_stand
     rng = np.random.default_rng(a.seed)
     walk = load_walk_params()
     eps = []

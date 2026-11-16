@@ -21,9 +21,12 @@ class PreFallPredictorTests(unittest.TestCase):
     def setUp(self):
         self.p = PreFallPredictor()
 
-    def test_needs_ten_seconds_then_scores_every_half_second(self):
+    def test_starts_soon_then_scores_every_half_second(self):
+        # v3 (reference walking profile): first score 3 s after the track appears; v1/v2 waited for 10 s of walking.
+        first = 3.0 if self.p.reference else 13.0
         results = [self.p.update(*r) for r in walk(100.0, 20.0, 0.8)]
-        self.assertTrue(all(r is None for r in results[: int(13 * 18) - 1]))
+        self.assertTrue(all(r is None for r in results[: int(first * 18) - 1]))
+        self.assertIsNotNone(next(r for r in results if r))
         scored = [r for r in results if r]
         self.assertGreaterEqual(len(scored), 12)
         self.assertTrue(all(0.0 <= r["prob"] <= 1.0 for r in scored))

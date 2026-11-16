@@ -1,0 +1,68 @@
+{
+ "sets": {
+  "kim (all 3 rounds)": [
+   "TEST_20261116_161406",
+   "TEST_20261116_163825",
+   "TEST_20261116_170337"
+  ],
+  "lee round 3": [
+   "TEST_20261116_154621"
+  ]
+ },
+ "results": {
+  "kim (all 3 rounds)": {
+   "Pi walking model v2": {
+    "falls_caught": "11/12",
+    "by_kind": {
+     "unsteady_fall": "5/6",
+     "freeze_collapse": "6/6"
+    },
+    "mean_lead_sec": 9.05,
+    "early_alarm": "0/12",
+    "control_alarm": "9/12"
+   },
+   "Pi walking model v3": {
+    "falls_caught": "11/12",
+    "by_kind": {
+     "unsteady_fall": "5/6",
+     "freeze_collapse": "6/6"
+    },
+    "mean_lead_sec": 8.67,
+    "early_alarm": "0/12",
+    "control_alarm": "9/12"
+   },
+   "new model v2 (person left out)": {
+    "falls_caught": "6/12",
+    "by_kind": {
+     "unsteady_fall": "5/6",
+     "freeze_collapse": "1/6"
+    },
+    "mean_lead_sec": 2.52,
+    "early_alarm": "0/12",
+    "control_alarm": "2/12"
+   }
+  },
+  "lee round 3": {
+   "Pi walking model v2": {
+    "falls_caught": "4/4",
+    "by_kind": {
+     "unsteady_fall": "2/2",
+     "freeze_collapse": "2/2"
+    },
+    "mean_lead_sec": 8.8,
+    "early_alarm": "0/4",
+    "control_alarm": "3/4"
+   },
+   "new model v2 (person left out)": {
+    "falls_caught": "3/4",
+    "by_kind": {
+     "unsteady_fall": "2/2",
+     "freeze_collapse": "1/2"
+    },
+    "mean_lead_sec": 4.54,
+    "early_alarm": "0/4",
+    "control_alarm": "1/4"
+   }
+  }
+ }
+}

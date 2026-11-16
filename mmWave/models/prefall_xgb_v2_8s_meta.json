@@ -1,0 +1,68 @@
+{
+ "created": "2026-11-16",
+ "version": 2,
+ "scenarios": [
+  "unsteady_fall",
+  "freeze_collapse"
+ ],
+ "window_sec": 3,
+ "step_sec": 0.5,
+ "horizon_sec": 8.0,
+ "baseline_sec": 10.0,
+ "trend_lags_sec": [
+  1.5,
+  3.0
+ ],
+ "rule": "mean of last 3 windows >= threshold, upright, walking 1.5-4 s before",
+ "threshold": 0.55,
+ "upright_ratio": 0.8,
+ "min_baseline_speed": 0.2,
+ "features": [
+  "speed_ratio",
+  "speed_cv_ratio",
+  "sway_ratio",
+  "freeze_diff",
+  "stride_cv_ratio",
+  "straightness",
+  "speed",
+  "d_speed_1.5s",
+  "d_speed_cv_1.5s",
+  "d_sway_1.5s",
+  "d_freeze_1.5s",
+  "d_speed_3s",
+  "d_speed_cv_3s",
+  "d_sway_3s",
+  "d_freeze_3s"
+ ],
+ "training": {
+  "mock": "mock_lead_train.pkl (60 virtual people x 5 episodes x 9 kinds, dizzy out)",
+  "real_sessions": [
+   "TEST_20261116_152746",
+   "TEST_20261116_153708",
+   "TEST_20261116_154621",
+   "TEST_20261116_161406",
+   "TEST_20261116_163825",
+   "TEST_20261116_170337"
+  ],
+  "real_share": 0.15
+ },
+ "new_mock_test": {
+  "caught_pct": 56.0,
+  "mean_lead_sec": 2.93,
+  "false_alarms_per_h": 1.68,
+  "control_alarm_pct": 1.2
+ },
+ "real_left_out (prefall_lead.py A8)": {
+  "kim": {
+   "caught_pct": 50.0,
+   "mean_lead_sec": 2.93,
+   "control_alarm_pct": 16.7
+  },
+  "lee": {
+   "caught_pct": 81.7,
+   "mean_lead_sec": 4.57,
+   "control_alarm_pct": 16.7
+  }
+ },
+ "previous_version": "v1 2026-11-16: 3 s horizon, threshold 0.51"
+}

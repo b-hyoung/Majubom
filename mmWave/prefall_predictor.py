@@ -1,18 +1,22 @@
 """Pre-fall predictor: "will this person fall within the next few seconds?" from the mmWave patient track (2026-11-16).
 
-Feed it the followed person's track one frame at a time (time, x, y, z, speed, points). It needs the person's first
-10 s of walking as a personal baseline, then every 0.5 s it scores the last 3 s with the model in
-models/prefall_xgb.json + prefall_xgb_meta.json. Version 2 (analysis/20261116_prefall_mock/prefall_final8.py) is
-trained to flag a drop within 8 s (horizon_sec in the metadata); its first alarm came 2.9 s before the drop on average
-on new mock data and 2.9-4.6 s on real people left out of training. Version 1 (3 s horizon) is kept as
-models/prefall_xgb_v1_3s.json.
+Feed it the followed person's track one frame at a time (time, x, y, z, speed, points). Every 0.5 s it scores the last
+3 s with the model in models/prefall_xgb.json + prefall_xgb_meta.json (flags a drop within horizon_sec = 8 s).
+
+Version 3 (current, analysis/20261116_prefall_mock/prefall_final_v3.py): gait is compared with one fixed reference
+walking profile measured from the real + mock walking data, so scoring starts 3 s after the track appears and it can
+warn when someone staggers right after getting out of bed. New mock data: 56% caught 3.1 s ahead after walking, 54.5%
+2.7 s ahead right after getting up; people left out of training: lee 90%, kim 42%; control-trial alarms 17%.
+Version 2 (prefall_xgb_v2_8s.json) used the person's own first 10 s of walking as the baseline and a "was walking"
+gate; version 1 (prefall_xgb_v1_3s.json) had a 3 s horizon. The metadata says which mode a model uses.
 
 Scenarios it was trained for: unsteady walking (비틀거림) and freezing / short shuffling steps (멈칫) before sitting or
 falling down. Dizzy collapse while standing is NOT covered (gait barely changes). Trips without warning cannot be
 predicted. Trained on 2 people's acted trials (lee, kim) plus mock data built from them: treat it as a prototype.
 
 Alarm = mean of the last 3 window probabilities >= threshold, and only while the person is upright (body height at
-least 80% of their walking height); once the body goes down, the existing fall check (fall_detect.py) takes over.
+least 80% of the walking height: reference height in v3, own in v1/v2); once the body goes down, the existing fall
+check (fall_detect.py) takes over.
 Call reset() when a different person is followed or the track was lost.
 
 Usage:
@@ -107,10 +111,14 @@ class PreFallPredictor:
         self.model = load_model(model_path)
         self.win = float(self.meta["window_sec"])
         self.step = float(self.meta["step_sec"])
-        self.base_sec = float(self.meta["baseline_sec"])
+        self.base_sec = float(self.meta.get("baseline_sec", 10.0))
         self.thr = float(self.meta["threshold"])
         self.upright = float(self.meta["upright_ratio"])
         self.min_walk_speed = float(self.meta.get("min_baseline_speed", M.WALK_SPEED_MIN))
+        # v3: one fixed reference walking profile (real + mock walking) instead of the person's own first 10 s, so
+        # scoring starts 3 s after the track appears (e.g. right after getting out of bed) and there is no walking gate.
+        self.reference = self.meta.get("baseline") == "reference"
+        self.walk_gate = bool(self.meta.get("walking_gate", True))
         self.reset()
 
     def reset(self, start=None):
@@ -148,6 +156,10 @@ class PreFallPredictor:
         self.recent.append(frame)
         while self.recent and rel - self.recent[0][0] > self.win + 3.5:
             self.recent.popleft()
+        if self.base is None and self.reference:
+            self.base = {k: float(v) for k, v in self.meta["reference"].items()}
+            self.walk_z = float(self.meta["reference_walk_z"])
+            self.next_end = float(self.meta.get("start_sec", self.win))
         if self.base is None:
             if rel < self.base_sec:
                 return None
@@ -179,9 +191,12 @@ class PreFallPredictor:
             # standstill), so an alarm also needs walking 1.5-4 s before this window's end.
             past = [f[4] for f in self.recent if end - self.RECENT_WALK_FROM < f[0] <= end - self.RECENT_WALK_TO]
             moving = bool(past) and float(np.median(past)) >= self.RECENT_WALK_SPEED
-            alarm = len(self.probs) == 3 and float(np.mean(self.probs)) >= self.thr and upright and moving
+            alarm = (len(self.probs) == 3 and float(np.mean(self.probs)) >= self.thr and upright
+                     and (moving or not self.walk_gate))
             self.low_since = None if upright else (self.low_since if self.low_since is not None else end)
-            self.rebase = self.low_since is not None and end - self.low_since >= self.LOW_RESET_SEC
+            # Personal-baseline models start over after the body was low; the reference model has no baseline to renew.
+            self.rebase = (not self.reference and self.low_since is not None
+                           and end - self.low_since >= self.LOW_RESET_SEC)
             result = {"t": self.t0 + end, "prob": prob, "mean3": float(np.mean(self.probs)), "upright": upright,
                       "walking_before": moving, "alarm": alarm, "threshold": self.thr, "rebaseline": self.rebase}
             if self.rebase:
