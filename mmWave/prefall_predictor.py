@@ -27,7 +27,7 @@ from collections import deque
 
 import numpy as np
 
-import send_mmw as M
+import prefall_gait as M   # same gait code the model was trained with, independent of the reader version
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 BASE_KEYS = ("speed", "speed_cv", "sway", "freeze_ratio", "stride_length", "stride_cv")
