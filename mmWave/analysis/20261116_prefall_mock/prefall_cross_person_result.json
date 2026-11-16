@@ -1,0 +1,1076 @@
+{
+ "sessions": {
+  "lee": [
+   "TEST_20261116_152746",
+   "TEST_20261116_153708",
+   "TEST_20261116_154621"
+  ],
+  "kim": [
+   "TEST_20261116_161406",
+   "TEST_20261116_163825",
+   "TEST_20261116_170337"
+  ]
+ },
+ "cross": {
+  "kim": {
+   "threshold": 0.66,
+   "trials": [
+    {
+     "trial": 1,
+     "kind": "unsteady_fall",
+     "caught": false,
+     "lead_sec": null,
+     "alarm_before_warning_window": false,
+     "max_prob_last3s": 0.513,
+     "session": "TEST_20261116_161406"
+    },
+    {
+     "trial": 2,
+     "kind": "walk_normal",
+     "false_alarm": false,
+     "max_prob": 0.363,
+     "session": "TEST_20261116_161406"
+    },
+    {
+     "trial": 3,
+     "kind": "freeze_collapse",
+     "caught": false,
+     "lead_sec": null,
+     "alarm_before_warning_window": false,
+     "max_prob_last3s": 0.769,
+     "session": "TEST_20261116_161406"
+    },
+    {
+     "trial": 4,
+     "kind": "sit_chair",
+     "false_alarm": true,
+     "max_prob": 0.897,
+     "session": "TEST_20261116_161406"
+    },
+    {
+     "trial": 5,
+     "kind": "dizzy_collapse",
+     "caught": false,
+     "lead_sec": null,
+     "alarm_before_warning_window": true,
+     "max_prob_last3s": 0.204,
+     "session": "TEST_20261116_161406"
+    },
+    {
+     "trial": 6,
+     "kind": "unsteady_fall",
+     "caught": false,
+     "lead_sec": null,
+     "alarm_before_warning_window": false,
+     "max_prob_last3s": 0.012,
+     "session": "TEST_20261116_161406"
+    },
+    {
+     "trial": 7,
+     "kind": "crouch",
+     "false_alarm": true,
+     "max_prob": 0.85,
+     "session": "TEST_20261116_161406"
+    },
+    {
+     "trial": 8,
+     "kind": "freeze_collapse",
+     "caught": false,
+     "lead_sec": null,
+     "alarm_before_warning_window": false,
+     "max_prob_last3s": 0.015,
+     "session": "TEST_20261116_161406"
+    },
+    {
+     "trial": 9,
+     "kind": "stop_stand",
+     "false_alarm": false,
+     "max_prob": 0.756,
+     "session": "TEST_20261116_161406"
+    },
+    {
+     "trial": 10,
+     "kind": "dizzy_collapse",
+     "caught": false,
+     "lead_sec": null,
+     "alarm_before_warning_window": false,
+     "max_prob_last3s": 0.629,
+     "session": "TEST_20261116_161406"
+    },
+    {
+     "trial": 1,
+     "kind": "dizzy_collapse",
+     "caught": false,
+     "lead_sec": null,
+     "alarm_before_warning_window": false,
+     "max_prob_last3s": 0.233,
+     "session": "TEST_20261116_163825"
+    },
+    {
+     "trial": 2,
+     "kind": "stop_stand",
+     "false_alarm": false,
+     "max_prob": 0.23,
+     "session": "TEST_20261116_163825"
+    },
+    {
+     "trial": 3,
+     "kind": "unsteady_fall",
+     "caught": true,
+     "lead_sec": 1.74,
+     "alarm_before_warning_window": false,
+     "max_prob_last3s": 0.883,
+     "session": "TEST_20261116_163825"
+    },
+    {
+     "trial": 4,
+     "kind": "freeze_collapse",
+     "caught": false,
+     "lead_sec": null,
+     "alarm_before_warning_window": false,
+     "max_prob_last3s": 0.337,
+     "session": "TEST_20261116_163825"
+    },
+    {
+     "trial": 5,
+     "kind": "crouch",
+     "false_alarm": true,
+     "max_prob": 0.763,
+     "session": "TEST_20261116_163825"
+    },
+    {
+     "trial": 6,
+     "kind": "dizzy_collapse",
+     "caught": false,
+     "lead_sec": null,
+     "alarm_before_warning_window": false,
+     "max_prob_last3s": 0.474,
+     "session": "TEST_20261116_163825"
+    },
+    {
+     "trial": 7,
+     "kind": "walk_normal",
+     "false_alarm": false,
+     "max_prob": 0.01,
+     "session": "TEST_20261116_163825"
+    },
+    {
+     "trial": 8,
+     "kind": "unsteady_fall",
+     "caught": false,
+     "lead_sec": null,
+     "alarm_before_warning_window": false,
+     "max_prob_last3s": 0.344,
+     "session": "TEST_20261116_163825"
+    },
+    {
+     "trial": 9,
+     "kind": "sit_chair",
+     "false_alarm": true,
+     "max_prob": 0.914,
+     "session": "TEST_20261116_163825"
+    },
+    {
+     "trial": 10,
+     "kind": "freeze_collapse",
+     "caught": false,
+     "lead_sec": null,
+     "alarm_before_warning_window": false,
+     "max_prob_last3s": 0.02,
+     "session": "TEST_20261116_163825"
+    },
+    {
+     "trial": 1,
+     "kind": "freeze_collapse",
+     "caught": false,
+     "lead_sec": null,
+     "alarm_before_warning_window": false,
+     "max_prob_last3s": 0.416,
+     "session": "TEST_20261116_170337"
+    },
+    {
+     "trial": 2,
+     "kind": "crouch",
+     "false_alarm": false,
+     "max_prob": 0.712,
+     "session": "TEST_20261116_170337"
+    },
+    {
+     "trial": 3,
+     "kind": "dizzy_collapse",
+     "caught": false,
+     "lead_sec": null,
+     "alarm_before_warning_window": false,
+     "max_prob_last3s": 0.405,
+     "session": "TEST_20261116_170337"
+    },
+    {
+     "trial": 4,
+     "kind": "walk_normal",
+     "false_alarm": false,
+     "max_prob": 0.009,
+     "session": "TEST_20261116_170337"
+    },
+    {
+     "trial": 5,
+     "kind": "unsteady_fall",
+     "caught": false,
+     "lead_sec": null,
+     "alarm_before_warning_window": false,
+     "max_prob_last3s": 0.5,
+     "session": "TEST_20261116_170337"
+    },
+    {
+     "trial": 6,
+     "kind": "sit_chair",
+     "false_alarm": false,
+     "max_prob": 0.497,
+     "session": "TEST_20261116_170337"
+    },
+    {
+     "trial": 7,
+     "kind": "freeze_collapse",
+     "caught": true,
+     "lead_sec": 1.65,
+     "alarm_before_warning_window": false,
+     "max_prob_last3s": 0.833,
+     "session": "TEST_20261116_170337"
+    },
+    {
+     "trial": 8,
+     "kind": "stop_stand",
+     "false_alarm": false,
+     "max_prob": 0.424,
+     "session": "TEST_20261116_170337"
+    },
+    {
+     "trial": 9,
+     "kind": "dizzy_collapse",
+     "caught": false,
+     "lead_sec": null,
+     "alarm_before_warning_window": true,
+     "max_prob_last3s": 0.459,
+     "session": "TEST_20261116_170337"
+    },
+    {
+     "trial": 10,
+     "kind": "unsteady_fall",
+     "caught": false,
+     "lead_sec": null,
+     "alarm_before_warning_window": false,
+     "max_prob_last3s": 0.81,
+     "session": "TEST_20261116_170337"
+    }
+   ],
+   "summary": {
+    "falls_caught": "2/18",
+    "by_kind": {
+     "unsteady_fall": "1/6",
+     "freeze_collapse": "1/6",
+     "dizzy_collapse": "0/6"
+    },
+    "mean_lead_sec": 1.69,
+    "control_trials_with_alarm": "4/12",
+    "fall_trials_alarm_too_early": "2/18",
+    "skipped": []
+   }
+  },
+  "lee": {
+   "threshold": 0.54,
+   "trials": [
+    {
+     "trial": 1,
+     "kind": "unsteady_fall",
+     "caught": false,
+     "lead_sec": null,
+     "alarm_before_warning_window": false,
+     "max_prob_last3s": 0.225,
+     "session": "TEST_20261116_152746"
+    },
+    {
+     "trial": 2,
+     "kind": "walk_normal",
+     "false_alarm": false,
+     "max_prob": 0.046,
+     "session": "TEST_20261116_152746"
+    },
+    {
+     "trial": 3,
+     "kind": "freeze_collapse",
+     "note": "no baseline",
+     "session": "TEST_20261116_152746"
+    },
+    {
+     "trial": 4,
+     "kind": "sit_chair",
+     "false_alarm": false,
+     "max_prob": 0.34,
+     "session": "TEST_20261116_152746"
+    },
+    {
+     "trial": 5,
+     "kind": "dizzy_collapse",
+     "caught": false,
+     "lead_sec": null,
+     "alarm_before_warning_window": false,
+     "max_prob_last3s": 0.249,
+     "session": "TEST_20261116_152746"
+    },
+    {
+     "trial": 6,
+     "kind": "unsteady_fall",
+     "caught": true,
+     "lead_sec": 2.63,
+     "alarm_before_warning_window": false,
+     "max_prob_last3s": 0.854,
+     "session": "TEST_20261116_152746"
+    },
+    {
+     "trial": 7,
+     "kind": "crouch",
+     "false_alarm": false,
+     "max_prob": 0.329,
+     "session": "TEST_20261116_152746"
+    },
+    {
+     "trial": 8,
+     "kind": "freeze_collapse",
+     "caught": true,
+     "lead_sec": 2.79,
+     "alarm_before_warning_window": false,
+     "max_prob_last3s": 0.893,
+     "session": "TEST_20261116_152746"
+    },
+    {
+     "trial": 9,
+     "kind": "stop_stand",
+     "false_alarm": false,
+     "max_prob": 0.85,
+     "session": "TEST_20261116_152746"
+    },
+    {
+     "trial": 10,
+     "kind": "dizzy_collapse",
+     "caught": false,
+     "lead_sec": null,
+     "alarm_before_warning_window": false,
+     "max_prob_last3s": 0.19,
+     "session": "TEST_20261116_152746"
+    },
+    {
+     "trial": 1,
+     "kind": "dizzy_collapse",
+     "caught": true,
+     "lead_sec": 1.49,
+     "alarm_before_warning_window": false,
+     "max_prob_last3s": 0.768,
+     "session": "TEST_20261116_153708"
+    },
+    {
+     "trial": 2,
+     "kind": "stop_stand",
+     "false_alarm": false,
+     "max_prob": 0.525,
+     "session": "TEST_20261116_153708"
+    },
+    {
+     "trial": 3,
+     "kind": "unsteady_fall",
+     "caught": true,
+     "lead_sec": 2.54,
+     "alarm_before_warning_window": true,
+     "max_prob_last3s": 0.7,
+     "session": "TEST_20261116_153708"
+    },
+    {
+     "trial": 4,
+     "kind": "freeze_collapse",
+     "caught": true,
+     "lead_sec": 2.76,
+     "alarm_before_warning_window": true,
+     "max_prob_last3s": 0.947,
+     "session": "TEST_20261116_153708"
+    },
+    {
+     "trial": 5,
+     "kind": "crouch",
+     "false_alarm": false,
+     "max_prob": 0.341,
+     "session": "TEST_20261116_153708"
+    },
+    {
+     "trial": 6,
+     "kind": "dizzy_collapse",
+     "caught": false,
+     "lead_sec": null,
+     "alarm_before_warning_window": false,
+     "max_prob_last3s": 0.24,
+     "session": "TEST_20261116_153708"
+    },
+    {
+     "trial": 7,
+     "kind": "walk_normal",
+     "false_alarm": false,
+     "max_prob": 0.021,
+     "session": "TEST_20261116_153708"
+    },
+    {
+     "trial": 8,
+     "kind": "unsteady_fall",
+     "caught": true,
+     "lead_sec": 2.83,
+     "alarm_before_warning_window": true,
+     "max_prob_last3s": 0.751,
+     "session": "TEST_20261116_153708"
+    },
+    {
+     "trial": 9,
+     "kind": "sit_chair",
+     "false_alarm": false,
+     "max_prob": 0.473,
+     "session": "TEST_20261116_153708"
+    },
+    {
+     "trial": 10,
+     "kind": "freeze_collapse",
+     "caught": false,
+     "lead_sec": null,
+     "alarm_before_warning_window": false,
+     "max_prob_last3s": 0.276,
+     "session": "TEST_20261116_153708"
+    },
+    {
+     "trial": 1,
+     "kind": "freeze_collapse",
+     "caught": false,
+     "lead_sec": null,
+     "alarm_before_warning_window": false,
+     "max_prob_last3s": 0.475,
+     "session": "TEST_20261116_154621"
+    },
+    {
+     "trial": 2,
+     "kind": "crouch",
+     "false_alarm": true,
+     "max_prob": 0.817,
+     "session": "TEST_20261116_154621"
+    },
+    {
+     "trial": 3,
+     "kind": "dizzy_collapse",
+     "caught": false,
+     "lead_sec": null,
+     "alarm_before_warning_window": false,
+     "max_prob_last3s": 0.175,
+     "session": "TEST_20261116_154621"
+    },
+    {
+     "trial": 4,
+     "kind": "walk_normal",
+     "false_alarm": false,
+     "max_prob": 0.027,
+     "session": "TEST_20261116_154621"
+    },
+    {
+     "trial": 5,
+     "kind": "unsteady_fall",
+     "caught": true,
+     "lead_sec": 2.08,
+     "alarm_before_warning_window": false,
+     "max_prob_last3s": 0.937,
+     "session": "TEST_20261116_154621"
+    },
+    {
+     "trial": 6,
+     "kind": "sit_chair",
+     "false_alarm": false,
+     "max_prob": 0.554,
+     "session": "TEST_20261116_154621"
+    },
+    {
+     "trial": 7,
+     "kind": "freeze_collapse",
+     "caught": true,
+     "lead_sec": 2.51,
+     "alarm_before_warning_window": false,
+     "max_prob_last3s": 0.914,
+     "session": "TEST_20261116_154621"
+    },
+    {
+     "trial": 8,
+     "kind": "stop_stand",
+     "false_alarm": true,
+     "max_prob": 0.768,
+     "session": "TEST_20261116_154621"
+    },
+    {
+     "trial": 9,
+     "kind": "dizzy_collapse",
+     "caught": false,
+     "lead_sec": null,
+     "alarm_before_warning_window": false,
+     "max_prob_last3s": 0.278,
+     "session": "TEST_20261116_154621"
+    },
+    {
+     "trial": 10,
+     "kind": "unsteady_fall",
+     "caught": true,
+     "lead_sec": 0.54,
+     "alarm_before_warning_window": true,
+     "max_prob_last3s": 0.742,
+     "session": "TEST_20261116_154621"
+    }
+   ],
+   "summary": {
+    "falls_caught": "9/17",
+    "by_kind": {
+     "unsteady_fall": "5/6",
+     "freeze_collapse": "3/5",
+     "dizzy_collapse": "1/6"
+    },
+    "mean_lead_sec": 2.24,
+    "control_trials_with_alarm": "2/12",
+    "fall_trials_alarm_too_early": "4/17",
+    "skipped": [
+     {
+      "trial": 3,
+      "kind": "freeze_collapse",
+      "note": "no baseline",
+      "session": "TEST_20261116_152746"
+     }
+    ]
+   }
+  }
+ },
+ "pooled_leave_round_out": {
+  "kim": {
+   "trials": [
+    {
+     "trial": 1,
+     "kind": "unsteady_fall",
+     "caught": false,
+     "lead_sec": null,
+     "alarm_before_warning_window": false,
+     "max_prob_last3s": 0.093,
+     "session": "TEST_20261116_161406"
+    },
+    {
+     "trial": 2,
+     "kind": "walk_normal",
+     "false_alarm": false,
+     "max_prob": 0.229,
+     "session": "TEST_20261116_161406"
+    },
+    {
+     "trial": 3,
+     "kind": "freeze_collapse",
+     "caught": false,
+     "lead_sec": null,
+     "alarm_before_warning_window": false,
+     "max_prob_last3s": 0.671,
+     "session": "TEST_20261116_161406"
+    },
+    {
+     "trial": 4,
+     "kind": "sit_chair",
+     "false_alarm": true,
+     "max_prob": 0.898,
+     "session": "TEST_20261116_161406"
+    },
+    {
+     "trial": 5,
+     "kind": "dizzy_collapse",
+     "caught": false,
+     "lead_sec": null,
+     "alarm_before_warning_window": false,
+     "max_prob_last3s": 0.232,
+     "session": "TEST_20261116_161406"
+    },
+    {
+     "trial": 6,
+     "kind": "unsteady_fall",
+     "caught": false,
+     "lead_sec": null,
+     "alarm_before_warning_window": false,
+     "max_prob_last3s": 0.012,
+     "session": "TEST_20261116_161406"
+    },
+    {
+     "trial": 7,
+     "kind": "crouch",
+     "false_alarm": true,
+     "max_prob": 0.717,
+     "session": "TEST_20261116_161406"
+    },
+    {
+     "trial": 8,
+     "kind": "freeze_collapse",
+     "caught": false,
+     "lead_sec": null,
+     "alarm_before_warning_window": false,
+     "max_prob_last3s": 0.071,
+     "session": "TEST_20261116_161406"
+    },
+    {
+     "trial": 9,
+     "kind": "stop_stand",
+     "false_alarm": false,
+     "max_prob": 0.601,
+     "session": "TEST_20261116_161406"
+    },
+    {
+     "trial": 10,
+     "kind": "dizzy_collapse",
+     "caught": true,
+     "lead_sec": 0.39,
+     "alarm_before_warning_window": false,
+     "max_prob_last3s": 0.735,
+     "session": "TEST_20261116_161406"
+    },
+    {
+     "trial": 1,
+     "kind": "dizzy_collapse",
+     "caught": false,
+     "lead_sec": null,
+     "alarm_before_warning_window": false,
+     "max_prob_last3s": 0.168,
+     "session": "TEST_20261116_163825"
+    },
+    {
+     "trial": 2,
+     "kind": "stop_stand",
+     "false_alarm": false,
+     "max_prob": 0.244,
+     "session": "TEST_20261116_163825"
+    },
+    {
+     "trial": 3,
+     "kind": "unsteady_fall",
+     "caught": true,
+     "lead_sec": 1.74,
+     "alarm_before_warning_window": false,
+     "max_prob_last3s": 0.78,
+     "session": "TEST_20261116_163825"
+    },
+    {
+     "trial": 4,
+     "kind": "freeze_collapse",
+     "caught": false,
+     "lead_sec": null,
+     "alarm_before_warning_window": false,
+     "max_prob_last3s": 0.822,
+     "session": "TEST_20261116_163825"
+    },
+    {
+     "trial": 5,
+     "kind": "crouch",
+     "false_alarm": true,
+     "max_prob": 0.87,
+     "session": "TEST_20261116_163825"
+    },
+    {
+     "trial": 6,
+     "kind": "dizzy_collapse",
+     "caught": false,
+     "lead_sec": null,
+     "alarm_before_warning_window": false,
+     "max_prob_last3s": 0.28,
+     "session": "TEST_20261116_163825"
+    },
+    {
+     "trial": 7,
+     "kind": "walk_normal",
+     "false_alarm": false,
+     "max_prob": 0.03,
+     "session": "TEST_20261116_163825"
+    },
+    {
+     "trial": 8,
+     "kind": "unsteady_fall",
+     "caught": false,
+     "lead_sec": null,
+     "alarm_before_warning_window": false,
+     "max_prob_last3s": 0.298,
+     "session": "TEST_20261116_163825"
+    },
+    {
+     "trial": 9,
+     "kind": "sit_chair",
+     "false_alarm": true,
+     "max_prob": 0.954,
+     "session": "TEST_20261116_163825"
+    },
+    {
+     "trial": 10,
+     "kind": "freeze_collapse",
+     "caught": false,
+     "lead_sec": null,
+     "alarm_before_warning_window": true,
+     "max_prob_last3s": 0.011,
+     "session": "TEST_20261116_163825"
+    },
+    {
+     "trial": 1,
+     "kind": "freeze_collapse",
+     "caught": false,
+     "lead_sec": null,
+     "alarm_before_warning_window": false,
+     "max_prob_last3s": 0.781,
+     "session": "TEST_20261116_170337"
+    },
+    {
+     "trial": 2,
+     "kind": "crouch",
+     "false_alarm": true,
+     "max_prob": 0.925,
+     "session": "TEST_20261116_170337"
+    },
+    {
+     "trial": 3,
+     "kind": "dizzy_collapse",
+     "caught": false,
+     "lead_sec": null,
+     "alarm_before_warning_window": false,
+     "max_prob_last3s": 0.268,
+     "session": "TEST_20261116_170337"
+    },
+    {
+     "trial": 4,
+     "kind": "walk_normal",
+     "false_alarm": false,
+     "max_prob": 0.023,
+     "session": "TEST_20261116_170337"
+    },
+    {
+     "trial": 5,
+     "kind": "unsteady_fall",
+     "caught": true,
+     "lead_sec": 0.45,
+     "alarm_before_warning_window": false,
+     "max_prob_last3s": 0.652,
+     "session": "TEST_20261116_170337"
+    },
+    {
+     "trial": 6,
+     "kind": "sit_chair",
+     "false_alarm": false,
+     "max_prob": 0.385,
+     "session": "TEST_20261116_170337"
+    },
+    {
+     "trial": 7,
+     "kind": "freeze_collapse",
+     "caught": true,
+     "lead_sec": 2.15,
+     "alarm_before_warning_window": false,
+     "max_prob_last3s": 0.871,
+     "session": "TEST_20261116_170337"
+    },
+    {
+     "trial": 8,
+     "kind": "stop_stand",
+     "false_alarm": false,
+     "max_prob": 0.785,
+     "session": "TEST_20261116_170337"
+    },
+    {
+     "trial": 9,
+     "kind": "dizzy_collapse",
+     "caught": false,
+     "lead_sec": null,
+     "alarm_before_warning_window": true,
+     "max_prob_last3s": 0.229,
+     "session": "TEST_20261116_170337"
+    },
+    {
+     "trial": 10,
+     "kind": "unsteady_fall",
+     "caught": false,
+     "lead_sec": null,
+     "alarm_before_warning_window": false,
+     "max_prob_last3s": 0.35,
+     "session": "TEST_20261116_170337"
+    }
+   ],
+   "summary": {
+    "falls_caught": "4/18",
+    "by_kind": {
+     "unsteady_fall": "2/6",
+     "freeze_collapse": "1/6",
+     "dizzy_collapse": "1/6"
+    },
+    "mean_lead_sec": 1.18,
+    "control_trials_with_alarm": "5/12",
+    "fall_trials_alarm_too_early": "2/18",
+    "skipped": []
+   }
+  },
+  "lee": {
+   "trials": [
+    {
+     "trial": 1,
+     "kind": "unsteady_fall",
+     "caught": false,
+     "lead_sec": null,
+     "alarm_before_warning_window": false,
+     "max_prob_last3s": 0.197,
+     "session": "TEST_20261116_152746"
+    },
+    {
+     "trial": 2,
+     "kind": "walk_normal",
+     "false_alarm": false,
+     "max_prob": 0.02,
+     "session": "TEST_20261116_152746"
+    },
+    {
+     "trial": 3,
+     "kind": "freeze_collapse",
+     "note": "no baseline",
+     "session": "TEST_20261116_152746"
+    },
+    {
+     "trial": 4,
+     "kind": "sit_chair",
+     "false_alarm": false,
+     "max_prob": 0.335,
+     "session": "TEST_20261116_152746"
+    },
+    {
+     "trial": 5,
+     "kind": "dizzy_collapse",
+     "caught": false,
+     "lead_sec": null,
+     "alarm_before_warning_window": true,
+     "max_prob_last3s": 0.323,
+     "session": "TEST_20261116_152746"
+    },
+    {
+     "trial": 6,
+     "kind": "unsteady_fall",
+     "caught": true,
+     "lead_sec": 2.63,
+     "alarm_before_warning_window": true,
+     "max_prob_last3s": 0.868,
+     "session": "TEST_20261116_152746"
+    },
+    {
+     "trial": 7,
+     "kind": "crouch",
+     "false_alarm": false,
+     "max_prob": 0.198,
+     "session": "TEST_20261116_152746"
+    },
+    {
+     "trial": 8,
+     "kind": "freeze_collapse",
+     "caught": true,
+     "lead_sec": 2.79,
+     "alarm_before_warning_window": false,
+     "max_prob_last3s": 0.881,
+     "session": "TEST_20261116_152746"
+    },
+    {
+     "trial": 9,
+     "kind": "stop_stand",
+     "false_alarm": false,
+     "max_prob": 0.738,
+     "session": "TEST_20261116_152746"
+    },
+    {
+     "trial": 10,
+     "kind": "dizzy_collapse",
+     "caught": false,
+     "lead_sec": null,
+     "alarm_before_warning_window": false,
+     "max_prob_last3s": 0.238,
+     "session": "TEST_20261116_152746"
+    },
+    {
+     "trial": 1,
+     "kind": "dizzy_collapse",
+     "caught": true,
+     "lead_sec": 2.99,
+     "alarm_before_warning_window": true,
+     "max_prob_last3s": 0.861,
+     "session": "TEST_20261116_153708"
+    },
+    {
+     "trial": 2,
+     "kind": "stop_stand",
+     "false_alarm": true,
+     "max_prob": 0.794,
+     "session": "TEST_20261116_153708"
+    },
+    {
+     "trial": 3,
+     "kind": "unsteady_fall",
+     "caught": true,
+     "lead_sec": 2.04,
+     "alarm_before_warning_window": true,
+     "max_prob_last3s": 0.59,
+     "session": "TEST_20261116_153708"
+    },
+    {
+     "trial": 4,
+     "kind": "freeze_collapse",
+     "caught": true,
+     "lead_sec": 2.76,
+     "alarm_before_warning_window": true,
+     "max_prob_last3s": 0.946,
+     "session": "TEST_20261116_153708"
+    },
+    {
+     "trial": 5,
+     "kind": "crouch",
+     "false_alarm": false,
+     "max_prob": 0.651,
+     "session": "TEST_20261116_153708"
+    },
+    {
+     "trial": 6,
+     "kind": "dizzy_collapse",
+     "caught": false,
+     "lead_sec": null,
+     "alarm_before_warning_window": false,
+     "max_prob_last3s": 0.439,
+     "session": "TEST_20261116_153708"
+    },
+    {
+     "trial": 7,
+     "kind": "walk_normal",
+     "false_alarm": false,
+     "max_prob": 0.016,
+     "session": "TEST_20261116_153708"
+    },
+    {
+     "trial": 8,
+     "kind": "unsteady_fall",
+     "caught": true,
+     "lead_sec": 2.83,
+     "alarm_before_warning_window": true,
+     "max_prob_last3s": 0.913,
+     "session": "TEST_20261116_153708"
+    },
+    {
+     "trial": 9,
+     "kind": "sit_chair",
+     "false_alarm": false,
+     "max_prob": 0.688,
+     "session": "TEST_20261116_153708"
+    },
+    {
+     "trial": 10,
+     "kind": "freeze_collapse",
+     "caught": false,
+     "lead_sec": null,
+     "alarm_before_warning_window": false,
+     "max_prob_last3s": 0.479,
+     "session": "TEST_20261116_153708"
+    },
+    {
+     "trial": 1,
+     "kind": "freeze_collapse",
+     "caught": false,
+     "lead_sec": null,
+     "alarm_before_warning_window": false,
+     "max_prob_last3s": 0.296,
+     "session": "TEST_20261116_154621"
+    },
+    {
+     "trial": 2,
+     "kind": "crouch",
+     "false_alarm": false,
+     "max_prob": 0.7,
+     "session": "TEST_20261116_154621"
+    },
+    {
+     "trial": 3,
+     "kind": "dizzy_collapse",
+     "caught": false,
+     "lead_sec": null,
+     "alarm_before_warning_window": false,
+     "max_prob_last3s": 0.128,
+     "session": "TEST_20261116_154621"
+    },
+    {
+     "trial": 4,
+     "kind": "walk_normal",
+     "false_alarm": false,
+     "max_prob": 0.016,
+     "session": "TEST_20261116_154621"
+    },
+    {
+     "trial": 5,
+     "kind": "unsteady_fall",
+     "caught": true,
+     "lead_sec": 2.58,
+     "alarm_before_warning_window": false,
+     "max_prob_last3s": 0.914,
+     "session": "TEST_20261116_154621"
+    },
+    {
+     "trial": 6,
+     "kind": "sit_chair",
+     "false_alarm": true,
+     "max_prob": 0.816,
+     "session": "TEST_20261116_154621"
+    },
+    {
+     "trial": 7,
+     "kind": "freeze_collapse",
+     "caught": true,
+     "lead_sec": 2.01,
+     "alarm_before_warning_window": false,
+     "max_prob_last3s": 0.846,
+     "session": "TEST_20261116_154621"
+    },
+    {
+     "trial": 8,
+     "kind": "stop_stand",
+     "false_alarm": true,
+     "max_prob": 0.717,
+     "session": "TEST_20261116_154621"
+    },
+    {
+     "trial": 9,
+     "kind": "dizzy_collapse",
+     "caught": false,
+     "lead_sec": null,
+     "alarm_before_warning_window": false,
+     "max_prob_last3s": 0.27,
+     "session": "TEST_20261116_154621"
+    },
+    {
+     "trial": 10,
+     "kind": "unsteady_fall",
+     "caught": true,
+     "lead_sec": 0.54,
+     "alarm_before_warning_window": false,
+     "max_prob_last3s": 0.759,
+     "session": "TEST_20261116_154621"
+    }
+   ],
+   "summary": {
+    "falls_caught": "9/17",
+    "by_kind": {
+     "unsteady_fall": "5/6",
+     "freeze_collapse": "3/5",
+     "dizzy_collapse": "1/6"
+    },
+    "mean_lead_sec": 2.35,
+    "control_trials_with_alarm": "3/12",
+    "fall_trials_alarm_too_early": "6/17",
+    "skipped": [
+     {
+      "trial": 3,
+      "kind": "freeze_collapse",
+      "note": "no baseline",
+      "session": "TEST_20261116_152746"
+     }
+    ]
+   }
+  }
+ }
+}

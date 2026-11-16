@@ -65,6 +65,9 @@ FALL_LOG = {  # stage → (activity_log event_type, level, 제목)
     "fallen": ("fall_detected", "critical", "낙상 감지"),
     "recovered": ("fall_recovered", "normal", "바닥에서 일어남"),
     "caution": ("fall_dip", "caution", "바닥 높이까지 내려갔다 일어남(주의)"),   # 2026-10-13: 쪼그렸다 일어남 등
+    # 2026-11-16: 낙상 전조 예측(prefall_predictor.py) — 비틀거리거나 멈칫하는 걸음이 보여 몇 초 안 낙상 위험. 낙상 자체가 아님.
+    # 제목의 초는 사건의 horizon_sec(모델이 내다보는 시간, v2 = 8초)로 채운다.
+    "prefall": ("fall_predicted", "warning", "낙상 전조"),
 }
 
 # 대상별 EMR 기반 보행 사전분포(gait_prior.py) — DB 조회를 줄이려고 30초 동안 재사용
@@ -360,7 +363,7 @@ def receive_fall():
     """send_mmw.py 프레임 단위 낙상 사건(fallen/recovered; fast_drop은 예전 호환). ToF 침상 재실이면 기록만 하고 알리지 않는다."""
     data = request.get_json(silent=True)
     if not isinstance(data, dict) or data.get("stage") not in FALL_LOG:
-        return jsonify({"error": "stage는 fallen/recovered/caution(예전 fast_drop) 중 하나"}), 400
+        return jsonify({"error": "stage는 fallen/recovered/caution/prefall(예전 fast_drop) 중 하나"}), 400
     target = data.get("target_id") if isinstance(data.get("target_id"), str) and data.get("target_id") else "room_01"
     in_bed = _tof_in_bed(target)
     # 2026-10-22: ToF가 '침대 위'여도 레이더가 본 낙상 위치가 침대에서 1.2m 넘게 떨어져 있으면 제외하지 않는다
@@ -382,6 +385,10 @@ def receive_fall():
     if data["stage"] == "fallen":   # fall_detect.py: 바닥 높이 3초 이상 = 낙상. fast=1초 이내·초당 1m 이상 하강(급격한 하강), slow=그 외(못 일어남)
         title += "(급격한 하강)" if data.get("kind") == "fast" else "(바닥에서 못 일어남)"
     note = f"몸 중심 {data.get('z')}m · 평소 {data.get('ref')}m · 추적 {data.get('tid')}"
+    if data["stage"] == "prefall":
+        horizon = data.get("horizon_sec")
+        title += f"({horizon:g}초 안 위험)" if isinstance(horizon, (int, float)) else "(몇 초 안 위험)"
+        note = f"예측 확률 {data.get('prob')} (기준 {data.get('threshold')}) · 추적 {data.get('tid')} · 걷기 10초 기준 대비 걸음 변화"
     try:
         import fall_risk
         with db.get_conn() as conn:

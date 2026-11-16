@@ -1,0 +1,525 @@
+{
+ "horizon_sec": 3.0,
+ "step_sec": 0.5,
+ "far_limit_per_h": 2.0,
+ "features": [
+  "speed",
+  "speed_cv",
+  "sway",
+  "freeze_ratio",
+  "stride_length",
+  "stride_cv",
+  "straightness",
+  "disp",
+  "d_speed",
+  "d_speed_cv",
+  "d_sway",
+  "d_freeze_ratio",
+  "d_stride_length",
+  "d_stride_cv"
+ ],
+ "episodes": 3000,
+ "people": 60,
+ "windows": {
+  "3s": {
+   "windows": 100827,
+   "positives": 5399,
+   "realism": {
+    "speed": {
+     "real_p50_lee_kim": [
+      0.827,
+      0.861
+     ],
+     "mock_p50": 0.864,
+     "mock_p10_p90": [
+      0.712,
+      1.028
+     ]
+    },
+    "speed_cv": {
+     "real_p50_lee_kim": [
+      0.228,
+      0.176
+     ],
+     "mock_p50": 0.174,
+     "mock_p10_p90": [
+      0.126,
+      0.232
+     ]
+    },
+    "sway": {
+     "real_p50_lee_kim": [
+      0.031,
+      0.027
+     ],
+     "mock_p50": 0.042,
+     "mock_p10_p90": [
+      0.022,
+      0.062
+     ]
+    },
+    "freeze_ratio": {
+     "real_p50_lee_kim": [
+      0.0,
+      0.0
+     ],
+     "mock_p50": 0.0,
+     "mock_p10_p90": [
+      0.0,
+      0.0
+     ]
+    },
+    "stride_length": {
+     "real_p50_lee_kim": [
+      1.122,
+      1.425
+     ],
+     "mock_p50": 1.197,
+     "mock_p10_p90": [
+      0.0,
+      1.492
+     ]
+    },
+    "stride_cv": {
+     "real_p50_lee_kim": [
+      0.115,
+      0.077
+     ],
+     "mock_p50": 0.036,
+     "mock_p10_p90": [
+      0.0,
+      0.098
+     ]
+    }
+   },
+   "logistic": {
+    "window_auc": 0.7983177483161367,
+    "thresholds": [
+     0.96,
+     0.97,
+     0.97,
+     0.97,
+     0.97
+    ],
+    "false_alarms_per_h_mock": 1.9931220254889646,
+    "by_kind": {
+     "crouch": {
+      "episodes": 300,
+      "caught": 0,
+      "recall": 0.0,
+      "mean_lead_sec": null
+     },
+     "dizzy_collapse": {
+      "episodes": 300,
+      "caught": 0,
+      "recall": 0.0,
+      "mean_lead_sec": null
+     },
+     "freeze_collapse": {
+      "episodes": 300,
+      "caught": 46,
+      "recall": 0.15333333333333332,
+      "mean_lead_sec": 0.5332608695651215
+     },
+     "sit_chair": {
+      "episodes": 300,
+      "caught": 0,
+      "recall": 0.0,
+      "mean_lead_sec": null
+     },
+     "stop_stand": {
+      "episodes": 300,
+      "caught": 0,
+      "recall": 0.0,
+      "mean_lead_sec": null
+     },
+     "trip_fall": {
+      "episodes": 300,
+      "caught": 0,
+      "recall": 0.0,
+      "mean_lead_sec": null
+     },
+     "unsteady_fall": {
+      "episodes": 300,
+      "caught": 1,
+      "recall": 0.0033333333333333335,
+      "mean_lead_sec": 1.054999999999911
+     },
+     "walk_normal": {
+      "episodes": 300,
+      "caught": 0,
+      "recall": 0.0,
+      "mean_lead_sec": null
+     },
+     "walk_shuffle": {
+      "episodes": 300,
+      "caught": 0,
+      "recall": 0.0,
+      "mean_lead_sec": null
+     },
+     "walk_slow": {
+      "episodes": 300,
+      "caught": 0,
+      "recall": 0.0,
+      "mean_lead_sec": null
+     }
+    },
+    "real_walking_hours": 0.234,
+    "real_walking_alarm_windows": 0,
+    "real_walking_windows": 1688
+   },
+   "xgboost": {
+    "window_auc": 0.9232288185851578,
+    "thresholds": [
+     0.77,
+     0.76,
+     0.77,
+     0.77,
+     0.77
+    ],
+    "false_alarms_per_h_mock": 3.449634274884746,
+    "by_kind": {
+     "crouch": {
+      "episodes": 300,
+      "caught": 0,
+      "recall": 0.0,
+      "mean_lead_sec": null
+     },
+     "dizzy_collapse": {
+      "episodes": 300,
+      "caught": 155,
+      "recall": 0.5166666666666667,
+      "mean_lead_sec": 1.6677419354837537
+     },
+     "freeze_collapse": {
+      "episodes": 300,
+      "caught": 147,
+      "recall": 0.49,
+      "mean_lead_sec": 1.4801700680271141
+     },
+     "sit_chair": {
+      "episodes": 300,
+      "caught": 0,
+      "recall": 0.0,
+      "mean_lead_sec": null
+     },
+     "stop_stand": {
+      "episodes": 300,
+      "caught": 0,
+      "recall": 0.0,
+      "mean_lead_sec": null
+     },
+     "trip_fall": {
+      "episodes": 300,
+      "caught": 0,
+      "recall": 0.0,
+      "mean_lead_sec": null
+     },
+     "unsteady_fall": {
+      "episodes": 300,
+      "caught": 51,
+      "recall": 0.17,
+      "mean_lead_sec": 1.3364705882351924
+     },
+     "walk_normal": {
+      "episodes": 300,
+      "caught": 0,
+      "recall": 0.0,
+      "mean_lead_sec": null
+     },
+     "walk_shuffle": {
+      "episodes": 300,
+      "caught": 0,
+      "recall": 0.0,
+      "mean_lead_sec": null
+     },
+     "walk_slow": {
+      "episodes": 300,
+      "caught": 0,
+      "recall": 0.0,
+      "mean_lead_sec": null
+     }
+    },
+    "real_walking_hours": 0.234,
+    "real_walking_alarm_windows": 99,
+    "real_walking_windows": 1688,
+    "top_features": [
+     [
+      "d_speed",
+      0.217
+     ],
+     [
+      "d_speed_cv",
+      0.158
+     ],
+     [
+      "speed",
+      0.116
+     ],
+     [
+      "freeze_ratio",
+      0.097
+     ],
+     [
+      "stride_cv",
+      0.093
+     ],
+     [
+      "speed_cv",
+      0.08
+     ]
+    ]
+   }
+  },
+  "6s": {
+   "windows": 83123,
+   "positives": 5231,
+   "realism": {
+    "speed": {
+     "real_p50_lee_kim": [
+      0.824,
+      0.887
+     ],
+     "mock_p50": 0.86,
+     "mock_p10_p90": [
+      0.729,
+      1.009
+     ]
+    },
+    "speed_cv": {
+     "real_p50_lee_kim": [
+      0.281,
+      0.212
+     ],
+     "mock_p50": 0.184,
+     "mock_p10_p90": [
+      0.146,
+      0.23
+     ]
+    },
+    "sway": {
+     "real_p50_lee_kim": [
+      0.035,
+      0.029
+     ],
+     "mock_p50": 0.048,
+     "mock_p10_p90": [
+      0.034,
+      0.064
+     ]
+    },
+    "freeze_ratio": {
+     "real_p50_lee_kim": [
+      0.0,
+      0.0
+     ],
+     "mock_p50": 0.0,
+     "mock_p10_p90": [
+      0.0,
+      0.0
+     ]
+    },
+    "stride_length": {
+     "real_p50_lee_kim": [
+      1.242,
+      1.437
+     ],
+     "mock_p50": 1.303,
+     "mock_p10_p90": [
+      0.927,
+      1.777
+     ]
+    },
+    "stride_cv": {
+     "real_p50_lee_kim": [
+      0.172,
+      0.133
+     ],
+     "mock_p50": 0.067,
+     "mock_p10_p90": [
+      0.03,
+      0.117
+     ]
+    }
+   },
+   "logistic": {
+    "window_auc": 0.7380286060539805,
+    "thresholds": [
+     0.92,
+     0.92,
+     0.91,
+     0.92,
+     0.91
+    ],
+    "false_alarms_per_h_mock": 1.7811804226397405,
+    "by_kind": {
+     "crouch": {
+      "episodes": 300,
+      "caught": 0,
+      "recall": 0.0,
+      "mean_lead_sec": null
+     },
+     "dizzy_collapse": {
+      "episodes": 300,
+      "caught": 13,
+      "recall": 0.043333333333333335,
+      "mean_lead_sec": 1.4549999999998826
+     },
+     "freeze_collapse": {
+      "episodes": 300,
+      "caught": 4,
+      "recall": 0.013333333333333334,
+      "mean_lead_sec": 0.1612499999998942
+     },
+     "sit_chair": {
+      "episodes": 300,
+      "caught": 0,
+      "recall": 0.0,
+      "mean_lead_sec": null
+     },
+     "stop_stand": {
+      "episodes": 300,
+      "caught": 0,
+      "recall": 0.0,
+      "mean_lead_sec": null
+     },
+     "trip_fall": {
+      "episodes": 300,
+      "caught": 0,
+      "recall": 0.0,
+      "mean_lead_sec": null
+     },
+     "unsteady_fall": {
+      "episodes": 300,
+      "caught": 0,
+      "recall": 0.0,
+      "mean_lead_sec": null
+     },
+     "walk_normal": {
+      "episodes": 300,
+      "caught": 0,
+      "recall": 0.0,
+      "mean_lead_sec": null
+     },
+     "walk_shuffle": {
+      "episodes": 300,
+      "caught": 0,
+      "recall": 0.0,
+      "mean_lead_sec": null
+     },
+     "walk_slow": {
+      "episodes": 300,
+      "caught": 0,
+      "recall": 0.0,
+      "mean_lead_sec": null
+     }
+    },
+    "real_walking_hours": 0.224,
+    "real_walking_alarm_windows": 0,
+    "real_walking_windows": 1610
+   },
+   "xgboost": {
+    "window_auc": 0.904511628250118,
+    "thresholds": [
+     0.77,
+     0.79,
+     0.8,
+     0.8,
+     0.79
+    ],
+    "false_alarms_per_h_mock": 3.1873754931447986,
+    "by_kind": {
+     "crouch": {
+      "episodes": 300,
+      "caught": 0,
+      "recall": 0.0,
+      "mean_lead_sec": null
+     },
+     "dizzy_collapse": {
+      "episodes": 300,
+      "caught": 170,
+      "recall": 0.5666666666666667,
+      "mean_lead_sec": 1.5796470588234095
+     },
+     "freeze_collapse": {
+      "episodes": 300,
+      "caught": 124,
+      "recall": 0.41333333333333333,
+      "mean_lead_sec": 1.6458467741934513
+     },
+     "sit_chair": {
+      "episodes": 300,
+      "caught": 0,
+      "recall": 0.0,
+      "mean_lead_sec": null
+     },
+     "stop_stand": {
+      "episodes": 300,
+      "caught": 0,
+      "recall": 0.0,
+      "mean_lead_sec": null
+     },
+     "trip_fall": {
+      "episodes": 300,
+      "caught": 0,
+      "recall": 0.0,
+      "mean_lead_sec": null
+     },
+     "unsteady_fall": {
+      "episodes": 300,
+      "caught": 39,
+      "recall": 0.13,
+      "mean_lead_sec": 1.030256410256307
+     },
+     "walk_normal": {
+      "episodes": 300,
+      "caught": 0,
+      "recall": 0.0,
+      "mean_lead_sec": null
+     },
+     "walk_shuffle": {
+      "episodes": 300,
+      "caught": 0,
+      "recall": 0.0,
+      "mean_lead_sec": null
+     },
+     "walk_slow": {
+      "episodes": 300,
+      "caught": 0,
+      "recall": 0.0,
+      "mean_lead_sec": null
+     }
+    },
+    "real_walking_hours": 0.224,
+    "real_walking_alarm_windows": 49,
+    "real_walking_windows": 1610,
+    "top_features": [
+     [
+      "d_speed_cv",
+      0.241
+     ],
+     [
+      "speed_cv",
+      0.122
+     ],
+     [
+      "freeze_ratio",
+      0.121
+     ],
+     [
+      "speed",
+      0.115
+     ],
+     [
+      "stride_cv",
+      0.094
+     ],
+     [
+      "d_speed",
+      0.059
+     ]
+    ]
+   }
+  }
+ }
+}

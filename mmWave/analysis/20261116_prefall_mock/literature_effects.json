@@ -1,0 +1,52 @@
+{
+ "note": "Step 4. How each scenario changes walking before a fall. Numbers come from the sources below; the mapping from a between-group difference (fallers vs non-fallers) to a within-episode change in the seconds before a fall is OUR ASSUMPTION and must be stated as such.",
+ "sources": {
+  "HAUSDORFF2001": {"citation": "Hausdorff JM, Rios DA, Edelberg HK. Gait variability and fall risk in community-living older adults: a 1-year prospective study. Arch Phys Med Rehabil. 2001;82(8):1050-6.", "pmid": "11494184",
+                    "finding": "stride time variability 106 ± 30 ms in later fallers (n=20) vs 49 ± 4 ms in non-fallers (n=32); only variability separated fallers"},
+  "HAUSDORFF1997": {"citation": "Hausdorff JM, Edelberg HK, Mitchell SL, Goldberger AL, Wei JY. Increased gait unsteadiness in community-dwelling elderly fallers. Arch Phys Med Rehabil. 1997;78(3):278-83.", "pmid": "9084350",
+                    "finding": "all stride-to-stride variability measures greater in fallers (p<.0002); walking speed similar to non-fallers"},
+  "VERGHESE2009": {"citation": "Verghese J, Holtzer R, Lipton RB, Wang C. Quantitative gait markers and incident fall risk in older adults. J Gerontol A. 2009;64(8):896-901.", "pmid": "19349593",
+                   "finding": "fall risk ratio 1.069 per 10 cm/s slower gait; stride length variability RR 1.076, swing time variability RR 1.007"},
+  "ROBINOVITCH2013": {"citation": "Robinovitch SN et al. Video capture of the circumstances of falls in elderly people residing in long-term care. Lancet. 2013;381:47-54.",
+                      "finding": "227 falls: incorrect weight shifting 41%, trip/stumble 21%, hit/bump 11%, loss of support 11%, collapse 11%, slip 3%; forward walking 24%, standing 13%, sitting down 12%"},
+  "MOL2019": {"citation": "Mol A et al. Orthostatic hypotension and falls in older adults: a systematic review and meta-analysis. J Am Med Dir Assoc. 2019.", "finding": "OR 1.73 (1.50-1.99)"},
+  "FOG_PD_REVIEW": {"citation": "Review citing Pelicioni et al.: 61% of 2,043 prospectively recorded falls in people with Parkinson's disease were freezing-related (secondhand; original not checked)."},
+  "OUR_RADAR": {"citation": "normal_gait_stats.json (lee/kim walking, 11-05/11-12) and fall_moment_stats.json (10-12/10-13 staged falls)"}
+ },
+ "scenarios": {
+  "unsteady_fall": {
+   "label_ko": "비틀거리며 걷다 넘어짐", "mechanism": "incorrect weight shifting (ROBINOVITCH2013, 41%)",
+   "pre_fall_sec": [4, 8],
+   "changes": {"speed_osc_ratio": [1.6, 2.6], "lateral_sway_ratio": [1.8, 3.0], "speed_ratio": [0.85, 1.0]},
+   "basis": "variability ratio 106/49 ≈ 2.2 (HAUSDORFF2001); speed roughly unchanged (HAUSDORFF1997)",
+   "fall": "fast or medium drop (fall_moment_stats fast/slow)"
+  },
+  "freeze_collapse": {
+   "label_ko": "걷다 멈칫한 뒤 주저앉음", "mechanism": "freezing / festination before a fall (FOG_PD_REVIEW)",
+   "pre_fall_sec": [3, 6],
+   "changes": {"speed_ratio_shuffle": [0.35, 0.6], "freeze_sec": [1.0, 2.5], "speed_osc_ratio": [1.3, 2.0]},
+   "basis": "short shuffling steps then a halt; slower gait raises risk (VERGHESE2009)",
+   "fall": "slow drop 1.2-3 s (fall_detect: slow 1.26-3.07 s)"
+  },
+  "dizzy_collapse": {
+   "label_ko": "일어선 직후 어지러워 주저앉음", "mechanism": "collapse (ROBINOVITCH2013, 11%); orthostatic hypotension (MOL2019)",
+   "pre_fall_sec": [3, 8],
+   "changes": {"standing_speed_mps": [0.0, 0.12], "lateral_sway_ratio": [2.0, 3.5]},
+   "basis": "standing still with growing body sway; no walking",
+   "fall": "medium drop 0.9-1.5 s"
+  },
+  "trip_fall": {
+   "label_ko": "걷다 걸려 넘어짐 (예고 없음)", "mechanism": "trip/stumble (ROBINOVITCH2013, 21%)",
+   "pre_fall_sec": [0, 0],
+   "changes": {},
+   "basis": "normal walking until the trip: kept as a check that the model is not credited for unpredictable falls",
+   "fall": "fast drop 0.6-0.9 s (fall_moment_stats fast 0.70 s)"
+  }
+ },
+ "negatives": {
+  "walk_normal": "normal_gait_stats lee/kim normal", "walk_slow": "normal_gait_stats slow", "walk_shuffle": "normal_gait_stats shuffle",
+  "stop_stand": "walk then stand still 3-10 s",
+  "sit_chair": "walk, stop, sit: centre drops to 0.85-0.95 m in 0.8-1.5 s (10-13 chair: z p10 0.90)",
+  "crouch": "walk, stop, crouch 1-4 s: centre drops near floor then rises (10-13 crouch: z p10 −0.1)"
+ }
+}

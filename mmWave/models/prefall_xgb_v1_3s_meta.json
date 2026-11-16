@@ -1,0 +1,69 @@
+{
+ "created": "2026-11-16",
+ "scenarios": [
+  "unsteady_fall",
+  "freeze_collapse"
+ ],
+ "window_sec": 3,
+ "step_sec": 0.5,
+ "horizon_sec": 3.0,
+ "baseline_sec": 10.0,
+ "trend_lags_sec": [
+  1.5,
+  3.0
+ ],
+ "rule": "mean of last 3 windows >= threshold",
+ "threshold": 0.51,
+ "upright_ratio": 0.8,
+ "features": [
+  "speed_ratio",
+  "speed_cv_ratio",
+  "sway_ratio",
+  "freeze_diff",
+  "stride_cv_ratio",
+  "straightness",
+  "speed",
+  "d_speed_1.5s",
+  "d_speed_cv_1.5s",
+  "d_sway_1.5s",
+  "d_freeze_1.5s",
+  "d_speed_3s",
+  "d_speed_cv_3s",
+  "d_sway_3s",
+  "d_freeze_3s"
+ ],
+ "training": {
+  "real_sessions": [
+   "TEST_20261116_152746",
+   "TEST_20261116_153708",
+   "TEST_20261116_154621",
+   "TEST_20261116_161406",
+   "TEST_20261116_163825",
+   "TEST_20261116_170337"
+  ],
+  "mock": "mock_final_all.pkl (60 virtual people × 5 episodes × kind)",
+  "real_weight_per_window": 3.6750169033130495
+ },
+ "leave_one_person_out": {
+  "kim": {
+   "falls_caught": "2/12",
+   "by_kind": {
+    "unsteady_fall": "1/6",
+    "freeze_collapse": "1/6"
+   },
+   "mean_lead_sec": 0.94,
+   "control_trials_with_alarm": "4/12",
+   "fall_trials_with_early_alarm": "1/12"
+  },
+  "lee": {
+   "falls_caught": "9/11",
+   "by_kind": {
+    "unsteady_fall": "5/6",
+    "freeze_collapse": "4/5"
+   },
+   "mean_lead_sec": 2.22,
+   "control_trials_with_alarm": "1/12",
+   "fall_trials_with_early_alarm": "6/11"
+  }
+ }
+}

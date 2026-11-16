@@ -1,0 +1,384 @@
+{
+ "scenarios": [
+  "unsteady_fall",
+  "freeze_collapse"
+ ],
+ "sessions": {
+  "lee": [
+   "TEST_20261116_152746",
+   "TEST_20261116_153708",
+   "TEST_20261116_154621"
+  ],
+  "kim": [
+   "TEST_20261116_161406",
+   "TEST_20261116_163825",
+   "TEST_20261116_170337"
+  ]
+ },
+ "lopo": {
+  "kim": {
+   "threshold": 0.52,
+   "real_weight": 3.28,
+   "summary": {
+    "falls_caught": "2/12",
+    "by_kind": {
+     "unsteady_fall": "1/6",
+     "freeze_collapse": "1/6"
+    },
+    "mean_lead_sec": 0.94,
+    "control_trials_with_alarm": "4/12",
+    "fall_trials_with_early_alarm": "1/12"
+   },
+   "trials": [
+    {
+     "session": "TEST_20261116_161406",
+     "trial": 1,
+     "kind": "unsteady_fall",
+     "caught": false,
+     "lead_sec": null,
+     "early_alarm": false
+    },
+    {
+     "session": "TEST_20261116_161406",
+     "trial": 2,
+     "kind": "walk_normal",
+     "false_alarm": false
+    },
+    {
+     "session": "TEST_20261116_161406",
+     "trial": 3,
+     "kind": "freeze_collapse",
+     "caught": false,
+     "lead_sec": null,
+     "early_alarm": false
+    },
+    {
+     "session": "TEST_20261116_161406",
+     "trial": 4,
+     "kind": "sit_chair",
+     "false_alarm": false
+    },
+    {
+     "session": "TEST_20261116_161406",
+     "trial": 6,
+     "kind": "unsteady_fall",
+     "caught": false,
+     "lead_sec": null,
+     "early_alarm": false
+    },
+    {
+     "session": "TEST_20261116_161406",
+     "trial": 7,
+     "kind": "crouch",
+     "false_alarm": false
+    },
+    {
+     "session": "TEST_20261116_161406",
+     "trial": 8,
+     "kind": "freeze_collapse",
+     "caught": false,
+     "lead_sec": null,
+     "early_alarm": false
+    },
+    {
+     "session": "TEST_20261116_161406",
+     "trial": 9,
+     "kind": "stop_stand",
+     "false_alarm": false
+    },
+    {
+     "session": "TEST_20261116_163825",
+     "trial": 2,
+     "kind": "stop_stand",
+     "false_alarm": false
+    },
+    {
+     "session": "TEST_20261116_163825",
+     "trial": 3,
+     "kind": "unsteady_fall",
+     "caught": true,
+     "lead_sec": 0.74,
+     "early_alarm": false
+    },
+    {
+     "session": "TEST_20261116_163825",
+     "trial": 4,
+     "kind": "freeze_collapse",
+     "caught": false,
+     "lead_sec": null,
+     "early_alarm": false
+    },
+    {
+     "session": "TEST_20261116_163825",
+     "trial": 5,
+     "kind": "crouch",
+     "false_alarm": true
+    },
+    {
+     "session": "TEST_20261116_163825",
+     "trial": 7,
+     "kind": "walk_normal",
+     "false_alarm": false
+    },
+    {
+     "session": "TEST_20261116_163825",
+     "trial": 8,
+     "kind": "unsteady_fall",
+     "caught": false,
+     "lead_sec": null,
+     "early_alarm": false
+    },
+    {
+     "session": "TEST_20261116_163825",
+     "trial": 9,
+     "kind": "sit_chair",
+     "false_alarm": true
+    },
+    {
+     "session": "TEST_20261116_163825",
+     "trial": 10,
+     "kind": "freeze_collapse",
+     "caught": false,
+     "lead_sec": null,
+     "early_alarm": true
+    },
+    {
+     "session": "TEST_20261116_170337",
+     "trial": 1,
+     "kind": "freeze_collapse",
+     "caught": false,
+     "lead_sec": null,
+     "early_alarm": false
+    },
+    {
+     "session": "TEST_20261116_170337",
+     "trial": 2,
+     "kind": "crouch",
+     "false_alarm": true
+    },
+    {
+     "session": "TEST_20261116_170337",
+     "trial": 4,
+     "kind": "walk_normal",
+     "false_alarm": false
+    },
+    {
+     "session": "TEST_20261116_170337",
+     "trial": 5,
+     "kind": "unsteady_fall",
+     "caught": false,
+     "lead_sec": null,
+     "early_alarm": false
+    },
+    {
+     "session": "TEST_20261116_170337",
+     "trial": 6,
+     "kind": "sit_chair",
+     "false_alarm": false
+    },
+    {
+     "session": "TEST_20261116_170337",
+     "trial": 7,
+     "kind": "freeze_collapse",
+     "caught": true,
+     "lead_sec": 1.15,
+     "early_alarm": false
+    },
+    {
+     "session": "TEST_20261116_170337",
+     "trial": 8,
+     "kind": "stop_stand",
+     "false_alarm": true
+    },
+    {
+     "session": "TEST_20261116_170337",
+     "trial": 10,
+     "kind": "unsteady_fall",
+     "caught": false,
+     "lead_sec": null,
+     "early_alarm": false
+    }
+   ]
+  },
+  "lee": {
+   "threshold": 0.4,
+   "real_weight": 5.02,
+   "summary": {
+    "falls_caught": "9/11",
+    "by_kind": {
+     "unsteady_fall": "5/6",
+     "freeze_collapse": "4/5"
+    },
+    "mean_lead_sec": 2.22,
+    "control_trials_with_alarm": "1/12",
+    "fall_trials_with_early_alarm": "6/11"
+   },
+   "trials": [
+    {
+     "session": "TEST_20261116_152746",
+     "trial": 1,
+     "kind": "unsteady_fall",
+     "caught": false,
+     "lead_sec": null,
+     "early_alarm": false
+    },
+    {
+     "session": "TEST_20261116_152746",
+     "trial": 2,
+     "kind": "walk_normal",
+     "false_alarm": false
+    },
+    {
+     "session": "TEST_20261116_152746",
+     "trial": 4,
+     "kind": "sit_chair",
+     "false_alarm": false
+    },
+    {
+     "session": "TEST_20261116_152746",
+     "trial": 6,
+     "kind": "unsteady_fall",
+     "caught": true,
+     "lead_sec": 2.63,
+     "early_alarm": true
+    },
+    {
+     "session": "TEST_20261116_152746",
+     "trial": 7,
+     "kind": "crouch",
+     "false_alarm": false
+    },
+    {
+     "session": "TEST_20261116_152746",
+     "trial": 8,
+     "kind": "freeze_collapse",
+     "caught": true,
+     "lead_sec": 2.29,
+     "early_alarm": false
+    },
+    {
+     "session": "TEST_20261116_152746",
+     "trial": 9,
+     "kind": "stop_stand",
+     "false_alarm": false
+    },
+    {
+     "session": "TEST_20261116_153708",
+     "trial": 2,
+     "kind": "stop_stand",
+     "false_alarm": false
+    },
+    {
+     "session": "TEST_20261116_153708",
+     "trial": 3,
+     "kind": "unsteady_fall",
+     "caught": true,
+     "lead_sec": 1.54,
+     "early_alarm": true
+    },
+    {
+     "session": "TEST_20261116_153708",
+     "trial": 4,
+     "kind": "freeze_collapse",
+     "caught": true,
+     "lead_sec": 2.76,
+     "early_alarm": true
+    },
+    {
+     "session": "TEST_20261116_153708",
+     "trial": 5,
+     "kind": "crouch",
+     "false_alarm": false
+    },
+    {
+     "session": "TEST_20261116_153708",
+     "trial": 7,
+     "kind": "walk_normal",
+     "false_alarm": false
+    },
+    {
+     "session": "TEST_20261116_153708",
+     "trial": 8,
+     "kind": "unsteady_fall",
+     "caught": true,
+     "lead_sec": 2.83,
+     "early_alarm": true
+    },
+    {
+     "session": "TEST_20261116_153708",
+     "trial": 9,
+     "kind": "sit_chair",
+     "false_alarm": false
+    },
+    {
+     "session": "TEST_20261116_153708",
+     "trial": 10,
+     "kind": "freeze_collapse",
+     "caught": false,
+     "lead_sec": null,
+     "early_alarm": true
+    },
+    {
+     "session": "TEST_20261116_154621",
+     "trial": 1,
+     "kind": "freeze_collapse",
+     "caught": true,
+     "lead_sec": 0.3,
+     "early_alarm": false
+    },
+    {
+     "session": "TEST_20261116_154621",
+     "trial": 2,
+     "kind": "crouch",
+     "false_alarm": false
+    },
+    {
+     "session": "TEST_20261116_154621",
+     "trial": 4,
+     "kind": "walk_normal",
+     "false_alarm": false
+    },
+    {
+     "session": "TEST_20261116_154621",
+     "trial": 5,
+     "kind": "unsteady_fall",
+     "caught": true,
+     "lead_sec": 2.58,
+     "early_alarm": false
+    },
+    {
+     "session": "TEST_20261116_154621",
+     "trial": 6,
+     "kind": "sit_chair",
+     "false_alarm": false
+    },
+    {
+     "session": "TEST_20261116_154621",
+     "trial": 7,
+     "kind": "freeze_collapse",
+     "caught": true,
+     "lead_sec": 2.51,
+     "early_alarm": false
+    },
+    {
+     "session": "TEST_20261116_154621",
+     "trial": 8,
+     "kind": "stop_stand",
+     "false_alarm": true
+    },
+    {
+     "session": "TEST_20261116_154621",
+     "trial": 10,
+     "kind": "unsteady_fall",
+     "caught": true,
+     "lead_sec": 2.54,
+     "early_alarm": true
+    }
+   ]
+  }
+ },
+ "final": {
+  "threshold": 0.51,
+  "model": "mmWave/models/prefall_xgb.json"
+ }
+}

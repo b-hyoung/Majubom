@@ -167,8 +167,8 @@ python arm_analyze.py "$S\TEST_20261113_201751" $B arm_lee.json    # 팔-안전�
 
 ### 5-3. 2026-11-14 이탈 시도 실험 (`analysis/20261114_exit_turn/`)
 ```powershell
-$S = 'C:\Majubom\mmWave\dataiewer_sessions'
-$B = 'C:\Majubom\mmWaveiewered_corners.json'
+$S = 'C:\Majubom\mmWave\data\viewer_sessions'
+$B = 'C:\Majubom\mmWave\viewer\bed_corners.json'
 python exit_turn_analyze.py  "$S\TEST_20261114_171305" $B exit_turn_kim.json   # 안내마다 높이·가장자리 움직임·몸 중심 이동
 python exit_turn_accuracy.py "$S\TEST_20261114_171305" $B exit_acc_kim.json    # 시도 하나씩 빼고 시험한 정확도
 ```
@@ -182,6 +182,21 @@ python exit_turn_accuracy.py "$S\TEST_20261114_171305" $B exit_acc_kim.json    #
 
 - 앉은 자세에서는 도플러 부호로 도는 방향을 구별하지 못했습니다(누운 자세와 다름). 몸 중심이 가장자리 쪽으로 0.2m 넘게 옮겨 가는지가 더 잘 맞았습니다.
 - `TEST_20261114_155620`은 유령 트랙(다른 사람의 반사) 진단용 60초 녹화입니다.
+
+### 5-4. 2026-11-16 낙상 전조 예측 (`analysis/20261116_prefall_mock/`, 실시간: `prefall_predictor.py`)
+- 무엇: 환자 추적의 걸음(속도·변동·흔들림·멈춤)으로 "몇 초 안에 넘어질지"를 0.5초마다 본다. 대상은 **비틀거림**과
+  **멈칫(종종걸음 후 멈춤)** 두 가지. 서서 어지러워 주저앉음은 걸음 변화가 거의 없어 제외, 걸려 넘어짐은 예측 불가.
+- 모델: `models/prefall_xgb.json` v2(8초 안 낙상, XGBoost, 기준 0.55). v1(3초)은 `prefall_xgb_v1_3s.json`으로 보관.
+  파이처럼 xgboost가 없으면 저장된 트리를 numpy로 직접 계산한다(결과 같음, 판정 1번 약 4ms).
+- 리더 연결: `send_mmw.py`가 매 프레임 환자 추적을 넣고, 새 경보마다 `/mmw/fall`에 `stage: "prefall"` 사건을 보낸다
+  (10초에 한 번). 끄려면 `--no-prefall`. 경보 조건: 처음 10초 걷기(초속 0.2m 이상)를 개인 기준으로 잡은 뒤, 최근 3개 창
+  평균이 기준 이상 + 서 있음(몸 높이가 평소의 80% 이상) + 1.5~4초 전에 걷고 있었음. 몸이 1초 넘게 낮아지면 기준을 새로 잡는다.
+- 데이터: lee·kim 시나리오 녹화(`tools/Record-FallScenario.ps1`, 사람당 3회차)와 걷기 녹화, 그 실측으로 만든 목데이터
+  (`mock_generator.py --profile real_scenario_profiles.json --mix`). 큰 목데이터 `.pkl`은 저장소에 올리지 않는다(다시 생성).
+- 성능(v2): 새 목데이터 잡음 56%·첫 경보 평균 2.9초 전·오경보 시간당 1.7회. 학습에서 뺀 실제 사람: lee 82%(4.6초 전),
+  kim 50%(2.9초 전), 비교 동작(의자·쪼그리기·멈춰 서기) 경보 17%. 실제 사람이 2명뿐이라 시제품 수준이다.
+- 다시 만들기: `prefall_final8.py`(모델 저장), 비교 실험은 `prefall_algo_compare.py`(알고리즘 8종), `prefall_lead.py`(예측 범위).
+  녹화 재생 확인: `replay_prefall_live.py <세션 폴더>`.
 
 ---
 

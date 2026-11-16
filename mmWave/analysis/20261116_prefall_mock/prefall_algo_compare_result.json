@@ -1,0 +1,427 @@
+{
+ "train_windows": {
+  "mock": 108685,
+  "real": 5220,
+  "real_weight": 3.6742731575388783
+ },
+ "validation_episodes": 884,
+ "test_episodes": 1757,
+ "results": {
+  "Saved model (XGBoost, deployed)": {
+   "auc": 0.9212033647326217,
+   "threshold": 0.51,
+   "false_alarms_per_h": 1.55,
+   "by_kind": {
+    "unsteady_fall": {
+     "n": 200,
+     "caught_pct": 14.0,
+     "mean_lead_sec": 1.66,
+     "early_alarm_pct": 5.5
+    },
+    "freeze_collapse": {
+     "n": 200,
+     "caught_pct": 72.5,
+     "mean_lead_sec": 1.43,
+     "early_alarm_pct": 1.5
+    },
+    "trip_fall": {
+     "n": 157,
+     "caught_pct": 0.0,
+     "mean_lead_sec": null,
+     "early_alarm_pct": 0.0
+    },
+    "walk_normal": {
+     "n": 200,
+     "alarm_pct": 0.0
+    },
+    "walk_slow": {
+     "n": 200,
+     "alarm_pct": 0.5
+    },
+    "walk_shuffle": {
+     "n": 200,
+     "alarm_pct": 0.0
+    },
+    "stop_stand": {
+     "n": 200,
+     "alarm_pct": 0.0
+    },
+    "sit_chair": {
+     "n": 200,
+     "alarm_pct": 0.0
+    },
+    "crouch": {
+     "n": 200,
+     "alarm_pct": 0.0
+    }
+   },
+   "prediction_rate_pct": 43.2,
+   "control_alarm_pct": 0.1,
+   "note": "saved model, its own threshold"
+  },
+  "Logistic regression": {
+   "auc": 0.7906480917076583,
+   "threshold": 0.94,
+   "false_alarms_per_h": 1.45,
+   "by_kind": {
+    "unsteady_fall": {
+     "n": 200,
+     "caught_pct": 0.5,
+     "mean_lead_sec": 1.86,
+     "early_alarm_pct": 0.0
+    },
+    "freeze_collapse": {
+     "n": 200,
+     "caught_pct": 41.5,
+     "mean_lead_sec": 1.29,
+     "early_alarm_pct": 0.0
+    },
+    "trip_fall": {
+     "n": 157,
+     "caught_pct": 0.0,
+     "mean_lead_sec": null,
+     "early_alarm_pct": 0.0
+    },
+    "walk_normal": {
+     "n": 200,
+     "alarm_pct": 0.0
+    },
+    "walk_slow": {
+     "n": 200,
+     "alarm_pct": 0.0
+    },
+    "walk_shuffle": {
+     "n": 200,
+     "alarm_pct": 0.0
+    },
+    "stop_stand": {
+     "n": 200,
+     "alarm_pct": 4.5
+    },
+    "sit_chair": {
+     "n": 200,
+     "alarm_pct": 1.5
+    },
+    "crouch": {
+     "n": 200,
+     "alarm_pct": 1.0
+    }
+   },
+   "prediction_rate_pct": 21.0,
+   "control_alarm_pct": 1.2,
+   "train_sec": 8.0
+  },
+  "Random forest": {
+   "auc": 0.9071923035122785,
+   "threshold": 0.99,
+   "false_alarms_per_h": 2.89,
+   "by_kind": {
+    "unsteady_fall": {
+     "n": 200,
+     "caught_pct": 14.5,
+     "mean_lead_sec": 1.76,
+     "early_alarm_pct": 5.5
+    },
+    "freeze_collapse": {
+     "n": 200,
+     "caught_pct": 72.5,
+     "mean_lead_sec": 1.46,
+     "early_alarm_pct": 4.5
+    },
+    "trip_fall": {
+     "n": 157,
+     "caught_pct": 0.0,
+     "mean_lead_sec": null,
+     "early_alarm_pct": 0.0
+    },
+    "walk_normal": {
+     "n": 200,
+     "alarm_pct": 0.0
+    },
+    "walk_slow": {
+     "n": 200,
+     "alarm_pct": 0.5
+    },
+    "walk_shuffle": {
+     "n": 200,
+     "alarm_pct": 1.0
+    },
+    "stop_stand": {
+     "n": 200,
+     "alarm_pct": 1.0
+    },
+    "sit_chair": {
+     "n": 200,
+     "alarm_pct": 0.5
+    },
+    "crouch": {
+     "n": 200,
+     "alarm_pct": 1.0
+    }
+   },
+   "prediction_rate_pct": 43.5,
+   "control_alarm_pct": 0.7,
+   "train_sec": 15.8
+  },
+  "Extra trees": {
+   "auc": 0.8622394792301622,
+   "threshold": 0.93,
+   "false_alarms_per_h": 1.14,
+   "by_kind": {
+    "unsteady_fall": {
+     "n": 200,
+     "caught_pct": 0.0,
+     "mean_lead_sec": null,
+     "early_alarm_pct": 0.0
+    },
+    "freeze_collapse": {
+     "n": 200,
+     "caught_pct": 64.0,
+     "mean_lead_sec": 1.43,
+     "early_alarm_pct": 2.5
+    },
+    "trip_fall": {
+     "n": 157,
+     "caught_pct": 0.0,
+     "mean_lead_sec": null,
+     "early_alarm_pct": 0.0
+    },
+    "walk_normal": {
+     "n": 200,
+     "alarm_pct": 0.0
+    },
+    "walk_slow": {
+     "n": 200,
+     "alarm_pct": 0.0
+    },
+    "walk_shuffle": {
+     "n": 200,
+     "alarm_pct": 0.0
+    },
+    "stop_stand": {
+     "n": 200,
+     "alarm_pct": 0.0
+    },
+    "sit_chair": {
+     "n": 200,
+     "alarm_pct": 2.0
+    },
+    "crouch": {
+     "n": 200,
+     "alarm_pct": 1.0
+    }
+   },
+   "prediction_rate_pct": 32.0,
+   "control_alarm_pct": 0.5,
+   "train_sec": 13.6
+  },
+  "XGBoost": {
+   "auc": 0.9229516896313833,
+   "threshold": 0.53,
+   "false_alarms_per_h": 1.55,
+   "by_kind": {
+    "unsteady_fall": {
+     "n": 200,
+     "caught_pct": 13.0,
+     "mean_lead_sec": 1.68,
+     "early_alarm_pct": 5.5
+    },
+    "freeze_collapse": {
+     "n": 200,
+     "caught_pct": 68.5,
+     "mean_lead_sec": 1.45,
+     "early_alarm_pct": 1.5
+    },
+    "trip_fall": {
+     "n": 157,
+     "caught_pct": 0.0,
+     "mean_lead_sec": null,
+     "early_alarm_pct": 0.0
+    },
+    "walk_normal": {
+     "n": 200,
+     "alarm_pct": 0.0
+    },
+    "walk_slow": {
+     "n": 200,
+     "alarm_pct": 0.5
+    },
+    "walk_shuffle": {
+     "n": 200,
+     "alarm_pct": 0.0
+    },
+    "stop_stand": {
+     "n": 200,
+     "alarm_pct": 0.0
+    },
+    "sit_chair": {
+     "n": 200,
+     "alarm_pct": 0.0
+    },
+    "crouch": {
+     "n": 200,
+     "alarm_pct": 0.0
+    }
+   },
+   "prediction_rate_pct": 40.8,
+   "control_alarm_pct": 0.1,
+   "train_sec": 8.2
+  },
+  "LightGBM": {
+   "auc": 0.9294283155900183,
+   "threshold": 0.67,
+   "false_alarms_per_h": 1.03,
+   "by_kind": {
+    "unsteady_fall": {
+     "n": 200,
+     "caught_pct": 11.5,
+     "mean_lead_sec": 1.74,
+     "early_alarm_pct": 3.0
+    },
+    "freeze_collapse": {
+     "n": 200,
+     "caught_pct": 66.0,
+     "mean_lead_sec": 1.38,
+     "early_alarm_pct": 2.0
+    },
+    "trip_fall": {
+     "n": 157,
+     "caught_pct": 0.0,
+     "mean_lead_sec": null,
+     "early_alarm_pct": 0.0
+    },
+    "walk_normal": {
+     "n": 200,
+     "alarm_pct": 0.0
+    },
+    "walk_slow": {
+     "n": 200,
+     "alarm_pct": 0.0
+    },
+    "walk_shuffle": {
+     "n": 200,
+     "alarm_pct": 0.0
+    },
+    "stop_stand": {
+     "n": 200,
+     "alarm_pct": 0.0
+    },
+    "sit_chair": {
+     "n": 200,
+     "alarm_pct": 0.0
+    },
+    "crouch": {
+     "n": 200,
+     "alarm_pct": 0.0
+    }
+   },
+   "prediction_rate_pct": 38.8,
+   "control_alarm_pct": 0.0,
+   "train_sec": 10.3
+  },
+  "CatBoost": {
+   "auc": 0.9255850391486989,
+   "threshold": 0.65,
+   "false_alarms_per_h": 0.72,
+   "by_kind": {
+    "unsteady_fall": {
+     "n": 200,
+     "caught_pct": 10.5,
+     "mean_lead_sec": 1.64,
+     "early_alarm_pct": 2.0
+    },
+    "freeze_collapse": {
+     "n": 200,
+     "caught_pct": 61.5,
+     "mean_lead_sec": 1.43,
+     "early_alarm_pct": 1.5
+    },
+    "trip_fall": {
+     "n": 157,
+     "caught_pct": 0.0,
+     "mean_lead_sec": null,
+     "early_alarm_pct": 0.0
+    },
+    "walk_normal": {
+     "n": 200,
+     "alarm_pct": 0.0
+    },
+    "walk_slow": {
+     "n": 200,
+     "alarm_pct": 0.0
+    },
+    "walk_shuffle": {
+     "n": 200,
+     "alarm_pct": 0.0
+    },
+    "stop_stand": {
+     "n": 200,
+     "alarm_pct": 0.0
+    },
+    "sit_chair": {
+     "n": 200,
+     "alarm_pct": 0.0
+    },
+    "crouch": {
+     "n": 200,
+     "alarm_pct": 0.0
+    }
+   },
+   "prediction_rate_pct": 36.0,
+   "control_alarm_pct": 0.0,
+   "train_sec": 9.0
+  },
+  "MLP (neural net)": {
+   "auc": 0.9071095820988616,
+   "threshold": 0.67,
+   "false_alarms_per_h": 1.86,
+   "by_kind": {
+    "unsteady_fall": {
+     "n": 200,
+     "caught_pct": 12.0,
+     "mean_lead_sec": 1.72,
+     "early_alarm_pct": 5.5
+    },
+    "freeze_collapse": {
+     "n": 200,
+     "caught_pct": 67.0,
+     "mean_lead_sec": 1.44,
+     "early_alarm_pct": 1.5
+    },
+    "trip_fall": {
+     "n": 157,
+     "caught_pct": 0.0,
+     "mean_lead_sec": null,
+     "early_alarm_pct": 0.0
+    },
+    "walk_normal": {
+     "n": 200,
+     "alarm_pct": 0.5
+    },
+    "walk_slow": {
+     "n": 200,
+     "alarm_pct": 0.0
+    },
+    "walk_shuffle": {
+     "n": 200,
+     "alarm_pct": 0.5
+    },
+    "stop_stand": {
+     "n": 200,
+     "alarm_pct": 0.5
+    },
+    "sit_chair": {
+     "n": 200,
+     "alarm_pct": 0.5
+    },
+    "crouch": {
+     "n": 200,
+     "alarm_pct": 0.0
+    }
+   },
+   "prediction_rate_pct": 39.5,
+   "control_alarm_pct": 0.3,
+   "train_sec": 12.3
+  }
+ }
+}

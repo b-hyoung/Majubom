@@ -1,0 +1,516 @@
+{
+ "rounds": [
+  "TEST_20261116_152746",
+  "TEST_20261116_153708",
+  "TEST_20261116_154621"
+ ],
+ "setup": {
+  "window_s": 3,
+  "features": "C",
+  "rule": "mean3",
+  "model": "xgboost"
+ },
+ "real_walking_windows": 2338,
+ "literature_mock": {
+  "threshold": 0.77,
+  "trials": [
+   {
+    "trial": 1,
+    "kind": "unsteady_fall",
+    "caught": false,
+    "lead_sec": null,
+    "alarm_before_warning_window": true,
+    "max_prob_last3s": 0.528
+   },
+   {
+    "trial": 2,
+    "kind": "walk_normal",
+    "false_alarm": false,
+    "max_prob": 0.05
+   },
+   {
+    "trial": 3,
+    "kind": "freeze_collapse",
+    "note": "no baseline"
+   },
+   {
+    "trial": 4,
+    "kind": "sit_chair",
+    "false_alarm": false,
+    "max_prob": 0.862
+   },
+   {
+    "trial": 5,
+    "kind": "dizzy_collapse",
+    "caught": false,
+    "lead_sec": null,
+    "alarm_before_warning_window": true,
+    "max_prob_last3s": 0.776
+   },
+   {
+    "trial": 6,
+    "kind": "unsteady_fall",
+    "caught": false,
+    "lead_sec": null,
+    "alarm_before_warning_window": true,
+    "max_prob_last3s": 0.691
+   },
+   {
+    "trial": 7,
+    "kind": "crouch",
+    "false_alarm": true,
+    "max_prob": 0.971
+   },
+   {
+    "trial": 8,
+    "kind": "freeze_collapse",
+    "caught": true,
+    "lead_sec": 2.79,
+    "alarm_before_warning_window": true,
+    "max_prob_last3s": 0.852
+   },
+   {
+    "trial": 9,
+    "kind": "stop_stand",
+    "false_alarm": true,
+    "max_prob": 0.957
+   },
+   {
+    "trial": 10,
+    "kind": "dizzy_collapse",
+    "caught": true,
+    "lead_sec": 1.72,
+    "alarm_before_warning_window": false,
+    "max_prob_last3s": 0.911
+   },
+   {
+    "trial": 1,
+    "kind": "dizzy_collapse",
+    "caught": true,
+    "lead_sec": 0.99,
+    "alarm_before_warning_window": true,
+    "max_prob_last3s": 0.972
+   },
+   {
+    "trial": 2,
+    "kind": "stop_stand",
+    "false_alarm": true,
+    "max_prob": 0.978
+   },
+   {
+    "trial": 3,
+    "kind": "unsteady_fall",
+    "caught": false,
+    "lead_sec": null,
+    "alarm_before_warning_window": true,
+    "max_prob_last3s": 0.883
+   },
+   {
+    "trial": 4,
+    "kind": "freeze_collapse",
+    "caught": false,
+    "lead_sec": null,
+    "alarm_before_warning_window": true,
+    "max_prob_last3s": 0.605
+   },
+   {
+    "trial": 5,
+    "kind": "crouch",
+    "false_alarm": true,
+    "max_prob": 0.969
+   },
+   {
+    "trial": 6,
+    "kind": "dizzy_collapse",
+    "caught": true,
+    "lead_sec": 0.78,
+    "alarm_before_warning_window": false,
+    "max_prob_last3s": 0.885
+   },
+   {
+    "trial": 7,
+    "kind": "walk_normal",
+    "false_alarm": false,
+    "max_prob": 0.077
+   },
+   {
+    "trial": 8,
+    "kind": "unsteady_fall",
+    "caught": true,
+    "lead_sec": 2.83,
+    "alarm_before_warning_window": true,
+    "max_prob_last3s": 0.878
+   },
+   {
+    "trial": 9,
+    "kind": "sit_chair",
+    "false_alarm": true,
+    "max_prob": 0.948
+   },
+   {
+    "trial": 10,
+    "kind": "freeze_collapse",
+    "caught": false,
+    "lead_sec": null,
+    "alarm_before_warning_window": true,
+    "max_prob_last3s": 0.121
+   },
+   {
+    "trial": 1,
+    "kind": "freeze_collapse",
+    "caught": false,
+    "lead_sec": null,
+    "alarm_before_warning_window": true,
+    "max_prob_last3s": 0.573
+   },
+   {
+    "trial": 2,
+    "kind": "crouch",
+    "false_alarm": true,
+    "max_prob": 0.964
+   },
+   {
+    "trial": 3,
+    "kind": "dizzy_collapse",
+    "caught": true,
+    "lead_sec": 0.31,
+    "alarm_before_warning_window": true,
+    "max_prob_last3s": 0.87
+   },
+   {
+    "trial": 4,
+    "kind": "walk_normal",
+    "false_alarm": false,
+    "max_prob": 0.104
+   },
+   {
+    "trial": 5,
+    "kind": "unsteady_fall",
+    "caught": false,
+    "lead_sec": null,
+    "alarm_before_warning_window": true,
+    "max_prob_last3s": 0.763
+   },
+   {
+    "trial": 6,
+    "kind": "sit_chair",
+    "false_alarm": true,
+    "max_prob": 0.976
+   },
+   {
+    "trial": 7,
+    "kind": "freeze_collapse",
+    "caught": true,
+    "lead_sec": 2.51,
+    "alarm_before_warning_window": true,
+    "max_prob_last3s": 0.942
+   },
+   {
+    "trial": 8,
+    "kind": "stop_stand",
+    "false_alarm": true,
+    "max_prob": 0.957
+   },
+   {
+    "trial": 9,
+    "kind": "dizzy_collapse",
+    "caught": true,
+    "lead_sec": 2.04,
+    "alarm_before_warning_window": false,
+    "max_prob_last3s": 0.911
+   },
+   {
+    "trial": 10,
+    "kind": "unsteady_fall",
+    "caught": true,
+    "lead_sec": 0.04,
+    "alarm_before_warning_window": true,
+    "max_prob_last3s": 0.958
+   }
+  ],
+  "summary": {
+   "falls_caught": "9/17",
+   "by_kind": {
+    "unsteady_fall": "2/6",
+    "freeze_collapse": "2/5",
+    "dizzy_collapse": "5/6"
+   },
+   "mean_lead_sec": 1.56,
+   "control_trials_with_alarm": "8/12",
+   "fall_trials_alarm_too_early": "14/17",
+   "skipped": [
+    {
+     "trial": 3,
+     "kind": "freeze_collapse",
+     "note": "no baseline"
+    }
+   ]
+  }
+ },
+ "real_profile_mock": {
+  "trials": [
+   {
+    "trial": 1,
+    "kind": "unsteady_fall",
+    "caught": false,
+    "lead_sec": null,
+    "alarm_before_warning_window": false,
+    "max_prob_last3s": 0.068,
+    "round": 1
+   },
+   {
+    "trial": 2,
+    "kind": "walk_normal",
+    "false_alarm": false,
+    "max_prob": 0.013,
+    "round": 1
+   },
+   {
+    "trial": 3,
+    "kind": "freeze_collapse",
+    "note": "no baseline",
+    "round": 1
+   },
+   {
+    "trial": 4,
+    "kind": "sit_chair",
+    "false_alarm": false,
+    "max_prob": 0.698,
+    "round": 1
+   },
+   {
+    "trial": 5,
+    "kind": "dizzy_collapse",
+    "caught": false,
+    "lead_sec": null,
+    "alarm_before_warning_window": true,
+    "max_prob_last3s": 0.369,
+    "round": 1
+   },
+   {
+    "trial": 6,
+    "kind": "unsteady_fall",
+    "caught": true,
+    "lead_sec": 2.13,
+    "alarm_before_warning_window": false,
+    "max_prob_last3s": 0.805,
+    "round": 1
+   },
+   {
+    "trial": 7,
+    "kind": "crouch",
+    "false_alarm": false,
+    "max_prob": 0.486,
+    "round": 1
+   },
+   {
+    "trial": 8,
+    "kind": "freeze_collapse",
+    "caught": true,
+    "lead_sec": 2.79,
+    "alarm_before_warning_window": false,
+    "max_prob_last3s": 0.913,
+    "round": 1
+   },
+   {
+    "trial": 9,
+    "kind": "stop_stand",
+    "false_alarm": true,
+    "max_prob": 0.866,
+    "round": 1
+   },
+   {
+    "trial": 10,
+    "kind": "dizzy_collapse",
+    "caught": false,
+    "lead_sec": null,
+    "alarm_before_warning_window": false,
+    "max_prob_last3s": 0.201,
+    "round": 1
+   },
+   {
+    "trial": 1,
+    "kind": "dizzy_collapse",
+    "caught": true,
+    "lead_sec": 2.99,
+    "alarm_before_warning_window": true,
+    "max_prob_last3s": 0.824,
+    "round": 2
+   },
+   {
+    "trial": 2,
+    "kind": "stop_stand",
+    "false_alarm": true,
+    "max_prob": 0.734,
+    "round": 2
+   },
+   {
+    "trial": 3,
+    "kind": "unsteady_fall",
+    "caught": true,
+    "lead_sec": 0.04,
+    "alarm_before_warning_window": false,
+    "max_prob_last3s": 0.633,
+    "round": 2
+   },
+   {
+    "trial": 4,
+    "kind": "freeze_collapse",
+    "caught": true,
+    "lead_sec": 2.76,
+    "alarm_before_warning_window": false,
+    "max_prob_last3s": 0.851,
+    "round": 2
+   },
+   {
+    "trial": 5,
+    "kind": "crouch",
+    "false_alarm": false,
+    "max_prob": 0.669,
+    "round": 2
+   },
+   {
+    "trial": 6,
+    "kind": "dizzy_collapse",
+    "caught": false,
+    "lead_sec": null,
+    "alarm_before_warning_window": false,
+    "max_prob_last3s": 0.225,
+    "round": 2
+   },
+   {
+    "trial": 7,
+    "kind": "walk_normal",
+    "false_alarm": false,
+    "max_prob": 0.014,
+    "round": 2
+   },
+   {
+    "trial": 8,
+    "kind": "unsteady_fall",
+    "caught": true,
+    "lead_sec": 2.83,
+    "alarm_before_warning_window": true,
+    "max_prob_last3s": 0.889,
+    "round": 2
+   },
+   {
+    "trial": 9,
+    "kind": "sit_chair",
+    "false_alarm": true,
+    "max_prob": 0.859,
+    "round": 2
+   },
+   {
+    "trial": 10,
+    "kind": "freeze_collapse",
+    "caught": false,
+    "lead_sec": null,
+    "alarm_before_warning_window": false,
+    "max_prob_last3s": 0.357,
+    "round": 2
+   },
+   {
+    "trial": 1,
+    "kind": "freeze_collapse",
+    "caught": false,
+    "lead_sec": null,
+    "alarm_before_warning_window": false,
+    "max_prob_last3s": 0.542,
+    "round": 3
+   },
+   {
+    "trial": 2,
+    "kind": "crouch",
+    "false_alarm": false,
+    "max_prob": 0.721,
+    "round": 3
+   },
+   {
+    "trial": 3,
+    "kind": "dizzy_collapse",
+    "caught": false,
+    "lead_sec": null,
+    "alarm_before_warning_window": false,
+    "max_prob_last3s": 0.078,
+    "round": 3
+   },
+   {
+    "trial": 4,
+    "kind": "walk_normal",
+    "false_alarm": false,
+    "max_prob": 0.027,
+    "round": 3
+   },
+   {
+    "trial": 5,
+    "kind": "unsteady_fall",
+    "caught": true,
+    "lead_sec": 2.08,
+    "alarm_before_warning_window": false,
+    "max_prob_last3s": 0.853,
+    "round": 3
+   },
+   {
+    "trial": 6,
+    "kind": "sit_chair",
+    "false_alarm": true,
+    "max_prob": 0.957,
+    "round": 3
+   },
+   {
+    "trial": 7,
+    "kind": "freeze_collapse",
+    "caught": true,
+    "lead_sec": 2.01,
+    "alarm_before_warning_window": false,
+    "max_prob_last3s": 0.87,
+    "round": 3
+   },
+   {
+    "trial": 8,
+    "kind": "stop_stand",
+    "false_alarm": true,
+    "max_prob": 0.823,
+    "round": 3
+   },
+   {
+    "trial": 9,
+    "kind": "dizzy_collapse",
+    "caught": false,
+    "lead_sec": null,
+    "alarm_before_warning_window": false,
+    "max_prob_last3s": 0.25,
+    "round": 3
+   },
+   {
+    "trial": 10,
+    "kind": "unsteady_fall",
+    "caught": false,
+    "lead_sec": null,
+    "alarm_before_warning_window": false,
+    "max_prob_last3s": 0.547,
+    "round": 3
+   }
+  ],
+  "summary": {
+   "falls_caught": "8/17",
+   "by_kind": {
+    "unsteady_fall": "4/6",
+    "freeze_collapse": "3/5",
+    "dizzy_collapse": "1/6"
+   },
+   "mean_lead_sec": 2.2,
+   "control_trials_with_alarm": "5/12",
+   "fall_trials_alarm_too_early": "3/17",
+   "skipped": [
+    {
+     "trial": 3,
+     "kind": "freeze_collapse",
+     "note": "no baseline",
+     "round": 1
+    }
+   ]
+  }
+ }
+}

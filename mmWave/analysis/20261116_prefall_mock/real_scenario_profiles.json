@@ -1,0 +1,1006 @@
+{
+ "sessions": [
+  "TEST_20261116_152746",
+  "TEST_20261116_153708",
+  "TEST_20261116_154621",
+  "TEST_20261116_161406",
+  "TEST_20261116_163825",
+  "TEST_20261116_170337"
+ ],
+ "trials": [
+  {
+   "session": "TEST_20261116_152746",
+   "trial": 1,
+   "kind": "unsteady_fall",
+   "warning_sec": 13.43,
+   "speed_ratio": 1.0711630727997534,
+   "osc_ratio": 1.6773955236056315,
+   "sway_ratio": 1.5397911383688339,
+   "slow_frac": 0.012295081967213115,
+   "drop_sec": 0.43199992179870605,
+   "floor_z": 0.018,
+   "shift_m": 0.45636936794662264,
+   "walk_z": 1.1015000000000001,
+   "walk_speed": 0.5854024390243903
+  },
+  {
+   "session": "TEST_20261116_152746",
+   "trial": 2,
+   "kind": "walk_normal",
+   "min_z": 0.56,
+   "walk_z": 0.976,
+   "speed_ratio": 1.0711771751567605,
+   "sway_ratio": 0.9885533857224575
+  },
+  {
+   "session": "TEST_20261116_152746",
+   "trial": 4,
+   "kind": "sit_chair",
+   "min_z": 0.528,
+   "walk_z": 0.971,
+   "speed_ratio": 0.8859650840533404,
+   "sway_ratio": 0.9364786373519735
+  },
+  {
+   "session": "TEST_20261116_152746",
+   "trial": 5,
+   "kind": "dizzy_collapse",
+   "warning_sec": 20.42,
+   "speed_ratio": 0.4831723003637592,
+   "osc_ratio": 1.2787358748475377,
+   "sway_ratio": 0.6937635282090773,
+   "slow_frac": 0.3638814016172507,
+   "drop_sec": 0.9309999942779541,
+   "floor_z": -0.046,
+   "shift_m": 0.1805685465411958,
+   "walk_z": 0.9165000000000001,
+   "walk_speed": 0.6288292682926828
+  },
+  {
+   "session": "TEST_20261116_152746",
+   "trial": 6,
+   "kind": "unsteady_fall",
+   "warning_sec": 11.41,
+   "speed_ratio": 0.9636816578165277,
+   "osc_ratio": 1.6762344775850309,
+   "sway_ratio": 1.3737711825317822,
+   "slow_frac": 0.024154589371980676,
+   "drop_sec": 1.311000108718872,
+   "floor_z": 0.179,
+   "shift_m": 1.1670484137344088,
+   "walk_z": 1.0465,
+   "walk_speed": 0.7352439024390244
+  },
+  {
+   "session": "TEST_20261116_152746",
+   "trial": 7,
+   "kind": "crouch",
+   "min_z": 0.523,
+   "walk_z": 1.131,
+   "speed_ratio": 1.0001378719026623,
+   "sway_ratio": 1.1209411743388626
+  },
+  {
+   "session": "TEST_20261116_152746",
+   "trial": 8,
+   "kind": "freeze_collapse",
+   "warning_sec": 15.59,
+   "speed_ratio": 0.4055062839727068,
+   "osc_ratio": 0.9332039108548463,
+   "sway_ratio": 0.4866907658025535,
+   "slow_frac": 0.3262411347517731,
+   "drop_sec": 0.8509998321533203,
+   "floor_z": 0.041,
+   "shift_m": 0.16857639217873888,
+   "walk_z": 0.966,
+   "walk_speed": 0.789644171779141
+  },
+  {
+   "session": "TEST_20261116_152746",
+   "trial": 9,
+   "kind": "stop_stand",
+   "min_z": 0.63,
+   "walk_z": 0.995,
+   "speed_ratio": 1.0153513661234783,
+   "sway_ratio": 1.0092346268327625
+  },
+  {
+   "session": "TEST_20261116_152746",
+   "trial": 10,
+   "kind": "dizzy_collapse",
+   "warning_sec": 20.58,
+   "speed_ratio": 0.36546344607521625,
+   "osc_ratio": 1.0584038702220848,
+   "sway_ratio": 0.7389144486730086,
+   "slow_frac": 0.45187165775401067,
+   "drop_sec": 1.317000150680542,
+   "floor_z": 0.194,
+   "shift_m": 0.3807847160798343,
+   "walk_z": 0.9584999999999999,
+   "walk_speed": 0.7902134146341463
+  },
+  {
+   "session": "TEST_20261116_153708",
+   "trial": 1,
+   "kind": "dizzy_collapse",
+   "warning_sec": 19.33,
+   "speed_ratio": 0.5500543844361632,
+   "osc_ratio": 2.3437621972935254,
+   "sway_ratio": 0.8034576288278065,
+   "slow_frac": 0.39316239316239315,
+   "drop_sec": 1.496000051498413,
+   "floor_z": 0.028,
+   "shift_m": 0.43681117201829905,
+   "walk_z": 1.0855000000000001,
+   "walk_speed": 0.6746341463414635
+  },
+  {
+   "session": "TEST_20261116_153708",
+   "trial": 2,
+   "kind": "stop_stand",
+   "min_z": 0.608,
+   "walk_z": 0.9844999999999999,
+   "speed_ratio": 0.8906170563410634,
+   "sway_ratio": 0.8186113491707065
+  },
+  {
+   "session": "TEST_20261116_153708",
+   "trial": 3,
+   "kind": "unsteady_fall",
+   "warning_sec": 11.86,
+   "speed_ratio": 0.7626284886630942,
+   "osc_ratio": 1.9834556079792238,
+   "sway_ratio": 0.9645999707856318,
+   "slow_frac": 0.009259259259259259,
+   "drop_sec": 0.6440000534057617,
+   "floor_z": 0.127,
+   "shift_m": 0.5105604763394832,
+   "walk_z": 1.072,
+   "walk_speed": 0.8525521472392639
+  },
+  {
+   "session": "TEST_20261116_153708",
+   "trial": 4,
+   "kind": "freeze_collapse",
+   "warning_sec": 15.66,
+   "speed_ratio": 0.4150173170168553,
+   "osc_ratio": 0.7840904450654419,
+   "sway_ratio": 0.9398577398732006,
+   "slow_frac": 0.2852112676056338,
+   "drop_sec": 0.7309999465942383,
+   "floor_z": 0.031,
+   "shift_m": 0.05249761899362676,
+   "walk_z": 1.0755,
+   "walk_speed": 0.7253048780487804
+  },
+  {
+   "session": "TEST_20261116_153708",
+   "trial": 5,
+   "kind": "crouch",
+   "min_z": 0.471,
+   "walk_z": 1.042,
+   "speed_ratio": 0.8151330597728151,
+   "sway_ratio": 1.016342801073249
+  },
+  {
+   "session": "TEST_20261116_153708",
+   "trial": 6,
+   "kind": "dizzy_collapse",
+   "warning_sec": 20.62,
+   "speed_ratio": 0.3629450333080296,
+   "osc_ratio": 1.3865531755832856,
+   "sway_ratio": 0.7218003495183377,
+   "slow_frac": 0.37433155080213903,
+   "drop_sec": 0.7000000476837158,
+   "floor_z": 0.093,
+   "shift_m": 0.18874321179846446,
+   "walk_z": 1.018,
+   "walk_speed": 0.8325092024539879
+  },
+  {
+   "session": "TEST_20261116_153708",
+   "trial": 7,
+   "kind": "walk_normal",
+   "min_z": 0.543,
+   "walk_z": 1.067,
+   "speed_ratio": 1.1958694811207358,
+   "sway_ratio": 0.9326147685660204
+  },
+  {
+   "session": "TEST_20261116_153708",
+   "trial": 8,
+   "kind": "unsteady_fall",
+   "warning_sec": 11.14,
+   "speed_ratio": 0.7661872364520609,
+   "osc_ratio": 2.132442157232656,
+   "sway_ratio": 1.0672294332211822,
+   "slow_frac": 0.04433497536945813,
+   "drop_sec": 0.940000057220459,
+   "floor_z": 0.129,
+   "shift_m": 0.668060625991384,
+   "walk_z": 0.9784999999999999,
+   "walk_speed": 0.9214329268292684
+  },
+  {
+   "session": "TEST_20261116_153708",
+   "trial": 9,
+   "kind": "sit_chair",
+   "min_z": 0.534,
+   "walk_z": 0.97,
+   "speed_ratio": 0.7246005098472528,
+   "sway_ratio": 0.9260604739028546
+  },
+  {
+   "session": "TEST_20261116_153708",
+   "trial": 10,
+   "kind": "freeze_collapse",
+   "warning_sec": 15.15,
+   "speed_ratio": 0.38506763658105175,
+   "osc_ratio": 1.3537954516495074,
+   "sway_ratio": 0.5764969822474453,
+   "slow_frac": 0.2773722627737226,
+   "drop_sec": 0.6779999732971191,
+   "floor_z": 0.04,
+   "shift_m": 0.291508147399005,
+   "walk_z": 0.988,
+   "walk_speed": 0.8182560975609757
+  },
+  {
+   "session": "TEST_20261116_154621",
+   "trial": 1,
+   "kind": "freeze_collapse",
+   "warning_sec": 15.62,
+   "speed_ratio": 0.46119665207419397,
+   "osc_ratio": 0.796952118303671,
+   "sway_ratio": 0.6641383210436093,
+   "slow_frac": 0.22535211267605634,
+   "drop_sec": 0.5290000438690186,
+   "floor_z": 0.101,
+   "shift_m": 0.07017834423809101,
+   "walk_z": 0.961,
+   "walk_speed": 0.8094451219512196
+  },
+  {
+   "session": "TEST_20261116_154621",
+   "trial": 2,
+   "kind": "crouch",
+   "min_z": 0.407,
+   "walk_z": 1.095,
+   "speed_ratio": 0.9817325602749429,
+   "sway_ratio": 1.4876466780136846
+  },
+  {
+   "session": "TEST_20261116_154621",
+   "trial": 3,
+   "kind": "dizzy_collapse",
+   "warning_sec": 21.14,
+   "speed_ratio": 0.26351742865631045,
+   "osc_ratio": 0.7312857571866905,
+   "sway_ratio": 0.37235783290345953,
+   "slow_frac": 0.4921875,
+   "drop_sec": 0.5480000972747803,
+   "floor_z": 0.08,
+   "shift_m": 0.4193566501201574,
+   "walk_z": 1.0265,
+   "walk_speed": 0.8278231707317072
+  },
+  {
+   "session": "TEST_20261116_154621",
+   "trial": 4,
+   "kind": "walk_normal",
+   "min_z": 0.57,
+   "walk_z": 1.1404999999999998,
+   "speed_ratio": 1.3510171929975898,
+   "sway_ratio": 1.2168790662270454
+  },
+  {
+   "session": "TEST_20261116_154621",
+   "trial": 5,
+   "kind": "unsteady_fall",
+   "warning_sec": 11.44,
+   "speed_ratio": 0.778808058086223,
+   "osc_ratio": 2.1236798840095523,
+   "sway_ratio": 1.109742926426265,
+   "slow_frac": 0.0625,
+   "drop_sec": 0.6559998989105225,
+   "floor_z": -0.021,
+   "shift_m": 0.5190240842196053,
+   "walk_z": 1.039,
+   "walk_speed": 0.7966871165644173
+  },
+  {
+   "session": "TEST_20261116_154621",
+   "trial": 6,
+   "kind": "sit_chair",
+   "min_z": 0.439,
+   "walk_z": 1.06,
+   "speed_ratio": 0.7600500260587981,
+   "sway_ratio": 0.7789234511340566
+  },
+  {
+   "session": "TEST_20261116_154621",
+   "trial": 7,
+   "kind": "freeze_collapse",
+   "warning_sec": 15.48,
+   "speed_ratio": 0.41498791698084053,
+   "osc_ratio": 0.769772564155548,
+   "sway_ratio": 0.4269569923443966,
+   "slow_frac": 0.30851063829787234,
+   "drop_sec": 0.4549999237060547,
+   "floor_z": 0.133,
+   "shift_m": 0.25724113201430304,
+   "walk_z": 0.9844999999999999,
+   "walk_speed": 0.7912987804878049
+  },
+  {
+   "session": "TEST_20261116_154621",
+   "trial": 8,
+   "kind": "stop_stand",
+   "min_z": 0.426,
+   "walk_z": 1.008,
+   "speed_ratio": 1.006084705913729,
+   "sway_ratio": 1.1186194121563329
+  },
+  {
+   "session": "TEST_20261116_154621",
+   "trial": 9,
+   "kind": "dizzy_collapse",
+   "warning_sec": 20.37,
+   "speed_ratio": 0.28570401634882975,
+   "osc_ratio": 0.8582462286824922,
+   "sway_ratio": 0.38361314384613643,
+   "slow_frac": 0.5257452574525745,
+   "drop_sec": 0.4739999771118164,
+   "floor_z": 0.077,
+   "shift_m": 0.5545493666031907,
+   "walk_z": 0.9664999999999999,
+   "walk_speed": 0.7916829268292683
+  },
+  {
+   "session": "TEST_20261116_154621",
+   "trial": 10,
+   "kind": "unsteady_fall",
+   "warning_sec": 11.91,
+   "speed_ratio": 0.9531534294517291,
+   "osc_ratio": 2.259689885377683,
+   "sway_ratio": 1.2258889359823244,
+   "slow_frac": 0.027649769585253458,
+   "drop_sec": 0.4869999885559082,
+   "floor_z": 0.205,
+   "shift_m": 1.0080724180335459,
+   "walk_z": 1.0579999999999998,
+   "walk_speed": 0.723439024390244
+  },
+  {
+   "session": "TEST_20261116_161406",
+   "trial": 1,
+   "kind": "unsteady_fall",
+   "warning_sec": 11.52,
+   "speed_ratio": 1.0016613300705508,
+   "osc_ratio": 1.7840427614484744,
+   "sway_ratio": 1.1715545755763952,
+   "slow_frac": 0.019138755980861243,
+   "drop_sec": 0.6029999256134033,
+   "floor_z": 0.009,
+   "shift_m": 0.26240617370786073,
+   "walk_z": 0.9085000000000001,
+   "walk_speed": 0.7594512195121951
+  },
+  {
+   "session": "TEST_20261116_161406",
+   "trial": 2,
+   "kind": "walk_normal",
+   "min_z": 0.554,
+   "walk_z": 0.914,
+   "speed_ratio": 1.1259159242238153,
+   "sway_ratio": 0.8975443594112661
+  },
+  {
+   "session": "TEST_20261116_161406",
+   "trial": 3,
+   "kind": "freeze_collapse",
+   "warning_sec": 16.2,
+   "speed_ratio": 0.39243153005427095,
+   "osc_ratio": 1.6838092620780523,
+   "sway_ratio": 0.807661534045047,
+   "slow_frac": 0.23728813559322035,
+   "drop_sec": 0.5299999713897705,
+   "floor_z": 0.028,
+   "shift_m": 0.19188017094009474,
+   "walk_z": 0.888,
+   "walk_speed": 0.9972073170731709
+  },
+  {
+   "session": "TEST_20261116_161406",
+   "trial": 4,
+   "kind": "sit_chair",
+   "min_z": 0.557,
+   "walk_z": 0.928,
+   "speed_ratio": 0.651624529964377,
+   "sway_ratio": 0.9767196476654973
+  },
+  {
+   "session": "TEST_20261116_161406",
+   "trial": 5,
+   "kind": "dizzy_collapse",
+   "warning_sec": 20.67,
+   "speed_ratio": 0.19010664143435652,
+   "osc_ratio": 0.7712231164695723,
+   "sway_ratio": 0.19089221560108766,
+   "slow_frac": 0.7287234042553191,
+   "drop_sec": 0.7999999523162842,
+   "floor_z": 0.118,
+   "shift_m": 0.707975282054395,
+   "walk_z": 0.915,
+   "walk_speed": 0.9393803680981595
+  },
+  {
+   "session": "TEST_20261116_161406",
+   "trial": 6,
+   "kind": "unsteady_fall",
+   "warning_sec": 10.69,
+   "speed_ratio": 1.0864351497364961,
+   "osc_ratio": 1.149768960262186,
+   "sway_ratio": 1.3581415091315934,
+   "slow_frac": 0.0,
+   "drop_sec": 1.1949999332427979,
+   "floor_z": 0.067,
+   "shift_m": 0.38257678967757575,
+   "walk_z": 0.892,
+   "walk_speed": 0.7412638036809815
+  },
+  {
+   "session": "TEST_20261116_161406",
+   "trial": 7,
+   "kind": "crouch",
+   "min_z": 0.563,
+   "walk_z": 0.981,
+   "speed_ratio": 0.9141205645163888,
+   "sway_ratio": 0.7384493263454108
+  },
+  {
+   "session": "TEST_20261116_161406",
+   "trial": 8,
+   "kind": "freeze_collapse",
+   "warning_sec": 15.42,
+   "speed_ratio": 0.3792787413088407,
+   "osc_ratio": 0.9008565808872158,
+   "sway_ratio": 0.8923669886695216,
+   "slow_frac": 0.29537366548042704,
+   "drop_sec": 0.28600001335144043,
+   "floor_z": 0.1335,
+   "shift_m": 0.27376632371422155,
+   "walk_z": 0.954,
+   "walk_speed": 1.1156969696969696
+  },
+  {
+   "session": "TEST_20261116_161406",
+   "trial": 9,
+   "kind": "stop_stand",
+   "min_z": 0.516,
+   "walk_z": 0.927,
+   "speed_ratio": 0.8502443644070984,
+   "sway_ratio": 0.7931859651803327
+  },
+  {
+   "session": "TEST_20261116_161406",
+   "trial": 10,
+   "kind": "dizzy_collapse",
+   "warning_sec": 19.73,
+   "speed_ratio": 0.4257477720794985,
+   "osc_ratio": 2.1794886217803664,
+   "sway_ratio": 0.9171119460415093,
+   "slow_frac": 0.19832402234636873,
+   "drop_sec": 0.5310001373291016,
+   "floor_z": 0.024,
+   "shift_m": 0.6073096409575597,
+   "walk_z": 0.883,
+   "walk_speed": 1.0498780487804877
+  },
+  {
+   "session": "TEST_20261116_163825",
+   "trial": 1,
+   "kind": "dizzy_collapse",
+   "warning_sec": 19.39,
+   "speed_ratio": 0.44174191035335664,
+   "osc_ratio": 1.2168952057452933,
+   "sway_ratio": 0.6520326835206287,
+   "slow_frac": 0.35127478753541075,
+   "drop_sec": 1.1089999675750732,
+   "floor_z": 0.0895,
+   "shift_m": 0.2961367927157988,
+   "walk_z": 0.987,
+   "walk_speed": 0.8054451219512196
+  },
+  {
+   "session": "TEST_20261116_163825",
+   "trial": 2,
+   "kind": "stop_stand",
+   "min_z": 0.525,
+   "walk_z": 0.986,
+   "speed_ratio": 0.9370453796374347,
+   "sway_ratio": 1.0172857755035023
+  },
+  {
+   "session": "TEST_20261116_163825",
+   "trial": 3,
+   "kind": "unsteady_fall",
+   "warning_sec": 11.06,
+   "speed_ratio": 0.7307751928393403,
+   "osc_ratio": 1.4243313791093029,
+   "sway_ratio": 1.7742351805557148,
+   "slow_frac": 0.004975124378109453,
+   "drop_sec": 0.48000001907348633,
+   "floor_z": 0.144,
+   "shift_m": 0.3265348373451139,
+   "walk_z": 0.8935,
+   "walk_speed": 1.1033536585365853
+  },
+  {
+   "session": "TEST_20261116_163825",
+   "trial": 4,
+   "kind": "freeze_collapse",
+   "warning_sec": 15.32,
+   "speed_ratio": 0.6313389450134268,
+   "osc_ratio": 0.7568251934657863,
+   "sway_ratio": 1.1330092259587017,
+   "slow_frac": 0.14388489208633093,
+   "drop_sec": 0.8090000152587891,
+   "floor_z": 0.1205,
+   "shift_m": 0.27433191575170396,
+   "walk_z": 0.907,
+   "walk_speed": 0.8620368098159509
+  },
+  {
+   "session": "TEST_20261116_163825",
+   "trial": 5,
+   "kind": "crouch",
+   "min_z": 0.362,
+   "walk_z": 0.9355,
+   "speed_ratio": 0.865136827987504,
+   "sway_ratio": 1.0684500032347843
+  },
+  {
+   "session": "TEST_20261116_163825",
+   "trial": 6,
+   "kind": "dizzy_collapse",
+   "warning_sec": 20.97,
+   "speed_ratio": 0.3353905682048095,
+   "osc_ratio": 0.9588113482350149,
+   "sway_ratio": 0.7414924865262191,
+   "slow_frac": 0.1679790026246719,
+   "drop_sec": 0.9140000343322754,
+   "floor_z": 0.07500000000000001,
+   "shift_m": 0.031320919526731654,
+   "walk_z": 0.851,
+   "walk_speed": 1.0743536585365854
+  },
+  {
+   "session": "TEST_20261116_163825",
+   "trial": 7,
+   "kind": "walk_normal",
+   "min_z": 0.594,
+   "walk_z": 0.968,
+   "speed_ratio": 1.0870791938139768,
+   "sway_ratio": 1.0804162497109047
+  },
+  {
+   "session": "TEST_20261116_163825",
+   "trial": 8,
+   "kind": "unsteady_fall",
+   "warning_sec": 10.54,
+   "speed_ratio": 0.8045581788249304,
+   "osc_ratio": 1.255429977941913,
+   "sway_ratio": 1.5453934943547323,
+   "slow_frac": 0.005235602094240838,
+   "drop_sec": 1.1340000629425049,
+   "floor_z": -0.058499999999999996,
+   "shift_m": 0.2734410356914265,
+   "walk_z": 0.875,
+   "walk_speed": 1.065128834355828
+  },
+  {
+   "session": "TEST_20261116_163825",
+   "trial": 9,
+   "kind": "sit_chair",
+   "min_z": 0.551,
+   "walk_z": 0.871,
+   "speed_ratio": 0.6518656250789173,
+   "sway_ratio": 0.9770244296022652
+  },
+  {
+   "session": "TEST_20261116_163825",
+   "trial": 10,
+   "kind": "freeze_collapse",
+   "warning_sec": 16.13,
+   "speed_ratio": 0.42611166050259064,
+   "osc_ratio": 0.654374533378987,
+   "sway_ratio": 0.6309107385607645,
+   "slow_frac": 0.3003412969283277,
+   "drop_sec": 0.5269999504089355,
+   "floor_z": 0.128,
+   "shift_m": 0.2687340692952794,
+   "walk_z": 0.883,
+   "walk_speed": 1.0220365853658535
+  },
+  {
+   "session": "TEST_20261116_170337",
+   "trial": 1,
+   "kind": "freeze_collapse",
+   "warning_sec": 15.31,
+   "speed_ratio": 0.624853160949501,
+   "osc_ratio": 1.464384082861422,
+   "sway_ratio": 0.9365423031467303,
+   "slow_frac": 0.09712230215827339,
+   "drop_sec": 0.7569999694824219,
+   "floor_z": 0.1195,
+   "shift_m": 0.09124143795447329,
+   "walk_z": 0.934,
+   "walk_speed": 0.8127607361963192
+  },
+  {
+   "session": "TEST_20261116_170337",
+   "trial": 2,
+   "kind": "crouch",
+   "min_z": 0.34,
+   "walk_z": 1.0335,
+   "speed_ratio": 1.0017919361690308,
+   "sway_ratio": 1.1752799762910584
+  },
+  {
+   "session": "TEST_20261116_170337",
+   "trial": 3,
+   "kind": "dizzy_collapse",
+   "warning_sec": 20.64,
+   "speed_ratio": 0.3423588486608192,
+   "osc_ratio": 1.2669239847323057,
+   "sway_ratio": 0.5501413831286558,
+   "slow_frac": 0.2967914438502674,
+   "drop_sec": 0.7100000381469727,
+   "floor_z": 0.156,
+   "shift_m": 0.19662146373170963,
+   "walk_z": 0.962,
+   "walk_speed": 1.0536134969325153
+  },
+  {
+   "session": "TEST_20261116_170337",
+   "trial": 4,
+   "kind": "walk_normal",
+   "min_z": 0.533,
+   "walk_z": 1.02,
+   "speed_ratio": 1.0606628500867048,
+   "sway_ratio": 1.1068646072120327
+  },
+  {
+   "session": "TEST_20261116_170337",
+   "trial": 5,
+   "kind": "unsteady_fall",
+   "warning_sec": 10.77,
+   "speed_ratio": 0.7547118802323483,
+   "osc_ratio": 1.3834133525447734,
+   "sway_ratio": 1.0359032696131625,
+   "slow_frac": 0.035897435897435895,
+   "drop_sec": 1.0,
+   "floor_z": 0.116,
+   "shift_m": 0.5513347440530117,
+   "walk_z": 0.935,
+   "walk_speed": 1.0148957055214725
+  },
+  {
+   "session": "TEST_20261116_170337",
+   "trial": 6,
+   "kind": "sit_chair",
+   "min_z": 0.492,
+   "walk_z": 0.931,
+   "speed_ratio": 0.7226007229857887,
+   "sway_ratio": 0.8739910727032275
+  },
+  {
+   "session": "TEST_20261116_170337",
+   "trial": 7,
+   "kind": "freeze_collapse",
+   "warning_sec": 14.64,
+   "speed_ratio": 0.5315955662108449,
+   "osc_ratio": 0.5998010756042341,
+   "sway_ratio": 0.5578188717128237,
+   "slow_frac": 0.20300751879699247,
+   "drop_sec": 1.2100000381469727,
+   "floor_z": 0.1125,
+   "shift_m": 0.22165288177689013,
+   "walk_z": 0.9855,
+   "walk_speed": 0.9324390243902438
+  },
+  {
+   "session": "TEST_20261116_170337",
+   "trial": 8,
+   "kind": "stop_stand",
+   "min_z": 0.562,
+   "walk_z": 0.903,
+   "speed_ratio": 0.9351913689597929,
+   "sway_ratio": 1.0199975023178318
+  },
+  {
+   "session": "TEST_20261116_170337",
+   "trial": 9,
+   "kind": "dizzy_collapse",
+   "warning_sec": 20.67,
+   "speed_ratio": 0.36730266985390214,
+   "osc_ratio": 1.155213300165268,
+   "sway_ratio": 0.7664131182380888,
+   "slow_frac": 0.300531914893617,
+   "drop_sec": 0.4779999256134033,
+   "floor_z": 0.043,
+   "shift_m": 0.4244737918882625,
+   "walk_z": 0.9835,
+   "walk_speed": 0.9733841463414633
+  },
+  {
+   "session": "TEST_20261116_170337",
+   "trial": 10,
+   "kind": "unsteady_fall",
+   "warning_sec": 10.86,
+   "speed_ratio": 0.8247584650370258,
+   "osc_ratio": 1.0042505533404422,
+   "sway_ratio": 1.028950526211333,
+   "slow_frac": 0.04081632653061224,
+   "drop_sec": 0.6579999923706055,
+   "floor_z": 0.1165,
+   "shift_m": 0.38881486597093995,
+   "walk_z": 0.9255,
+   "walk_speed": 0.883858024691358
+  }
+ ],
+ "summary_min_median_max": {
+  "crouch": {
+   "n": 6,
+   "min_z": [
+    0.34,
+    0.439,
+    0.563
+   ],
+   "walk_z": [
+    0.935,
+    1.038,
+    1.131
+   ],
+   "speed_ratio": [
+    0.815,
+    0.948,
+    1.002
+   ],
+   "sway_ratio": [
+    0.738,
+    1.095,
+    1.488
+   ]
+  },
+  "dizzy_collapse": {
+   "n": 12,
+   "warning_sec": [
+    19.33,
+    20.6,
+    21.14
+   ],
+   "speed_ratio": [
+    0.19,
+    0.364,
+    0.55
+   ],
+   "osc_ratio": [
+    0.731,
+    1.186,
+    2.344
+   ],
+   "sway_ratio": [
+    0.191,
+    0.708,
+    0.917
+   ],
+   "slow_frac": [
+    0.168,
+    0.369,
+    0.729
+   ],
+   "drop_sec": [
+    0.474,
+    0.755,
+    1.496
+   ],
+   "floor_z": [
+    -0.046,
+    0.079,
+    0.194
+   ],
+   "shift_m": [
+    0.031,
+    0.4,
+    0.708
+   ],
+   "walk_z": [
+    0.851,
+    0.964,
+    1.086
+   ],
+   "walk_speed": [
+    0.629,
+    0.83,
+    1.074
+   ]
+  },
+  "freeze_collapse": {
+   "n": 11,
+   "warning_sec": [
+    14.64,
+    15.48,
+    16.2
+   ],
+   "speed_ratio": [
+    0.379,
+    0.415,
+    0.631
+   ],
+   "osc_ratio": [
+    0.6,
+    0.797,
+    1.684
+   ],
+   "sway_ratio": [
+    0.427,
+    0.664,
+    1.133
+   ],
+   "slow_frac": [
+    0.097,
+    0.277,
+    0.326
+   ],
+   "drop_sec": [
+    0.286,
+    0.678,
+    1.21
+   ],
+   "floor_z": [
+    0.028,
+    0.113,
+    0.134
+   ],
+   "shift_m": [
+    0.052,
+    0.222,
+    0.292
+   ],
+   "walk_z": [
+    0.883,
+    0.961,
+    1.075
+   ],
+   "walk_speed": [
+    0.725,
+    0.818,
+    1.116
+   ]
+  },
+  "sit_chair": {
+   "n": 6,
+   "min_z": [
+    0.439,
+    0.531,
+    0.557
+   ],
+   "walk_z": [
+    0.871,
+    0.951,
+    1.06
+   ],
+   "speed_ratio": [
+    0.652,
+    0.724,
+    0.886
+   ],
+   "sway_ratio": [
+    0.779,
+    0.931,
+    0.977
+   ]
+  },
+  "stop_stand": {
+   "n": 6,
+   "min_z": [
+    0.426,
+    0.544,
+    0.63
+   ],
+   "walk_z": [
+    0.903,
+    0.985,
+    1.008
+   ],
+   "speed_ratio": [
+    0.85,
+    0.936,
+    1.015
+   ],
+   "sway_ratio": [
+    0.793,
+    1.013,
+    1.119
+   ]
+  },
+  "unsteady_fall": {
+   "n": 12,
+   "warning_sec": [
+    10.54,
+    11.275,
+    13.43
+   ],
+   "speed_ratio": [
+    0.731,
+    0.815,
+    1.086
+   ],
+   "osc_ratio": [
+    1.004,
+    1.677,
+    2.26
+   ],
+   "sway_ratio": [
+    0.965,
+    1.199,
+    1.774
+   ],
+   "slow_frac": [
+    0.0,
+    0.022,
+    0.062
+   ],
+   "drop_sec": [
+    0.432,
+    0.657,
+    1.311
+   ],
+   "floor_z": [
+    -0.058,
+    0.116,
+    0.205
+   ],
+   "shift_m": [
+    0.262,
+    0.483,
+    1.167
+   ],
+   "walk_z": [
+    0.875,
+    0.957,
+    1.102
+   ],
+   "walk_speed": [
+    0.585,
+    0.825,
+    1.103
+   ]
+  },
+  "walk_normal": {
+   "n": 6,
+   "min_z": [
+    0.533,
+    0.557,
+    0.594
+   ],
+   "walk_z": [
+    0.914,
+    0.998,
+    1.14
+   ],
+   "speed_ratio": [
+    1.061,
+    1.106,
+    1.351
+   ],
+   "sway_ratio": [
+    0.898,
+    1.034,
+    1.217
+   ]
+  }
+ }
+}

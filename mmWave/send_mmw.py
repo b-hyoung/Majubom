@@ -92,6 +92,10 @@ WALK_SPEED_MIN = 0.20        # 이 속도(m/s) 이상이어야 '보행'으로 ba
 WALK_DISP_MIN = 0.30         # 윈도우 내 순이동(m) 최소 — 제자리 미동/누움 배제
 MERGE_DIST = 0.7             # 침대 후보끼리 이 거리(m) 이내면 같은 사람(track 분리)로 병합
 STRAIGHT_MIN = 0.5           # 경로 직진성(순이동/이동거리) 최소 — 회전 많은 굽은 윈도우는 gait 왜곡 → 보행에서 제외 (좁은 방 실측 튜닝: 0.7→0.5)
+STRAIGHT_PART_SEC = 3.0      # 직진성은 3초 조각마다 본다(2026-11-16). 좁은 방에서 6초 걸으면 거의 반드시 방향을 틀어,
+                             # 6초 전체로 보면 걸은 구간의 17%만 통과했다(lee·kim 녹화, 3초 조각: 69%, 걷지 않는 움직임 통과 1.1%→1.0%).
+SWAY_SMOOTH_SEC = 1.0        # 흔들림 = 1초 이동평균 경로(진행 방향)에서 옆으로 벗어난 거리의 표준편차. 길 모양(휘어짐)은 빼고
+                             # 몸의 출렁임만 남긴다(평소 걷기 곧은 구간 0.045m·휜 구간 0.043m, 예전 방식은 0.290m·0.453m).
 
 
 # ── TLV 파싱 ───────────────────────────────────────────────────────────
@@ -439,6 +443,47 @@ def _cluster_candidates(tids, alive, dist):
     return clusters
 
 
+def _sway_along_heading(t, xy, smooth_sec=SWAY_SMOOTH_SEC):
+    """1초 이동평균 경로를 진행 방향으로 보고, 각 점이 그 방향에서 옆으로 벗어난 거리의 표준편차(m).
+    시작점→끝점 직선을 기준으로 하면 휘어진 길 자체가 흔들림으로 잡힌다."""
+    if len(xy) < 3:
+        return 0.0
+    dt = np.diff(t)
+    dt = dt[dt > 0]
+    fs = 1.0 / float(np.median(dt)) if len(dt) else 18.0
+    k = max(3, int(round(fs * smooth_sec)) | 1)          # 홀수 창
+    if k > len(xy):
+        k = len(xy) if len(xy) % 2 else len(xy) - 1
+    if k < 3:
+        return 0.0
+    pad = np.pad(xy, ((k // 2, k // 2), (0, 0)), mode="edge")
+    smooth = np.column_stack([np.convolve(pad[:, i], np.ones(k) / k, mode="valid") for i in range(2)])
+    tangent = np.gradient(smooth, axis=0)
+    norm = np.linalg.norm(tangent, axis=1, keepdims=True)
+    tangent = tangent / np.where(norm > 1e-9, norm, 1.0)
+    d = xy - smooth
+    return float(np.std(d[:, 0] * tangent[:, 1] - d[:, 1] * tangent[:, 0]))
+
+
+def straightness_by_part(t, xy, part_sec=STRAIGHT_PART_SEC):
+    """창을 part_sec 조각으로 나눠 조각마다 순이동/경로 길이를 구하고 가장 낮은 값을 돌려준다.
+    창이 part_sec보다 짧으면 창 전체 하나로 본다."""
+    if len(xy) < 2:
+        return 0.0
+    span = t[-1] - t[0]
+    parts = max(1, int(round(span / part_sec)))
+    edges = [t[0] + span * i / parts for i in range(parts + 1)]
+    values = []
+    for a, b in zip(edges, edges[1:]):
+        idx = np.where((t >= a) & (t <= b))[0]
+        if len(idx) < 2:
+            continue
+        p = xy[idx]
+        path = float(np.sum(np.hypot(*np.diff(p, axis=0).T)))
+        values.append(float(np.hypot(*(p[-1] - p[0]))) / path if path > 1e-6 else 0.0)
+    return min(values) if values else 0.0
+
+
 def _gait_from_samples(samples):
     """샘플 리스트 [(t,x,y,z,vx,vy), ...] → gait raw dict. 10건 미만이면 None."""
     if len(samples) < 10:
@@ -453,17 +498,8 @@ def _gait_from_samples(samples):
     speed_std = float(np.std(speed))
     speed_cv = float(speed_std / speed_mean) if speed_mean > 1e-6 else 0.0
 
-    # sway: 시작-끝 진행축에 수직인 이탈의 표준편차
-    pts = np.column_stack([x, y])
-    axis = pts[-1] - pts[0]
-    norm = np.linalg.norm(axis)
-    if norm > 1e-6:
-        axis = axis / norm
-        rel = pts - pts[0]
-        perp = np.abs(rel[:, 0] * axis[1] - rel[:, 1] * axis[0])
-        sway = float(np.std(perp))
-    else:
-        sway = 0.0
+    # sway: 진행 방향(1초 이동평균 경로)에서 옆으로 벗어난 거리의 표준편차
+    sway = _sway_along_heading(t, np.column_stack([x, y]))
 
     # freeze: 거의 멈춰 있던 비율
     freeze_ratio = float(np.mean(speed < FREEZE_SPEED_THRESH))
@@ -548,9 +584,7 @@ def select_patient(track_history, now):
     arr = np.array(recent)
     xy = arr[:, 1:3]
     disp = float(np.hypot(xy[-1, 0] - xy[0, 0], xy[-1, 1] - xy[0, 1]))  # 순이동(직선거리)
-    seg = np.diff(xy, axis=0)
-    path_len = float(np.sum(np.hypot(seg[:, 0], seg[:, 1])))            # 실제 이동거리(경로 길이)
-    straightness = disp / path_len if path_len > 1e-6 else 0.0          # 1=직선, 작을수록 굽음/왕복
+    straightness = straightness_by_part(arr[:, 0], xy)                   # 3초 조각 중 가장 굽은 조각(1=직선)
     walking = (raw["speed"] >= WALK_SPEED_MIN) and (disp >= WALK_DISP_MIN) \
         and (straightness >= STRAIGHT_MIN)
     quality = {"reliable": True, "walking": walking,
@@ -773,7 +807,7 @@ class RawTap:
 
 
 def run(cli_port, data_port, cfg_path, do_send=True, target_id="room_01", height=2.7, tilt=90.0, room_filter=True, max_people=3,
-        raw_tap=0):
+        raw_tap=0, prefall=True):
     if serial is None:
         raise RuntimeError("pyserial 미설치: pip install pyserial")
     if do_send and requests is None:
@@ -803,6 +837,14 @@ def run(cli_port, data_port, cfg_path, do_send=True, target_id="room_01", height
     global poster
     if do_send and poster is None:
         poster = BackgroundPoster()
+    # 낙상 전조 예측(2026-11-16): 환자 추적으로 '3초 안에 넘어질지'를 본다(비틀거림·멈칫, models/prefall_xgb.json).
+    # 모델 파일이나 xgboost가 없으면 경고만 하고 나머지는 그대로 돈다.
+    pre, pre_why = (None, "꺼둠(--no-prefall)")
+    if prefall:
+        from prefall_predictor import load_patient_prefall
+        pre, pre_why = load_patient_prefall()
+    print(f"[prefall] {'켜짐: 걷기 10초를 기준으로 0.5초마다 판정' if pre else '꺼짐 — ' + str(pre_why)}")
+    pre_last = None
     tap = RawTap(raw_tap) if raw_tap else None
     if tap:
         print(f"[tap] 원본 바이트 복사 127.0.0.1:{tap.port} (테스트 뷰어용)")
@@ -839,6 +881,15 @@ def run(cli_port, data_port, cfg_path, do_send=True, target_id="room_01", height
                     for ev in latest["events"]:
                         send_fall_event(ev, target_id, do_send)
                     t = latest["patient_target"]
+                    if pre is not None:
+                        try:
+                            pre_last, ev = pre.feed(now, t, latest["patient"].get("pid"))
+                        except Exception as exc:   # 예측이 실패해도 수신·낙상 판정은 계속한다
+                            print(f"[prefall] 판정 오류, 끕니다: {type(exc).__name__}: {exc}")
+                            pre, pre_last, ev = None, None, None
+                        if ev:
+                            print(f"[prefall] {time.strftime('%H:%M:%S')} 낙상 전조 tid={ev['tid']} 확률={ev['prob']} (기준 {ev['threshold']})")
+                            send_fall_event(ev, target_id, do_send)
                     if t:   # 보행 지표는 환자 번호로만 계산한다. 번호가 바뀌면 옛 번호의 이력은 버린다
                         if t["tid"] != history_tid:
                             history.clear()
@@ -853,7 +904,7 @@ def run(cli_port, data_port, cfg_path, do_send=True, target_id="room_01", height
             if do_send and now - last_live >= LIVE_INTERVAL and latest and now - latest_at <= LIVE_STALE_SEC:
                 poster.post_live(LIVE_URL, {"targets": latest["targets"], "target_id": target_id,
                                             "patient_tid": latest["patient_tid"], "patient": latest["patient"],
-                                            "falls": latest["falls"]}, timeout=0.5)   # 시각화 실패는 무시
+                                            "falls": latest["falls"], "prefall": pre_last}, timeout=0.5)   # 시각화 실패는 무시
                 last_live = now
 
             # 윈도우 경과 → 지표 계산 + 전송
@@ -969,6 +1020,7 @@ if __name__ == "__main__":
     ap.add_argument("--upright", action="store_true", help="레이더를 바로 달았을 때")
     ap.add_argument("--no-room-filter", action="store_true", help="측정 범위 밖 추적도 전부 사용(범위를 다시 잴 때)")
     ap.add_argument("--max-people", type=int, default=3, help="사람 ID를 줄 최대 인원")
+    ap.add_argument("--no-prefall", action="store_true", help="낙상 전조 예측(models/prefall_xgb.json)을 끈다")
     ap.add_argument("--raw-tap", type=int, default=0, metavar="PORT",
                     help="읽은 원본 바이트를 127.0.0.1:PORT로도 내보냄(테스트 뷰어용, 0이면 끔)")
     args = ap.parse_args()
@@ -981,4 +1033,4 @@ if __name__ == "__main__":
     else:
         run(args.cli, args.data, args.cfg, do_send=not args.no_send, target_id=args.target,
             height=args.height, tilt=args.tilt, room_filter=not args.no_room_filter, max_people=args.max_people,
-            raw_tap=args.raw_tap)
+            raw_tap=args.raw_tap, prefall=not args.no_prefall)
