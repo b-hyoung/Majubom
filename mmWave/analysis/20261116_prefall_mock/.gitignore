@@ -27,3 +27,9 @@ combined.log
 mock_exit_*.pkl
 pop_cache_*.pkl
 popbase.log
+mock_hist_*.pkl
+history.log
+path_cache_*.pkl
+v3path.log
+sweep.log
+mock_value.log

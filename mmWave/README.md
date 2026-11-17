@@ -186,7 +186,7 @@ python exit_turn_accuracy.py "$S\TEST_20261114_171305" $B exit_acc_kim.json    #
 ### 5-4. 2026-11-16 낙상 전조 예측 (`analysis/20261116_prefall_mock/`, 실시간: `prefall_predictor.py`)
 - 무엇: 환자 추적의 걸음(속도·변동·흔들림·멈춤)으로 "몇 초 안에 넘어질지"를 0.5초마다 본다. 대상은 **비틀거림**과
   **멈칫(종종걸음 후 멈춤)** 두 가지. 서서 어지러워 주저앉음은 걸음 변화가 거의 없어 제외, 걸려 넘어짐은 예측 불가.
-- 모델: `models/prefall_xgb.json` v2(8초 안 낙상, XGBoost, 기준 0.55). v1(3초)은 `prefall_xgb_v1_3s.json`으로 보관.
+- 모델: `models/prefall_xgb.json` v3(8초 안 낙상, XGBoost, 고정 기준 보행, 기준값 0.50 — 2026-11-17에 0.55에서 낮춤, 근거 `analysis/20261116_prefall_mock/prefall_threshold_sweep_result.json`). v2(8초)는 `prefall_xgb_v2_8s.json`, v1(3초)은 `prefall_xgb_v1_3s.json`으로 보관.
   파이처럼 xgboost가 없으면 저장된 트리를 numpy로 직접 계산한다(결과 같음, 판정 1번 약 4ms).
 - 리더 연결: `send_mmw.py`가 매 프레임 환자 추적을 넣고, 새 경보마다 `/mmw/fall`에 `stage: "prefall"` 사건을 보낸다
   (10초에 한 번). 끄려면 `--no-prefall`. 경보 조건: 처음 10초 걷기(초속 0.2m 이상)를 개인 기준으로 잡은 뒤, 최근 3개 창

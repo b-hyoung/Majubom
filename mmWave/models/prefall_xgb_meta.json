@@ -25,7 +25,8 @@
   3.0
  ],
  "rule": "mean of last 3 windows >= threshold and upright (body centre >= 80% of reference walking height)",
- "threshold": 0.55,
+ "threshold": 0.5,
+ "threshold_note": "0.55 -> 0.50 on 2026-11-17 to catch more falls (analysis/20261116_prefall_mock/prefall_threshold_sweep_result.json: real 19/23 caught, 6/24 control alarms, mock 2.8 false alarms/h)",
  "upright_ratio": 0.8,
  "features": [
   "speed_ratio",
